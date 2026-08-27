@@ -1,7 +1,7 @@
 
 
 ! function() {
-	var t = sessionStorage.getItem("__THEME_CONFIG__"),
+	var t = localStorage.getItem("__THEME_CONFIG__") || sessionStorage.getItem("__THEME_CONFIG__"),
 		e = document.getElementsByTagName("html")[0],
 		i = {
 			theme: "light",
@@ -162,7 +162,9 @@ class ThemeCustomizer {
 		window.innerWidth <= 767.98 ? e.changeLeftbarSize("full-width", !1) : 767 <= window.innerWidth && window.innerWidth <= 1140 ? "full-width" !== e.config.sidenav.size && "hidden" !== e.config.sidenav.size && ("hover-view" === e.config.sidenav.size ? e.changeLeftbarSize("condensed") : e.changeLeftbarSize("condensed", !1)) : (e.changeLeftbarSize(e.config.sidenav.size))
 	}
 	setSwitchFromConfig() {
-		sessionStorage.setItem("__THEME_CONFIG__", JSON.stringify(this.config)), document.querySelectorAll(".right-bar input[type=checkbox]").forEach(function(e) {
+		try { localStorage.setItem("__THEME_CONFIG__", JSON.stringify(this.config)); } catch(e) {}
+		try { sessionStorage.setItem("__THEME_CONFIG__", JSON.stringify(this.config)); } catch(e) {}
+		document.querySelectorAll(".right-bar input[type=checkbox]").forEach(function(e) {
 			e.checked = !1
 		});
 		var e, t, a, n, i, o = this.config;
