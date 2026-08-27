@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Profile Settings | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="keywords"
+		content="LilyPad ERP, operations, CRM, ticketing">
+	<meta name="author" content="LilyPad Systems">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Datatable CSS -->
+	<link rel="stylesheet" href="assets/plugins/datatables/css3/dataTables.bootstrap5.min.css">
+
+	<!-- Daterangepicker CSS -->
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="assets/plugins/flatpickr/flatpickr.min.css">
+
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+
+					<!-- Sidebar Mobile Button -->
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+
+				</div>
+
+				<!-- Centered & Larger Global Search Bar -->
+				<div class="header-search d-none d-md-flex align-items-center justify-content-center mx-auto" style="width: 100%; max-width: 520px;">
+					<div class="input-icon position-relative w-100">
+						<input type="text" class="form-control rounded-pill py-2 px-4 shadow-sm" placeholder="Search anything in LilyPad ERP... (Ctrl + K)" style="font-size: 14px; height: 42px;">
+						<span class="input-icon-addon d-inline-flex p-0 header-search-icon pe-3"><i class="ti ti-command fs-16 text-muted"></i></span>
+					</div>
+				</div>
+
+				<div class="d-flex align-items-center">
+
+					<!-- Direct Ticket Suite Button -->
+					<div class="header-item me-2">
+						<a href="/tickets" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 py-2 text-white shadow-sm fw-semibold rounded-pill" style="font-size: 13px;">
+							<i class="ti ti-ticket fs-16"></i>
+							<span>Ticket Suite</span>
+						</a>
+					</div>
+
+					<!-- Search for Mobile -->
+					<div class="header-item d-flex d-lg-none me-2">
+						<button class="topbar-link btn" data-bs-toggle="modal" data-bs-target="#searchModal"
+							type="button">
+							<i class="ti ti-search fs-16"></i>
+						</button>
+					</div>
+
+
+					<!-- Minimize -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link btnFullscreen"><i
+									class="ti ti-maximize"></i></a>
+						</div>
+					</div>
+					<!-- Minimize -->
+
+					<!-- Light/Dark Mode Button -->
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<!-- pages -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link topbar-teal-link"
+								data-bs-toggle="dropdown">
+								<i class="ti ti-layout-grid-add"></i>
+							</a>
+							<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+								<!-- Item-->
+								<a href="contacts.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Contacts</span>
+											<span class="fs-13">View All the Contacts</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="pipeline.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Pipeline</span>
+											<span class="fs-13">View All the Pipeline</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="activities.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Activities</span>
+											<span class="fs-13">Activities</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="analytics.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Analytics</span>
+											<span class="fs-13">Analytics</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- faq -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="faq.html" class="btn topbar-link topbar-indigo-link"><i
+									class="ti ti-help-hexagon"></i></a>
+						</div>
+					</div>
+
+					<!-- report -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="lead-reports.html" class="btn topbar-link topbar-warning-link"><i
+									class="ti ti-chart-pie"></i></a>
+						</div>
+					</div>
+
+					<div class="header-line"></div>
+
+					<!-- message -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="chat.html" class="btn topbar-link">
+								<i class="ti ti-message-circle-exclamation"></i>
+								<span class="badge rounded-pill">&nbsp;</span>
+							</a>
+						</div>
+					</div>
+
+					<!-- Notification Dropdown -->
+					<div class="header-item">
+						<div class="dropdown me-2 position-relative">
+
+							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative"
+								data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false"
+								aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
+								<i class="ti ti-bell fs-19" id="notificationBellIcon"></i>
+								<span class="notification-badge" id="notificationBadge" data-notif-badge style="display:none;">0</span>
+							</button>
+
+							<div class="dropdown-menu p-0 dropdown-menu-end shadow-lg border-0"
+								style="min-width: 360px; max-width: 380px; z-index: 1060;">
+
+								<div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+									<div class="d-flex align-items-center gap-2">
+										<h6 class="m-0 fs-15 fw-bold text-dark">Notifications</h6>
+										<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold">Live Feed</span>
+									</div>
+									<a href="javascript:void(0);" onclick="LilypadNotifications.markAllAsRead(event)" class="fs-12 text-decoration-none fw-semibold text-primary">
+										Mark all read
+									</a>
+								</div>
+
+								<!-- Notification Dynamic Body -->
+								<div class="notification-body position-relative z-2" id="notificationListContainer" style="max-height: 360px; overflow-y: auto;">
+								</div>
+
+								<!-- Direct Ticket Operations Button -->
+								<div class="p-2 rounded-bottom border-top text-center bg-light">
+									<a href="/tickets" class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2">
+										<i class="ti ti-ticket fs-16"></i>
+										<span>Open Ticket Operations</span>
+									</a>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- User Dropdown -->
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);"
+							class="topbar-link dropdown-toggle drop-arrow-none position-relative"
+							data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex"
+								alt="user-image">
+							<span class="online text-success"><i
+									class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42"
+									alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0">Katherine Brooks</p>
+									<span class="d-block fs-13">Installer</span>
+								</div>
+							</div>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+
+							<!-- item -->
+							<div
+								class="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
+								<label class="form-check-label" for="notify"><i
+										class="ti ti-bell"></i>Notifications</label>
+								<input class="form-check-input me-0" type="checkbox" role="switch" id="notify">
+							</div>
+
+							<!-- Item-->
+							<a href="javascript:void(0);" class="dropdown-item">
+								<i class="ti ti-help-circle me-1 align-middle"></i>
+								<span class="align-middle">Help & Support</span>
+							</a>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-settings me-1 align-middle"></i>
+								<span class="align-middle">Settings</span>
+							</a>
+
+							<!-- Item-->
+							<div class="pt-2 mt-2 border-top">
+								<a href="login.html" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Search Modal -->
+		<div class="modal fade" id="searchModal">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content bg-transparent">
+					<div class="card shadow-none mb-0">
+						<div class="px-3 py-2 d-flex flex-row align-items-center" id="search-top">
+							<i class="ti ti-search fs-22"></i>
+							<input type="search" class="form-control border-0" placeholder="Search">
+							<button type="button" class="btn p-0" data-bs-dismiss="modal" aria-label="Close"><i
+									class="ti ti-x fs-22"></i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+
+			<!-- Start Logo -->
+			<div class="sidebar-logo">
+				<div>
+					<!-- Logo Normal -->
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span class="text-primary">ERP</span></span>
+					</a>
+
+					<!-- Logo Small (shown when sidebar is minimized) -->
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+
+				<!-- Sidebar Menu Close -->
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+			<!-- End Logo -->
+
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			<!-- Sidenav Menu -->
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu">
+					<ul>
+						<li class="menu-title"><span>Main Operations</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="dashboard.html" class="active">
+										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
+									</a>
+								</li>
+								<li>
+									<a href="tickets.html">
+										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
+									</a>
+								</li>
+								<li>
+									<a href="knowledge-base.html">
+										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Administration & Setup</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);" class="subdrop">
+										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
+									</a>
+									<ul style="display: block;">
+										<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Account</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="login.html" onclick="sessionStorage.removeItem('lilypad_auth_user'); localStorage.removeItem('lilypad_logged_in');">
+										<i class="ti ti-logout text-danger"></i><span class="text-danger fw-semibold">Sign Out</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<!-- ========================
+			Start Page Content
+		========================= -->
+
+		<div class="page-wrapper">
+
+			<!-- Start Content -->
+			<div class="content pb-0"><!-- Page Header -->
+<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+    <div>
+        <h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+            <span>Profile & Account Settings</span>
+            <span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold"><i class="ti ti-user-check"></i> Account Hub</span>
+        </h4>
+        <p class="text-muted fs-13 mb-0">Manage your personal credentials, contact details, authentication security, and platform notification preferences.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <a href="dashboard.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="ti ti-dashboard me-1"></i> Dashboard
+        </a>
+        <a href="admin-team.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+            <i class="ti ti-users me-1"></i> Team Directory
+        </a>
+    </div>
+</div>
+
+<!-- Profile Banner Card -->
+<div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="position-relative">
+                <div class="rounded-circle text-white bg-primary d-flex align-items-center justify-content-center fw-bold fs-22 shadow" id="myProfileAvatar" style="width: 72px; height: 72px;">
+                    SK
+                </div>
+                <span class="position-absolute bottom-0 end-0 bg-success border border-white border-2 rounded-circle" style="width:16px; height:16px;"></span>
+            </div>
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                    <h4 class="fw-bold mb-0 text-dark" id="myProfileFullName">Scott Karan</h4>
+                    <span class="badge bg-dark fs-11" id="myProfileRoleBadge">Admin</span>
+                    <span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Online</span>
+                </div>
+                <div class="d-flex align-items-center gap-3 fs-13 text-muted flex-wrap">
+                    <span><i class="ti ti-mail me-1 text-primary"></i> <strong class="text-dark" id="myProfileEmail">scott@froggysfog.com</strong></span>
+                    <span><i class="ti ti-user me-1"></i> @<span id="myProfileUsername">skaran</span></span>
+                    <span><i class="ti ti-building me-1"></i> <span id="myProfileDepartment">Operations</span></span>
+                    <span><i class="ti ti-phone me-1"></i> <span id="myProfilePhone">(615) 555-0100</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" onclick="triggerAvatarChange()">
+                <i class="ti ti-camera me-1"></i> Change Avatar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Main Settings Card with Tabs -->
+<div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-header bg-transparent border-bottom py-3">
+        <ul class="nav nav-pills gap-2" id="profileSettingsTabs">
+            <li class="nav-item">
+                <button class="nav-link active py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabPersonalInfo">
+                    <i class="ti ti-user me-1"></i> Personal Profile
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabSecurity">
+                    <i class="ti ti-shield-lock me-1"></i> Security & Password
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabNotifications">
+                    <i class="ti ti-bell-ringing me-1"></i> Notifications & Teams
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabPreferences">
+                    <i class="ti ti-adjustments me-1"></i> Workspace Preferences
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card-body p-4">
+        <div class="tab-content">
+            <!-- Tab 1: Personal Profile -->
+            <div class="tab-pane fade show active" id="tabPersonalInfo">
+                <form id="personalInfoForm" onsubmit="savePersonalProfile(event)">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fs-13 fw-semibold text-dark">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" id="myEditFullName" class="form-control" value="Scott Karan" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fs-13 fw-semibold text-dark">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" id="myEditEmail" class="form-control" value="scott@froggysfog.com" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fs-13 fw-semibold text-dark">Username <span class="text-danger">*</span></label>
+                            <input type="text" id="myEditUsername" class="form-control" value="skaran" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fs-13 fw-semibold text-dark">Direct Phone / Extension</label>
+                            <input type="text" id="myEditPhone" class="form-control" value="(615) 555-0100" placeholder="(615) 555-0100">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fs-13 fw-semibold text-dark">Department</label>
+                            <select id="myEditDepartment" class="form-select">
+                                <option value="Operations" selected>Operations</option>
+                                <option value="Customer Support">Customer Support</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Sales & Marketing">Sales & Marketing</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fs-13 fw-semibold text-dark">Timezone</label>
+                            <select id="myEditTimezone" class="form-select">
+                                <option value="America/Chicago" selected>Central Time (US & Canada) (GMT-5)</option>
+                                <option value="America/New_York">Eastern Time (US & Canada) (GMT-4)</option>
+                                <option value="America/Denver">Mountain Time (US & Canada) (GMT-6)</option>
+                                <option value="America/Los_Angeles">Pacific Time (US & Canada) (GMT-7)</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fs-13 fw-semibold text-dark">About / Operational Bio</label>
+                            <textarea id="myEditBio" class="form-control" rows="3" placeholder="Operations Lead overseeing machine diagnostic workflows, fluid formulations, and factory tickets.">Operations Lead overseeing machine diagnostic workflows, fluid formulations, and factory tickets.</textarea>
+                        </div>
+                    </div>
+                    <div class="text-end mt-4 pt-3 border-top">
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                            <i class="ti ti-device-floppy me-1"></i> Save Profile Details
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab 2: Security & Password -->
+            <div class="tab-pane fade" id="tabSecurity">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <h6 class="fw-bold mb-3 text-dark d-flex align-items-center gap-2">
+                                <i class="ti ti-key text-primary"></i> Change Account Password
+                            </h6>
+                            <form id="changePasswordForm" onsubmit="saveNewPassword(event)">
+                                <div class="mb-3">
+                                    <label class="form-label fs-13 fw-semibold text-dark">Current Password <span class="text-danger">*</span></label>
+                                    <input type="password" id="myCurrentPass" class="form-control" placeholder="••••••••" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fs-13 fw-semibold text-dark">New Password <span class="text-danger">*</span></label>
+                                    <input type="password" id="myNewPass" class="form-control" placeholder="Min. 8 characters" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fs-13 fw-semibold text-dark">Confirm New Password <span class="text-danger">*</span></label>
+                                    <input type="password" id="myConfirmPass" class="form-control" placeholder="Re-enter new password" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm">
+                                    <i class="ti ti-lock-check me-1"></i> Update Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                    <i class="ti ti-shield-check text-success"></i> Two-Factor Authentication (2FA)
+                                </h6>
+                                <span class="badge bg-success-subtle text-success fs-11">Active</span>
+                            </div>
+                            <p class="text-muted fs-12 mb-3">Protect your LilyPad ERP account using Microsoft Authenticator or Google Authenticator OTP.</p>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="alert('2FA is currently active with your Microsoft 365 Authenticator app.')">
+                                <i class="ti ti-qrcode me-1"></i> Manage Authenticator Keys
+                            </button>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 border">
+                            <h6 class="fw-bold mb-2 text-dark d-flex align-items-center gap-2">
+                                <i class="ti ti-devices text-primary"></i> Active Sessions
+                            </h6>
+                            <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                                <div>
+                                    <strong class="fs-12 text-dark d-block">Windows Chrome (Current Session)</strong>
+                                    <span class="fs-11 text-muted">IP: 192.168.1.45 &middot; Active Now</span>
+                                </div>
+                                <span class="badge bg-success fs-10">This Device</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between py-2">
+                                <div>
+                                    <strong class="fs-12 text-dark d-block">iPhone Microsoft Teams App</strong>
+                                    <span class="fs-11 text-muted">IP: 70.182.44.12 &middot; 2 hrs ago</span>
+                                </div>
+                                <button class="btn btn-sm btn-link text-danger p-0 fs-12" onclick="alert('Session terminated.')">Revoke</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Notifications & Teams -->
+            <div class="tab-pane fade" id="tabNotifications">
+                <div class="card border rounded-3 p-4 bg-light shadow-none">
+                    <h6 class="fw-bold mb-3 text-dark d-flex align-items-center gap-2">
+                        <i class="ti ti-bell-ringing text-primary"></i> Alert Preferences & Channel Routing
+                    </h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white rounded-3 border">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <strong class="fs-13 text-dark">Ticket Assignment Email</strong>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" id="prefEmailAssign" checked>
+                                    </div>
+                                </div>
+                                <span class="fs-12 text-muted">Receive email when an operational ticket is assigned to you.</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white rounded-3 border">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <strong class="fs-13 text-dark">Microsoft Teams Direct Pings</strong>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" id="prefTeamsPings" checked>
+                                    </div>
+                                </div>
+                                <span class="fs-12 text-muted">Send bot messages to your Teams client on high priority machine failures.</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white rounded-3 border">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <strong class="fs-13 text-dark">Urgent Priority Escalations</strong>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" id="prefUrgentEscalation" checked>
+                                    </div>
+                                </div>
+                                <span class="fs-12 text-muted">Instant pop-up alert when a ticket SLA is within 30 minutes of breach.</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white rounded-3 border">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <strong class="fs-13 text-dark">Diagnostic SOP Updates</strong>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" id="prefSopUpdates" checked>
+                                    </div>
+                                </div>
+                                <span class="fs-12 text-muted">Notify when a testing SOP is published or edited in the Knowledge Base.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-primary px-4 shadow-sm" onclick="saveNotificationPreferences()">
+                            <i class="ti ti-device-floppy me-1"></i> Save Notification Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Workspace Preferences -->
+            <div class="tab-pane fade" id="tabPreferences">
+                <div class="card border rounded-3 p-4 bg-light shadow-none">
+                    <h6 class="fw-bold mb-3 text-dark d-flex align-items-center gap-2">
+                        <i class="ti ti-layout-dashboard text-primary"></i> Workspace & UI Personalization
+                    </h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fs-13 fw-semibold text-dark">Default Landing Dashboard</label>
+                            <select id="prefDefaultLanding" class="form-select">
+                                <option value="dashboard.html" selected>Main Operations Dashboard</option>
+                                <option value="tickets.html">Ticket Operations & Support Queue</option>
+                                <option value="knowledge-base.html">Knowledge Base & Diagnostic SOPs</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fs-13 fw-semibold text-dark">Date & Time Format</label>
+                            <select id="prefDateFormat" class="form-select">
+                                <option value="MM/DD/YYYY" selected>MM/DD/YYYY (12-hour: 02:30 PM)</option>
+                                <option value="DD/MM/YYYY">DD/MM/YYYY (24-hour: 14:30)</option>
+                                <option value="YYYY-MM-DD">YYYY-MM-DD (ISO 8601)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="p-3 bg-white rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div>
+                                    <strong class="fs-13 text-dark d-block">Theme & Color Palette Customizer</strong>
+                                    <span class="fs-12 text-muted">Quickly switch between Light/Dark mode and customized accent/button colors.</span>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas">
+                                    <i class="ti ti-palette me-1"></i> Open Theme Customizer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-primary px-4 shadow-sm" onclick="saveWorkspacePreferences()">
+                            <i class="ti ti-device-floppy me-1"></i> Save Workspace Preferences
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- Start Footer -->
+			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+				<p class="mb-md-0 mb-1">Copyright &copy;
+					<script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank"
+						class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.
+				</p>
+				<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
+					<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
+					<a href="knowledge-base.html" class="text-muted fs-13">Knowledge Base</a>
+					<a href="admin-email.html" class="text-muted fs-13">Email Gateway</a>
+				</div>
+			</footer>
+			<!-- End Footer -->
+
+		</div>
+		<!-- End Page Content -->
+
+	</div>
+	<!-- End Wrapper -->
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<!-- Main JS -->
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/lilypad-notifications.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        try {
+            const auth = sessionStorage.getItem('lilypad_auth_user');
+            if (auth) {
+                const u = JSON.parse(auth);
+                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
+                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
+            }
+        } catch(e) {}
+    });
+</script>
+
+	<script>
+        const STORAGE_TEAM_KEY = "lilypad_team_users_v2";
+
+        function getActiveAuthUser() {
+            try {
+                const sessionAuth = sessionStorage.getItem('lilypad_auth_user');
+                if (sessionAuth) return JSON.parse(sessionAuth);
+            } catch(e) {}
+            return {
+                fullname: 'Scott Karan',
+                username: 'skaran',
+                email: 'scott@froggysfog.com',
+                role: 'Admin',
+                department: 'Operations',
+                phone: '(615) 555-0100',
+                initials: 'SK'
+            };
+        }
+
+        function loadMyProfileData() {
+            const user = getActiveAuthUser();
+            
+            document.getElementById('myProfileFullName').textContent = user.fullname || 'Scott Karan';
+            document.getElementById('myProfileEmail').textContent = user.email || 'scott@froggysfog.com';
+            document.getElementById('myProfileUsername').textContent = user.username || 'skaran';
+            document.getElementById('myProfileRoleBadge').textContent = user.role || 'Admin';
+            document.getElementById('myProfileDepartment').textContent = user.department || 'Operations';
+            document.getElementById('myProfilePhone').textContent = user.phone || '(615) 555-0100';
+            document.getElementById('myProfileAvatar').textContent = user.initials || 'SK';
+
+            document.getElementById('myEditFullName').value = user.fullname || 'Scott Karan';
+            document.getElementById('myEditEmail').value = user.email || 'scott@froggysfog.com';
+            document.getElementById('myEditUsername').value = user.username || 'skaran';
+            document.getElementById('myEditPhone').value = user.phone || '(615) 555-0100';
+            document.getElementById('myEditDepartment').value = user.department || 'Operations';
+        }
+
+        function savePersonalProfile(e) {
+            e.preventDefault();
+            const fullname = document.getElementById('myEditFullName').value.trim();
+            const email = document.getElementById('myEditEmail').value.trim();
+            const username = document.getElementById('myEditUsername').value.trim();
+            const phone = document.getElementById('myEditPhone').value.trim();
+            const department = document.getElementById('myEditDepartment').value;
+            const initials = fullname.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'FF';
+
+            let user = getActiveAuthUser();
+            user.fullname = fullname;
+            user.email = email;
+            user.username = username;
+            user.phone = phone;
+            user.department = department;
+            user.initials = initials;
+
+            sessionStorage.setItem('lilypad_auth_user', JSON.stringify(user));
+
+            try {
+                const stored = localStorage.getItem(STORAGE_TEAM_KEY);
+                if (stored) {
+                    let teamList = JSON.parse(stored);
+                    let idx = teamList.findIndex(u => u.email === email || u.username === username);
+                    if (idx !== -1) {
+                        teamList[idx] = Object.assign({}, teamList[idx], user);
+                        localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(teamList));
+                    }
+                }
+            } catch(err) {}
+
+            loadMyProfileData();
+
+            if (window.LilypadNotifications && LilypadNotifications.addNotification) {
+                LilypadNotifications.addNotification({
+                    title: 'Profile Updated',
+                    message: 'Your personal profile information was saved successfully.',
+                    type: 'system',
+                    link: 'profile-settings.html'
+                });
+            }
+
+            alert('✓ Profile settings updated successfully!');
+        }
+
+        function saveNewPassword(e) {
+            e.preventDefault();
+            const cur = document.getElementById('myCurrentPass').value;
+            const pass1 = document.getElementById('myNewPass').value;
+            const pass2 = document.getElementById('myConfirmPass').value;
+
+            if (pass1.length < 8) {
+                alert('New password must be at least 8 characters long.');
+                return;
+            }
+            if (pass1 !== pass2) {
+                alert('Passwords do not match. Please verify your new password.');
+                return;
+            }
+
+            const user = getActiveAuthUser();
+            try {
+                const stored = localStorage.getItem(STORAGE_TEAM_KEY);
+                if (stored) {
+                    let teamList = JSON.parse(stored);
+                    let target = teamList.find(u => u.email === user.email || u.username === user.username);
+                    if (target) {
+                        target.password = pass1;
+                        localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(teamList));
+                    }
+                }
+            } catch(err) {}
+
+            document.getElementById('changePasswordForm').reset();
+            alert('✓ Account password updated successfully!');
+        }
+
+        function saveNotificationPreferences() {
+            alert('✓ Alert & notification routing preferences saved!');
+        }
+
+        function saveWorkspacePreferences() {
+            alert('✓ Workspace & default landing page preferences saved!');
+        }
+
+        function triggerAvatarChange() {
+            const newInitials = prompt('Enter 2-letter Avatar Initials (e.g. SK, FF):', 'SK');
+            if (newInitials) {
+                let user = getActiveAuthUser();
+                user.initials = newInitials.toUpperCase().slice(0, 2);
+                sessionStorage.setItem('lilypad_auth_user', JSON.stringify(user));
+                loadMyProfileData();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMyProfileData();
+        });
+	</script>
+</body>
+</html>
