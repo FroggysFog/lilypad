@@ -596,7 +596,7 @@ const teamPageContent = `
 							<i class="ti ti-ticket me-1"></i> View Tickets
 						</a>
 						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#teamTabs button[data-bs-target=\\'#tabAdd\\']')).show()">
-							<i class="ti ti-user-plus me-1"></i> + Add Team Member
+							<i class="ti ti-user-plus me-1"></i> Add Team Member
 						</button>
 					</div>
 				</div>
@@ -671,7 +671,7 @@ const teamPageContent = `
 							</li>
 							<li class="nav-item">
 								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-primary" data-bs-toggle="tab" data-bs-target="#tabAdd">
-									<i class="ti ti-user-plus me-1"></i> + Add New User
+									<i class="ti ti-user-plus me-1"></i> Add New User
 								</button>
 							</li>
 							<li class="nav-item">
@@ -1528,7 +1528,7 @@ const formsPageContent = `
 									<span class="fs-12 text-muted">Configured dynamic attributes for this category</span>
 								</div>
 								<button class="btn btn-sm btn-outline-primary" onclick="addNewFieldRow()">
-									<i class="ti ti-plus me-1"></i> + Add Custom Field
+									<i class="ti ti-plus me-1"></i> Add Custom Field
 								</button>
 							</div>
 
@@ -1736,7 +1736,7 @@ const kbPageContent = `
 							<i class="ti ti-ticket me-1"></i> Ticket Operations
 						</a>
 						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#kbTabs button[data-bs-target=\\'#tabKbCreate\\']')).show()">
-							<i class="ti ti-plus me-1"></i> + Create New SOP
+							<i class="ti ti-plus me-1"></i> Create New SOP
 						</button>
 					</div>
 				</div>
@@ -1801,7 +1801,7 @@ const kbPageContent = `
 							</li>
 							<li class="nav-item">
 								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-success" data-bs-toggle="tab" data-bs-target="#tabKbCreate">
-									<i class="ti ti-plus me-1"></i> + Create New Diagnostic SOP
+									<i class="ti ti-plus me-1"></i> Create New Diagnostic SOP
 								</button>
 							</li>
 						</ul>

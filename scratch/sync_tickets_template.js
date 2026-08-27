@@ -738,7 +738,7 @@ const ticketingModalsHtml = `
 						</li>
 						<li class="nav-item">
 							<button class="nav-link py-2 px-3 fs-13 fw-semibold text-success" data-bs-toggle="tab" data-bs-target="#tabKbCreate">
-								<i class="ti ti-plus me-1"></i> + Create New Diagnostic SOP
+								<i class="ti ti-plus me-1"></i> Create New Diagnostic SOP
 							</button>
 						</li>
 					</ul>
