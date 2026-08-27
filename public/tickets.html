@@ -1112,6 +1112,7 @@
 
 			</div>
 		</div>
+    </div>
 	<!-- SOP Detail Modal Popup -->
 	<div class="modal fade" id="sopDetailModal" tabindex="-1" aria-hidden="true">
 		<div class="modal-dialog modal-dialog-centered modal-lg">
@@ -2152,14 +2153,12 @@
 
             container.innerHTML = CATEGORIES.map((cat, idx) => {
                 const desc = categoryDescriptions[cat.name] || 'Custom operational intake form with dedicated fields';
-                const fieldCount = (cat.fields || []).length;
                 return '<div class="col-md-4 col-sm-6">' +
                     '<div class="card border rounded-3 p-3 h-100 shadow-none bg-light category-card-hover" style="cursor: pointer; transition: all 0.2s ease;" data-category-name="' + cat.name.replace(/"/g, '&quot;') + '" onclick="openDedicatedCategoryForm(this.dataset.categoryName)">' +
                         '<div class="d-flex align-items-center justify-content-between mb-2">' +
                             '<div class="rounded-2 p-2 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
                                 '<i class="ti ' + (cat.icon || 'ti-file') + ' fs-16"></i>' +
                             '</div>' +
-                            '<span class="badge bg-white text-dark border fs-11">' + fieldCount + ' Custom Fields</span>' +
                         '</div>' +
                         '<h6 class="fw-bold fs-13 text-dark mb-1">' + cat.name + '</h6>' +
                         '<p class="fs-12 text-muted mb-3" style="line-height: 1.4;">' + desc + '</p>' +
