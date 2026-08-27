@@ -213,6 +213,7 @@ function mainRoutes (router, middleware, controllers) {
 
   // Messages
   router.get('/messages', middleware.redirectToLogin, middleware.loadCommonData, controllers.messages.get)
+  router.get('/chat.html', middleware.redirectToLogin, middleware.loadCommonData, controllers.messages.get)
   router.get(
     '/messages/startconversation',
     middleware.redirectToLogin,
@@ -224,6 +225,15 @@ function mainRoutes (router, middleware, controllers) {
     controllers.messages.get
   )
   router.get('/messages/:convoid', middleware.redirectToLogin, middleware.loadCommonData, controllers.messages.view)
+
+  // Microsoft Teams
+  router.get('/auth/microsoft/connect', middleware.redirectToLogin, controllers.microsoftTeams.connect)
+  router.get('/auth/microsoft/callback', controllers.microsoftTeams.callback)
+  router.get('/api/microsoft-teams/status', middleware.api, controllers.microsoftTeams.status)
+  router.post('/api/microsoft-teams/disconnect', middleware.api, controllers.microsoftTeams.disconnect)
+  router.get('/api/microsoft-teams/chats', middleware.api, controllers.microsoftTeams.chats)
+  router.get('/api/microsoft-teams/chats/:chatId/messages', middleware.api, controllers.microsoftTeams.messages)
+  router.post('/api/microsoft-teams/chats/:chatId/messages', middleware.api, controllers.microsoftTeams.send)
 
   // Accounts
   router.get(

@@ -10,6 +10,7 @@ const Controllers = {
   groups: require('./groups'),
   teams: require('./teams'),
   departments: require('./departments'),
+  microsoftTeams: require('./microsoftTeams'),
   reports: require('./reports'),
   notices: require('./notices'),
   plugins: require('./plugins'),

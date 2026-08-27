@@ -668,6 +668,10 @@
 							<i class="ti ti-plus"></i>
 							<span>New Ticket</span>
 						</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" onclick="openTeamsChatModal()">
+                            <i class="ti ti-brand-teams"></i>
+                            <span>Teams Chat</span>
+                        </button>
 					</div>
 				</div>
 
@@ -1861,6 +1865,46 @@
 			</div>
 		</div>
 	</div>
+
+    <!-- Microsoft Teams Chat Modal -->
+    <div class="modal fade" id="teamsChatModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header py-3 px-4 border-bottom bg-light">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0"><i class="ti ti-message-circle text-primary me-1"></i> Microsoft Teams Chat</h5>
+                        <span class="fs-12 text-muted" id="teamsChatStatus">Checking connection...</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="teamsChatDisconnected" class="text-center py-4">
+                        <i class="ti ti-brand-teams fs-36 text-primary"></i>
+                        <h6 class="fw-bold mt-2">Connect Microsoft Teams</h6>
+                        <p class="text-muted fs-13">Connect the shared Microsoft account to view and send Teams chat messages.</p>
+                        <a class="btn btn-primary" href="/auth/microsoft/connect"><i class="ti ti-plug-connected me-1"></i> Connect Teams</a>
+                    </div>
+                    <div id="teamsChatConnected" style="display:none;">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fs-13 fw-semibold" for="teamsChatSelect">Conversation</label>
+                                <select id="teamsChatSelect" class="form-select" onchange="loadTeamsMessages(this.value)"></select>
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="loadTeamsChats()"><i class="ti ti-refresh me-1"></i> Refresh chats</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="disconnectTeams()"><i class="ti ti-plug-x me-1"></i> Disconnect</button>
+                            </div>
+                            <div class="col-md-8">
+                                <div id="teamsMessages" class="border rounded-2 p-3 mb-2" style="height:360px; overflow-y:auto; background:#f8fafc;"></div>
+                                <form onsubmit="sendTeamsMessage(event)" class="input-group">
+                                    <input id="teamsMessageInput" class="form-control" placeholder="Write a Teams message..." autocomplete="off" required>
+                                    <button class="btn btn-primary" type="submit"><i class="ti ti-send"></i><span class="visually-hidden">Send message</span></button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 <!-- Start Footer -->
 			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
 				<p class="mb-md-0 mb-1">Copyright &copy;
@@ -2223,6 +2267,86 @@
                 modalEl.classList.add('show');
                 modalEl.style.display = 'block';
             }
+        }
+
+        let teamsChats = [];
+
+        function openTeamsChatModal() {
+            const modalEl = document.getElementById('teamsChatModal');
+            if (!modalEl) return;
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            checkTeamsStatus();
+        }
+
+        async function checkTeamsStatus() {
+            const statusEl = document.getElementById('teamsChatStatus');
+            try {
+                const response = await fetch('/api/microsoft-teams/status');
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || 'Unable to check Teams status');
+                const connected = result.data.connected;
+                document.getElementById('teamsChatDisconnected').style.display = connected ? 'none' : 'block';
+                document.getElementById('teamsChatConnected').style.display = connected ? 'block' : 'none';
+                statusEl.textContent = connected ? 'Connected to the shared Microsoft account' : (result.data.configured ? 'Connect a shared Microsoft account to continue' : 'Add Microsoft Entra environment variables to enable Teams');
+                if (connected) loadTeamsChats();
+            } catch (err) {
+                statusEl.textContent = err.message;
+            }
+        }
+
+        async function loadTeamsChats() {
+            const select = document.getElementById('teamsChatSelect');
+            try {
+                const response = await fetch('/api/microsoft-teams/chats');
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.error || 'Unable to load Teams chats');
+                teamsChats = result.data;
+                select.innerHTML = teamsChats.map(chat => '<option value="' + chat.id + '">' + (chat.topic || chat.chatType || 'Teams conversation') + '</option>').join('');
+                if (teamsChats.length) await loadTeamsMessages(teamsChats[0].id);
+                else document.getElementById('teamsMessages').innerHTML = '<p class="text-muted fs-13 mb-0">No Teams conversations found.</p>';
+            } catch (err) {
+                document.getElementById('teamsMessages').innerHTML = '<p class="text-danger fs-13 mb-0">' + err.message + '</p>';
+            }
+        }
+
+        async function loadTeamsMessages(chatId) {
+            if (!chatId) return;
+            const container = document.getElementById('teamsMessages');
+            try {
+                const response = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(chatId) + '/messages');
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.error || 'Unable to load Teams messages');
+                container.innerHTML = result.data.map(message => '<div class="mb-3"><strong class="fs-12">' + escapeTeamsHtml(message.from?.user?.displayName || 'Teams user') + '</strong><div class="fs-13 mt-1">' + escapeTeamsHtml(message.body?.content || '') + '</div></div>').join('') || '<p class="text-muted fs-13 mb-0">No messages in this conversation.</p>';
+                container.scrollTop = container.scrollHeight;
+            } catch (err) {
+                container.innerHTML = '<p class="text-danger fs-13 mb-0">' + err.message + '</p>';
+            }
+        }
+
+        function escapeTeamsHtml(value) {
+            return String(value).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+        }
+
+        async function sendTeamsMessage(event) {
+            event.preventDefault();
+            const chatId = document.getElementById('teamsChatSelect').value;
+            const input = document.getElementById('teamsMessageInput');
+            const content = input.value.trim();
+            if (!chatId || !content) return;
+            const response = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(chatId) + '/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content })
+            });
+            const result = await response.json();
+            if (!response.ok || !result.success) return alert(result.error || 'Unable to send Teams message');
+            input.value = '';
+            loadTeamsMessages(chatId);
+        }
+
+        async function disconnectTeams() {
+            await fetch('/api/microsoft-teams/disconnect', { method: 'POST' });
+            checkTeamsStatus();
         }
 
         function switchToIntakeFormGrid() {

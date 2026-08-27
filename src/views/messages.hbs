@@ -1,1 +1,87 @@
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+	<h4 class="mb-0">Chat</h4>
+	<button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleTeamsPanel()">
+		<i class="ti ti-brand-teams me-1"></i> Microsoft Teams
+	</button>
+</div>
+<div id="teamsChatPanel" class="card border shadow-sm mb-3" style="display:none;">
+	<div class="card-header d-flex align-items-center justify-content-between">
+		<div>
+			<strong>Microsoft Teams Chat</strong>
+			<div id="teamsChatStatus" class="text-muted fs-12">Checking connection...</div>
+		</div>
+		<a id="teamsConnectLink" class="btn btn-sm btn-primary" href="/auth/microsoft/connect" style="display:none;">Connect Teams</a>
+	</div>
+	<div id="teamsChatWorkspace" class="card-body" style="display:none;">
+		<div class="row g-3">
+			<div class="col-md-4">
+				<label class="form-label fs-13 fw-semibold" for="teamsChatSelect">Conversation</label>
+				<select id="teamsChatSelect" class="form-select" onchange="loadTeamsMessages(this.value)"></select>
+				<button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="loadTeamsChats()"><i class="ti ti-refresh me-1"></i> Refresh</button>
+			</div>
+			<div class="col-md-8">
+				<div id="teamsMessages" class="border rounded p-3 mb-2" style="height:300px; overflow-y:auto;"></div>
+				<form onsubmit="sendTeamsMessage(event)" class="input-group">
+					<input id="teamsMessageInput" class="form-control" placeholder="Write a Teams message..." required>
+					<button class="btn btn-primary" type="submit"><i class="ti ti-send"></i><span class="visually-hidden">Send message</span></button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
 <div id="messages-container" data-conversation-id="{{data.conversationId}}" data-show-new-convo="{{data.showNewConvo}}"></div>
+<script>
+	let teamsChatIds = []
+	function toggleTeamsPanel () {
+		const panel = document.getElementById('teamsChatPanel')
+		panel.style.display = panel.style.display === 'none' ? 'block' : 'none'
+		if (panel.style.display === 'block') checkTeamsStatus()
+	}
+	async function checkTeamsStatus () {
+		const status = document.getElementById('teamsChatStatus')
+		const connect = document.getElementById('teamsConnectLink')
+		try {
+			const response = await fetch('/api/microsoft-teams/status')
+			const result = await response.json()
+			if (!result.success) throw new Error(result.error || 'Unable to check Teams status')
+			const connected = result.data.connected
+			status.textContent = connected ? 'Connected to the shared Microsoft account' : (result.data.configured ? 'Connect the shared Microsoft account' : 'Microsoft Teams is not configured')
+			connect.style.display = connected || !result.data.configured ? 'none' : 'inline-block'
+			document.getElementById('teamsChatWorkspace').style.display = connected ? 'block' : 'none'
+			if (connected) await loadTeamsChats()
+		} catch (error) {
+			status.textContent = error.message
+		}
+	}
+	async function loadTeamsChats () {
+		const response = await fetch('/api/microsoft-teams/chats')
+		const result = await response.json()
+		if (!response.ok || !result.success) throw new Error(result.error || 'Unable to load Teams chats')
+		teamsChatIds = result.data
+		const select = document.getElementById('teamsChatSelect')
+		select.replaceChildren(...teamsChatIds.map(chat => {
+			const option = document.createElement('option')
+			option.value = chat.id
+			option.textContent = chat.topic || chat.chatType || 'Teams conversation'
+			return option
+		}))
+		if (teamsChatIds.length) loadTeamsMessages(teamsChatIds[0].id)
+	}
+	async function loadTeamsMessages (chatId) {
+		if (!chatId) return
+		const response = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(chatId) + '/messages')
+		const result = await response.json()
+		if (!response.ok || !result.success) throw new Error(result.error || 'Unable to load Teams messages')
+		document.getElementById('teamsMessages').textContent = result.data.map(message => (message.from && message.from.user ? message.from.user.displayName : 'Teams user') + ': ' + (message.body ? message.body.content : '')).join('\n\n') || 'No messages in this conversation.'
+	}
+	async function sendTeamsMessage (event) {
+		event.preventDefault()
+		const chatId = document.getElementById('teamsChatSelect').value
+		const input = document.getElementById('teamsMessageInput')
+		const response = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(chatId) + '/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: input.value.trim() }) })
+		const result = await response.json()
+		if (!response.ok || !result.success) return alert(result.error || 'Unable to send Teams message')
+		input.value = ''
+		loadTeamsMessages(chatId)
+	}
+</script>
