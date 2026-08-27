@@ -5,8 +5,8 @@ services:
     plan: starter
     region: oregon
     branch: main
-    buildCommand: "node scratch/sync_tickets_template.js && node scratch/build_unified_templates.js"
-    startCommand: "node preview-server.js"
+    buildCommand: "npm install --legacy-peer-deps --ignore-scripts && node scratch/sync_tickets_template.js && node scratch/build_unified_templates.js"
+    startCommand: "node app.js"
     healthCheckPath: "/api/v1/lilypad/tickets/todo"
     autoDeploy: true
     envVars:
