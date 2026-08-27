@@ -830,6 +830,19 @@
     });
 </script>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        try {
+            const auth = sessionStorage.getItem('lilypad_auth_user');
+            if (auth) {
+                const u = JSON.parse(auth);
+                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
+                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
+            }
+        } catch(e) {}
+    });
+</script>
+
 	<script>
         const STORAGE_TEAM_KEY = "lilypad_team_users_v2";
 

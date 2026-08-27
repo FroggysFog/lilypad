@@ -1640,7 +1640,134 @@ const ticketingEngineScript = `
             else window.location.href = 'tickets.html?action=new';
         };
 
+        
+        function renderCategoryFormGrid() {
+            const container = document.getElementById('categoryFormGridCards');
+            if (!container) return;
+
+            const categoryDescriptions = {
+                'FX Machine Support': 'Fog, Faze, Bubble, Snow & Cryo machines hardware defect troubleshooting',
+                'Fluid Finder Update': 'Fluid formulas, chemical SDS compliance, and machine compatibility matrices',
+                'Customer Support Request': 'Inbound customer support, RMAs, parts orders, and show blocker escalations',
+                'Vendor Purchase Order': 'Purchase orders, tooling dies, carton suppliers, and component procurement',
+                'Computer/Laptop Issue': 'Internal staff workstations, macOS/Windows issues, and hardware repairs',
+                'IT AI Process/UI Development': 'LilyPad ERP feature development, prompt integrations, and UI enhancements',
+                'Rep Assignment Change': 'Sales territory reassignments, client handoffs, and customer transitions',
+                'Website Frontend Update': 'FroggysFog.com product pages, specs, pricing, and graphics updates',
+                'Unspecified': 'General operational inquiries and unclassified service requests'
+            };
+
+            container.innerHTML = CATEGORIES.map((cat, idx) => {
+                const desc = categoryDescriptions[cat.name] || 'Custom operational intake form with dedicated fields';
+                const fieldCount = (cat.fields || []).length;
+                return '<div class="col-md-4 col-sm-6">' +
+                    '<div class="card border rounded-3 p-3 h-100 shadow-none bg-light category-card-hover" style="cursor: pointer; transition: all 0.2s ease;" onclick="openDedicatedCategoryForm(\'' + cat.name + '\')">' +
+                        '<div class="d-flex align-items-center justify-content-between mb-2">' +
+                            '<div class="rounded-2 p-2 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                                '<i class="ti ' + (cat.icon || 'ti-file') + ' fs-16"></i>' +
+                            '</div>' +
+                            '<span class="badge bg-white text-dark border fs-11">' + fieldCount + ' Custom Fields</span>' +
+                        '</div>' +
+                        '<h6 class="fw-bold fs-13 text-dark mb-1">' + cat.name + '</h6>' +
+                        '<p class="fs-12 text-muted mb-3" style="line-height: 1.4;">' + desc + '</p>' +
+                        '<div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto fs-12 text-primary fw-semibold">' +
+                            '<span>Fill Form</span>' +
+                            '<i class="ti ti-arrow-right"></i>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderTopCategoryFilterPills() {
+            const container = document.getElementById('topCategoryFilterPills');
+            if (!container) return;
+
+            let html = '<button class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" onclick="selectTopCategoryFilter(\'All\', this)">All Forms & Queues</button>';
+            CATEGORIES.forEach(cat => {
+                html += '<button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold text-dark" onclick="selectTopCategoryFilter(\'' + cat.name + '\', this)">' +
+                    '<i class="ti ' + (cat.icon || 'ti-file') + ' me-1 text-primary"></i>' + cat.name +
+                '</button>';
+            });
+            container.innerHTML = html;
+        }
+
+        function selectTopCategoryFilter(catName, btnEl) {
+            document.querySelectorAll('#topCategoryFilterPills .nav-link').forEach(b => b.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            const catDropdown = document.getElementById('categoryFilter');
+            if (catDropdown) {
+                catDropdown.value = catName === 'All' ? '' : catName;
+                renderTickets();
+                if (currentView === 'kanban') renderKanban();
+            }
+        }
+
+        function openNewTicketModal(categoryName = null) {
+            const modalEl = document.getElementById('intakeModal');
+            if (!modalEl) return;
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+            if (categoryName) {
+                openDedicatedCategoryForm(categoryName);
+            } else {
+                switchToIntakeFormGrid();
+            }
+            modal.show();
+        }
+
+        function switchToIntakeFormGrid() {
+            document.getElementById('intakeCategorySelectView').style.display = 'block';
+            document.getElementById('intakeCategoryFormView').style.display = 'none';
+            document.getElementById('intakeModalTitle').textContent = 'Ticket Intake & Dedicated Forms';
+        }
+
+        function openDedicatedCategoryForm(catName) {
+            const found = CATEGORIES.find(c => c.name === catName) || CATEGORIES[0];
+            selectedCategory = found;
+
+            document.getElementById('intakeCategorySelectView').style.display = 'none';
+            document.getElementById('intakeCategoryFormView').style.display = 'block';
+
+            document.getElementById('intakeModalTitle').textContent = 'Intake Form: ' + found.name;
+            document.getElementById('activeFormBadge').innerHTML = '<i class="ti ' + (found.icon || 'ti-file') + ' me-1"></i> ' + found.name;
+            document.getElementById('activeFormHeading').textContent = 'Dedicated ' + found.name + ' Request Form';
+            document.getElementById('dynamicCategoryLabel').textContent = found.name;
+
+            const formPrio = document.getElementById('formPriority');
+            if (formPrio) formPrio.value = found.defaultPriority || 'Normal';
+
+            // Auto-fill active reporter
+            try {
+                const auth = sessionStorage.getItem('lilypad_auth_user') || localStorage.getItem('lilypad_auth_user');
+                if (auth) {
+                    const u = JSON.parse(auth);
+                    document.getElementById('formReporterName').value = u.fullname || 'Scott Karan';
+                    document.getElementById('formReporterEmail').value = u.email || 'scott@froggysfog.com';
+                }
+            } catch(e) {}
+
+            renderDynamicFormFields();
+        }
+
+        function checkUrlIntakeAction() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('action') === 'new') {
+                const catParam = params.get('category');
+                if (catParam) {
+                    const matched = CATEGORIES.find(c => c.slug === catParam || c.name.toLowerCase().includes(catParam.toLowerCase()));
+                    openNewTicketModal(matched ? matched.name : null);
+                } else {
+                    openNewTicketModal();
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            renderCategoryFormGrid();
+            renderTopCategoryFilterPills();
+            checkUrlIntakeAction();
             renderCategoryChips();
             renderDynamicFormFields();
             updateCategoryFilterDropdown();
