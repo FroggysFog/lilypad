@@ -707,6 +707,48 @@ const ticketingModalsHtml = `
 
 			</div>
 		</div>
+	<!-- SOP Detail Modal Popup -->
+	<div class="modal fade" id="sopDetailModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-lg">
+			<div class="modal-content border-0 shadow-lg">
+				<div class="modal-header py-3 px-4 border-bottom bg-light d-flex align-items-center justify-content-between">
+					<div class="d-flex align-items-center gap-2">
+						<span class="badge bg-dark text-white fw-bold fs-12 px-2 py-1" id="sopModalCode">SOP-014</span>
+						<span class="badge bg-soft-primary text-primary fw-semibold fs-12" id="sopModalProduct">Antari 2000 Elite</span>
+					</div>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body p-4">
+					<h4 class="fw-bold text-dark mb-2" id="sopModalTitle">Silkscreen Artwork Alignment & Emulsion Curing Protocol</h4>
+					<div class="d-flex align-items-center gap-3 fs-12 text-muted mb-3 pb-2 border-bottom">
+						<span><i class="ti ti-user me-1"></i> Author: <strong class="text-dark" id="sopModalAuthor">Scott Karan</strong></span>
+						<span><i class="ti ti-clock me-1"></i> Updated: <span id="sopModalUpdated">2 days ago</span></span>
+						<span class="badge bg-soft-success text-success"><i class="ti ti-shield-check me-1"></i> Verified Factory SOP</span>
+					</div>
+
+					<div class="alert alert-warning border-0 rounded-3 mb-3 p-3 fs-13">
+						<strong class="d-block text-warning-emphasis mb-1"><i class="ti ti-alert-triangle me-1"></i> Observed Failure Symptom:</strong>
+						<span id="sopModalSymptom" class="text-dark">Silkscreen lettering offset or smudging after powder-coat bake.</span>
+					</div>
+
+					<h6 class="fw-bold text-dark text-uppercase fs-12 mb-2 d-flex align-items-center gap-1">
+						<i class="ti ti-list-check text-success"></i> Pre-Flight "Check First" Diagnostic Steps:
+					</h6>
+					<div class="d-flex flex-column gap-2 mb-3" id="sopModalStepsList"></div>
+
+					<div class="p-3 bg-light rounded-3 border">
+						<h6 class="fw-bold text-dark text-uppercase fs-12 mb-1"><i class="ti ti-bulb text-primary me-1"></i> Permanent Resolution & Prevention:</h6>
+						<p class="mb-0 fs-13 text-dark" id="sopModalResolution">Use high-adhesion 2-part epoxy ink with 300-mesh screen.</p>
+					</div>
+				</div>
+				<div class="modal-footer border-top py-2 px-4 bg-light d-flex align-items-center justify-content-between">
+					<button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-sm btn-success px-3" onclick="alert('Diagnostic checklist verified and logged to audit trail!')">
+						<i class="ti ti-check me-1"></i> Mark Diagnostics Verified
+					</button>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<!-- Knowledgebase & Machine Trend Analytics Modal -->
@@ -1581,8 +1623,36 @@ const ticketingEngineScript = `
         let selectedCategory = CATEGORIES[0];
         let currentStatusFilter = 'In Progress';
         let currentActiveTicket = null;
-        let selectedTicketIds = new Set();
-        let currentView = 'list';
+        // Global Modal Openers for Operations Admin & Hub
+        window.openEmailGatewayModal = function() {
+            const modalEl = document.getElementById('emailGatewayModal');
+            if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            else window.location.href = 'tickets.html?admin=email';
+        };
+
+        window.openUserManagementModal = function() {
+            const modalEl = document.getElementById('userManagementModal');
+            if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            else window.location.href = 'tickets.html?admin=team';
+        };
+
+        window.openFormBuilderModal = function() {
+            const modalEl = document.getElementById('formBuilderModal');
+            if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            else window.location.href = 'tickets.html?admin=forms';
+        };
+
+        window.openKnowledgeBaseModal = function() {
+            const modalEl = document.getElementById('knowledgebaseModal');
+            if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            else window.location.href = 'tickets.html?view=kb';
+        };
+
+        window.openIntakeModal = function() {
+            const modalEl = document.getElementById('intakeModal');
+            if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            else window.location.href = 'tickets.html?action=new';
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             renderCategoryChips();
@@ -3152,6 +3222,16 @@ const ticketingEngineScript = `
 `;
 
 const finalTicketsHtml = unifiedHeader + ticketingBodyContent + ticketingModalsHtml + footerScriptsPart.replace('</body>', ticketingEngineScript + '</body>');
-
 fs.writeFileSync(path.join(__dirname, '../public/tickets.html'), finalTicketsHtml, 'utf8');
-console.log('Successfully synchronized public/tickets.html with Centered Ticket Popup Modal & Admin Setup dropdown');
+
+// Ensure index.html and dashboard.html also have Operations Admin modals and handlers
+let cleanIndex = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
+// Remove old modals if already appended
+if (cleanIndex.includes('id="emailGatewayModal"')) {
+    cleanIndex = cleanIndex.substring(0, cleanIndex.indexOf('<!-- SOP Detail Modal Popup -->')) + cleanIndex.substring(cleanIndex.lastIndexOf('</script>') + 9);
+}
+const finalIndexHtml = cleanIndex.replace('</body>', ticketingModalsHtml + ticketingEngineScript + '</body>');
+fs.writeFileSync(path.join(__dirname, '../public/index.html'), finalIndexHtml, 'utf8');
+fs.writeFileSync(path.join(__dirname, '../public/dashboard.html'), finalIndexHtml, 'utf8');
+
+console.log('Successfully synchronized public/tickets.html, public/index.html, and public/dashboard.html with Operations Admin Modals');
