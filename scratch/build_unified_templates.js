@@ -825,24 +825,26 @@ const teamPageScripts = `
             const countDisplay = document.getElementById('teamCountTotal');
             if (countDisplay) countDisplay.textContent = TEAM_USERS.length;
             if (!tbody) return;
-
             tbody.innerHTML = TEAM_USERS.map(u => \`
                 <tr>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-11" style="width: 32px; height: 32px; background: #047d24;">
+                            <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-11 shadow-sm" style="width: 34px; height: 34px; background: #047d24;">
                                 \${u.initials}
                             </div>
                             <div>
-                                <strong class="d-block text-dark">\${u.fullname}</strong>
+                                <a href="admin-user-detail.html?id=\${u.id}" class="d-block text-dark fw-bold text-decoration-none">\${u.fullname}</a>
                                 <span class="text-muted fs-11">\${u.email}</span>
                             </div>
                         </div>
                     </td>
                     <td><span class="badge \${u.role === 'Admin' ? 'bg-dark' : (u.role === 'Support Lead' ? 'bg-primary' : 'bg-secondary')} fs-11">\${u.role}</span></td>
                     <td><span class="text-dark fw-medium">\${u.department}</span></td>
-                    <td><span class="badge bg-success-subtle text-success fs-11">Active</span></td>
+                    <td><span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Active</span></td>
                     <td class="text-end">
+                        <a href="admin-user-detail.html?id=\${u.id}" class="btn btn-sm btn-outline-primary py-1 px-2 fs-12 me-1 shadow-sm">
+                            <i class="ti ti-edit me-1"></i>Edit
+                        </a>
                         <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteTeamUser('\${u.id}')"><i class="ti ti-trash"></i></button>
                     </td>
                 </tr>
@@ -883,6 +885,597 @@ const teamPageScripts = `
 
 const finalTeamHtml = getHeaderForPage('team', 'Team & Permissions') + teamPageContent + footerScripts.replace('</body>', teamPageScripts + '</body>');
 fs.writeFileSync(path.join(__dirname, '../public/admin-team.html'), finalTeamHtml, 'utf8');
+
+// ==========================================
+// 2B. ADMIN USER DETAIL & ACTIVITY ANALYTICS PAGE (admin-user-detail.html)
+// ==========================================
+const userDetailPageContent = `
+				<!-- Page Header / Breadcrumbs -->
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<div class="d-flex align-items-center gap-2 mb-1">
+							<a href="admin-team.html" class="text-muted fs-13 text-decoration-none">&larr; Back to Staff Directory</a>
+						</div>
+						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+							<span id="uHeaderName">Scott Karan</span>
+							<span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold" id="uHeaderRole">Operations Admin</span>
+							<span class="badge bg-soft-success text-success fs-12 rounded-pill fw-semibold" id="uHeaderStatus"><i class="ti ti-point-filled"></i> Active</span>
+						</h4>
+						<p class="text-muted fs-13 mb-0">Member profile, activity history audit trail, and operational ticket resolution performance.</p>
+					</div>
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<div class="dropdown">
+							<button class="btn btn-outline-secondary btn-sm dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+								<i class="ti ti-switch-horizontal me-1"></i> Switch Team Member
+							</button>
+							<ul class="dropdown-menu dropdown-menu-end shadow-sm fs-13" id="memberSwitchDropdown">
+								<!-- Dynamically Populated -->
+							</ul>
+						</div>
+						<a href="tickets.html" class="btn btn-outline-success btn-sm rounded-pill px-3">
+							<i class="ti ti-ticket me-1"></i> View Tickets
+						</a>
+					</div>
+				</div>
+
+				<!-- User Profile Identity Banner Card -->
+				<div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
+					<div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+						<div class="d-flex align-items-center gap-3">
+							<div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-22 shadow" id="uProfileAvatar" style="width: 68px; height: 68px; background: #047d24;">
+								SK
+							</div>
+							<div>
+								<h4 class="fw-bold mb-1 text-dark" id="uProfileFullName">Scott Karan</h4>
+								<div class="d-flex align-items-center gap-3 fs-13 text-muted flex-wrap">
+									<span><i class="ti ti-mail me-1 text-primary"></i> <strong class="text-dark" id="uProfileEmail">scott@froggysfog.com</strong></span>
+									<span><i class="ti ti-user me-1"></i> @<span id="uProfileUsername">skaran</span></span>
+									<span><i class="ti ti-building me-1"></i> <span id="uProfileDepartment">Operations</span></span>
+									<span><i class="ti ti-phone me-1"></i> <span id="uProfilePhone">(615) 555-0142</span></span>
+									<span><i class="ti ti-calendar me-1"></i> Joined <span id="uProfileJoined">Jan 2024</span></span>
+								</div>
+							</div>
+						</div>
+
+						<div class="d-flex align-items-center gap-2">
+							<button type="button" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#userDetailTabs button[data-bs-target=\'#tabEditProfile\']')).show()">
+								<i class="ti ti-edit me-1"></i> Edit Profile & Role
+							</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- Timeframe Filter Bar -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-body py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+						<div class="d-flex align-items-center gap-2">
+							<i class="ti ti-calendar-stats fs-18 text-primary"></i>
+							<strong class="text-dark fs-13">Performance Timeframe:</strong>
+						</div>
+						<div class="btn-group btn-group-sm rounded-pill" role="group" id="timeframeButtonGroup">
+							<button type="button" class="btn btn-outline-secondary px-3" onclick="setTimeframe('today', this)">Today</button>
+							<button type="button" class="btn btn-outline-secondary px-3" onclick="setTimeframe('week', this)">This Week</button>
+							<button type="button" class="btn btn-primary active px-3" onclick="setTimeframe('month', this)">This Month</button>
+							<button type="button" class="btn btn-outline-secondary px-3" onclick="setTimeframe('quarter', this)">This Quarter</button>
+							<button type="button" class="btn btn-outline-secondary px-3" onclick="setTimeframe('all', this)">All Time</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- Live Performance Stats (Filtered Dynamically) -->
+				<div class="row g-3 mb-4">
+					<div class="col-xl-2 col-md-4 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white">
+							<span class="fs-11 text-muted text-uppercase fw-bold">Open Tickets</span>
+							<h3 class="fw-bold mb-1 mt-1 text-dark" id="statOpen">0</h3>
+							<span class="fs-11 text-muted">Awaiting Action</span>
+						</div>
+					</div>
+
+					<div class="col-xl-2 col-md-4 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white">
+							<span class="fs-11 text-muted text-uppercase fw-bold">In Progress</span>
+							<h3 class="fw-bold mb-1 mt-1 text-primary" id="statInProgress">0</h3>
+							<span class="fs-11 text-primary"><i class="ti ti-loader me-1"></i>Active Work</span>
+						</div>
+					</div>
+
+					<div class="col-xl-2 col-md-4 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white">
+							<span class="fs-11 text-muted text-uppercase fw-bold">Completed</span>
+							<h3 class="fw-bold mb-1 mt-1 text-success" id="statCompleted" style="color:#047d24;">0</h3>
+							<span class="fs-11 text-success"><i class="ti ti-circle-check me-1"></i>Resolved</span>
+						</div>
+					</div>
+
+					<div class="col-xl-2 col-md-4 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white">
+							<span class="fs-11 text-muted text-uppercase fw-bold">Urgent & High</span>
+							<h3 class="fw-bold mb-1 mt-1 text-danger" id="statUrgentHigh">0</h3>
+							<span class="fs-11 text-danger"><i class="ti ti-alert-circle me-1"></i>Priority</span>
+						</div>
+					</div>
+
+					<div class="col-xl-2 col-md-4 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white">
+							<span class="fs-11 text-muted text-uppercase fw-bold">Avg Resolution</span>
+							<h3 class="fw-bold mb-1 mt-1 text-dark" id="statAvgResolution">0.0 hrs</h3>
+							<span class="fs-11 text-muted"><i class="ti ti-clock me-1"></i>Turnaround</span>
+						</div>
+					</div>
+
+					<div class="col-xl-2 col-md-4 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white">
+							<span class="fs-11 text-muted text-uppercase fw-bold">SLA Compliance</span>
+							<h3 class="fw-bold mb-1 mt-1 text-success" id="statSla">100%</h3>
+							<span class="fs-11 text-success"><i class="ti ti-shield-check me-1"></i>On-Time</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Main Navigation Tabs: Activity, Edit Profile, Assigned Tickets -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-header bg-transparent border-bottom py-3">
+						<ul class="nav nav-pills gap-2" id="userDetailTabs">
+							<li class="nav-item">
+								<button class="nav-link active py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabActivity">
+									<i class="ti ti-history me-1"></i> 1. Activity History & Audit Trail
+								</button>
+							</li>
+							<li class="nav-item">
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabAssignedTickets">
+									<i class="ti ti-ticket me-1"></i> 2. Assigned Tickets (<span id="assignedTicketsCountBadge">0</span>)
+								</button>
+							</li>
+							<li class="nav-item">
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-primary" data-bs-toggle="tab" data-bs-target="#tabEditProfile">
+									<i class="ti ti-user-edit me-1"></i> 3. Edit Profile & Permissions
+								</button>
+							</li>
+						</ul>
+					</div>
+
+					<div class="card-body p-4">
+						<div class="tab-content">
+							<!-- Tab 1: Activity History -->
+							<div class="tab-pane fade show active" id="tabActivity">
+								<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+									<h6 class="fw-bold fs-14 text-dark mb-0 d-flex align-items-center gap-1">
+										<i class="ti ti-list-details text-primary"></i> Chronological Activity Log
+									</h6>
+									<div class="btn-group btn-group-sm">
+										<button class="btn btn-outline-secondary active fs-12" onclick="filterActivity('all', this)">All Activity</button>
+										<button class="btn btn-outline-secondary fs-12" onclick="filterActivity('status', this)">Status Updates</button>
+										<button class="btn btn-outline-secondary fs-12" onclick="filterActivity('note', this)">Notes & Replies</button>
+										<button class="btn btn-outline-secondary fs-12" onclick="filterActivity('sop', this)">SOP & Admin</button>
+									</div>
+								</div>
+
+								<div class="position-relative ps-4" id="userActivityTimeline">
+									<!-- Dynamically Rendered Timeline -->
+								</div>
+							</div>
+
+							<!-- Tab 2: Assigned Tickets -->
+							<div class="tab-pane fade" id="tabAssignedTickets">
+								<div class="table-responsive">
+									<table class="table table-hover align-middle mb-0 fs-13 border rounded-3">
+										<thead class="table-light">
+											<tr>
+												<th>Ticket #</th>
+												<th>Subject</th>
+												<th>Category</th>
+												<th>Priority</th>
+												<th>Status</th>
+												<th>Last Updated</th>
+												<th class="text-end">Action</th>
+											</tr>
+										</thead>
+										<tbody id="userAssignedTicketsTableBody">
+											<!-- Dynamically Rendered Assigned Tickets -->
+										</tbody>
+									</table>
+								</div>
+							</div>
+
+							<!-- Tab 3: Edit Profile Form -->
+							<div class="tab-pane fade" id="tabEditProfile">
+								<form id="editUserProfileForm" onsubmit="saveUserProfileEdits(event)">
+									<div class="row g-3">
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Full Name <span class="text-danger">*</span></label>
+											<input type="text" id="editFullName" class="form-control" required>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Email Address <span class="text-danger">*</span></label>
+											<input type="email" id="editEmail" class="form-control" required>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Username <span class="text-danger">*</span></label>
+											<input type="text" id="editUsername" class="form-control" required>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Direct Phone / Extension</label>
+											<input type="text" id="editPhone" class="form-control" placeholder="(615) 555-0100">
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Role & Access Level <span class="text-danger">*</span></label>
+											<select id="editRole" class="form-select">
+												<option value="Admin">Admin (Full System Access)</option>
+												<option value="Support Lead">Support Lead (Manage Queues & SOPs)</option>
+												<option value="Agent">Agent (Ticket Resolution)</option>
+												<option value="Viewer">Viewer (Read-Only)</option>
+											</select>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Department <span class="text-danger">*</span></label>
+											<select id="editDepartment" class="form-select">
+												<option value="Operations">Operations</option>
+												<option value="Engineering">Engineering</option>
+												<option value="Customer Support">Customer Support</option>
+												<option value="Finance">Finance</option>
+												<option value="Sales & Marketing">Sales & Marketing</option>
+											</select>
+										</div>
+										<div class="col-12">
+											<hr class="my-3">
+											<h6 class="fw-bold fs-13 text-dark mb-2">Notification & Security Preferences</h6>
+											<div class="d-flex flex-column gap-2">
+												<div class="form-check form-switch">
+													<input class="form-check-input" type="checkbox" id="chkNotifAssign" checked>
+													<label class="form-check-label fs-13 text-dark" for="chkNotifAssign">Send immediate email notifications on new ticket assignments</label>
+												</div>
+												<div class="form-check form-switch">
+													<input class="form-check-input" type="checkbox" id="chkNotifSla" checked>
+													<label class="form-check-label fs-13 text-dark" for="chkNotifSla">Alert when assigned tickets approach SLA deadline (< 2 hrs remaining)</label>
+												</div>
+												<div class="form-check form-switch">
+													<input class="form-check-input" type="checkbox" id="chkNotifDaily" checked>
+													<label class="form-check-label fs-13 text-dark" for="chkNotifDaily">Receive daily operational digest summary</label>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<div class="text-end mt-4 pt-3 border-top d-flex align-items-center justify-content-between">
+										<button type="button" class="btn btn-outline-danger btn-sm" onclick="alert('Password reset link sent to ' + document.getElementById('editEmail').value)">
+											<i class="ti ti-key me-1"></i> Send Password Reset Link
+										</button>
+										<button type="submit" class="btn btn-primary px-4 shadow-sm">
+											<i class="ti ti-check me-1"></i> Save Changes
+										</button>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+`;
+
+const userDetailPageScripts = `
+	<script>
+        const USER_DATABASE = {
+            'u1': {
+                id: 'u1',
+                fullname: 'Scott Karan',
+                username: 'skaran',
+                email: 'scott@froggysfog.com',
+                role: 'Admin',
+                department: 'Operations',
+                phone: '(615) 555-0142',
+                initials: 'SK',
+                active: true,
+                joinDate: 'Jan 2024',
+                stats: {
+                    'today': { open: 1, inProgress: 2, completed: 3, low: 0, normal: 2, high: 3, urgent: 1, avgRes: '1.8 hrs', sla: '100%' },
+                    'week': { open: 4, inProgress: 5, completed: 14, low: 2, normal: 8, high: 9, urgent: 4, avgRes: '2.4 hrs', sla: '99.1%' },
+                    'month': { open: 6, inProgress: 8, completed: 48, low: 6, normal: 24, high: 22, urgent: 10, avgRes: '3.1 hrs', sla: '98.5%' },
+                    'quarter': { open: 8, inProgress: 12, completed: 136, low: 18, normal: 68, high: 54, urgent: 24, avgRes: '2.9 hrs', sla: '98.8%' },
+                    'all': { open: 8, inProgress: 12, completed: 312, low: 42, normal: 156, high: 104, urgent: 38, avgRes: '3.0 hrs', sla: '99.0%' }
+                },
+                activities: [
+                    { type: 'status', title: 'Moved Ticket to Resolved', desc: 'Resolved #TICK-8092 (Antari 2000 Silkscreen Alignment Offset) after verifying 2-part epoxy bake.', time: '2 hours ago', icon: 'ti-check', color: 'success' },
+                    { type: 'note', title: 'Added Technical Note & Proof', desc: 'Uploaded Antari_Plate_Proof_v3.ai to #TICK-8095 (Vendor Purchase Order - Apex Prints).', time: '4 hours ago', icon: 'ti-message-circle', color: 'primary' },
+                    { type: 'sop', title: 'Verified Diagnostic Checklist', desc: 'Logged Pre-Flight Diagnostic Checklist verification for SOP-014 on Antari 2000 chassis batch #408.', time: 'Yesterday at 3:45 PM', icon: 'ti-book', color: 'info' },
+                    { type: 'sop', title: 'Updated Inbound Anti-Spam Security Rules', desc: 'Enabled first-time sender challenge and updated domain whitelist for @packcraft.com.', time: '2 days ago', icon: 'ti-shield-check', color: 'warning' },
+                    { type: 'status', title: 'Logged Operational Repair Time', desc: 'Recorded 2.5 hours diagnostic work on #TICK-8092.', time: '3 days ago', icon: 'ti-clock', color: 'secondary' }
+                ],
+                tickets: [
+                    { id: 'TICK-8092', subject: 'Antari 2000 Silkscreen Front Plate Alignment Proof', category: 'FX Machine Support', priority: 'High', status: 'In Progress', updated: '2 hrs ago' },
+                    { id: 'TICK-8095', subject: 'Master Carton Burst Test Flute Spec Revision', category: 'Vendor Purchase Order', priority: 'Urgent', status: 'To-Do', updated: '4 hrs ago' },
+                    { id: 'TICK-8088', subject: 'Solar Telemetry Modbus RTU 120-Ohm Termination Resistor', category: 'FX Machine Support', priority: 'Normal', status: 'In Progress', updated: '1 day ago' },
+                    { id: 'TICK-8081', subject: 'Fast-Dissipating Fog Fluid Formula Batch SDS', category: 'Fluid Finder Update', priority: 'Low', status: 'Completed', updated: '3 days ago' }
+                ]
+            },
+            'u2': {
+                id: 'u2',
+                fullname: 'Alex Morgan',
+                username: 'amorgan',
+                email: 'alex@froggysfog.com',
+                role: 'Support Lead',
+                department: 'Customer Support',
+                phone: '(615) 555-0188',
+                initials: 'AM',
+                active: true,
+                joinDate: 'Mar 2024',
+                stats: {
+                    'today': { open: 2, inProgress: 1, completed: 4, low: 1, normal: 3, high: 2, urgent: 1, avgRes: '2.1 hrs', sla: '100%' },
+                    'week': { open: 5, inProgress: 7, completed: 22, low: 4, normal: 12, high: 11, urgent: 7, avgRes: '2.6 hrs', sla: '97.8%' },
+                    'month': { open: 7, inProgress: 9, completed: 64, low: 12, normal: 30, high: 28, urgent: 10, avgRes: '2.8 hrs', sla: '98.2%' },
+                    'quarter': { open: 9, inProgress: 14, completed: 180, low: 32, normal: 85, high: 62, urgent: 20, avgRes: '2.7 hrs', sla: '98.4%' },
+                    'all': { open: 9, inProgress: 14, completed: 410, low: 70, normal: 190, high: 130, urgent: 39, avgRes: '2.8 hrs', sla: '98.6%' }
+                },
+                activities: [
+                    { type: 'status', title: 'Triage Inbound Support Request', desc: 'Triaged and routed email from Live Nation to FX Machine Support queue.', time: '1 hour ago', icon: 'ti-mail', color: 'primary' },
+                    { type: 'note', title: 'Customer Reply Sent', desc: 'Sent SDS sheets and tracking number for order #FF-9021.', time: '3 hours ago', icon: 'ti-send', color: 'info' },
+                    { type: 'status', title: 'Resolved Customer Inquiry', desc: 'Closed ticket #TICK-8075 (Fluid consumption rate calculator for stadium gig).', time: 'Yesterday', icon: 'ti-check', color: 'success' }
+                ],
+                tickets: [
+                    { id: 'TICK-8089', subject: 'Customer Inquiry: DMX Fog Controller Latency on 5-Pin Cable', category: 'Customer Support Request', priority: 'High', status: 'In Progress', updated: '1 hr ago' },
+                    { id: 'TICK-8076', subject: 'Account Rep Assignment Update for Orlando Venue', category: 'Rep Assignment Change', priority: 'Normal', status: 'To-Do', updated: '5 hrs ago' }
+                ]
+            },
+            'u3': {
+                id: 'u3',
+                fullname: 'David Miller',
+                username: 'dmiller',
+                email: 'david@froggysfog.com',
+                role: 'Agent',
+                department: 'Engineering',
+                phone: '(615) 555-0129',
+                initials: 'DM',
+                active: true,
+                joinDate: 'Feb 2024',
+                stats: {
+                    'today': { open: 1, inProgress: 3, completed: 1, low: 0, normal: 2, high: 2, urgent: 1, avgRes: '3.4 hrs', sla: '95%' },
+                    'week': { open: 3, inProgress: 6, completed: 11, low: 1, normal: 7, high: 8, urgent: 4, avgRes: '3.8 hrs', sla: '96.2%' },
+                    'month': { open: 5, inProgress: 8, completed: 36, low: 4, normal: 18, high: 20, urgent: 7, avgRes: '3.6 hrs', sla: '97.0%' },
+                    'quarter': { open: 6, inProgress: 10, completed: 98, low: 10, normal: 48, high: 40, urgent: 16, avgRes: '3.5 hrs', sla: '97.3%' },
+                    'all': { open: 6, inProgress: 10, completed: 215, low: 22, normal: 105, high: 84, urgent: 30, avgRes: '3.5 hrs', sla: '97.5%' }
+                },
+                activities: [
+                    { type: 'sop', title: 'Published SOP-031 Update', desc: 'Updated Cell Balancing Voltage Drift & Lockout Reset guidelines.', time: '5 hours ago', icon: 'ti-book', color: 'info' },
+                    { type: 'status', title: 'Assigned Firmware Debug Task', desc: 'Accepted #TICK-8084 (Solar Gateway Firmware v2.1 OTA failure).', time: 'Yesterday', icon: 'ti-check', color: 'success' }
+                ],
+                tickets: [
+                    { id: 'TICK-8084', subject: 'Solar Gateway Firmware v2.1 OTA Update Failure', category: 'FX Machine Support', priority: 'Urgent', status: 'In Progress', updated: '3 hrs ago' }
+                ]
+            },
+            'u4': {
+                id: 'u4',
+                fullname: 'Sarah Connor',
+                username: 'sconnor',
+                email: 'sarah@froggysfog.com',
+                role: 'Agent',
+                department: 'Engineering',
+                phone: '(615) 555-0177',
+                initials: 'SC',
+                active: true,
+                joinDate: 'Apr 2024',
+                stats: {
+                    'today': { open: 0, inProgress: 2, completed: 2, low: 0, normal: 1, high: 2, urgent: 1, avgRes: '2.0 hrs', sla: '100%' },
+                    'week': { open: 2, inProgress: 4, completed: 15, low: 2, normal: 8, high: 7, urgent: 4, avgRes: '2.5 hrs', sla: '98.5%' },
+                    'month': { open: 4, inProgress: 6, completed: 42, low: 5, normal: 22, high: 19, urgent: 6, avgRes: '2.7 hrs', sla: '98.8%' },
+                    'quarter': { open: 5, inProgress: 8, completed: 110, low: 14, normal: 56, high: 45, urgent: 14, avgRes: '2.6 hrs', sla: '98.9%' },
+                    'all': { open: 5, inProgress: 8, completed: 240, low: 28, normal: 120, high: 90, urgent: 27, avgRes: '2.6 hrs', sla: '99.0%' }
+                },
+                activities: [
+                    { type: 'status', title: 'Resolved Wiring Bug', desc: 'Replaced RS-485 bus line termination on node 25.', time: '3 hours ago', icon: 'ti-tool', color: 'success' }
+                ],
+                tickets: [
+                    { id: 'TICK-8078', subject: 'IT AI Process UI Assistant Model Token Streaming', category: 'IT AI Process/UI Development', priority: 'High', status: 'In Progress', updated: '2 hrs ago' }
+                ]
+            },
+            'u5': {
+                id: 'u5',
+                fullname: 'Mark Henderson',
+                username: 'mhenderson',
+                email: 'mark@froggysfog.com',
+                role: 'Packaging Lead',
+                department: 'Operations',
+                phone: '(615) 555-0199',
+                initials: 'MH',
+                active: true,
+                joinDate: 'May 2024',
+                stats: {
+                    'today': { open: 1, inProgress: 1, completed: 2, low: 1, normal: 2, high: 1, urgent: 0, avgRes: '1.5 hrs', sla: '100%' },
+                    'week': { open: 3, inProgress: 3, completed: 12, low: 3, normal: 7, high: 5, urgent: 3, avgRes: '2.1 hrs', sla: '99.0%' },
+                    'month': { open: 4, inProgress: 5, completed: 38, low: 8, normal: 20, high: 15, urgent: 4, avgRes: '2.3 hrs', sla: '99.2%' },
+                    'quarter': { open: 5, inProgress: 7, completed: 95, low: 18, normal: 52, high: 32, urgent: 9, avgRes: '2.2 hrs', sla: '99.1%' },
+                    'all': { open: 5, inProgress: 7, completed: 190, low: 35, normal: 100, high: 58, urgent: 16, avgRes: '2.2 hrs', sla: '99.3%' }
+                },
+                activities: [
+                    { type: 'sop', title: 'Reviewed SOP-015', desc: 'Updated packaging burst resistance requirements for international air freight.', time: 'Yesterday', icon: 'ti-box', color: 'primary' }
+                ],
+                tickets: [
+                    { id: 'TICK-8095', subject: 'Master Carton Burst Test Flute Spec Revision', category: 'Vendor Purchase Order', priority: 'Urgent', status: 'To-Do', updated: '4 hrs ago' }
+                ]
+            }
+        };
+
+        let currentUserId = 'u1';
+        let currentTimeframe = 'month';
+        let currentActivityFilter = 'all';
+
+        function loadUserProfileFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (id && USER_DATABASE[id]) {
+                currentUserId = id;
+            }
+            renderMemberDropdown();
+            renderUserView();
+        }
+
+        function renderMemberDropdown() {
+            const dropdown = document.getElementById('memberSwitchDropdown');
+            if (!dropdown) return;
+            dropdown.innerHTML = Object.values(USER_DATABASE).map(u => \`
+                <li>
+                    <a class="dropdown-item d-flex align-items-center justify-content-between \${u.id === currentUserId ? 'active' : ''}" href="admin-user-detail.html?id=\${u.id}">
+                        <span>\${u.fullname}</span>
+                        <span class="badge \${u.id === currentUserId ? 'bg-white text-dark' : 'bg-light text-dark'} fs-11 ms-2">\${u.role}</span>
+                    </a>
+                </li>
+            \`).join('');
+        }
+
+        function setTimeframe(tf, btn) {
+            currentTimeframe = tf;
+            document.querySelectorAll('#timeframeButtonGroup button').forEach(b => {
+                b.className = 'btn btn-outline-secondary px-3';
+            });
+            btn.className = 'btn btn-primary active px-3';
+            renderUserStats();
+        }
+
+        function filterActivity(type, btn) {
+            currentActivityFilter = type;
+            if (btn && btn.parentElement) {
+                btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+            renderUserActivity();
+        }
+
+        function renderUserView() {
+            const user = USER_DATABASE[currentUserId];
+            if (!user) return;
+
+            // Identity Header
+            document.getElementById('uHeaderName').textContent = user.fullname;
+            document.getElementById('uHeaderRole').textContent = user.role;
+            document.getElementById('uProfileFullName').textContent = user.fullname;
+            document.getElementById('uProfileEmail').textContent = user.email;
+            document.getElementById('uProfileUsername').textContent = user.username;
+            document.getElementById('uProfileDepartment').textContent = user.department;
+            document.getElementById('uProfilePhone').textContent = user.phone || '(615) 555-0100';
+            document.getElementById('uProfileJoined').textContent = user.joinDate;
+            document.getElementById('uProfileAvatar').textContent = user.initials;
+
+            // Edit Form Inputs
+            document.getElementById('editFullName').value = user.fullname;
+            document.getElementById('editEmail').value = user.email;
+            document.getElementById('editUsername').value = user.username;
+            document.getElementById('editPhone').value = user.phone || '';
+            document.getElementById('editRole').value = user.role;
+            document.getElementById('editDepartment').value = user.department;
+
+            renderUserStats();
+            renderUserActivity();
+            renderUserAssignedTickets();
+        }
+
+        function renderUserStats() {
+            const user = USER_DATABASE[currentUserId];
+            const stats = (user && user.stats && user.stats[currentTimeframe]) ? user.stats[currentTimeframe] : { open: 0, inProgress: 0, completed: 0, low: 0, normal: 0, high: 0, urgent: 0, avgRes: '0 hrs', sla: '100%' };
+
+            document.getElementById('statOpen').textContent = stats.open;
+            document.getElementById('statInProgress').textContent = stats.inProgress;
+            document.getElementById('statCompleted').textContent = stats.completed;
+            document.getElementById('statUrgentHigh').textContent = (stats.urgent + stats.high);
+            document.getElementById('statAvgResolution').textContent = stats.avgRes;
+            document.getElementById('statSla').textContent = stats.sla;
+        }
+
+        function renderUserActivity() {
+            const user = USER_DATABASE[currentUserId];
+            const container = document.getElementById('userActivityTimeline');
+            if (!container || !user) return;
+
+            const acts = user.activities.filter(a => currentActivityFilter === 'all' || a.type === currentActivityFilter);
+
+            if (!acts.length) {
+                container.innerHTML = '<div class="text-center py-4 text-muted fs-13">No activity logs recorded for this filter.</div>';
+                return;
+            }
+
+            container.innerHTML = acts.map(a => \`
+                <div class="d-flex gap-3 mb-4 position-relative">
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center bg-\${a.color} shadow-sm" style="width: 36px; height: 36px; min-width: 36px; font-size: 16px;">
+                        <i class="ti \${a.icon}"></i>
+                    </div>
+                    <div class="card border rounded-3 p-3 w-100 shadow-none bg-light">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <strong class="text-dark fs-13">\${a.title}</strong>
+                            <span class="text-muted fs-11"><i class="ti ti-clock me-1"></i>\${a.time}</span>
+                        </div>
+                        <p class="mb-0 fs-12 text-muted">\${a.desc}</p>
+                    </div>
+                </div>
+            \`).join('');
+        }
+
+        function renderUserAssignedTickets() {
+            const user = USER_DATABASE[currentUserId];
+            const tbody = document.getElementById('userAssignedTicketsTableBody');
+            const countBadge = document.getElementById('assignedTicketsCountBadge');
+            if (!tbody || !user) return;
+
+            if (countBadge) countBadge.textContent = user.tickets.length;
+
+            if (!user.tickets.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No tickets currently assigned.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = user.tickets.map(t => \`
+                <tr>
+                    <td><strong class="text-primary font-monospace">\${t.id}</strong></td>
+                    <td><strong class="text-dark fs-12">\${t.subject}</strong></td>
+                    <td><span class="badge bg-soft-primary text-primary fs-11">\${t.category}</span></td>
+                    <td><span class="badge \${t.priority === 'Urgent' ? 'bg-danger' : (t.priority === 'High' ? 'bg-warning text-dark' : 'bg-secondary')} fs-11">\${t.priority}</span></td>
+                    <td><span class="badge \${t.status === 'Completed' ? 'bg-success-subtle text-success' : (t.status === 'In Progress' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary')} fs-11">\${t.status}</span></td>
+                    <td><span class="text-muted fs-11">\${t.updated}</span></td>
+                    <td class="text-end">
+                        <a href="tickets.html?ticket=\${t.id}" class="btn btn-sm btn-outline-success py-0 px-2 fs-11 shadow-sm">
+                            Open &rarr;
+                        </a>
+                    </td>
+                </tr>
+            \`).join('');
+        }
+
+        function saveUserProfileEdits(e) {
+            e.preventDefault();
+            const user = USER_DATABASE[currentUserId];
+            if (!user) return;
+
+            user.fullname = document.getElementById('editFullName').value.trim();
+            user.email = document.getElementById('editEmail').value.trim();
+            user.username = document.getElementById('editUsername').value.trim();
+            user.phone = document.getElementById('editPhone').value.trim();
+            user.role = document.getElementById('editRole').value;
+            user.department = document.getElementById('editDepartment').value;
+            user.initials = user.fullname.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'FF';
+
+            // Add activity log
+            user.activities.unshift({
+                type: 'sop',
+                title: 'User Profile Updated',
+                desc: 'Administrative profile and role permissions updated by Scott Karan.',
+                time: 'Just now',
+                icon: 'ti-user-check',
+                color: 'success'
+            });
+
+            renderUserView();
+            renderMemberDropdown();
+
+            const tabBtn = document.querySelector('#userDetailTabs button[data-bs-target="#tabActivity"]');
+            if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+
+            alert('Profile details for ' + user.fullname + ' updated successfully!');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserProfileFromUrl();
+        });
+	</script>
+`;
+
+const finalUserDetailHtml = getHeaderForPage('team', 'Team Member Profile') + userDetailPageContent + footerScripts.replace('</body>', userDetailPageScripts + '</body>');
+fs.writeFileSync(path.join(__dirname, '../public/admin-user-detail.html'), finalUserDetailHtml, 'utf8');
 
 // ==========================================
 // 3. ADMIN DYNAMIC FORM BUILDER PAGE (admin-forms.html)
