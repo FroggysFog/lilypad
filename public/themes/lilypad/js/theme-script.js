@@ -746,4 +746,56 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		document.body.appendChild(wrapper.firstChild);
 	}
 	(new ThemeCustomizer).init();
+	syncLilypadActiveUserProfile();
 });
+
+
+function syncLilypadActiveUserProfile() {
+    try {
+        let auth = null;
+        try {
+            const raw = sessionStorage.getItem('lilypad_auth_user') || localStorage.getItem('lilypad_auth_user');
+            if (raw) auth = JSON.parse(raw);
+        } catch(e) {}
+
+        if (!auth) {
+            auth = {
+                fullname: 'Scott Karan',
+                username: 'skaran',
+                email: 'scott@froggysfog.com',
+                role: 'Admin',
+                department: 'Operations',
+                phone: '(615) 555-0100',
+                initials: 'SK',
+                avatarUrl: null
+            };
+        }
+
+        // Update all Katherine Brooks or placeholder user labels across header & dropdowns
+        document.querySelectorAll('.profile-dropdown, .navbar-header, .header, .topbar').forEach(function(container) {
+            container.querySelectorAll('p, span, strong, h5, h6').forEach(function(el) {
+                if (el.textContent.includes('Katherine Brooks')) {
+                    el.textContent = auth.fullname || 'Scott Karan';
+                }
+                if (el.textContent.trim() === 'Installer') {
+                    el.textContent = auth.role || 'Admin';
+                }
+            });
+        });
+
+        document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = auth.fullname || 'Scott Karan'; });
+        document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = auth.role || 'Admin'; });
+
+        // Update avatar images if avatarUrl exists
+        if (auth.avatarUrl) {
+            document.querySelectorAll('.profile-dropdown img, .topbar-avatar-img, img[src*="user-40"]').forEach(function(img) {
+                img.src = auth.avatarUrl;
+                img.style.objectFit = 'cover';
+            });
+        }
+    } catch(err) {
+        console.error('Error syncing active user profile:', err);
+    }
+}
+window.syncLilypadActiveUserProfile = syncLilypadActiveUserProfile;
+

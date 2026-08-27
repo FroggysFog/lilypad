@@ -251,8 +251,8 @@
 								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42"
 									alt="Img">
 								<div class="ms-2">
-									<p class="fw-medium text-dark mb-0">Katherine Brooks</p>
-									<span class="d-block fs-13">Installer</span>
+									<p class="fw-medium text-dark mb-0 topbar-user-name">Scott Karan</p>
+									<span class="d-block fs-13 topbar-user-role">Operations Admin</span>
 								</div>
 							</div>
 
@@ -429,7 +429,7 @@
             <span>Profile & Account Settings</span>
             <span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold"><i class="ti ti-user-check"></i> Account Hub</span>
         </h4>
-        <p class="text-muted fs-13 mb-0">Manage your personal credentials, contact details, authentication security, and platform notification preferences.</p>
+        <p class="text-muted fs-13 mb-0">Manage your personal credentials, contact details, profile photo, authentication security, and platform notification preferences.</p>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
         <a href="dashboard.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
@@ -445,7 +445,7 @@
 <div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
         <div class="d-flex align-items-center gap-3">
-            <div class="position-relative">
+            <div class="position-relative" id="myAvatarContainer">
                 <div class="rounded-circle text-white bg-primary d-flex align-items-center justify-content-center fw-bold fs-22 shadow" id="myProfileAvatar" style="width: 72px; height: 72px;">
                     SK
                 </div>
@@ -467,8 +467,12 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" onclick="triggerAvatarChange()">
-                <i class="ti ti-camera me-1"></i> Change Avatar
+            <input type="file" id="avatarFileInput" accept="image/png, image/jpeg, image/jpg, image/webp" class="d-none" onchange="handleAvatarFileUpload(event)">
+            <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="triggerAvatarUpload()">
+                <i class="ti ti-upload me-1"></i> Upload Photo
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm" id="btnRemovePhoto" onclick="removeAvatarPhoto()">
+                <i class="ti ti-trash me-1"></i> Remove
             </button>
         </div>
     </div>
@@ -774,12 +778,43 @@
     });
 </script>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        try {
+            const auth = sessionStorage.getItem('lilypad_auth_user');
+            if (auth) {
+                const u = JSON.parse(auth);
+                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
+                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
+            }
+        } catch(e) {}
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        try {
+            const auth = sessionStorage.getItem('lilypad_auth_user');
+            if (auth) {
+                const u = JSON.parse(auth);
+                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
+                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
+            }
+        } catch(e) {}
+    });
+</script>
+
 	<script>
         const STORAGE_TEAM_KEY = "lilypad_team_users_v2";
 
+        function triggerAvatarUpload() {
+            const input = document.getElementById('avatarFileInput');
+            if (input) input.click();
+        }
+
         function getActiveAuthUser() {
             try {
-                const sessionAuth = sessionStorage.getItem('lilypad_auth_user');
+                const sessionAuth = sessionStorage.getItem('lilypad_auth_user') || localStorage.getItem('lilypad_auth_user');
                 if (sessionAuth) return JSON.parse(sessionAuth);
             } catch(e) {}
             return {
@@ -789,7 +824,8 @@
                 role: 'Admin',
                 department: 'Operations',
                 phone: '(615) 555-0100',
-                initials: 'SK'
+                initials: 'SK',
+                avatarUrl: null
             };
         }
 
@@ -802,13 +838,117 @@
             document.getElementById('myProfileRoleBadge').textContent = user.role || 'Admin';
             document.getElementById('myProfileDepartment').textContent = user.department || 'Operations';
             document.getElementById('myProfilePhone').textContent = user.phone || '(615) 555-0100';
-            document.getElementById('myProfileAvatar').textContent = user.initials || 'SK';
+
+            const avatarContainer = document.getElementById('myAvatarContainer');
+            if (avatarContainer) {
+                if (user.avatarUrl) {
+                    avatarContainer.innerHTML = '<img src="' + user.avatarUrl + '" class="rounded-circle shadow" style="width: 72px; height: 72px; object-fit: cover;" alt="Avatar">' +
+                        '<span class="position-absolute bottom-0 end-0 bg-success border border-white border-2 rounded-circle" style="width:16px; height:16px;"></span>';
+                } else {
+                    avatarContainer.innerHTML = '<div class="rounded-circle text-white bg-primary d-flex align-items-center justify-content-center fw-bold fs-22 shadow" id="myProfileAvatar" style="width: 72px; height: 72px;">' +
+                        (user.initials || 'SK') + '</div>' +
+                        '<span class="position-absolute bottom-0 end-0 bg-success border border-white border-2 rounded-circle" style="width:16px; height:16px;"></span>';
+                }
+            }
 
             document.getElementById('myEditFullName').value = user.fullname || 'Scott Karan';
             document.getElementById('myEditEmail').value = user.email || 'scott@froggysfog.com';
             document.getElementById('myEditUsername').value = user.username || 'skaran';
             document.getElementById('myEditPhone').value = user.phone || '(615) 555-0100';
             document.getElementById('myEditDepartment').value = user.department || 'Operations';
+
+            if (window.syncLilypadActiveUserProfile) window.syncLilypadActiveUserProfile();
+        }
+
+        function handleAvatarFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file (PNG, JPG, JPEG, WEBP).');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image size exceeds 5MB limit. Please choose a smaller image.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 256;
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > height) {
+                        if (width > maxDim) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        }
+                    } else {
+                        if (height > maxDim) {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+                    let user = getActiveAuthUser();
+                    user.avatarUrl = optimizedDataUrl;
+
+                    sessionStorage.setItem('lilypad_auth_user', JSON.stringify(user));
+                    localStorage.setItem('lilypad_auth_user', JSON.stringify(user));
+
+                    try {
+                        const stored = localStorage.getItem(STORAGE_TEAM_KEY);
+                        if (stored) {
+                            let teamList = JSON.parse(stored);
+                            let idx = teamList.findIndex(u => u.email === user.email || u.username === user.username);
+                            if (idx !== -1) {
+                                teamList[idx].avatarUrl = optimizedDataUrl;
+                                localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(teamList));
+                            }
+                        }
+                    } catch(err) {}
+
+                    loadMyProfileData();
+                    if (window.syncLilypadActiveUserProfile) window.syncLilypadActiveUserProfile();
+
+                    alert('✓ Avatar image uploaded successfully!');
+                };
+                img.src = dataUrl;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeAvatarPhoto() {
+            let user = getActiveAuthUser();
+            user.avatarUrl = null;
+            sessionStorage.setItem('lilypad_auth_user', JSON.stringify(user));
+            localStorage.setItem('lilypad_auth_user', JSON.stringify(user));
+
+            try {
+                const stored = localStorage.getItem(STORAGE_TEAM_KEY);
+                if (stored) {
+                    let teamList = JSON.parse(stored);
+                    let idx = teamList.findIndex(u => u.email === user.email || u.username === user.username);
+                    if (idx !== -1) {
+                        teamList[idx].avatarUrl = null;
+                        localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(teamList));
+                    }
+                }
+            } catch(err) {}
+
+            loadMyProfileData();
+            if (window.syncLilypadActiveUserProfile) window.syncLilypadActiveUserProfile();
+            alert('✓ Avatar photo removed. Reset to default initials.');
         }
 
         function savePersonalProfile(e) {
@@ -829,6 +969,7 @@
             user.initials = initials;
 
             sessionStorage.setItem('lilypad_auth_user', JSON.stringify(user));
+            localStorage.setItem('lilypad_auth_user', JSON.stringify(user));
 
             try {
                 const stored = localStorage.getItem(STORAGE_TEAM_KEY);
@@ -847,7 +988,7 @@
             if (window.LilypadNotifications && LilypadNotifications.addNotification) {
                 LilypadNotifications.addNotification({
                     title: 'Profile Updated',
-                    message: 'Your personal profile information was saved successfully.',
+                    message: 'Your profile and contact details have been saved.',
                     type: 'system',
                     link: 'profile-settings.html'
                 });
@@ -894,16 +1035,6 @@
 
         function saveWorkspacePreferences() {
             alert('✓ Workspace & default landing page preferences saved!');
-        }
-
-        function triggerAvatarChange() {
-            const newInitials = prompt('Enter 2-letter Avatar Initials (e.g. SK, FF):', 'SK');
-            if (newInitials) {
-                let user = getActiveAuthUser();
-                user.initials = newInitials.toUpperCase().slice(0, 2);
-                sessionStorage.setItem('lilypad_auth_user', JSON.stringify(user));
-                loadMyProfileData();
-            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
