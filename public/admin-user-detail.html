@@ -754,70 +754,6 @@
     <script src="assets/js/script.js"></script>
     <script src="assets/js/lilypad-notifications.js"></script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -995,7 +931,7 @@
                                     'all': { open: 3, inProgress: 4, completed: 120, low: 20, normal: 70, high: 40, urgent: 10, avgRes: '2.3 hrs', sla: '99.3%' }
                                 },
                                 activities: [
-                                    { type: 'status', title: 'Profile Activated', desc: 'Account provisioned and onboarded into Froggy's Fog ERP.', time: 'Recently', icon: 'ti-user-check', color: 'primary' }
+                                    { type: 'status', title: 'Profile Activated', desc: "Account provisioned and onboarded into Froggy's Fog ERP.", time: "Recently", icon: "ti-user-check", color: 'primary' }
                                 ],
                                 tickets: []
                             };
@@ -1205,16 +1141,16 @@
             const token = 'tok_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
             const setupUrl = origin + '/login.html?action=setup-password&email=' + encodeURIComponent(user.email) + '&user=' + encodeURIComponent(user.username || '') + '&token=' + token;
             const hubUrl = origin + '/dashboard.html';
-            const subject = 'Welcome to Froggy's Fog Hub | Set Up Your Account (' + user.fullname + ')';
+            const subject = "Welcome to Froggy's Fog Hub | Set Up Your Account (" + user.fullname + ")";
 
             const emailHtml = '<div style="max-width: 620px; margin: 0 auto; color: #1e293b;">' +
                 '<div style="border-bottom: 2px solid var(--bs-primary, #0d6efd); padding-bottom: 14px; margin-bottom: 20px;">' +
-                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy's Fog Operations Hub</h4>' +
+                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy Operations Hub</h4>' +
                     '<span style="font-size: 13px; color: #64748b;">Enterprise ERP & Diagnostic Portal</span>' +
                 '</div>' +
                 '<p style="font-size: 15px; margin-bottom: 16px;">Hi <strong>' + user.fullname + '</strong>,</p>' +
                 '<p style="font-size: 14px; line-height: 1.6; margin-bottom: 20px;">' +
-                    'An account has been created for you on the <strong>Froggy's Fog Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
+                    'An account has been created for you on the <strong>Froggy Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
                 '</p>' +
                 '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; text-align: center; margin-bottom: 24px;">' +
                     '<p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">Please activate your profile and establish your private password:</p>' +

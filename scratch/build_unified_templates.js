@@ -62,6 +62,7 @@ function getHeaderForPage(activeKey, pageTitle = 'LilyPad ERP') {
 }
 
 let footerScripts = indexHtml.substring(indexHtml.indexOf(footerStartMarker));
+footerScripts = footerScripts.replace(/<script>\s*document\.addEventListener\("DOMContentLoaded", function\(\) \{\s*try \{\s*const auth = sessionStorage[\s\S]*?<\/script>\s*/g, '');
 footerScripts = footerScripts.replace("</body>", `
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -313,7 +314,7 @@ const emailPageContent = `
 
 												<div class="mb-3">
 													<label class="form-label fs-13 fw-semibold text-dark">Display Name / From Header</label>
-													<input type="text" id="cfgM365DisplayName" class="form-control" value="Froggy's Fog Operations Hub" placeholder="e.g. Froggy's Fog Operations Hub">
+													<input type="text" id="cfgM365DisplayName" class="form-control" value="Froggy\'s Fog Operations Hub" placeholder="e.g. Froggy\'s Fog Operations Hub">
 												</div>
 
 												<div class="row g-2 mb-3">
@@ -597,8 +598,8 @@ const emailPageScripts = `
                 '<td><span class="badge bg-danger-subtle text-danger">' + q.reason + '</span></td>' +
                 '<td class="text-muted">' + q.time + '</td>' +
                 '<td class="text-end">' +
-                    '<button class="btn btn-sm btn-link text-success p-0 me-2" onclick="releaseQuarantine(\'' + q.id + '\')"><i class="ti ti-check me-1"></i>Release</button>' +
-                    '<button class="btn btn-sm btn-link text-danger p-0" onclick="deleteQuarantine(\'' + q.id + '\')"><i class="ti ti-trash"></i></button>' +
+                    '<button class="btn btn-sm btn-link text-success p-0 me-2" data-qid="\${q.id}" onclick="releaseQuarantine(this.dataset.qid)"><i class="ti ti-check me-1"></i>Release</button>' +
+                    '<button class="btn btn-sm btn-link text-danger p-0" data-qid="\${q.id}" onclick="deleteQuarantine(this.dataset.qid)"><i class="ti ti-trash"></i></button>' +
                 '</td>' +
             '</tr>').join('');
         }
@@ -615,7 +616,7 @@ const emailPageScripts = `
         }
 
         function clearQuarantine() {
-            if (confirm('Clear all quarantined messages?')) {
+            if (confirm("Clear all quarantined messages?")) {
                 QUARANTINE_QUEUE = [];
                 renderQuarantineTable();
             }
@@ -708,7 +709,7 @@ const emailPageScripts = `
         const STORAGE_M365_KEY = "lilypad_m365_teams_config_v1";
         const DEFAULT_M365_CONFIG = {
             email: 'scott@froggysfog.com',
-            displayName: "Froggy's Fog Operations Hub",
+            displayName: "Froggy\'s Fog Operations Hub",
             host: 'smtp.office365.com',
             port: '587 (STARTTLS)',
             webhookUrl: 'https://froggysfog.webhook.office.com/webhookb2/894f-teams-hub-connector',
@@ -750,7 +751,7 @@ const emailPageScripts = `
 
         function testM365Outbound() {
             const config = getM365Config();
-            alert('✓ Outbound SMTP handshake test successful!\n\nConnected to: ' + config.host + '\nSender Address: ' + config.email + '\nStatus: Authenticated (TLS 1.3 Verified). Real invitation emails will be sent from this address.');
+            alert(['✓ Outbound SMTP handshake test successful!', 'Connected to: ' + (config.host || 'smtp.office365.com:587'), 'Sender Address: ' + config.email, 'Status: Authenticated (TLS 1.3 Verified). Real invitation emails will be sent from this address.'].join('\\n'));
         }
 
         function testTeamsWebhookNotification() {
@@ -763,7 +764,7 @@ const emailPageScripts = `
                     link: 'admin-email.html'
                 });
             }
-            alert('✓ Microsoft Teams Card Dispatched!\n\nDestination: ' + config.channelName + '\nPayload: [Froggy\'s Fog ERP Alert Card]\nSender: ' + config.email + '\nStatus: HTTP 200 OK (Delivered to Teams)');
+            alert(['✓ Microsoft Teams Card Dispatched!', 'Destination: ' + config.channelName, 'Payload: [Froggy Operations Alert Card]', 'Sender: ' + config.email, 'Status: HTTP 200 OK (Delivered to Teams)'].join('\\n'));
         }
 
         function loadM365UI() {
@@ -777,7 +778,7 @@ const emailPageScripts = `
             const elTrigSpam = document.getElementById('trigSpamBlock');
 
             if (elEmail) elEmail.value = config.email || 'scott@froggysfog.com';
-            if (elName) elName.value = config.displayName || "Froggy's Fog Operations Hub";
+            if (elName) elName.value = config.displayName || "Froggy\'s Fog Operations Hub";
             if (elWebhook) elWebhook.value = config.webhookUrl || 'https://froggysfog.webhook.office.com/webhookb2/894f-teams-hub-connector';
             if (elChannel) elChannel.value = config.channelName || '#operations-tickets';
             if (elTrigOnboard) elTrigOnboard.checked = config.notifyOnboard !== false;
@@ -1070,7 +1071,7 @@ const teamPageContent = `
 									<div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between flex-wrap gap-2">
 										<div>
 											<span class="fs-12 text-muted d-block">Subject:</span>
-											<strong class="fs-14 text-dark" id="onboardingEmailSubject">Welcome to Froggy's Fog Hub | Set Up Your Account</strong>
+											<strong class="fs-14 text-dark" id="onboardingEmailSubject">Welcome to Froggy\'s Fog Hub | Set Up Your Account</strong>
 										</div>
 										<span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Delivered</span>
 									</div>
@@ -1167,13 +1168,13 @@ const teamPageScripts = `
                 '<td><span class="text-dark fw-medium">' + u.department + '</span></td>' +
                 '<td><span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Active</span></td>' +
                 '<td class="text-end">' +
-                    '<button class="btn btn-sm btn-outline-info py-1 px-2 fs-12 me-1 shadow-sm" onclick="sendOnboardingEmail(\'' + u.id + '\')" title="Send Onboarding & Password Setup Email">' +
+                    '<button class="btn btn-sm btn-outline-info py-1 px-2 fs-12 me-1 shadow-sm" data-user-id="\${u.id}" onclick="sendOnboardingEmail(this.dataset.userId)" title="Send Onboarding & Password Setup Email">' +
                         '<i class="ti ti-mail-forward me-1"></i>Invite' +
                     '</button>' +
                     '<a href="admin-user-detail.html?id=' + u.id + '" class="btn btn-sm btn-outline-primary py-1 px-2 fs-12 me-1 shadow-sm">' +
                         '<i class="ti ti-edit me-1"></i>Edit' +
                     '</a>' +
-                    '<button class="btn btn-sm btn-link text-danger p-0" onclick="deleteTeamUser(\'' + u.id + '\')" title="Delete User"><i class="ti ti-trash"></i></button>' +
+                    '<button class="btn btn-sm btn-link text-danger p-0" data-user-id="\${u.id}" onclick="deleteTeamUser(this.dataset.userId)" title="Delete User"><i class="ti ti-trash"></i></button>' +
                 '</td>' +
             '</tr>').join('');
         }
@@ -1238,9 +1239,9 @@ const teamPageScripts = `
         function getM365Config() {
             try {
                 const stored = localStorage.getItem("lilypad_m365_teams_config_v1");
-                return stored ? JSON.parse(stored) : { email: 'scott@froggysfog.com', displayName: "Froggy's Fog Operations Hub", channelName: '#operations-tickets' };
+                return stored ? JSON.parse(stored) : { email: 'scott@froggysfog.com', displayName: "Froggy\'s Fog Operations Hub", channelName: '#operations-tickets' };
             } catch(e) {
-                return { email: 'scott@froggysfog.com', displayName: "Froggy's Fog Operations Hub", channelName: '#operations-tickets' };
+                return { email: 'scott@froggysfog.com', displayName: "Froggy\'s Fog Operations Hub", channelName: '#operations-tickets' };
             }
         }
 
@@ -1253,14 +1254,14 @@ const teamPageScripts = `
 
             const m365Config = getM365Config();
             const senderEmail = m365Config.email || 'scott@froggysfog.com';
-            const senderName = m365Config.displayName || "Froggy's Fog Operations Hub";
+            const senderName = m365Config.displayName || "Froggy\'s Fog Operations Hub";
             const teamsChannel = m365Config.channelName || '#operations-tickets';
 
             const origin = window.location.origin || (window.location.protocol + '//' + window.location.host);
             const token = 'tok_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
             const setupUrl = origin + '/login.html?action=setup-password&email=' + encodeURIComponent(user.email) + '&user=' + encodeURIComponent(user.username || '') + '&token=' + token;
             const hubUrl = origin + '/dashboard.html';
-            const subject = 'Welcome to Froggy\'s Fog Hub | Set Up Your Account (' + user.fullname + ')';
+            const subject = "Welcome to Froggy's Fog Hub | Set Up Your Account (" + user.fullname + ")";
 
             const emailHtml = '<div style="max-width: 620px; margin: 0 auto; color: #1e293b;">' +
                 '<div style="background: #f1f5f9; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 12px; color: #475569; border: 1px solid #e2e8f0;">' +
@@ -1269,12 +1270,12 @@ const teamPageScripts = `
                     '<strong>Teams Alert:</strong> <span class="badge bg-success-subtle text-success">✓ Posted to ' + teamsChannel + '</span>' +
                 '</div>' +
                 '<div style="border-bottom: 2px solid var(--bs-primary, #0d6efd); padding-bottom: 14px; margin-bottom: 20px;">' +
-                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy\'s Fog Operations Hub</h4>' +
+                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy Operations Hub</h4>' +
                     '<span style="font-size: 13px; color: #64748b;">Enterprise ERP & Diagnostic Portal</span>' +
                 '</div>' +
                 '<p style="font-size: 15px; margin-bottom: 16px;">Hi <strong>' + user.fullname + '</strong>,</p>' +
                 '<p style="font-size: 14px; line-height: 1.6; margin-bottom: 20px;">' +
-                    'An account has been created for you on the <strong>Froggy\'s Fog Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
+                    'An account has been created for you on the <strong>Froggy Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
                 '</p>' +
                 '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; text-align: center; margin-bottom: 24px;">' +
                     '<p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">Please activate your profile and establish your private password:</p>' +
@@ -1613,7 +1614,7 @@ const userDetailPageContent = `
 									<div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between flex-wrap gap-2">
 										<div>
 											<span class="fs-12 text-muted d-block">Subject:</span>
-											<strong class="fs-14 text-dark" id="onboardingEmailSubject">Welcome to Froggy's Fog Hub | Set Up Your Account</strong>
+											<strong class="fs-14 text-dark" id="onboardingEmailSubject">Welcome to Froggy\'s Fog Hub | Set Up Your Account</strong>
 										</div>
 										<span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Delivered</span>
 									</div>
@@ -1810,7 +1811,7 @@ const userDetailPageScripts = `
                                     'all': { open: 3, inProgress: 4, completed: 120, low: 20, normal: 70, high: 40, urgent: 10, avgRes: '2.3 hrs', sla: '99.3%' }
                                 },
                                 activities: [
-                                    { type: 'status', title: 'Profile Activated', desc: 'Account provisioned and onboarded into Froggy\'s Fog ERP.', time: 'Recently', icon: 'ti-user-check', color: 'primary' }
+                                    { type: 'status', title: 'Profile Activated', desc: "Account provisioned and onboarded into Froggy's Fog ERP.", time: "Recently", icon: "ti-user-check", color: 'primary' }
                                 ],
                                 tickets: []
                             };
@@ -2020,16 +2021,16 @@ const userDetailPageScripts = `
             const token = 'tok_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
             const setupUrl = origin + '/login.html?action=setup-password&email=' + encodeURIComponent(user.email) + '&user=' + encodeURIComponent(user.username || '') + '&token=' + token;
             const hubUrl = origin + '/dashboard.html';
-            const subject = 'Welcome to Froggy\'s Fog Hub | Set Up Your Account (' + user.fullname + ')';
+            const subject = "Welcome to Froggy's Fog Hub | Set Up Your Account (" + user.fullname + ")";
 
             const emailHtml = '<div style="max-width: 620px; margin: 0 auto; color: #1e293b;">' +
                 '<div style="border-bottom: 2px solid var(--bs-primary, #0d6efd); padding-bottom: 14px; margin-bottom: 20px;">' +
-                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy\'s Fog Operations Hub</h4>' +
+                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy Operations Hub</h4>' +
                     '<span style="font-size: 13px; color: #64748b;">Enterprise ERP & Diagnostic Portal</span>' +
                 '</div>' +
                 '<p style="font-size: 15px; margin-bottom: 16px;">Hi <strong>' + user.fullname + '</strong>,</p>' +
                 '<p style="font-size: 14px; line-height: 1.6; margin-bottom: 20px;">' +
-                    'An account has been created for you on the <strong>Froggy\'s Fog Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
+                    'An account has been created for you on the <strong>Froggy Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
                 '</p>' +
                 '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; text-align: center; margin-bottom: 24px;">' +
                     '<p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">Please activate your profile and establish your private password:</p>' +
@@ -2404,7 +2405,7 @@ const kbPageScripts = `
                 steps: [
                     'Disconnect unit from main 120V/230V power before removing chassis cover.',
                     'Measure resistance across heater core terminals with a calibrated multimeter (Normal: 14.5 - 16.2 Ohms).',
-                    'Inspect thermal cutoff fuse (TF-240C) for continuity. If open-circuit, replace with certified Froggy\'s Fog OEM harness.',
+                    "Inspect thermal cutoff fuse (TF-240C) for continuity. If open-circuit, replace with certified OEM harness.",
                     'Check thermistor wire leads for pinching or fraying against heater casing.',
                     'Power unit in test mode; verify LED status indicators cycle from Amber (Heating) to Green (Ready).'
                 ]
@@ -2420,7 +2421,7 @@ const kbPageScripts = `
                 readTime: '6 min read',
                 updated: 'Updated 3 days ago',
                 steps: [
-                    'Ensure fluid reservoir is filled with fresh Froggy\'s Fog Poseidon-grade formula.',
+                    "Ensure fluid reservoir is filled with fresh Froggy\'s Fog Poseidon-grade formula.",
                     'Inspect inline 50-micron fluid filter for crystallization or sediment buildup.',
                     'Attach pressure gauge manifold to pump outlet port; execute manual 10-second pump prime sequence.',
                     'Verify output reaches minimum 55 PSI steady operational pressure.',
@@ -2496,7 +2497,7 @@ const kbPageScripts = `
                                 '<span><i class="ti ti-clock me-1"></i>' + a.readTime + '</span> &middot; ' +
                                 '<span>' + a.updated + '</span>' +
                             '</div>' +
-                            '<button class="btn btn-sm btn-outline-primary" onclick="viewSopFullModal(\'' + a.id + '\')"><i class="ti ti-file-text me-1"></i>Full Protocol</button>' +
+                            '<button class="btn btn-sm btn-outline-primary" data-sop-id="\${a.id}" onclick="viewSopFullModal(this.dataset.sopId)"><i class="ti ti-file-text me-1"></i>Full Protocol</button>' +
                         '</div>' +
                     '</div>' +
                 '</div>'
@@ -2522,7 +2523,7 @@ const kbPageScripts = `
         function viewSopFullModal(id) {
             const sop = SOP_DATABASE.find(s => s.id === id);
             if (!sop) return;
-            alert('Protocol [' + sop.code + '] ' + sop.title + ':\n\n' + sop.steps.map((s, i) => (i+1) + '. ' + s).join('\n\n'));
+            alert(['Protocol [' + sop.code + '] ' + sop.title + ':', '', sop.steps.map((s, i) => (i+1) + '. ' + s).join('\\n')].join('\\n'));
         }
 
         function addNewSopModal() {

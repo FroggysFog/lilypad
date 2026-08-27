@@ -1661,7 +1661,7 @@ const ticketingEngineScript = `
                 const desc = categoryDescriptions[cat.name] || 'Custom operational intake form with dedicated fields';
                 const fieldCount = (cat.fields || []).length;
                 return '<div class="col-md-4 col-sm-6">' +
-                    '<div class="card border rounded-3 p-3 h-100 shadow-none bg-light category-card-hover" style="cursor: pointer; transition: all 0.2s ease;" onclick="openDedicatedCategoryForm(\'' + cat.name + '\')">' +
+                    '<div class="card border rounded-3 p-3 h-100 shadow-none bg-light category-card-hover" style="cursor: pointer; transition: all 0.2s ease;" data-category-name="' + cat.name.replace(/"/g, '&quot;') + '" onclick="openDedicatedCategoryForm(this.dataset.categoryName)">' +
                         '<div class="d-flex align-items-center justify-content-between mb-2">' +
                             '<div class="rounded-2 p-2 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
                                 '<i class="ti ' + (cat.icon || 'ti-file') + ' fs-16"></i>' +
@@ -1683,9 +1683,9 @@ const ticketingEngineScript = `
             const container = document.getElementById('topCategoryFilterPills');
             if (!container) return;
 
-            let html = '<button class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" onclick="selectTopCategoryFilter(\'All\', this)">All Forms & Queues</button>';
+            let html = '<button class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" data-category="All" onclick="selectTopCategoryFilter(this.dataset.category, this)">All Forms & Queues</button>';
             CATEGORIES.forEach(cat => {
-                html += '<button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold text-dark" onclick="selectTopCategoryFilter(\'' + cat.name + '\', this)">' +
+                html += '<button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold text-dark" data-category="' + cat.name.replace(/"/g, '&quot;') + '" onclick="selectTopCategoryFilter(this.dataset.category, this)">' +
                     '<i class="ti ' + (cat.icon || 'ti-file') + ' me-1 text-primary"></i>' + cat.name +
                 '</button>';
             });
@@ -2400,12 +2400,12 @@ const ticketingEngineScript = `
                 const isChecked = task.done ? 'checked' : '';
                 return '<div class="p-2 rounded-3 border d-flex align-items-center justify-content-between gap-2 ' + bgClass + '">' +
                     '<div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">' +
-                        '<input type="checkbox" class="form-check-input mt-0 flex-shrink-0" id="task_chk_' + task.id + '" ' + isChecked + ' onchange="toggleTicketTask(\'' + task.id + '\', this.checked)">' +
+                        '<input type="checkbox" class="form-check-input mt-0 flex-shrink-0" id="task_chk_' + task.id + '" ' + isChecked + ' data-task-id="' + task.id + '" onchange="toggleTicketTask(this.dataset.taskId, this.checked)">' +
                         '<label for="task_chk_' + task.id + '" class="fs-13 mb-0 ' + textClass + '" style="cursor: pointer;">' +
                             task.text +
                         '</label>' +
                     '</div>' +
-                    '<button type="button" class="btn btn-sm btn-link text-danger p-0 ms-auto" onclick="deleteTicketTask(\'' + task.id + '\')" title="Delete Task">' +
+                    '<button type="button" class="btn btn-sm btn-link text-danger p-0 ms-auto" data-task-id="' + task.id + '" onclick="deleteTicketTask(this.dataset.taskId)" title="Delete Task">' +
                         '<i class="ti ti-trash fs-14"></i>' +
                     '</button>' +
                 '</div>';
@@ -2923,7 +2923,7 @@ const ticketingEngineScript = `
             const stepsRaw = document.getElementById('standaloneSopSteps').value.trim();
             const resolution = document.getElementById('standaloneSopResolution').value.trim();
 
-            const checkFirstSteps = stepsRaw.split('\n').map(s => s.replace(/^[0-9]+[.)]\s*/, '').trim()).filter(Boolean);
+            const checkFirstSteps = stepsRaw.split('\\n').map(s => s.replace(/^[0-9]+[.)]\s*/, '').trim()).filter(Boolean);
             const newCode = 'SOP-0' + (KB_ARTICLES.length + 12);
             
             const newArticle = {
@@ -2959,7 +2959,7 @@ const ticketingEngineScript = `
             const stepsRaw = document.getElementById('newKbSteps').value.trim();
             const resolution = document.getElementById('newKbResolution').value.trim();
 
-            const checkFirstSteps = stepsRaw.split('\n').map(s => s.replace(/^[0-9]+[.)]\s*/, '').trim()).filter(Boolean);
+            const checkFirstSteps = stepsRaw.split('\\n').map(s => s.replace(/^[0-9]+[.)]\s*/, '').trim()).filter(Boolean);
 
             const newCode = 'SOP-0' + (KB_ARTICLES.length + 12);
             const newArticle = {

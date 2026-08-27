@@ -491,70 +491,6 @@
     <script src="assets/js/script.js"></script>
     <script src="assets/js/lilypad-notifications.js"></script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -584,7 +520,7 @@
                 steps: [
                     'Disconnect unit from main 120V/230V power before removing chassis cover.',
                     'Measure resistance across heater core terminals with a calibrated multimeter (Normal: 14.5 - 16.2 Ohms).',
-                    'Inspect thermal cutoff fuse (TF-240C) for continuity. If open-circuit, replace with certified Froggy's Fog OEM harness.',
+                    "Inspect thermal cutoff fuse (TF-240C) for continuity. If open-circuit, replace with certified OEM harness.",
                     'Check thermistor wire leads for pinching or fraying against heater casing.',
                     'Power unit in test mode; verify LED status indicators cycle from Amber (Heating) to Green (Ready).'
                 ]
@@ -600,7 +536,7 @@
                 readTime: '6 min read',
                 updated: 'Updated 3 days ago',
                 steps: [
-                    'Ensure fluid reservoir is filled with fresh Froggy's Fog Poseidon-grade formula.',
+                    "Ensure fluid reservoir is filled with fresh Froggy's Fog Poseidon-grade formula.",
                     'Inspect inline 50-micron fluid filter for crystallization or sediment buildup.',
                     'Attach pressure gauge manifold to pump outlet port; execute manual 10-second pump prime sequence.',
                     'Verify output reaches minimum 55 PSI steady operational pressure.',
@@ -676,7 +612,7 @@
                                 '<span><i class="ti ti-clock me-1"></i>' + a.readTime + '</span> &middot; ' +
                                 '<span>' + a.updated + '</span>' +
                             '</div>' +
-                            '<button class="btn btn-sm btn-outline-primary" onclick="viewSopFullModal('' + a.id + '')"><i class="ti ti-file-text me-1"></i>Full Protocol</button>' +
+                            '<button class="btn btn-sm btn-outline-primary" data-sop-id="${a.id}" onclick="viewSopFullModal(this.dataset.sopId)"><i class="ti ti-file-text me-1"></i>Full Protocol</button>' +
                         '</div>' +
                     '</div>' +
                 '</div>'
@@ -702,11 +638,7 @@
         function viewSopFullModal(id) {
             const sop = SOP_DATABASE.find(s => s.id === id);
             if (!sop) return;
-            alert('Protocol [' + sop.code + '] ' + sop.title + ':
-
-' + sop.steps.map((s, i) => (i+1) + '. ' + s).join('
-
-'));
+            alert(['Protocol [' + sop.code + '] ' + sop.title + ':', '', sop.steps.map((s, i) => (i+1) + '. ' + s).join('\n')].join('\n'));
         }
 
         function addNewSopModal() {

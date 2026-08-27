@@ -753,70 +753,6 @@
     <script src="assets/js/script.js"></script>
     <script src="assets/js/lilypad-notifications.js"></script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
-    });
-</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -894,13 +830,13 @@
                 '<td><span class="text-dark fw-medium">' + u.department + '</span></td>' +
                 '<td><span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Active</span></td>' +
                 '<td class="text-end">' +
-                    '<button class="btn btn-sm btn-outline-info py-1 px-2 fs-12 me-1 shadow-sm" onclick="sendOnboardingEmail('' + u.id + '')" title="Send Onboarding & Password Setup Email">' +
+                    '<button class="btn btn-sm btn-outline-info py-1 px-2 fs-12 me-1 shadow-sm" data-user-id="${u.id}" onclick="sendOnboardingEmail(this.dataset.userId)" title="Send Onboarding & Password Setup Email">' +
                         '<i class="ti ti-mail-forward me-1"></i>Invite' +
                     '</button>' +
                     '<a href="admin-user-detail.html?id=' + u.id + '" class="btn btn-sm btn-outline-primary py-1 px-2 fs-12 me-1 shadow-sm">' +
                         '<i class="ti ti-edit me-1"></i>Edit' +
                     '</a>' +
-                    '<button class="btn btn-sm btn-link text-danger p-0" onclick="deleteTeamUser('' + u.id + '')" title="Delete User"><i class="ti ti-trash"></i></button>' +
+                    '<button class="btn btn-sm btn-link text-danger p-0" data-user-id="${u.id}" onclick="deleteTeamUser(this.dataset.userId)" title="Delete User"><i class="ti ti-trash"></i></button>' +
                 '</td>' +
             '</tr>').join('');
         }
@@ -987,7 +923,7 @@
             const token = 'tok_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
             const setupUrl = origin + '/login.html?action=setup-password&email=' + encodeURIComponent(user.email) + '&user=' + encodeURIComponent(user.username || '') + '&token=' + token;
             const hubUrl = origin + '/dashboard.html';
-            const subject = 'Welcome to Froggy's Fog Hub | Set Up Your Account (' + user.fullname + ')';
+            const subject = "Welcome to Froggy's Fog Hub | Set Up Your Account (" + user.fullname + ")";
 
             const emailHtml = '<div style="max-width: 620px; margin: 0 auto; color: #1e293b;">' +
                 '<div style="background: #f1f5f9; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 12px; color: #475569; border: 1px solid #e2e8f0;">' +
@@ -996,12 +932,12 @@
                     '<strong>Teams Alert:</strong> <span class="badge bg-success-subtle text-success">✓ Posted to ' + teamsChannel + '</span>' +
                 '</div>' +
                 '<div style="border-bottom: 2px solid var(--bs-primary, #0d6efd); padding-bottom: 14px; margin-bottom: 20px;">' +
-                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy's Fog Operations Hub</h4>' +
+                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy Operations Hub</h4>' +
                     '<span style="font-size: 13px; color: #64748b;">Enterprise ERP & Diagnostic Portal</span>' +
                 '</div>' +
                 '<p style="font-size: 15px; margin-bottom: 16px;">Hi <strong>' + user.fullname + '</strong>,</p>' +
                 '<p style="font-size: 14px; line-height: 1.6; margin-bottom: 20px;">' +
-                    'An account has been created for you on the <strong>Froggy's Fog Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
+                    'An account has been created for you on the <strong>Froggy Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
                 '</p>' +
                 '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; text-align: center; margin-bottom: 24px;">' +
                     '<p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">Please activate your profile and establish your private password:</p>' +
