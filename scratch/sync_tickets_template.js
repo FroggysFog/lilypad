@@ -1613,15 +1613,15 @@ const ticketingEngineScript = `
         let tickets = [];
 
         let USERS = [
-            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@froggysfog.com', role: 'Admin', department: 'Operations', initials: 'SK', active: true },
-            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@froggysfog.com', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true },
-            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'DM', active: true },
-            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'SC', active: true },
-            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@froggysfog.com', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true }
+            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@lilypad.local', role: 'Admin', department: 'Operations', initials: 'SK', active: true },
+            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@lilypad.local', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true },
+            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@lilypad.local', role: 'Agent', department: 'Engineering', initials: 'DM', active: true },
+            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@lilypad.local', role: 'Agent', department: 'Engineering', initials: 'SC', active: true },
+            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@lilypad.local', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true }
         ];
 
         let selectedCategory = CATEGORIES[0];
-        let currentStatusFilter = 'All';
+        let currentStatusFilter = 'In Progress';
         let currentActiveTicket = null;
         // Global Modal Openers for Operations Admin & Hub
         window.openEmailGatewayModal = function() {
@@ -1675,20 +1675,29 @@ const ticketingEngineScript = `
             const targetTicket = urlParams.get('ticket');
             const targetView = urlParams.get('view');
             const targetAdmin = urlParams.get('admin');
-            const targetAction = urlParams.get('action');
 
             if (targetView === 'kb') {
-                setTimeout(() => openKnowledgeBaseModal(), 200);
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('knowledgebaseModal'));
+                    modal.show();
+                }, 300);
             } else if (targetAdmin === 'email') {
-                setTimeout(() => openEmailGatewayModal(), 200);
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('emailGatewayModal'));
+                    modal.show();
+                }, 300);
             } else if (targetAdmin === 'team') {
-                setTimeout(() => openUserManagementModal(), 200);
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('userManagementModal'));
+                    modal.show();
+                }, 300);
             } else if (targetAdmin === 'forms') {
-                setTimeout(() => openFormBuilderModal(), 200);
-            } else if (targetAction === 'new') {
-                setTimeout(() => openIntakeModal(), 200);
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('formBuilderModal'));
+                    modal.show();
+                }, 300);
             } else if (targetTicket) {
-                setTimeout(() => openTicketModal(targetTicket), 200);
+                setTimeout(() => openTicketModal(targetTicket), 300);
             }
         });
 
@@ -3215,6 +3224,14 @@ const ticketingEngineScript = `
 const finalTicketsHtml = unifiedHeader + ticketingBodyContent + ticketingModalsHtml + footerScriptsPart.replace('</body>', ticketingEngineScript + '</body>');
 fs.writeFileSync(path.join(__dirname, '../public/tickets.html'), finalTicketsHtml, 'utf8');
 
-// Keep dashboard.html in exact sync with clean index.html
-fs.copyFileSync(path.join(__dirname, '../public/index.html'), path.join(__dirname, '../public/dashboard.html'));
-console.log('Successfully synchronized public/tickets.html and public/dashboard.html');
+// Ensure index.html and dashboard.html also have Operations Admin modals and handlers
+let cleanIndex = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
+// Remove old modals if already appended
+if (cleanIndex.includes('id="emailGatewayModal"')) {
+    cleanIndex = cleanIndex.substring(0, cleanIndex.indexOf('<!-- SOP Detail Modal Popup -->')) + cleanIndex.substring(cleanIndex.lastIndexOf('</script>') + 9);
+}
+const finalIndexHtml = cleanIndex.replace('</body>', ticketingModalsHtml + ticketingEngineScript + '</body>');
+fs.writeFileSync(path.join(__dirname, '../public/index.html'), finalIndexHtml, 'utf8');
+fs.writeFileSync(path.join(__dirname, '../public/dashboard.html'), finalIndexHtml, 'utf8');
+
+console.log('Successfully synchronized public/tickets.html, public/index.html, and public/dashboard.html with Operations Admin Modals');

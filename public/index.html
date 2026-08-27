@@ -110,27 +110,95 @@
 						</button>
 					</div>
 
-					<!-- Fullscreen Toggle -->
-					<div class="header-item">
+					<!-- pages -->
+					<div class="header-item d-none d-sm-flex">
 						<div class="dropdown me-2">
-							<a href="javascript:void(0);" class="btn topbar-link btnFullscreen" title="Toggle Fullscreen">
-								<i class="ti ti-maximize"></i>
+							<a href="javascript:void(0);" class="btn topbar-link topbar-teal-link"
+								data-bs-toggle="dropdown">
+								<i class="ti ti-layout-grid-add"></i>
 							</a>
+							<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+								<!-- Item-->
+								<a href="contacts.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Contacts</span>
+											<span class="fs-13">View All the Contacts</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="pipeline.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Pipeline</span>
+											<span class="fs-13">View All the Pipeline</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="activities.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Activities</span>
+											<span class="fs-13">Activities</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="analytics.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Analytics</span>
+											<span class="fs-13">Analytics</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+							</div>
 						</div>
 					</div>
 
-					<!-- Light/Dark Mode Button -->
-					<div class="header-item d-none d-sm-flex me-2">
-						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button" title="Toggle Theme">
-							<i class="ti ti-moon fs-16"></i>
-						</button>
+					<!-- faq -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="faq.html" class="btn topbar-link topbar-indigo-link"><i
+									class="ti ti-help-hexagon"></i></a>
+						</div>
+					</div>
+
+					<!-- report -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="lead-reports.html" class="btn topbar-link topbar-warning-link"><i
+									class="ti ti-chart-pie"></i></a>
+						</div>
 					</div>
 
 					<div class="header-line"></div>
 
+					<!-- message -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="chat.html" class="btn topbar-link">
+								<i class="ti ti-message-circle-exclamation"></i>
+								<span class="badge rounded-pill">&nbsp;</span>
+							</a>
+						</div>
+					</div>
+
 					<!-- Notification Dropdown -->
 					<div class="header-item">
 						<div class="dropdown me-2 position-relative">
+
 							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative"
 								data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false"
 								aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
@@ -157,9 +225,9 @@
 
 								<!-- Direct Ticket Operations Button -->
 								<div class="p-2 rounded-bottom border-top text-center bg-light">
-									<a href="tickets.html" class="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2" style="background-color: #047d24;">
+									<a href="/tickets" class="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2" style="background-color: #047d24;">
 										<i class="ti ti-ticket fs-16"></i>
-										<span>Open Ticket Suite</span>
+										<span>Open Ticket Operations</span>
 									</a>
 								</div>
 
@@ -167,47 +235,57 @@
 						</div>
 					</div>
 
-					<!-- User Profile Dropdown -->
+					<!-- User Dropdown -->
 					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
 						<a href="javascript:void(0);"
-							class="topbar-link dropdown-toggle drop-arrow-none position-relative d-flex align-items-center gap-2"
+							class="topbar-link dropdown-toggle drop-arrow-none position-relative"
 							data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
-							<div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-12 shadow-sm" style="width: 36px; height: 36px; background: #047d24;">
-								SK
-							</div>
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex"
+								alt="user-image">
 							<span class="online text-success"><i
 									class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
 						</a>
 						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
 
 							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
-								<div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-14 me-2 shadow-sm" style="width: 40px; height: 40px; background: #047d24;">
-									SK
-								</div>
-								<div>
-									<p class="fw-bold text-dark mb-0">Scott Karan</p>
-									<span class="badge bg-soft-success text-success fs-11 fw-semibold">Operations Admin</span>
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42"
+									alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0">Katherine Brooks</p>
+									<span class="d-block fs-13">Installer</span>
 								</div>
 							</div>
 
-							<a href="javascript:void(0);" onclick="openEmailGatewayModal()" class="dropdown-item">
-								<i class="ti ti-mail-shield me-2 text-primary align-middle"></i>
-								<span class="align-middle">Inbound Email Gateway</span>
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
 							</a>
 
-							<a href="javascript:void(0);" onclick="openUserManagementModal()" class="dropdown-item">
-								<i class="ti ti-users me-2 text-primary align-middle"></i>
-								<span class="align-middle">Team & Permissions</span>
+							<!-- item -->
+							<div
+								class="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
+								<label class="form-check-label" for="notify"><i
+										class="ti ti-bell"></i>Notifications</label>
+								<input class="form-check-input me-0" type="checkbox" role="switch" id="notify">
+							</div>
+
+							<!-- Item-->
+							<a href="javascript:void(0);" class="dropdown-item">
+								<i class="ti ti-help-circle me-1 align-middle"></i>
+								<span class="align-middle">Help & Support</span>
 							</a>
 
-							<a href="javascript:void(0);" onclick="openKnowledgeBaseModal()" class="dropdown-item">
-								<i class="ti ti-book me-2 text-success align-middle"></i>
-								<span class="align-middle">Diagnostic SOPs</span>
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-settings me-1 align-middle"></i>
+								<span class="align-middle">Settings</span>
 							</a>
 
+							<!-- Item-->
 							<div class="pt-2 mt-2 border-top">
-								<a href="login.html" onclick="sessionStorage.removeItem('lilypad_auth_user'); localStorage.removeItem('lilypad_logged_in');" class="dropdown-item text-danger fw-semibold">
-									<i class="ti ti-logout me-2 fs-16 align-middle"></i>
+								<a href="login.html" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
 									<span class="align-middle">Sign Out</span>
 								</a>
 							</div>
@@ -285,7 +363,7 @@
 									</a>
 								</li>
 								<li>
-									<a href="tickets.html?view=kb">
+									<a href="javascript:void(0);" onclick="openKnowledgeBaseModal()">
 										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
 									</a>
 								</li>
@@ -296,13 +374,13 @@
 						<li>
 							<ul>
 								<li class="submenu">
-									<a href="javascript:void(0);">
+									<a href="javascript:void(0);" class="subdrop">
 										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
 									</a>
 									<ul>
-										<li><a href="tickets.html?admin=email"><i class="ti ti-mail-shield me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
-										<li><a href="tickets.html?admin=team"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
-										<li><a href="tickets.html?admin=forms"><i class="ti ti-tool me-2 text-primary"></i>Dynamic Form Builder</a></li>
+										<li><a href="javascript:void(0);" onclick="openEmailGatewayModal()"><i class="ti ti-mail-shield me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="javascript:void(0);" onclick="openUserManagementModal()"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="javascript:void(0);" onclick="openFormBuilderModal()"><i class="ti ti-tool me-2 text-primary"></i>Dynamic Form Builder</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -344,16 +422,16 @@
 						<p class="text-muted fs-13 mb-0">Overview of active support queues, diagnostic activity, and real-time operations.</p>
 					</div>
 					<div class="d-flex align-items-center gap-2 flex-wrap">
-						<a href="tickets.html?admin=email" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+						<button type="button" onclick="openEmailGatewayModal()" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
 							<i class="ti ti-mail-shield me-1"></i> Email Gateway
-						</a>
-						<a href="tickets.html?view=kb" class="btn btn-outline-success btn-sm rounded-pill px-3">
+						</button>
+						<button type="button" onclick="openKnowledgeBaseModal()" class="btn btn-outline-success btn-sm rounded-pill px-3">
 							<i class="ti ti-book me-1"></i> Diagnostic SOPs
-						</a>
-						<a href="tickets.html" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
+						</button>
+						<button type="button" onclick="openIntakeModal()" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-1">
 							<i class="ti ti-plus"></i>
 							<span>New Ticket</span>
-						</a>
+						</button>
 					</div>
 				</div>
 
@@ -477,8 +555,8 @@
 				</p>
 				<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
 					<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
-					<a href="tickets.html?view=kb" class="text-muted fs-13">Knowledge Base</a>
-					<a href="tickets.html?admin=email" class="text-muted fs-13">Email Gateway</a>
+					<a href="knowledge-base.html" class="text-muted fs-13">Knowledge Base</a>
+					<a href="admin-email.html" class="text-muted fs-13">Email Gateway</a>
 				</div>
 			</footer>
 			<!-- End Footer -->
@@ -503,6 +581,14 @@
 	<script src="assets/plugins/datatables/js3/dataTables.min.js"></script>
     <script src="assets/plugins/datatables/js3/dataTables.bootstrap5.min.js"></script>
 
+	<!-- Daterangepicker JS -->
+	<!-- Apexchart JS -->
+	<script src="assets/plugins/apexchart/apexcharts.min.js"></script>
+	<script src="assets/plugins/apexchart/chart-data.js"></script>
+
+	<!-- Custom Json Js -->
+	<script src="assets/json/dashboard.js"></script>
+
 	<!-- Main JS -->
 	<!-- Flatpickr JS -->
     <script src="assets/plugins/flatpickr/flatpickr.min.js"></script>
@@ -510,6 +596,2763 @@
     <script src="assets/js/script.js"></script>
     <script src="assets/js/lilypad-notifications.js"></script>
 
+
+	<!-- Floating Bulk Selection Bar -->
+	<div id="bulkActionBar" class="bulk-bar">
+		<span class="fs-13 fw-semibold"><span id="bulkSelectedCount">0</span> selected</span>
+		<div class="vr bg-secondary"></div>
+		<button class="btn btn-sm btn-outline-light py-1" onclick="bulkUpdateStatus('In Progress')">Move to In Progress</button>
+		<button class="btn btn-sm btn-outline-success py-1" onclick="bulkUpdateStatus('Complete')">Mark Complete</button>
+		<button class="btn btn-sm btn-outline-danger py-1" onclick="bulkDelete()"><i class="ti ti-trash"></i> Delete</button>
+		<button class="btn btn-sm btn-link text-white text-decoration-none py-1" onclick="deselectAll()"><i class="ti ti-x"></i></button>
+	</div>
+
+	<!-- Centered Ticket Details & Operations Modal (Popup) -->
+	<div class="modal fade" id="ticketDetailModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+			<div class="modal-content border-0 shadow-lg rounded-3">
+				
+				<div class="modal-header py-3 px-4 border-bottom bg-light d-flex align-items-center justify-content-between">
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<span id="drawerUid" class="badge bg-secondary fs-13 px-2 py-1">LP-1001</span>
+						<span id="drawerStatusBadge" class="badge badge-todo px-2 py-1">To-Do</span>
+						<span id="drawerDueBadge" class="badge bg-light text-dark border px-2 py-1 fs-11">Due in 3 days</span>
+					</div>
+					<div class="d-flex align-items-center gap-2">
+						<button class="btn btn-sm btn-outline-success py-1 px-2 fs-12" onclick="openPromoteToKbModal()" title="Promote ticket solution to Knowledgebase SOP">
+							<i class="ti ti-bulb me-1"></i> Save to KB
+						</button>
+						<a id="drawerPortalLink" href="/client-portal.html" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-2 fs-12" title="Open Customer Magic Link">
+							<i class="ti ti-external-link me-1"></i> Portal Link
+						</a>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					</div>
+				</div>
+
+				<div class="modal-body p-4">
+					<h4 id="drawerTitle" class="fw-bold mb-1 text-dark">Ticket Title</h4>
+					<p id="drawerDesc" class="text-muted fs-13 mb-3"></p>
+
+					<!-- Navigation Tabs -->
+					<ul class="nav nav-tabs mb-3 fs-13 fw-semibold">
+						<li class="nav-item">
+							<button class="nav-link active py-2" data-bs-toggle="tab" data-bs-target="#tabDrawerDetails">Details & Diagnostics</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-2" data-bs-toggle="tab" data-bs-target="#tabDrawerComments">Discussions & Notes</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-2" data-bs-toggle="tab" data-bs-target="#tabDrawerFiles">
+								📁 Files & Proofs (<span id="drawerFilesCount">0</span>)
+							</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-2" data-bs-toggle="tab" data-bs-target="#tabDrawerTime">Time Tracking</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-2" data-bs-toggle="tab" data-bs-target="#tabDrawerExpenses">💰 Expenses</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-2" data-bs-toggle="tab" data-bs-target="#tabDrawerAudit">Audit History</button>
+						</li>
+					</ul>
+
+					<div class="tab-content flex-fill">
+						<!-- Tab 1: Details & Diagnostic Checklists -->
+						<div class="tab-pane fade show active" id="tabDrawerDetails">
+							
+							<!-- Contextual Machine Diagnostic "Check First" Box -->
+							<div id="drawerCheckFirstContainer"></div>
+
+							<h6 class="fw-bold text-uppercase fs-12 text-muted mb-2">Core Attributes & Asset Link</h6>
+							<div class="row g-2 mb-3 fs-13">
+								<div class="col-6 col-md-3">
+									<span class="text-muted d-block">Category</span>
+									<strong id="drawerCategory" class="text-dark">IT & Hardware</strong>
+								</div>
+								<div class="col-6 col-md-3">
+									<span class="text-muted d-block">Priority</span>
+									<span id="drawerPriority" class="badge priority-high px-2 py-1">High</span>
+								</div>
+								<div class="col-6 col-md-3">
+									<span class="text-muted d-block">Linked Product / Asset</span>
+									<strong id="drawerLinkedProduct" class="text-primary d-flex align-items-center gap-1">
+										<i class="ti ti-box"></i> Antari 2000 Elite
+									</strong>
+								</div>
+								<div class="col-6 col-md-3">
+									<span class="text-muted d-block">Target Due Date</span>
+									<input type="date" id="drawerDueDateInput" class="form-control form-control-sm mt-1" onchange="updateDrawerDueDate(this.value)">
+								</div>
+								<div class="col-6 col-md-3 mt-2">
+									<span class="text-muted d-block">Reporter</span>
+									<strong id="drawerReporter" class="text-dark">Sarah Connor</strong>
+								</div>
+								<div class="col-6 col-md-3 mt-2">
+									<span class="text-muted d-block">Assignee</span>
+									<select id="drawerAssigneeSelect" class="form-select form-select-sm mt-1" onchange="updateDrawerAssignee()"></select>
+								</div>
+							</div>
+
+							<!-- Watchers / CC Collaborators -->
+							<div class="card bg-light border-0 rounded-3 p-3 mb-3">
+								<div class="d-flex align-items-center justify-content-between mb-2">
+									<h6 class="fw-bold text-uppercase fs-12 text-dark mb-0 d-flex align-items-center gap-1">
+										<i class="ti ti-eye text-primary"></i> Watchers & CC Collaborators
+									</h6>
+									<div class="dropdown">
+										<button class="btn btn-sm btn-link text-primary p-0 text-decoration-none fs-12 fw-semibold dropdown-toggle" data-bs-toggle="dropdown">
+											+ Add Watcher
+										</button>
+										<ul class="dropdown-menu dropdown-menu-end fs-13" id="addWatcherDropdownList"></ul>
+									</div>
+								</div>
+								<div id="drawerWatchersContainer" class="d-flex flex-wrap gap-1"></div>
+							</div>
+
+							<!-- Dynamic Form Data -->
+							<div class="card bg-light border-0 rounded-3 p-3 mb-3">
+								<h6 class="fw-bold text-uppercase fs-12 text-primary mb-2 d-flex align-items-center gap-2">
+									<i class="ti ti-database"></i> Category Specifications (formData)
+								</h6>
+								<div id="drawerFormDataFields" class="row g-2 fs-13"></div>
+							</div>
+						</div>
+
+						<!-- Tab 2: Comments & Canned Responses -->
+						<div class="tab-pane fade" id="tabDrawerComments">
+							<div id="drawerCommentsList" class="mb-3" style="max-height: 280px; overflow-y: auto;"></div>
+
+							<form onsubmit="postDrawerComment(event)">
+								<div class="d-flex align-items-center justify-content-between mb-2">
+									<div class="d-flex gap-2">
+										<div class="form-check">
+											<input class="form-check-input" type="radio" name="commentType" id="typePublic" value="public" checked>
+											<label class="form-check-label fs-12 fw-semibold" for="typePublic">Public Reply</label>
+										</div>
+										<div class="form-check">
+											<input class="form-check-input" type="radio" name="commentType" id="typeInternal" value="internal">
+											<label class="form-check-label fs-12 fw-semibold text-warning" for="typeInternal"><i class="ti ti-lock"></i> Internal Staff Note</label>
+										</div>
+									</div>
+									<div class="dropdown">
+										<button type="button" class="btn btn-sm btn-link text-success p-0 text-decoration-none fs-12 fw-semibold dropdown-toggle" data-bs-toggle="dropdown">
+											<i class="ti ti-template me-1"></i> Quick Macro
+										</button>
+										<ul class="dropdown-menu dropdown-menu-end fs-12 shadow-sm">
+											<li><a class="dropdown-item" href="javascript:void(0);" onclick="insertMacro('Artwork proof approved - proceeding with master silkscreen printing.')">Proof Approved (Print)</a></li>
+											<li><a class="dropdown-item" href="javascript:void(0);" onclick="insertMacro('Awaiting updated carton dieline specs from packaging supplier.')">Awaiting Carton Specs</a></li>
+											<li><a class="dropdown-item" href="javascript:void(0);" onclick="insertMacro('User manual technical translations completed and queued for layout review.')">Manual Translations Done</a></li>
+											<li><a class="dropdown-item" href="javascript:void(0);" onclick="insertMacro('Hardware quality assurance inspection passed all 12 test checkpoints.')">QA Testing Passed</a></li>
+											<li><a class="dropdown-item" href="javascript:void(0);" onclick="insertMacro('Task is complete. Please review and verify in your portal.')">Mark Resolved Sign-off</a></li>
+										</ul>
+									</div>
+								</div>
+								<div class="mb-2">
+									<textarea id="drawerCommentInput" class="form-control form-control-sm" rows="2" placeholder="Write reply or internal note..." required></textarea>
+								</div>
+								<button type="submit" class="btn btn-sm btn-primary w-100"><i class="ti ti-send me-1"></i> Add Note / Reply</button>
+							</form>
+						</div>
+
+						<!-- Tab 3: File Attachments & Proofs -->
+						<div class="tab-pane fade" id="tabDrawerFiles">
+							<div class="border border-dashed rounded-3 p-3 text-center mb-3 bg-light" style="cursor: pointer;" onclick="document.getElementById('drawerFileInput').click()">
+								<i class="ti ti-cloud-upload fs-28 text-primary mb-1 d-block"></i>
+								<span class="fs-13 fw-semibold text-dark d-block">Click or Drop Artwork Proofs, Manuals, & Spec Files</span>
+								<span class="fs-11 text-muted">Supports AI, PDF, DXF, PNG, SVG, DOCX, ZIP (Up to 50MB)</span>
+								<input type="file" id="drawerFileInput" class="d-none" multiple onchange="handleFileUpload(event)">
+							</div>
+
+							<h6 class="fw-bold fs-12 text-uppercase text-muted mb-2">Attached Files & Proofs</h6>
+							<div id="drawerFilesList" class="d-flex flex-column gap-2" style="max-height: 280px; overflow-y: auto;"></div>
+						</div>
+
+						<!-- Tab 4: Time Tracking -->
+						<div class="tab-pane fade" id="tabDrawerTime">
+							<div class="card bg-light border-0 rounded-3 p-3 mb-3 text-center">
+								<span class="text-muted fs-12 text-uppercase fw-semibold">Total Time Spent</span>
+								<h3 class="fw-bold text-primary mb-0" id="drawerTotalHours">0.0 hrs</h3>
+							</div>
+
+							<div id="drawerWorkLogsList" class="mb-3 fs-13" style="max-height: 180px; overflow-y: auto;"></div>
+
+							<form onsubmit="logWorkTime(event)" class="card border p-3 rounded-3">
+								<h6 class="fw-bold fs-13 mb-2">Log Work Hours</h6>
+								<div class="row g-2 mb-2">
+									<div class="col-4">
+										<input type="number" step="0.25" id="workHoursInput" class="form-control form-control-sm" placeholder="e.g. 1.5" required>
+									</div>
+									<div class="col-8">
+										<input type="text" id="workNoteInput" class="form-control form-control-sm" placeholder="Work summary / activity">
+									</div>
+								</div>
+								<button type="submit" class="btn btn-sm btn-outline-primary"><i class="ti ti-clock-plus me-1"></i> Log Hours</button>
+							</form>
+						</div>
+
+						<!-- Tab 5: Material & Expense Tracking -->
+						<div class="tab-pane fade" id="tabDrawerExpenses">
+							<div class="card bg-light border-0 rounded-3 p-3 mb-3 text-center">
+								<span class="text-muted fs-12 text-uppercase fw-semibold">Total Material & Tooling Cost</span>
+								<h3 class="fw-bold text-success mb-0" id="drawerTotalExpenses">$0.00</h3>
+							</div>
+
+							<div id="drawerExpensesList" class="mb-3 fs-13" style="max-height: 180px; overflow-y: auto;"></div>
+
+							<form onsubmit="logExpense(event)" class="card border p-3 rounded-3">
+								<h6 class="fw-bold fs-13 mb-2">Add Expense / Material Cost</h6>
+								<div class="row g-2 mb-2">
+									<div class="col-6">
+										<input type="text" id="expItemInput" class="form-control form-control-sm" placeholder="Item / Tooling (e.g. Film Plate)" required>
+									</div>
+									<div class="col-6">
+										<input type="number" step="0.01" id="expAmountInput" class="form-control form-control-sm" placeholder="Cost ($ USD)" required>
+									</div>
+									<div class="col-6">
+										<input type="text" id="expPoInput" class="form-control form-control-sm" placeholder="PO / Invoice # (e.g. PO-88412)">
+									</div>
+									<div class="col-6">
+										<input type="text" id="expVendorInput" class="form-control form-control-sm" placeholder="Vendor / Supplier">
+									</div>
+								</div>
+								<button type="submit" class="btn btn-sm btn-outline-success"><i class="ti ti-plus me-1"></i> Add Expense Line</button>
+							</form>
+						</div>
+
+						<!-- Tab 6: Audit History -->
+						<div class="tab-pane fade" id="tabDrawerAudit">
+							<div id="drawerAuditTimeline" class="mt-2"></div>
+						</div>
+					</div>
+
+				</div>
+
+				<div class="modal-footer border-top py-2 px-4 bg-light d-flex align-items-center justify-content-between">
+					<button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>
+					<div class="d-flex gap-2">
+						<button class="btn btn-sm btn-outline-warning" onclick="updateDrawerStatus('In Progress')">
+							<i class="ti ti-loader-2 me-1"></i> Move to In Progress
+						</button>
+						<button class="btn btn-sm btn-success px-3" onclick="updateDrawerStatus('Complete')">
+							<i class="ti ti-circle-check me-1"></i> Mark Complete
+						</button>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	<!-- SOP Detail Modal Popup -->
+	<div class="modal fade" id="sopDetailModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-lg">
+			<div class="modal-content border-0 shadow-lg">
+				<div class="modal-header py-3 px-4 border-bottom bg-light d-flex align-items-center justify-content-between">
+					<div class="d-flex align-items-center gap-2">
+						<span class="badge bg-dark text-white fw-bold fs-12 px-2 py-1" id="sopModalCode">SOP-014</span>
+						<span class="badge bg-soft-primary text-primary fw-semibold fs-12" id="sopModalProduct">Antari 2000 Elite</span>
+					</div>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body p-4">
+					<h4 class="fw-bold text-dark mb-2" id="sopModalTitle">Silkscreen Artwork Alignment & Emulsion Curing Protocol</h4>
+					<div class="d-flex align-items-center gap-3 fs-12 text-muted mb-3 pb-2 border-bottom">
+						<span><i class="ti ti-user me-1"></i> Author: <strong class="text-dark" id="sopModalAuthor">Scott Karan</strong></span>
+						<span><i class="ti ti-clock me-1"></i> Updated: <span id="sopModalUpdated">2 days ago</span></span>
+						<span class="badge bg-soft-success text-success"><i class="ti ti-shield-check me-1"></i> Verified Factory SOP</span>
+					</div>
+
+					<div class="alert alert-warning border-0 rounded-3 mb-3 p-3 fs-13">
+						<strong class="d-block text-warning-emphasis mb-1"><i class="ti ti-alert-triangle me-1"></i> Observed Failure Symptom:</strong>
+						<span id="sopModalSymptom" class="text-dark">Silkscreen lettering offset or smudging after powder-coat bake.</span>
+					</div>
+
+					<h6 class="fw-bold text-dark text-uppercase fs-12 mb-2 d-flex align-items-center gap-1">
+						<i class="ti ti-list-check text-success"></i> Pre-Flight "Check First" Diagnostic Steps:
+					</h6>
+					<div class="d-flex flex-column gap-2 mb-3" id="sopModalStepsList"></div>
+
+					<div class="p-3 bg-light rounded-3 border">
+						<h6 class="fw-bold text-dark text-uppercase fs-12 mb-1"><i class="ti ti-bulb text-primary me-1"></i> Permanent Resolution & Prevention:</h6>
+						<p class="mb-0 fs-13 text-dark" id="sopModalResolution">Use high-adhesion 2-part epoxy ink with 300-mesh screen.</p>
+					</div>
+				</div>
+				<div class="modal-footer border-top py-2 px-4 bg-light d-flex align-items-center justify-content-between">
+					<button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-sm btn-success px-3" onclick="alert('Diagnostic checklist verified and logged to audit trail!')">
+						<i class="ti ti-check me-1"></i> Mark Diagnostics Verified
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Knowledgebase & Machine Trend Analytics Modal -->
+	<div class="modal fade" id="knowledgebaseModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+			<div class="modal-content border-0 shadow">
+				<div class="modal-header py-3 px-4 border-bottom bg-light">
+					<div class="d-flex align-items-center gap-2">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:34px; height:34px;">
+							<i class="ti ti-brain fs-18"></i>
+						</div>
+						<div>
+							<h5 class="modal-title fw-bold mb-0 text-dark">Machine Trends & Knowledgebase Hub</h5>
+							<span class="fs-12 text-muted">Recurring defect analytics, root cause playbooks, and diagnostic SOPs</span>
+						</div>
+					</div>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				
+				<div class="modal-body p-4">
+					<ul class="nav nav-pills mb-4" id="kbModalTabs">
+						<li class="nav-item">
+							<button class="nav-link active py-2 px-3 fs-13 fw-semibold" data-bs-toggle="tab" data-bs-target="#tabKbTrends">
+								<i class="ti ti-chart-bar me-1"></i> 1. Machine Failure Trends & Reliability
+							</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-2 px-3 fs-13 fw-semibold" data-bs-toggle="tab" data-bs-target="#tabKbArticles">
+								<i class="ti ti-book me-1"></i> 2. Troubleshooting Knowledgebase (<span id="kbArticlesCountBadge">4</span>)
+							</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-2 px-3 fs-13 fw-semibold text-success" data-bs-toggle="tab" data-bs-target="#tabKbCreate">
+								<i class="ti ti-plus me-1"></i> + Create New Diagnostic SOP
+							</button>
+						</li>
+					</ul>
+
+					<div class="tab-content">
+						<!-- Tab 1: Machine Failure Trends -->
+						<div class="tab-pane fade show active" id="tabKbTrends">
+							<div class="alert alert-info border-0 rounded-3 d-flex align-items-center gap-2 mb-4 py-2 px-3 fs-13">
+								<i class="ti ti-info-circle fs-18 text-info"></i>
+								<span>These defect patterns are computed directly from past resolved tickets to prioritize what to inspect first on any machine.</span>
+							</div>
+
+							<div class="row g-3" id="machineTrendsContainer">
+								<!-- Rendered dynamically -->
+							</div>
+						</div>
+
+						<!-- Tab 2: Searchable Knowledgebase SOPs -->
+						<div class="tab-pane fade" id="tabKbArticles">
+							<div class="row g-2 mb-3">
+								<div class="col-md-6">
+									<input type="text" id="kbSearchInput" class="form-control form-control-sm" placeholder="Search by symptom, machine, or keyword (e.g. Silkscreen, Modbus)..." oninput="renderKbArticlesList()">
+								</div>
+								<div class="col-md-6">
+									<select id="kbModelFilter" class="form-select form-select-sm" onchange="renderKbArticlesList()">
+										<option value="">All Machines / Products</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="row g-3" id="kbArticlesListContainer">
+								<!-- Rendered dynamically -->
+							</div>
+						</div>
+
+						<!-- Tab 3: Create New SOP -->
+						<div class="tab-pane fade" id="tabKbCreate">
+							<form id="createKbForm" onsubmit="saveNewKbArticle(event)">
+								<div class="row g-3">
+									<div class="col-md-6">
+										<label class="form-label fs-13 fw-semibold">Machine / Product Model <span class="text-danger">*</span></label>
+										<select id="newKbProduct" class="form-select form-select-sm" required>
+											<option value="Antari 2000 Elite">Antari 2000 Elite</option>
+											<option value="LilyPad Solar Telemetry Gateway">LilyPad Solar Telemetry Gateway</option>
+											<option value="Industrial LFP Battery Array 480V">Industrial LFP Battery Array 480V</option>
+											<option value="Enterprise ERP Server Node X1">Enterprise ERP Server Node X1</option>
+										</select>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label fs-13 fw-semibold">SOP Guide Title <span class="text-danger">*</span></label>
+										<input type="text" id="newKbTitle" class="form-control form-control-sm" placeholder="e.g. SOP-014: Silkscreen Alignment & Emulsion Curing Protocol" required>
+									</div>
+									<div class="col-12">
+										<label class="form-label fs-13 fw-semibold">Common Symptom / Problem Observed <span class="text-danger">*</span></label>
+										<input type="text" id="newKbSymptom" class="form-control form-control-sm" placeholder="e.g. Silkscreen lettering misaligned or smudging during assembly" required>
+									</div>
+									<div class="col-12">
+										<label class="form-label fs-13 fw-semibold">"Check First" Diagnostic Steps (1 per line) <span class="text-danger">*</span></label>
+										<textarea id="newKbSteps" class="form-control form-control-sm" rows="4" placeholder="1. Inspect chassis alignment pin tolerances (±0.2mm)&#10;2. Check UV curing oven temperature (must reach 140°C for 8 mins)&#10;3. Verify mesh tension gauge reads 24 N/cm" required></textarea>
+									</div>
+									<div class="col-12">
+										<label class="form-label fs-13 fw-semibold">Permanent Resolution & Root Cause</label>
+										<textarea id="newKbResolution" class="form-control form-control-sm" rows="3" placeholder="Explain the underlying fix and how to prevent reoccurrence..."></textarea>
+									</div>
+								</div>
+								<div class="text-end mt-4 pt-3 border-top">
+									<button type="submit" class="btn btn-primary px-4 shadow-sm">
+										<i class="ti ti-check me-1"></i> Publish to Knowledgebase
+									</button>
+								</div>
+							</form>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Promote Ticket to KB Modal -->
+	<div class="modal fade" id="promoteKbModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-lg">
+			<div class="modal-content border-0 shadow">
+				<div class="modal-header py-3 px-4 border-bottom bg-success-subtle">
+					<h5 class="modal-title fw-bold text-success d-flex align-items-center gap-2">
+						<i class="ti ti-bulb"></i> Promote Ticket Solution to Knowledgebase SOP
+					</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<form onsubmit="submitPromotedKb(event)">
+					<div class="modal-body p-4">
+						<div class="row g-3">
+							<div class="col-md-6">
+								<label class="form-label fs-13 fw-semibold">Machine Model</label>
+								<input type="text" id="promotedProduct" class="form-control form-control-sm bg-light" readonly>
+							</div>
+							<div class="col-md-6">
+								<label class="form-label fs-13 fw-semibold">Source Ticket</label>
+								<input type="text" id="promotedSourceTicket" class="form-control form-control-sm bg-light" readonly>
+							</div>
+							<div class="col-12">
+								<label class="form-label fs-13 fw-semibold">SOP / Knowledgebase Title</label>
+								<input type="text" id="promotedTitle" class="form-control form-control-sm" required>
+							</div>
+							<div class="col-12">
+								<label class="form-label fs-13 fw-semibold">Key "Check First" Diagnostic Steps (1 per line)</label>
+								<textarea id="promotedSteps" class="form-control form-control-sm" rows="3" required></textarea>
+							</div>
+							<div class="col-12">
+								<label class="form-label fs-13 fw-semibold">Verified Solution & Root Cause</label>
+								<textarea id="promotedResolution" class="form-control form-control-sm" rows="3" required></textarea>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer border-top py-2 px-4 bg-light">
+						<button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-success px-4">Publish KB Article</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Inbound Email-to-Ticket Gateway & Anti-Spam Shield Modal -->
+	<div class="modal fade" id="emailGatewayModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+			<div class="modal-content border-0 shadow-lg">
+				<div class="modal-header py-3 px-4 border-bottom bg-light d-flex align-items-center justify-content-between">
+					<div class="d-flex align-items-center gap-2">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:34px; height:34px;">
+							<i class="ti ti-mail-shield fs-18"></i>
+						</div>
+						<div>
+							<h5 class="modal-title fw-bold mb-0 text-dark">Inbound Email & Anti-Spam Bot Shield</h5>
+							<span class="fs-12 text-muted">Automated ticket creation from email, SPF/DKIM verification, and spam quarantine</span>
+						</div>
+					</div>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				
+				<div class="modal-body p-4">
+					<ul class="nav nav-pills mb-4" id="emailGatewayTabs">
+						<li class="nav-item">
+							<button class="nav-link active py-2 px-3 fs-13 fw-semibold" data-bs-toggle="tab" data-bs-target="#tabEmailRouting">
+								<i class="ti ti-mail me-1"></i> 1. Mailbox & Category Routing
+							</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-2 px-3 fs-13 fw-semibold" data-bs-toggle="tab" data-bs-target="#tabAntiSpamShield">
+								<i class="ti ti-shield-lock me-1"></i> 2. Anti-Spam & Bot Protection
+							</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-2 px-3 fs-13 fw-semibold text-danger" data-bs-toggle="tab" data-bs-target="#tabSpamQuarantine">
+								<i class="ti ti-ban me-1"></i> 3. Quarantine Queue (<span id="quarantineCountBadge">2</span>)
+							</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-2 px-3 fs-13 fw-semibold text-success" data-bs-toggle="tab" data-bs-target="#tabEmailSimulator">
+								<i class="ti ti-flask me-1"></i> 4. Live Inbound Email Simulator
+							</button>
+						</li>
+					</ul>
+
+					<div class="tab-content">
+						<!-- Tab 1: Mailbox & Category Routing -->
+						<div class="tab-pane fade show active" id="tabEmailRouting">
+							<div class="card border rounded-3 p-3 mb-4 bg-light">
+								<div class="row g-3 align-items-center">
+									<div class="col-md-6">
+										<label class="form-label fs-13 fw-semibold">Primary Inbound Help Desk Address</label>
+										<div class="input-group input-group-sm">
+											<span class="input-group-text bg-white"><i class="ti ti-mail"></i></span>
+											<input type="text" id="primaryInboundEmail" class="form-control fw-bold text-dark" value="support@lilypad.local" readonly>
+											<button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('support@lilypad.local'); alert('Copied address to clipboard!')">Copy</button>
+										</div>
+										<span class="fs-11 text-muted">All emails sent here are processed, parsed, and converted to tickets.</span>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label fs-13 fw-semibold">Ingestion Mode</label>
+										<select id="ingestionMode" class="form-select form-select-sm">
+											<option value="webhook" selected>Instant Cloud Webhook (SendGrid / Postmark / AWS SES / Mailgun)</option>
+											<option value="imap">Direct IMAP / Exchange Polling (Every 60s)</option>
+										</select>
+										<span class="fs-11 text-muted">Webhook Endpoint: <code>http://localhost:8118/api/email-webhook</code></span>
+									</div>
+								</div>
+							</div>
+
+							<h6 class="fw-bold fs-13 text-dark mb-2 d-flex align-items-center gap-1">
+								<i class="ti ti-arrows-split text-primary"></i> Category Direct Routing Aliases
+							</h6>
+							<p class="fs-12 text-muted mb-3">Emails sent to specific department aliases automatically categorize and tag the new ticket.</p>
+
+							<div class="table-responsive">
+								<table class="table table-hover align-middle mb-0 fs-13 border rounded-3">
+									<thead class="table-light">
+										<tr>
+											<th>Incoming Email Alias</th>
+											<th>Target Category</th>
+											<th>Default Priority</th>
+											<th>Linked Machine / Model</th>
+											<th>Status</th>
+										</tr>
+									</thead>
+									<tbody id="emailAliasTableBody">
+										<tr>
+											<td><code>fx-support@lilypad.local</code></td>
+											<td><span class="badge bg-soft-primary text-primary">FX Machine Support</span></td>
+											<td><span class="badge priority-high">High</span></td>
+											<td><strong>Antari 2000 Elite</strong></td>
+											<td><span class="badge bg-success-subtle text-success">Active</span></td>
+										</tr>
+										<tr>
+											<td><code>fluid-finder@lilypad.local</code></td>
+											<td><span class="badge bg-soft-primary text-primary">Fluid Finder Update</span></td>
+											<td><span class="badge priority-normal">Normal</span></td>
+											<td><strong>All Fog / Haze Formulas</strong></td>
+											<td><span class="badge bg-success-subtle text-success">Active</span></td>
+										</tr>
+										<tr>
+											<td><code>po@lilypad.local</code></td>
+											<td><span class="badge bg-soft-primary text-primary">Vendor Purchase Order</span></td>
+											<td><span class="badge priority-high">High</span></td>
+											<td><strong>Tooling & Dielines</strong></td>
+											<td><span class="badge bg-success-subtle text-success">Active</span></td>
+										</tr>
+										<tr>
+											<td><code>it-help@lilypad.local</code></td>
+											<td><span class="badge bg-soft-primary text-primary">Computer/Laptop Issue</span></td>
+											<td><span class="badge priority-normal">Normal</span></td>
+											<td><strong>IT Hardware</strong></td>
+											<td><span class="badge bg-success-subtle text-success">Active</span></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<!-- Tab 2: Anti-Spam & Bot Shield -->
+						<div class="tab-pane fade" id="tabAntiSpamShield">
+							<div class="row g-3">
+								<div class="col-md-6">
+									<div class="card border rounded-3 p-3 h-100">
+										<h6 class="fw-bold fs-13 text-dark mb-3 d-flex align-items-center gap-2">
+											<i class="ti ti-shield-check text-success fs-16"></i> Active Anti-Spam Protection Rules
+										</h6>
+										
+										<div class="form-check form-switch mb-3">
+											<input class="form-check-input" type="checkbox" id="chkLoopBlock" checked>
+											<label class="form-check-label fs-13 fw-semibold text-dark" for="chkLoopBlock">
+												1. Block Infinite Mail Loops & Auto-Responders
+											</label>
+											<span class="d-block fs-11 text-muted">Drops <code>Auto-Submitted: auto-generated</code>, <code>X-Autoreply</code>, and <code>mailer-daemon</code> bounces.</span>
+										</div>
+
+										<div class="form-check form-switch mb-3">
+											<input class="form-check-input" type="checkbox" id="chkSpfDkim" checked>
+											<label class="form-check-label fs-13 fw-semibold text-dark" for="chkSpfDkim">
+												2. SPF / DKIM / DMARC Cryptographic Verification
+											</label>
+											<span class="d-block fs-11 text-muted">Rejects spoofed sender domains and unauthenticated SMTP relays.</span>
+										</div>
+
+										<div class="form-check form-switch mb-3">
+											<input class="form-check-input" type="checkbox" id="chkRateLimit" checked>
+											<label class="form-check-label fs-13 fw-semibold text-dark" for="chkRateLimit">
+												3. Rate Limiting & Anti-Flooding Threshold
+											</label>
+											<span class="d-block fs-11 text-muted">Maximum 3 tickets per email address per hour. Excess emails routed to quarantine.</span>
+										</div>
+
+										<div class="form-check form-switch mb-3">
+											<input class="form-check-input" type="checkbox" id="chkAiSpam" checked>
+											<label class="form-check-label fs-13 fw-semibold text-dark" for="chkAiSpam">
+												4. AI & Heuristic Content Scanner
+											</label>
+											<span class="d-block fs-11 text-muted">Scans for SEO spam keywords, phishing URLs, empty payloads, and suspicious links.</span>
+										</div>
+
+										<div class="form-check form-switch">
+											<input class="form-check-input" type="checkbox" id="chkFirstTimeChallenge" checked>
+											<label class="form-check-label fs-13 fw-semibold text-dark" for="chkFirstTimeChallenge">
+												5. First-Time Sender 1-Click Verification Challenge
+											</label>
+											<span class="d-block fs-11 text-muted">Sends a quick 1-click confirmation email to new senders to block crawlers and web scrapers.</span>
+										</div>
+									</div>
+								</div>
+
+								<div class="col-md-6">
+									<div class="card border rounded-3 p-3 h-100">
+										<h6 class="fw-bold fs-13 text-dark mb-2 d-flex align-items-center gap-2">
+											<i class="ti ti-list-check text-primary fs-16"></i> Trusted Domain Whitelist & Blacklist
+										</h6>
+										
+										<div class="mb-3">
+											<label class="form-label fs-12 fw-semibold text-success">Trusted Whitelist (Always bypass challenges)</label>
+											<textarea class="form-control form-control-sm" rows="3" readonly style="font-family:monospace; font-size:12px;">@antari.com&#10;@apexprints.com&#10;@packcraft.com&#10;@livenation.com&#10;@lilypad.local</textarea>
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label fs-12 fw-semibold text-danger">Blacklisted Senders & Domains (Auto-dropped)</label>
+											<textarea class="form-control form-control-sm" rows="3" readonly style="font-family:monospace; font-size:12px;">*@marketing-crawler.xyz&#10;*@crypto-leads.ru&#10;*@phish-invoices.net&#10;mailer-daemon@*</textarea>
+										</div>
+
+										<button class="btn btn-sm btn-primary w-100" onclick="alert('Anti-Spam security rules saved!')">
+											<i class="ti ti-check me-1"></i> Save Anti-Spam Security Rules
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Tab 3: Spam Quarantine Queue -->
+						<div class="tab-pane fade" id="tabSpamQuarantine">
+							<div class="alert alert-danger border-0 rounded-3 d-flex align-items-center justify-content-between mb-3 py-2 px-3 fs-13">
+								<div class="d-flex align-items-center gap-2">
+									<i class="ti ti-shield-x fs-20 text-danger"></i>
+									<span>These incoming messages were intercepted by the Anti-Spam Shield and held securely for review.</span>
+								</div>
+								<button class="btn btn-sm btn-outline-danger py-1" onclick="clearQuarantine()"><i class="ti ti-trash"></i> Clear All</button>
+							</div>
+
+							<div class="table-responsive">
+								<table class="table table-hover align-middle mb-0 fs-13 border rounded-3">
+									<thead class="table-light">
+										<tr>
+											<th>Sender</th>
+											<th>Subject & Snippet</th>
+											<th>Block Reason</th>
+											<th>Time</th>
+											<th class="text-end">Action</th>
+										</tr>
+									</thead>
+									<tbody id="quarantineTableBody">
+										<!-- Rendered dynamically -->
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<!-- Tab 4: Live Inbound Email Simulator -->
+						<div class="tab-pane fade" id="tabEmailSimulator">
+							<div class="row g-3">
+								<div class="col-md-6">
+									<div class="card border rounded-3 p-3 bg-light">
+										<h6 class="fw-bold fs-13 text-dark mb-3 d-flex align-items-center gap-2">
+											<i class="ti ti-send text-success"></i> Simulate Incoming Customer / Vendor Email
+										</h6>
+
+										<form id="emailSimForm" onsubmit="runEmailSimulation(event)">
+											<div class="mb-2">
+												<label class="form-label fs-12 fw-semibold">From (Sender Email):</label>
+												<input type="email" id="simFromEmail" class="form-control form-control-sm" value="mark.henderson@apexprints.com" required>
+											</div>
+
+											<div class="mb-2">
+												<label class="form-label fs-12 fw-semibold">To (Inbound Gateway Alias):</label>
+												<select id="simToEmail" class="form-select form-select-sm">
+													<option value="fx-support@lilypad.local">fx-support@lilypad.local (➔ FX Machine Support)</option>
+													<option value="fluid-finder@lilypad.local">fluid-finder@lilypad.local (➔ Fluid Finder Update)</option>
+													<option value="po@lilypad.local">po@lilypad.local (➔ Vendor Purchase Order)</option>
+													<option value="support@lilypad.local">support@lilypad.local (➔ Triage / Customer Support)</option>
+												</select>
+											</div>
+
+											<div class="mb-2">
+												<label class="form-label fs-12 fw-semibold">Subject:</label>
+												<input type="text" id="simSubject" class="form-control form-control-sm" value="Antari 2000 Elite Silkscreen Plate Proof Attached" required>
+											</div>
+
+											<div class="mb-2">
+												<label class="form-label fs-12 fw-semibold">Body Content:</label>
+												<textarea id="simBody" class="form-control form-control-sm" rows="3" required>Attached is the updated vector silkscreen plate artwork Rev C.2 for the Antari 2000 Elite front chassis. Please review tolerances.</textarea>
+											</div>
+
+											<div class="p-2 border rounded bg-white mb-3 fs-12">
+												<strong class="text-dark d-block mb-1">Simulate Attack / Spam Conditions:</strong>
+												<div class="form-check">
+													<input class="form-check-input" type="checkbox" id="simFlagLoop">
+													<label class="form-check-label text-danger" for="simFlagLoop">Inject <code>Auto-Submitted: auto-generated</code> (Mail Loop Test)</label>
+												</div>
+												<div class="form-check">
+													<input class="form-check-input" type="checkbox" id="simFlagFlood">
+													<label class="form-check-label text-danger" for="simFlagFlood">Simulate Rapid Bot Flood (>3 emails in 1 hour)</label>
+												</div>
+												<div class="form-check">
+													<input class="form-check-input" type="checkbox" id="simFlagAttach" checked>
+													<label class="form-check-label text-success" for="simFlagAttach">Attach Test Artwork Vector Proof (<code>Antari_Plate_Proof_v3.ai</code>, 4.2 MB)</label>
+												</div>
+											</div>
+
+											<button type="submit" class="btn btn-sm btn-primary w-100 shadow-sm">
+												<i class="ti ti-rocket me-1"></i> Send Inbound Email to Gateway
+											</button>
+										</form>
+									</div>
+								</div>
+
+								<div class="col-md-6">
+									<div class="card border rounded-3 p-3 h-100 bg-dark text-light" style="font-family:monospace; font-size:12px;">
+										<h6 class="fw-bold text-white mb-2 d-flex align-items-center justify-content-between">
+											<span><i class="ti ti-terminal me-1 text-success"></i> Gateway Security Inspection Log</span>
+											<span class="badge bg-success" id="simStatusBadge">IDLE</span>
+										</h6>
+										<div id="simConsoleLog" class="overflow-y-auto p-2 bg-black rounded" style="height: 340px;">
+											<span class="text-muted">[SYSTEM] Inbound SMTP/Webhook Gateway Ready on port 8118...</span><br>
+											<span class="text-muted">[ANTI-SPAM] SPF/DKIM filter active. Rate limiter: 3/hr. Bot deflector active.</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Admin User Management Modal -->
+	<div class="modal fade" id="userManagementModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-lg">
+			<div class="modal-content border-0 shadow">
+				<div class="modal-header py-3 px-4 border-bottom">
+					<h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+						<i class="ti ti-users text-primary"></i> Team & User Management
+					</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body p-4">
+					<ul class="nav nav-pills mb-4" id="userModalTabs">
+						<li class="nav-item">
+							<button class="nav-link active py-1 px-3 fs-13 fw-semibold" data-bs-toggle="tab" data-bs-target="#tabTeamList">Active Team Members (<span id="userCountBadge">5</span>)</button>
+						</li>
+						<li class="nav-item">
+							<button class="nav-link py-1 px-3 fs-13 fw-semibold text-primary" data-bs-toggle="tab" data-bs-target="#tabAddUser"><i class="ti ti-user-plus me-1"></i> Add New User</button>
+						</li>
+					</ul>
+
+					<div class="tab-content">
+						<div class="tab-pane fade show active" id="tabTeamList">
+							<div class="table-responsive">
+								<table class="table table-hover align-middle mb-0 fs-13">
+									<thead class="table-light">
+										<tr>
+											<th>Team Member</th>
+											<th>Role</th>
+											<th>Department</th>
+											<th>Assigned</th>
+											<th class="text-end">Actions</th>
+										</tr>
+									</thead>
+									<tbody id="userTableBody"></tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-pane fade" id="tabAddUser">
+							<form id="addUserForm" onsubmit="saveNewUser(event)">
+								<div class="row g-3">
+									<div class="col-md-6">
+										<label class="form-label fs-13 fw-semibold">Full Name <span class="text-danger">*</span></label>
+										<input type="text" id="newFullName" class="form-control form-control-sm" placeholder="e.g. Jordan Hayes" required>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label fs-13 fw-semibold">Email Address <span class="text-danger">*</span></label>
+										<input type="email" id="newEmail" class="form-control form-control-sm" placeholder="jordan@lilypad.local" required>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label fs-13 fw-semibold">Username <span class="text-danger">*</span></label>
+										<input type="text" id="newUsername" class="form-control form-control-sm" placeholder="jhayes" required>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label fs-13 fw-semibold">Temporary Password <span class="text-danger">*</span></label>
+										<input type="password" id="newPassword" class="form-control form-control-sm" placeholder="••••••••" value="Password123!" required>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label fs-13 fw-semibold">Role <span class="text-danger">*</span></label>
+										<select id="newRole" class="form-select form-select-sm">
+											<option value="Admin">Admin</option>
+											<option value="Support Lead">Support Lead</option>
+											<option value="Agent" selected>Agent</option>
+											<option value="Viewer">Viewer</option>
+										</select>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label fs-13 fw-semibold">Department <span class="text-danger">*</span></label>
+										<select id="newDepartment" class="form-select form-select-sm">
+											<option value="Engineering">Engineering</option>
+											<option value="Operations" selected>Operations</option>
+											<option value="Customer Support">Customer Support</option>
+											<option value="Finance">Finance</option>
+											<option value="Sales & Marketing">Sales & Marketing</option>
+										</select>
+									</div>
+								</div>
+								<div class="text-end mt-4 pt-3 border-top">
+									<button type="submit" class="btn btn-primary px-4 shadow-sm">
+										<i class="ti ti-user-plus me-1"></i> Create Team Member
+									</button>
+								</div>
+							</form>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Form Builder Modal -->
+	<div class="modal fade" id="formBuilderModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-lg">
+			<div class="modal-content border-0 shadow">
+				<div class="modal-header py-3 px-4 border-bottom">
+					<h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+						<i class="ti ti-tool text-primary"></i> Category & Dynamic Form Builder
+					</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body p-4">
+					<div class="row g-3 mb-4">
+						<div class="col-md-6">
+							<label class="form-label fs-13 fw-semibold">New Category Name</label>
+							<input type="text" id="builderCategoryName" class="form-control" placeholder="e.g. Quality Assurance & Testing">
+						</div>
+						<div class="col-md-6">
+							<label class="form-label fs-13 fw-semibold">Category Icon (Tabler Icon)</label>
+							<input type="text" id="builderCategoryIcon" class="form-control" placeholder="ti-building, ti-tool, ti-shield" value="ti-tool">
+						</div>
+					</div>
+
+					<h6 class="fw-bold text-uppercase fs-12 text-muted mb-2">Custom Dynamic Fields</h6>
+					<div id="builderFieldsList" class="d-flex flex-column gap-2 mb-3"></div>
+
+					<button type="button" class="btn btn-sm btn-outline-primary" onclick="addBuilderFieldRow()">
+						<i class="ti ti-plus me-1"></i> Add Custom Form Field
+					</button>
+				</div>
+				<div class="modal-footer border-top py-2 px-4 bg-light">
+					<button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary px-4" onclick="saveNewCategoryForm()">Save Category Form</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Dynamic Intake Modal -->
+	<div class="modal fade" id="intakeModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-lg">
+			<div class="modal-content border-0 shadow">
+				<div class="modal-header border-bottom py-3 px-4">
+					<h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+						<i class="ti ti-forms text-primary"></i> Create Ticket / Dynamic Intake
+					</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<form id="intakeFormSubmit" onsubmit="submitNewTicket(event)">
+					<div class="modal-body p-4">
+						
+						<!-- Step 1: Select Category -->
+						<label class="form-label fw-bold text-dark fs-13 text-uppercase mb-2">1. Select Request Category</label>
+						<div class="row g-2 mb-4" id="categorySelectionChips"></div>
+
+						<!-- Step 2: Standard Core Info & Model Selector -->
+						<label class="form-label fw-bold text-dark fs-13 text-uppercase mb-2">2. Ticket Overview & Linked Assets</label>
+						
+						<!-- Dynamic Pre-flight Model Hint -->
+						<div id="intakeModelHintContainer" class="alert alert-success border-success d-flex align-items-start gap-2 py-2 px-3 mb-3 fs-12" style="background:#eefaf1; display:none;">
+							<i class="ti ti-bulb fs-18 text-success flex-shrink-0 mt-1"></i>
+							<div>
+								<strong class="text-dark d-block">Known Diagnostic Checklist for <span id="intakeModelHintName">Antari 2000 Elite</span>:</strong>
+								<span id="intakeModelHintText" class="text-muted">1. Verify chassis mounting tolerances. 2. Check silkscreen curing temp.</span>
+							</div>
+						</div>
+
+						<div class="row g-3 mb-4">
+							<div class="col-md-8">
+								<label class="form-label fs-13 fw-semibold">Title / Summary</label>
+								<input type="text" id="formTitle" class="form-control" placeholder="e.g. Antari 2000 Elite Silkscreens, Cartons, User Manuals" required>
+							</div>
+							<div class="col-md-4">
+								<label class="form-label fs-13 fw-semibold">Priority</label>
+								<select id="formPriority" class="form-select">
+									<option value="Low">Low</option>
+									<option value="Normal" selected>Normal</option>
+									<option value="High">High</option>
+									<option value="Urgent">Urgent</option>
+								</select>
+							</div>
+							<div class="col-md-6">
+								<label class="form-label fs-13 fw-semibold">Linked Product / Asset Model</label>
+								<select id="formLinkedProduct" class="form-select" onchange="updateIntakeModelHint(this.value)">
+									<option value="Antari 2000 Elite">Antari 2000 Elite</option>
+									<option value="LilyPad Solar Telemetry Gateway">LilyPad Solar Telemetry Gateway</option>
+									<option value="Industrial LFP Battery Array 480V">Industrial LFP Battery Array 480V</option>
+									<option value="Enterprise ERP Server Node X1">Enterprise ERP Server Node X1</option>
+									<option value="General Asset / None">General Asset / None</option>
+								</select>
+							</div>
+							<div class="col-md-6">
+								<label class="form-label fs-13 fw-semibold">Target Due Date</label>
+								<input type="date" id="formDueDate" class="form-control">
+							</div>
+							<div class="col-12">
+								<label class="form-label fs-13 fw-semibold">Description</label>
+								<textarea id="formDesc" class="form-control" rows="3" placeholder="Provide detailed explanation and requirements..." required></textarea>
+							</div>
+							<div class="col-md-6">
+								<label class="form-label fs-13 fw-semibold">Reporter Name / Client</label>
+								<input type="text" id="formReporterName" class="form-control" placeholder="e.g. Mark Henderson (Packaging Lead)" value="Mark Henderson (Packaging Lead)">
+							</div>
+							<div class="col-md-6">
+								<label class="form-label fs-13 fw-semibold">Reporter Email</label>
+								<input type="email" id="formReporterEmail" class="form-control" placeholder="mark@lilypad.local" value="mark@lilypad.local">
+							</div>
+						</div>
+
+						<!-- Step 3: Dynamic Category-Specific Fields -->
+						<div class="border-top pt-3">
+							<label class="form-label fw-bold text-primary fs-13 text-uppercase mb-2 d-flex align-items-center gap-2">
+								<i class="ti ti-adjustments-alt"></i> 3. Dynamic Category Attributes (<span id="dynamicCategoryLabel">IT & Hardware</span>)
+							</label>
+							<div id="dynamicFieldsContainer" class="row g-3"></div>
+						</div>
+
+					</div>
+					<div class="modal-footer border-top py-2 px-4 bg-light">
+						<button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary px-4 shadow-sm">Submit Ticket</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+    <!-- App Engine Logic -->
+    <script>
+        let CATEGORIES = [
+            {
+                name: 'FX Machine Support',
+                slug: 'fx-machine-support',
+                icon: 'ti-engine',
+                defaultPriority: 'High',
+                fields: [
+                    { name: 'machineModel', label: 'Machine / Equipment Model', type: 'select', options: ['Antari 2000 Elite', 'Antari DarkFX Spot 510', 'Antari Z-350 Fazer', 'Antari MB-1 Mobile Fogger', 'Custom Special Effects Rig'], required: true },
+                    { name: 'serialNumber', label: 'Serial / Production Batch #', type: 'text', placeholder: 'e.g. SN-2026-8812', defaultValue: 'SN-2026-8812' },
+                    { name: 'issueSubtype', label: 'Component / Subsystem', type: 'select', options: ['Silkscreens, Cartons & Manuals', 'Heater Core / Thermocouple', 'Fluid Pump / Flow Sensor', 'DMX512 / Wireless Control', 'Power Supply / PCB Mainboard', 'Cosmetic / Housing Chassis'], required: true },
+                    { name: 'voltageSpec', label: 'Operating Voltage Spec', type: 'select', options: ['120V / 60Hz', '230V / 50Hz', 'Universal / Battery 24V'], required: true },
+                    { name: 'warrantyStatus', label: 'Warranty / Service Status', type: 'select', options: ['Under Factory Warranty', 'Out of Warranty (Billable Repair)', 'R&D / Pre-Production Sample'] }
+                ]
+            },
+            {
+                name: 'Fluid Finder Update',
+                slug: 'fluid-finder-update',
+                icon: 'ti-droplet',
+                defaultPriority: 'Normal',
+                fields: [
+                    { name: 'fluidFormula', label: 'Fluid Formula / Product Line', type: 'select', options: ['Heavy Density Fog (FLG)', 'Fast Dissipating Fog (FLY)', 'Neutral Haze Fluid (HZL)', 'Special FX Bubble Fluid', 'Snow Liquid (SL-5N)', 'Oil-Based Super Haze'], required: true },
+                    { name: 'compatibleMachines', label: 'Target Compatible Machines', type: 'text', placeholder: 'e.g. Antari 2000 Elite, Z-Series, M-Series', defaultValue: 'Antari 2000 Elite, Z-Series', required: true },
+                    { name: 'changeType', label: 'Update Scope', type: 'select', options: ['Formula / Viscosity Revision', 'Compatibility Matrix Update', 'New Packaging / Container Size', 'SDS / Safety Regulatory Certification'], required: true },
+                    { name: 'sdsNumber', label: 'SDS / Chemical Registration #', type: 'text', placeholder: 'e.g. SDS-2026-FLG-04' }
+                ]
+            },
+            {
+                name: 'Computer/Laptop Issue',
+                slug: 'computer-laptop-issue',
+                icon: 'ti-device-laptop',
+                defaultPriority: 'Normal',
+                fields: [
+                    { name: 'deviceType', label: 'Hardware Device Type', type: 'select', options: ['MacBook Pro 16" (M3 Max)', 'Dell XPS 15 Laptop', 'Precision Workstation PC', 'Warehouse Handheld Scanner / Tablet', 'Office Monitor / Peripherals'], required: true },
+                    { name: 'assetTag', label: 'Asset Tag Number', type: 'text', placeholder: 'e.g. LP-TAG-4421', defaultValue: 'LP-TAG-1092' },
+                    { name: 'operatingSystem', label: 'Operating System', type: 'select', options: ['macOS Sequoia 15.x', 'Windows 11 Enterprise', 'Ubuntu Linux 24.04 LTS', 'iPadOS / Android Enterprise'], required: true },
+                    { name: 'workstationIssue', label: 'Specific Hardware / OS Failure', type: 'textarea', placeholder: 'Explain boot failure, peripheral malfunction, or software crash...', required: true }
+                ]
+            },
+            {
+                name: 'Customer Support Request',
+                slug: 'customer-support-request',
+                icon: 'ti-headset',
+                defaultPriority: 'High',
+                fields: [
+                    { name: 'customerAccount', label: 'Customer / Venue Company', type: 'text', placeholder: 'e.g. LiveNation Stage FX, PRG Worldwide', defaultValue: 'LiveNation Stage FX', required: true },
+                    { name: 'orderNumber', label: 'Sales Order / Invoice #', type: 'text', placeholder: 'e.g. SO-99412', defaultValue: 'SO-99412' },
+                    { name: 'supportType', label: 'Inquiry Classification', type: 'select', options: ['Technical Troubleshooting / RMA', 'Parts & Consumables Order', 'Tracking / Freight Expedite', 'Billing / Warranty Claim'], required: true },
+                    { name: 'urgencyLevel', label: 'Event / Show Deadline', type: 'select', options: ['Urgent Show Today / Live Event Blocker', 'Standard (1-2 business days)', 'Scheduled Maintenance Window'] }
+                ]
+            },
+            {
+                name: 'IT AI Process/UI Development',
+                slug: 'it-ai-process-ui',
+                icon: 'ti-sparkles',
+                defaultPriority: 'Normal',
+                fields: [
+                    { name: 'systemComponent', label: 'System / Module Area', type: 'select', options: ['LilyPad ERP Core', 'CRM / Deal Pipelines', 'Ticketing & Knowledgebase Engine', 'AI Trend Diagnostics Model', 'Inventory & Stock Sync', 'Reporting / Analytics'], required: true },
+                    { name: 'pipelineType', label: 'Development Type', type: 'select', options: ['UI / Front-End Component', 'Backend API / Node Microservice', 'AI Prompt / RAG Integration', 'Automation Webhook / Script'], required: true },
+                    { name: 'jiraGithubRef', label: 'Branch / Task Reference', type: 'text', placeholder: 'e.g. feat/ai-trend-engine', defaultValue: 'feat/ai-knowledgebase' }
+                ]
+            },
+            {
+                name: 'Rep Assignment Change',
+                slug: 'rep-assignment-change',
+                icon: 'ti-arrows-exchange',
+                defaultPriority: 'Normal',
+                fields: [
+                    { name: 'clientTerritory', label: 'Account / Sales Territory', type: 'text', placeholder: 'e.g. Midwest Region / Acme Theatrical', defaultValue: 'Midwest Region / Theatrical Accounts', required: true },
+                    { name: 'outgoingRep', label: 'Current / Outgoing Sales Rep', type: 'select', options: ['Scott Karan', 'Alex Morgan', 'David Miller', 'Sarah Connor', 'Mark Henderson'], required: true },
+                    { name: 'incomingRep', label: 'Newly Assigned Sales Rep', type: 'select', options: ['Alex Morgan', 'Scott Karan', 'David Miller', 'Sarah Connor', 'Mark Henderson'], required: true },
+                    { name: 'effectiveDate', label: 'Effective Transition Date', type: 'date', required: true }
+                ]
+            },
+            {
+                name: 'Vendor Purchase Order',
+                slug: 'vendor-purchase-order',
+                icon: 'ti-receipt-2',
+                defaultPriority: 'High',
+                fields: [
+                    { name: 'vendorName', label: 'Vendor / Supplier Name', type: 'text', placeholder: 'e.g. Apex Print Works, PackCraft Global', defaultValue: 'Apex Print Works', required: true },
+                    { name: 'poNumber', label: 'PO Number', type: 'text', placeholder: 'e.g. PO-88412', defaultValue: 'PO-88412', required: true },
+                    { name: 'poTotalAmount', label: 'Total PO Amount ($ USD)', type: 'number', placeholder: 'e.g. 2450.00', defaultValue: 240.00, required: true },
+                    { name: 'deliveryTargetDate', label: 'Required Delivery Date', type: 'date', required: true },
+                    { name: 'costCenter', label: 'Cost Center / Department', type: 'select', options: ['Manufacturing & Production', 'Packaging & Print', 'R&D / Engineering', 'IT & Operations'] }
+                ]
+            },
+            {
+                name: 'Website Frontend Update',
+                slug: 'website-frontend-update',
+                icon: 'ti-world-www',
+                defaultPriority: 'Normal',
+                fields: [
+                    { name: 'pageUrl', label: 'Website Section / Target URL', type: 'text', placeholder: 'e.g. /products/antari-2000-elite', defaultValue: '/products/antari-2000-elite', required: true },
+                    { name: 'updateScope', label: 'Scope of Change', type: 'select', options: ['Product Spec / Spec Sheet PDF', 'Hero Banner / Marketing Graphics', 'Pricing / Dealer Portal Info', 'Bug Fix / Layout Alignment'], required: true },
+                    { name: 'assetLinks', label: 'Figma / Design Asset Link', type: 'text', placeholder: 'e.g. https://figma.com/file/...' }
+                ]
+            },
+            {
+                name: 'Unspecified',
+                slug: 'unspecified',
+                icon: 'ti-help-circle',
+                defaultPriority: 'Normal',
+                fields: [
+                    { name: 'generalTopic', label: 'Topic / Summary', type: 'text', placeholder: 'General operational inquiry', required: true },
+                    { name: 'details', label: 'Detailed Description', type: 'textarea', placeholder: 'Please provide background details...' }
+                ]
+            }
+        ];
+
+        let PRODUCTS = [
+            'Antari 2000 Elite',
+            'Antari DarkFX Spot 510',
+            'Antari Z-350 Fazer',
+            'LilyPad Solar Telemetry Gateway',
+            'Industrial LFP Battery Array 480V',
+            'Enterprise ERP Server Node X1',
+            'General Asset / None'
+        ];
+
+        // Knowledgebase & Standard Operating Procedures (SOPs)
+        let KB_ARTICLES = [
+            {
+                id: 'kb_1',
+                code: 'SOP-014',
+                product: 'Antari 2000 Elite',
+                title: 'Silkscreen Artwork Alignment & Emulsion Curing Protocol',
+                symptom: 'Silkscreen graphics offset by 2-3mm on front chassis or smudging after powder-coat bake.',
+                checkFirstSteps: [
+                    'Verify chassis alignment guide pins are calibrated to ±0.15mm tolerance.',
+                    'Check UV emulsion curing temperature: must reach 140°C for minimum 8 minutes.',
+                    'Inspect silkscreen mesh tension: must read between 22-26 N/cm.'
+                ],
+                resolution: 'Use high-adhesion 2-part epoxy ink (Series 9600) with 300-mesh monofilament polyester screen. Ensure pre-wipe with isopropyl alcohol before screening.',
+                updatedAt: '2 days ago',
+                author: 'Scott Karan'
+            },
+            {
+                id: 'kb_2',
+                code: 'SOP-015',
+                product: 'Antari 2000 Elite',
+                title: 'Master Carton Burst Resistance & Corner Drop Inspection',
+                symptom: 'Carton corner crushing during multi-tier container freight and transit.',
+                checkFirstSteps: [
+                    'Confirm corrugated grade is minimum 5-ply Double Wall (200# Mullen burst test rating).',
+                    'Ensure foam corner buffer density is minimum 28 kg/m³ EPE.',
+                    'Verify moisture desiccant bag (50g) is placed inside PE bag seal.'
+                ],
+                resolution: 'Switch supplier spec to 5-ply BC flute with reinforced edge protectors for international air & sea shipments.',
+                updatedAt: '3 days ago',
+                author: 'Mark Henderson'
+            },
+            {
+                id: 'kb_3',
+                code: 'SOP-022',
+                product: 'LilyPad Solar Telemetry Gateway',
+                title: 'Modbus RTU RS-485 Communication Timeout & Noise Suppression',
+                symptom: 'Telemetry drops packet bursts when inverters spin up to peak wattage.',
+                checkFirstSteps: [
+                    'Check RS-485 bus 120-ohm termination resistors at both ends of daisy-chain.',
+                    'Verify shield drain wire is grounded at one end only (prevents ground loop current).',
+                    'Confirm baud rate is matched across all inverter slaves (typically 9600-8-N-1).'
+                ],
+                resolution: 'Installed isolated RS-485 repeater at 25th inverter node to boost SNR voltage margin.',
+                updatedAt: '1 week ago',
+                author: 'Sarah Connor'
+            },
+            {
+                id: 'kb_4',
+                code: 'SOP-031',
+                product: 'Industrial LFP Battery Array 480V',
+                title: 'Cell Balancing Voltage Drift & Lockout Reset',
+                symptom: 'Array BMS enters high-voltage protection lockout on string #4 during rapid charging.',
+                checkFirstSteps: [
+                    'Check individual cell delta voltage across string (must not exceed 35mV).',
+                    'Inspect thermistor wiring harness connection J2 for loose crimp.',
+                    'Execute passive balancing cycle at 3.45V per cell.'
+                ],
+                resolution: 'Replaced cell #14 on tray 4 which had internal high impedance (>1.8 mΩ).',
+                updatedAt: '2 weeks ago',
+                author: 'David Miller'
+            }
+        ];
+
+        // Clean production tickets store
+        let tickets = [];
+
+        let USERS = [
+            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@lilypad.local', role: 'Admin', department: 'Operations', initials: 'SK', active: true },
+            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@lilypad.local', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true },
+            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@lilypad.local', role: 'Agent', department: 'Engineering', initials: 'DM', active: true },
+            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@lilypad.local', role: 'Agent', department: 'Engineering', initials: 'SC', active: true },
+            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@lilypad.local', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true }
+        ];
+
+        let selectedCategory = CATEGORIES[0];
+        let currentStatusFilter = 'In Progress';
+        let currentActiveTicket = null;
+        // Global Modal Openers for Operations Admin & Hub
+        window.openEmailGatewayModal = function() {
+            const modalEl = document.getElementById('emailGatewayModal');
+            if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            else window.location.href = 'tickets.html?admin=email';
+        };
+
+        window.openUserManagementModal = function() {
+            const modalEl = document.getElementById('userManagementModal');
+            if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            else window.location.href = 'tickets.html?admin=team';
+        };
+
+        window.openFormBuilderModal = function() {
+            const modalEl = document.getElementById('formBuilderModal');
+            if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            else window.location.href = 'tickets.html?admin=forms';
+        };
+
+        window.openKnowledgeBaseModal = function() {
+            const modalEl = document.getElementById('knowledgebaseModal');
+            if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            else window.location.href = 'tickets.html?view=kb';
+        };
+
+        window.openIntakeModal = function() {
+            const modalEl = document.getElementById('intakeModal');
+            if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            else window.location.href = 'tickets.html?action=new';
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCategoryChips();
+            renderDynamicFormFields();
+            updateCategoryFilterDropdown();
+            updateProductFilterDropdown();
+            renderTickets();
+            updateKpis();
+            initFormBuilder();
+            renderUsersTable();
+            updateAllAssigneeDropdowns();
+            renderMachineTrends();
+            renderKbArticlesList();
+            updateKbModelFilter();
+            renderQuarantineTable();
+            updateIntakeModelHint('Antari 2000 Elite');
+
+            // Handle URL action parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetTicket = urlParams.get('ticket');
+            const targetView = urlParams.get('view');
+            const targetAdmin = urlParams.get('admin');
+
+            if (targetView === 'kb') {
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('knowledgebaseModal'));
+                    modal.show();
+                }, 300);
+            } else if (targetAdmin === 'email') {
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('emailGatewayModal'));
+                    modal.show();
+                }, 300);
+            } else if (targetAdmin === 'team') {
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('userManagementModal'));
+                    modal.show();
+                }, 300);
+            } else if (targetAdmin === 'forms') {
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('formBuilderModal'));
+                    modal.show();
+                }, 300);
+            } else if (targetTicket) {
+                setTimeout(() => openTicketModal(targetTicket), 300);
+            }
+        });
+
+        function triggerNotification(title, message, icon, ticketId) {
+            if (window.LilypadNotifications) {
+                window.LilypadNotifications.addNotification({
+                    title: title,
+                    description: message,
+                    ticketId: ticketId || (currentActiveTicket ? currentActiveTicket.id : '10'),
+                    type: 'ticket'
+                });
+            }
+        }
+
+        function switchView(view) {
+            currentView = view;
+            const btnList = document.getElementById('btnListView');
+            const btnKanban = document.getElementById('btnKanbanView');
+            const listContainer = document.getElementById('listViewContainer');
+            const kanbanContainer = document.getElementById('kanbanViewContainer');
+
+            if (view === 'list') {
+                btnList.classList.add('active');
+                btnKanban.classList.remove('active');
+                listContainer.classList.remove('d-none');
+                kanbanContainer.classList.add('d-none');
+                renderTickets();
+            } else {
+                btnKanban.classList.add('active');
+                btnList.classList.remove('active');
+                listContainer.classList.add('d-none');
+                kanbanContainer.classList.remove('d-none');
+                renderKanban();
+            }
+        }
+
+        function renderCategoryChips() {
+            const container = document.getElementById('categorySelectionChips');
+            if (!container) return;
+            container.innerHTML = CATEGORIES.map((cat, idx) => `
+                <div class="col-sm-6">
+                    <div class="category-chip d-flex align-items-center gap-2 ${cat.name === selectedCategory.name ? 'active' : ''}" onclick="selectCategory('${cat.name}')">
+                        <i class="ti ${cat.icon} fs-18"></i>
+                        <span class="fs-13 fw-semibold">${cat.name}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectCategory(catName) {
+            const found = CATEGORIES.find(c => c.name === catName);
+            if (found) {
+                selectedCategory = found;
+                renderCategoryChips();
+                renderDynamicFormFields();
+                const formPrio = document.getElementById('formPriority');
+                if (formPrio) formPrio.value = found.defaultPriority || 'Normal';
+            }
+        }
+
+        function updateCategoryFilterDropdown() {
+            const select = document.getElementById('categoryFilter');
+            if (!select) return;
+            select.innerHTML = '<option value="">All Categories</option>' + CATEGORIES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        }
+
+        function updateProductFilterDropdown() {
+            const select = document.getElementById('productFilter');
+            if (!select) return;
+            select.innerHTML = '<option value="">All Products / Assets</option>' + PRODUCTS.map(p => `<option value="${p}">${p}</option>`).join('');
+        }
+
+        function renderDynamicFormFields() {
+            const container = document.getElementById('dynamicFieldsContainer');
+            const label = document.getElementById('dynamicCategoryLabel');
+            if (label) label.textContent = selectedCategory.name;
+            if (!container) return;
+
+            container.innerHTML = selectedCategory.fields.map(f => {
+                if (f.type === 'select') {
+                    const opts = f.options.map(o => `<option value="${o}">${o}</option>`).join('');
+                    return `
+                        <div class="col-md-6">
+                            <label class="form-label fs-13 fw-semibold">${f.label} ${f.required ? '<span class="text-danger">*</span>' : ''}</label>
+                            <select name="${f.name}" class="form-select form-control-dynamic" ${f.required ? 'required' : ''}>
+                                ${opts}
+                            </select>
+                        </div>
+                    `;
+                } else if (f.type === 'textarea') {
+                    return `
+                        <div class="col-12">
+                            <label class="form-label fs-13 fw-semibold">${f.label} ${f.required ? '<span class="text-danger">*</span>' : ''}</label>
+                            <textarea name="${f.name}" class="form-control form-control-dynamic" rows="2" placeholder="${f.placeholder || ''}" ${f.required ? 'required' : ''}></textarea>
+                        </div>
+                    `;
+                } else if (f.type === 'checkbox') {
+                    return `
+                        <div class="col-md-6 d-flex align-items-center mt-4">
+                            <div class="form-check">
+                                <input type="checkbox" name="${f.name}" class="form-check-input form-control-dynamic" id="chk_${f.name}" ${f.defaultValue ? 'checked' : ''}>
+                                <label class="form-check-label fs-13 fw-semibold" for="chk_${f.name}">${f.label}</label>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="col-md-6">
+                            <label class="form-label fs-13 fw-semibold">${f.label} ${f.required ? '<span class="text-danger">*</span>' : ''}</label>
+                            <input type="${f.type}" name="${f.name}" class="form-control form-control-dynamic" placeholder="${f.placeholder || ''}" ${f.defaultValue ? `value="${f.defaultValue}"` : ''} ${f.required ? 'required' : ''}>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function updateIntakeModelHint(productName) {
+            const hintBox = document.getElementById('intakeModelHintContainer');
+            const hintName = document.getElementById('intakeModelHintName');
+            const hintText = document.getElementById('intakeModelHintText');
+            if (!hintBox || !hintName || !hintText) return;
+
+            const relatedKb = KB_ARTICLES.find(k => k.product === productName);
+            if (relatedKb) {
+                hintName.textContent = productName;
+                hintText.textContent = relatedKb.checkFirstSteps.slice(0, 2).join(' · ');
+                hintBox.style.display = 'flex';
+            } else {
+                hintBox.style.display = 'none';
+            }
+        }
+
+        function submitNewTicket(e) {
+            e.preventDefault();
+            const title = document.getElementById('formTitle').value;
+            const description = document.getElementById('formDesc').value;
+            const priority = document.getElementById('formPriority').value;
+            const linkedProduct = document.getElementById('formLinkedProduct').value;
+            const dueDate = document.getElementById('formDueDate').value;
+            const reporterName = document.getElementById('formReporterName').value;
+
+            const formData = {};
+            document.querySelectorAll('.form-control-dynamic').forEach(input => {
+                if (input.type === 'checkbox') {
+                    formData[input.name] = input.checked ? 'Yes' : 'No';
+                } else {
+                    formData[input.name] = input.value;
+                }
+            });
+
+            const nextUid = tickets.length ? Math.max(...tickets.map(t => t.uid || 1000)) + 1 : 1001;
+
+            const newTicket = {
+                id: String(Date.now()),
+                uid: nextUid,
+                formattedUid: `LP-${nextUid}`,
+                title,
+                description,
+                status: 'To-Do',
+                priority,
+                categoryName: selectedCategory.name,
+                linkedProduct: linkedProduct || 'General Asset / None',
+                dueDate: dueDate || new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10),
+                reporterName,
+                assigneeName: 'Scott Karan',
+                watchers: ['Scott Karan'],
+                formData,
+                attachments: [],
+                expenses: [],
+                history: [
+                    { action: 'Ticket Created', by: reporterName, time: 'Just now' }
+                ],
+                comments: [],
+                workLogs: [],
+                createdAt: new Date().toISOString()
+            };
+
+            tickets.unshift(newTicket);
+            renderTickets();
+            updateKpis();
+            if (currentView === 'kanban') renderKanban();
+
+            triggerNotification('New Ticket Created', `${newTicket.formattedUid}: "${title}" submitted`, 'ti-plus', newTicket.id);
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('intakeModal'));
+            modal.hide();
+            document.getElementById('intakeFormSubmit').reset();
+        }
+
+        function setStatusFilter(status) {
+            currentStatusFilter = status;
+            document.querySelectorAll('#statusFilterPills .nav-link').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === (status === 'All' ? 'All' : status));
+            });
+            renderTickets();
+        }
+
+        function setPresetFilter(preset) {
+            if (preset === 'mine') {
+                currentStatusFilter = 'All';
+                document.querySelectorAll('#statusFilterPills .nav-link').forEach(btn => btn.classList.remove('active'));
+                if (event && event.currentTarget) event.currentTarget.classList.add('active');
+                renderTickets('mine');
+            }
+        }
+
+        function filterTickets(preset) {
+            renderTickets(preset);
+            if (currentView === 'kanban') renderKanban();
+        }
+
+        function renderTickets(preset) {
+            const container = document.getElementById('ticketsContainer');
+            if (!container) return;
+            const search = document.getElementById('globalSearch')?.value.toLowerCase() || '';
+            const catFilter = document.getElementById('categoryFilter')?.value || '';
+            const prodFilter = document.getElementById('productFilter')?.value || '';
+            const prioFilter = document.getElementById('priorityFilter')?.value || '';
+
+            let filtered = tickets.filter(t => {
+                const matchesStatus = (currentStatusFilter === 'All') || (t.status === currentStatusFilter);
+                const matchesMine = (preset !== 'mine') || (t.assigneeName === 'Scott Karan');
+                const matchesSearch = !search || t.title.toLowerCase().includes(search) || t.formattedUid.toLowerCase().includes(search) || t.reporterName.toLowerCase().includes(search);
+                const matchesCat = !catFilter || t.categoryName === catFilter;
+                const matchesProd = !prodFilter || t.linkedProduct === prodFilter;
+                const matchesPrio = !prioFilter || t.priority === prioFilter;
+                return matchesStatus && matchesMine && matchesSearch && matchesCat && matchesProd && matchesPrio;
+            });
+
+            if (!filtered.length) {
+                container.innerHTML = `
+                    <div class="card border-0 shadow-sm rounded-3 text-center py-5">
+                        <i class="ti ti-clipboard-list text-muted fs-40 mb-2"></i>
+                        <h5 class="fw-bold text-dark mb-1">No Tickets Found</h5>
+                        <p class="text-muted fs-13 mb-3">There are currently no tickets matching the selected filters.</p>
+                        <div>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#intakeModal">
+                                <i class="ti ti-plus me-1"></i> Create New Ticket
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(t => {
+                const priorityClass = `priority-${t.priority.toLowerCase()}`;
+                const statusBadgeClass = `badge-${t.status.toLowerCase().replace(/\s+/g, '')}`;
+                const isChecked = selectedTicketIds.has(t.id);
+                
+                const metaSnippets = Object.entries(t.formData || {})
+                    .slice(0, 2)
+                    .map(([k, v]) => `<span class="metadata-pill"><strong>${k}:</strong> ${v}</span>`)
+                    .join('');
+
+                const filesBadge = (t.attachments && t.attachments.length) 
+                    ? `<span class="badge bg-light text-dark border fs-11 ms-1"><i class="ti ti-paperclip me-1"></i>${t.attachments.length} files</span>` 
+                    : '';
+
+                const productBadge = t.linkedProduct && t.linkedProduct !== 'General Asset / None'
+                    ? `<span class="badge bg-soft-primary text-primary fs-11 ms-1"><i class="ti ti-box me-1"></i>${t.linkedProduct}</span>`
+                    : '';
+
+                const dueText = t.dueDate ? `<span class="badge bg-light text-muted border fs-11"><i class="ti ti-calendar me-1"></i>Due ${t.dueDate}</span>` : '';
+
+                const assigneeOptions = '<option value="Unassigned">Unassigned</option>' + USERS.map(u => `
+                    <option value="${u.fullname}" ${t.assigneeName === u.fullname ? 'selected' : ''}>${u.fullname}</option>
+                `).join('');
+
+                return `
+                    <div class="ticket-row">
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="checkbox" class="form-check-input" ${isChecked ? 'checked' : ''} onchange="toggleSelectTicket('${t.id}', this.checked)">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                    <span class="badge bg-dark fs-12 px-2 py-1">${t.formattedUid}</span>
+                                    <span class="badge ${statusBadgeClass}">${t.status}</span>
+                                    ${productBadge}
+                                    ${filesBadge}
+                                    ${dueText}
+                                </div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                    <h6 class="fw-bold mb-0 text-dark" style="cursor: pointer;" onclick="openTicketModal('${t.id}')">${t.title}</h6>
+                                    <span class="badge ${priorityClass} fs-11">${t.priority}</span>
+                                </div>
+                                <div class="fs-13 text-muted mb-1">
+                                    <i class="ti ti-user fs-13"></i> ${t.reporterName} &middot; <i class="ti ti-tag fs-13"></i> ${t.categoryName}
+                                </div>
+                                <div class="metadata-container">
+                                    ${metaSnippets}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-end d-none d-md-block">
+                                <span class="fs-12 text-muted d-block">Assignee</span>
+                                <select class="form-select form-select-sm" style="width: 140px;" onchange="updateAssignee('${t.id}', this.value)">
+                                    ${assigneeOptions}
+                                </select>
+                            </div>
+
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light border" data-bs-toggle="dropdown">
+                                    <i class="ti ti-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="openTicketModal('${t.id}')"><i class="ti ti-eye me-2"></i> View Details & Diagnostics</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="quickStatus('${t.id}', 'To-Do')"><i class="ti ti-list-check me-2"></i> Move to To-Do</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="quickStatus('${t.id}', 'In Progress')"><i class="ti ti-loader-2 me-2"></i> Move to In Progress</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="quickStatus('${t.id}', 'Blocked')"><i class="ti ti-ban me-2 text-danger"></i> Mark Blocked</a></li>
+                                    <li><a class="dropdown-item text-success" href="javascript:void(0);" onclick="quickStatus('${t.id}', 'Complete')"><i class="ti ti-circle-check me-2"></i> Mark Complete</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Kanban Board
+        function renderKanban() {
+            const cols = { 'To-Do': 'kanbanColTodo', 'In Progress': 'kanbanColProgress', 'Blocked': 'kanbanColBlocked', 'Complete': 'kanbanColComplete' };
+            const counts = { 'To-Do': 0, 'In Progress': 0, 'Blocked': 0, 'Complete': 0 };
+
+            Object.values(cols).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = '';
+            });
+
+            tickets.forEach(t => {
+                const targetCol = cols[t.status] || 'kanbanColTodo';
+                counts[t.status] = (counts[t.status] || 0) + 1;
+
+                const card = document.createElement('div');
+                card.className = 'kanban-card';
+                card.draggable = true;
+                card.ondragstart = (e) => e.dataTransfer.setData('text/plain', t.id);
+                card.onclick = () => openTicketModal(t.id);
+
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-secondary fs-11">${t.formattedUid}</span>
+                        <span class="badge priority-${t.priority.toLowerCase()} fs-11">${t.priority}</span>
+                    </div>
+                    <h6 class="fw-bold fs-13 mb-1 text-dark">${t.title}</h6>
+                    ${t.linkedProduct ? `<span class="badge bg-soft-primary text-primary fs-10 mb-2"><i class="ti ti-box me-1"></i>${t.linkedProduct}</span>` : ''}
+                    <p class="text-muted fs-12 mb-2 text-truncate">${t.description}</p>
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                        <span class="fs-11 text-muted"><i class="ti ti-user"></i> ${t.assigneeName}</span>
+                        ${(t.attachments && t.attachments.length) ? `<span class="fs-11 text-muted"><i class="ti ti-paperclip"></i> ${t.attachments.length}</span>` : ''}
+                    </div>
+                `;
+                const colEl = document.getElementById(targetCol);
+                if (colEl) colEl.appendChild(card);
+            });
+
+            if (document.getElementById('kanbanCountTodo')) document.getElementById('kanbanCountTodo').textContent = `(${counts['To-Do'] || 0})`;
+            if (document.getElementById('kanbanCountProgress')) document.getElementById('kanbanCountProgress').textContent = `(${counts['In Progress'] || 0})`;
+            if (document.getElementById('kanbanCountBlocked')) document.getElementById('kanbanCountBlocked').textContent = `(${counts['Blocked'] || 0})`;
+            if (document.getElementById('kanbanCountComplete')) document.getElementById('kanbanCountComplete').textContent = `(${counts['Complete'] || 0})`;
+        }
+
+        function allowDrop(e) { e.preventDefault(); }
+        function handleDrop(e, newStatus) {
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text/plain');
+            quickStatus(id, newStatus);
+            renderKanban();
+        }
+
+        // Bulk Selection Actions
+        function toggleSelectTicket(id, checked) {
+            if (checked) selectedTicketIds.add(id);
+            else selectedTicketIds.delete(id);
+            updateBulkBar();
+        }
+
+        function updateBulkBar() {
+            const bar = document.getElementById('bulkActionBar');
+            if (!bar) return;
+            const count = selectedTicketIds.size;
+            document.getElementById('bulkSelectedCount').textContent = count;
+            bar.style.display = count > 0 ? 'flex' : 'none';
+        }
+
+        function deselectAll() {
+            selectedTicketIds.clear();
+            renderTickets();
+            updateBulkBar();
+        }
+
+        function bulkUpdateStatus(status) {
+            selectedTicketIds.forEach(id => {
+                const t = tickets.find(x => x.id === id);
+                if (t) t.status = status;
+            });
+            triggerNotification('Batch Status Update', `Updated ${selectedTicketIds.size} tickets to ${status}`, 'ti-stack-2');
+            deselectAll();
+            updateKpis();
+        }
+
+        function bulkDelete() {
+            const count = selectedTicketIds.size;
+            tickets = tickets.filter(t => !selectedTicketIds.has(t.id));
+            triggerNotification('Batch Delete', `Deleted ${count} tickets from board`, 'ti-trash');
+            deselectAll();
+            updateKpis();
+        }
+
+        function exportCsv() {
+            let csv = 'Ticket UID,Title,Status,Priority,Category,Product,Due Date,Reporter,Assignee,Created At,Dynamic Metadata\n';
+            tickets.forEach(t => {
+                const meta = JSON.stringify(t.formData || {}).replace(/"/g, '""');
+                csv += `"${t.formattedUid}","${t.title}","${t.status}","${t.priority}","${t.categoryName}","${t.linkedProduct || ''}","${t.dueDate || ''}","${t.reporterName}","${t.assigneeName}","${t.createdAt}","${meta}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `LilyPad_Tickets_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        }
+
+        function updateKpis() {
+            if (document.getElementById('kpiTodo')) document.getElementById('kpiTodo').textContent = tickets.filter(t => t.status === 'To-Do').length;
+            if (document.getElementById('kpiProgress')) document.getElementById('kpiProgress').textContent = tickets.filter(t => t.status === 'In Progress').length;
+            if (document.getElementById('kpiUrgent')) document.getElementById('kpiUrgent').textContent = tickets.filter(t => t.priority === 'Urgent' || t.priority === 'High').length;
+            if (document.getElementById('kpiComplete')) document.getElementById('kpiComplete').textContent = tickets.filter(t => t.status === 'Complete').length;
+        }
+
+        function quickStatus(id, newStatus) {
+            const ticket = tickets.find(t => t.id === id || t.formattedUid === id);
+            if (ticket) {
+                const prev = ticket.status;
+                ticket.status = newStatus;
+                ticket.history.unshift({ action: `Status changed from ${prev} to ${newStatus}`, by: 'Scott Karan', time: 'Just now' });
+                renderTickets();
+                updateKpis();
+
+                triggerNotification('Status Updated', `Status for ${ticket.formattedUid} changed to "${newStatus}"`, 'ti-loader-2', ticket.id);
+            }
+        }
+
+        function updateAssignee(id, assignee) {
+            const ticket = tickets.find(t => t.id === id || t.formattedUid === id);
+            if (ticket) {
+                ticket.assigneeName = assignee;
+                ticket.history.unshift({ action: `Assigned to ${assignee}`, by: 'Scott Karan', time: 'Just now' });
+                triggerNotification('Ticket Assigned', `Ticket ${ticket.formattedUid} assigned to ${assignee}`, 'ti-user-check', ticket.id);
+            }
+        }
+
+        // Centered Ticket Modal Popup & Check First Playbook
+        function openTicketModal(id) {
+            const ticket = tickets.find(t => t.id === id || t.formattedUid === id || t.formattedUid === ('#' + id));
+            if (!ticket) return;
+            currentActiveTicket = ticket;
+            window.openTicketDrawer = openTicketModal;
+            window.openTicketModal = openTicketModal;
+
+            document.getElementById('drawerUid').textContent = ticket.formattedUid;
+            document.getElementById('drawerStatusBadge').textContent = ticket.status;
+            document.getElementById('drawerStatusBadge').className = `badge badge-${ticket.status.toLowerCase().replace(/\s+/g, '')} px-2 py-1`;
+            document.getElementById('drawerTitle').textContent = ticket.title;
+            document.getElementById('drawerDesc').textContent = ticket.description;
+            document.getElementById('drawerCategory').textContent = ticket.categoryName;
+            document.getElementById('drawerPriority').textContent = ticket.priority;
+            document.getElementById('drawerPriority').className = `badge priority-${ticket.priority.toLowerCase()} px-2 py-1`;
+            document.getElementById('drawerLinkedProduct').innerHTML = `<i class="ti ti-box"></i> ${ticket.linkedProduct || 'General Asset / None'}`;
+            document.getElementById('drawerDueDateInput').value = ticket.dueDate || '';
+            document.getElementById('drawerReporter').textContent = ticket.reporterName;
+            document.getElementById('drawerAssigneeSelect').value = ticket.assigneeName;
+
+            const formFieldsContainer = document.getElementById('drawerFormDataFields');
+            const entries = Object.entries(ticket.formData || {});
+            formFieldsContainer.innerHTML = entries.length ? entries.map(([k, v]) => `
+                <div class="col-sm-6 mb-2">
+                    <span class="text-muted d-block text-capitalize">${k.replace(/([A-Z])/g, ' $1')}</span>
+                    <strong class="text-dark">${v}</strong>
+                </div>
+            `).join('') : '<div class="col-12 text-muted">No custom form data recorded.</div>';
+
+            renderDrawerCheckFirstBox(ticket);
+            renderDrawerWatchers(ticket);
+            renderDrawerComments(ticket);
+            renderDrawerFiles(ticket);
+            renderDrawerWorkLogs(ticket);
+            renderDrawerExpenses(ticket);
+            renderDrawerAudit(ticket);
+
+            const modalEl = document.getElementById('ticketDetailModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+
+        // Backward compatibility
+        function openDrawer(id) {
+            openTicketModal(id);
+        }
+
+        function closeDrawer() {
+            const modalEl = document.getElementById('ticketDetailModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+
+        // Render In-Modal "Check First" Diagnostic Playbook
+        function renderDrawerCheckFirstBox(ticket) {
+            const container = document.getElementById('drawerCheckFirstContainer');
+            if (!container) return;
+
+            const matchedKb = KB_ARTICLES.find(k => k.product === ticket.linkedProduct);
+            if (!matchedKb) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="check-first-card">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success text-white fw-bold fs-10 px-2 py-1 rounded-pill">
+                                <i class="ti ti-bulb me-1"></i> CHECK FIRST PLAYBOOK
+                            </span>
+                            <span class="fw-bold fs-12 text-dark">${matchedKb.code}: ${matchedKb.product}</span>
+                        </div>
+                        <button class="btn btn-sm btn-link text-success p-0 text-decoration-none fs-12 fw-semibold" onclick="viewKbArticleModal('${matchedKb.id}')">
+                            Full SOP &rarr;
+                        </button>
+                    </div>
+
+                    <p class="fs-12 text-muted mb-2"><strong>Known Symptom:</strong> ${matchedKb.symptom}</p>
+
+                    <h6 class="fw-bold fs-11 text-uppercase text-dark mb-1">Pre-Flight Diagnostic Steps:</h6>
+                    <div class="d-flex flex-column gap-1 mb-2">
+                        ${matchedKb.checkFirstSteps.map((step, idx) => `
+                            <div class="diagnostic-step">
+                                <input type="checkbox" class="form-check-input mt-0 me-2" id="chk_step_${idx}">
+                                <label for="chk_step_${idx}" class="text-dark mb-0 fw-medium" style="cursor: pointer;">${step}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top fs-11 text-muted">
+                        <span><i class="ti ti-history me-1"></i>Derived from past resolved failure trends</span>
+                        <a href="javascript:void(0);" onclick="insertMacro('Checked standard diagnostics for ${matchedKb.product}: ' + '${matchedKb.checkFirstSteps[0]}');" class="text-success fw-semibold text-decoration-none">
+                            <i class="ti ti-plus me-1"></i>Log Checked Steps to Note
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateDrawerDueDate(val) {
+            if (currentActiveTicket) {
+                currentActiveTicket.dueDate = val;
+                currentActiveTicket.history.unshift({ action: `Target Due Date updated to ${val}`, by: 'Scott Karan', time: 'Just now' });
+                renderDrawerAudit(currentActiveTicket);
+                renderTickets();
+                triggerNotification('Due Date Updated', `${currentActiveTicket.formattedUid} due date changed to ${val}`, 'ti-calendar', currentActiveTicket.id);
+            }
+        }
+
+        function renderDrawerWatchers(ticket) {
+            const container = document.getElementById('drawerWatchersContainer');
+            const dropdown = document.getElementById('addWatcherDropdownList');
+            const watchers = ticket.watchers || ['Scott Karan'];
+
+            container.innerHTML = watchers.map(w => `
+                <span class="watcher-pill">
+                    <i class="ti ti-user fs-11"></i> ${w}
+                    <button type="button" class="btn btn-link text-muted p-0 ms-1" onclick="removeWatcher('${w}')">&times;</button>
+                </span>
+            `).join('');
+
+            dropdown.innerHTML = USERS.filter(u => !watchers.includes(u.fullname)).map(u => `
+                <li><a class="dropdown-item" href="javascript:void(0);" onclick="addWatcher('${u.fullname}')">${u.fullname} (${u.role})</a></li>
+            `).join('') || '<li><span class="dropdown-item text-muted">All users are watching</span></li>';
+        }
+
+        function addWatcher(name) {
+            if (!currentActiveTicket) return;
+            currentActiveTicket.watchers = currentActiveTicket.watchers || [];
+            if (!currentActiveTicket.watchers.includes(name)) {
+                currentActiveTicket.watchers.push(name);
+                currentActiveTicket.history.unshift({ action: `Added ${name} to ticket watchers / CC`, by: 'Scott Karan', time: 'Just now' });
+                renderDrawerWatchers(currentActiveTicket);
+                renderDrawerAudit(currentActiveTicket);
+            }
+        }
+
+        function removeWatcher(name) {
+            if (!currentActiveTicket) return;
+            currentActiveTicket.watchers = (currentActiveTicket.watchers || []).filter(w => w !== name);
+            renderDrawerWatchers(currentActiveTicket);
+        }
+
+        // File Attachments & Proofs
+        function renderDrawerFiles(ticket) {
+            const container = document.getElementById('drawerFilesList');
+            const countEl = document.getElementById('drawerFilesCount');
+            const files = ticket.attachments || [];
+            if (countEl) countEl.textContent = files.length;
+
+            if (!files.length) {
+                container.innerHTML = '<p class="text-muted fs-13">No artwork proofs or documents attached yet.</p>';
+                return;
+            }
+
+            container.innerHTML = files.map(f => `
+                <div class="file-attachment-card">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="p-2 rounded bg-white border text-primary fs-18">
+                            <i class="ti ${f.icon || 'ti-file'}"></i>
+                        </div>
+                        <div>
+                            <strong class="d-block text-dark fs-13 text-truncate" style="max-width: 320px;">${f.name}</strong>
+                            <span class="fs-11 text-muted">${f.size} &middot; Uploaded by ${f.uploader} (${f.uploadedAt})</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm btn-outline-primary py-1 px-2 fs-12" onclick="downloadMockFile('${f.name}')" title="Download File">
+                            <i class="ti ti-download"></i>
+                        </button>
+                        <button class="btn btn-sm btn-link text-danger p-1" onclick="deleteDrawerFile('${f.id}')" title="Remove File">
+                            <i class="ti ti-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleFileUpload(e) {
+            if (!currentActiveTicket || !e.target.files.length) return;
+            const file = e.target.files[0];
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+            const icon = file.name.endsWith('.pdf') ? 'ti-file-type-pdf' : (file.name.endsWith('.ai') ? 'ti-file-vector' : 'ti-file');
+
+            currentActiveTicket.attachments = currentActiveTicket.attachments || [];
+            currentActiveTicket.attachments.push({
+                id: 'f_' + Date.now(),
+                name: file.name,
+                size: sizeMb === '0.0 MB' ? '450 KB' : sizeMb,
+                uploader: 'Scott Karan',
+                uploadedAt: 'Just now',
+                icon: icon
+            });
+
+            currentActiveTicket.history.unshift({ action: `Uploaded proof / file: ${file.name}`, by: 'Scott Karan', time: 'Just now' });
+            renderDrawerFiles(currentActiveTicket);
+            renderDrawerAudit(currentActiveTicket);
+            renderTickets();
+
+            triggerNotification('File Attached', `Uploaded ${file.name} to ${currentActiveTicket.formattedUid}`, 'ti-file-plus', currentActiveTicket.id);
+        }
+
+        function downloadMockFile(filename) {
+            alert(`Downloading ${filename} directly from LilyPad ERP Vault...`);
+        }
+
+        function deleteDrawerFile(fileId) {
+            if (!currentActiveTicket) return;
+            currentActiveTicket.attachments = (currentActiveTicket.attachments || []).filter(f => f.id !== fileId);
+            renderDrawerFiles(currentActiveTicket);
+            renderTickets();
+        }
+
+        function insertMacro(text) {
+            const input = document.getElementById('drawerCommentInput');
+            if (input) {
+                input.value = text;
+                input.focus();
+            }
+        }
+
+        function renderDrawerComments(ticket) {
+            const list = document.getElementById('drawerCommentsList');
+            const comments = ticket.comments || [];
+            list.innerHTML = comments.length ? comments.map(c => `
+                <div class="p-2 rounded-3 mb-2 fs-13 ${c.isInternal ? 'bg-warning-subtle border border-warning' : 'bg-light border'}">
+                    <div class="d-flex justify-content-between mb-1">
+                        <strong class="${c.isInternal ? 'text-warning-emphasis' : 'text-primary'} fs-12">
+                            ${c.isInternal ? '<i class="ti ti-lock me-1"></i> [Internal Note]' : '<i class="ti ti-message me-1"></i>'} ${c.author}
+                        </strong>
+                        <span class="text-muted fs-11">${c.time}</span>
+                    </div>
+                    <p class="mb-0 text-dark">${c.text}</p>
+                </div>
+            `).join('') : '<p class="text-muted fs-13">No comments yet.</p>';
+        }
+
+        function postDrawerComment(e) {
+            e.preventDefault();
+            const text = document.getElementById('drawerCommentInput').value.trim();
+            const isInternal = document.getElementById('typeInternal').checked;
+            if (!text || !currentActiveTicket) return;
+
+            currentActiveTicket.comments = currentActiveTicket.comments || [];
+            currentActiveTicket.comments.push({
+                author: 'Scott Karan',
+                text,
+                isInternal,
+                time: 'Just now'
+            });
+
+            currentActiveTicket.history.unshift({ action: isInternal ? 'Added internal staff note' : 'Replied to ticket', by: 'Scott Karan', time: 'Just now' });
+            renderDrawerComments(currentActiveTicket);
+            renderDrawerAudit(currentActiveTicket);
+            document.getElementById('drawerCommentInput').value = '';
+
+            triggerNotification(isInternal ? 'Internal Note Added' : 'Public Reply Posted', `Note on ${currentActiveTicket.formattedUid}: "${text.slice(0, 35)}..."`, isInternal ? 'ti-lock' : 'ti-message', currentActiveTicket.id);
+        }
+
+        function renderDrawerWorkLogs(ticket) {
+            const list = document.getElementById('drawerWorkLogsList');
+            const logs = ticket.workLogs || [];
+            const total = logs.reduce((sum, l) => sum + Number(l.hours), 0);
+            document.getElementById('drawerTotalHours').textContent = `${total.toFixed(1)} hrs`;
+
+            list.innerHTML = logs.length ? logs.map(l => `
+                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                    <div>
+                        <strong class="text-dark">${l.note || 'Work activity'}</strong>
+                        <span class="text-muted d-block fs-11">${l.loggedAt}</span>
+                    </div>
+                    <span class="badge bg-primary fs-12">${l.hours} hrs</span>
+                </div>
+            `).join('') : '<p class="text-muted fs-13">No time logged yet.</p>';
+        }
+
+        function logWorkTime(e) {
+            e.preventDefault();
+            const hours = parseFloat(document.getElementById('workHoursInput').value);
+            const note = document.getElementById('workNoteInput').value.trim();
+            if (!hours || !currentActiveTicket) return;
+
+            currentActiveTicket.workLogs = currentActiveTicket.workLogs || [];
+            currentActiveTicket.workLogs.push({
+                hours,
+                note: note || 'Technical Review & Operations',
+                loggedAt: 'Just now'
+            });
+
+            renderDrawerWorkLogs(currentActiveTicket);
+            document.getElementById('workHoursInput').value = '';
+            document.getElementById('workNoteInput').value = '';
+
+            triggerNotification('Time Logged', `Logged ${hours} hrs on ${currentActiveTicket.formattedUid}`, 'ti-clock-plus', currentActiveTicket.id);
+        }
+
+        function renderDrawerExpenses(ticket) {
+            const list = document.getElementById('drawerExpensesList');
+            const totalEl = document.getElementById('drawerTotalExpenses');
+            const expenses = ticket.expenses || [];
+            const totalCost = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+            if (totalEl) totalEl.textContent = `${totalCost.toFixed(2)}`;
+
+            if (!expenses.length) {
+                list.innerHTML = '<p class="text-muted fs-13">No tooling or material expenses recorded.</p>';
+                return;
+            }
+
+            list.innerHTML = expenses.map(e => `
+                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                    <div>
+                        <strong class="text-dark d-block">${e.item}</strong>
+                        <span class="text-muted fs-11">${e.vendor || 'Supplier'} &middot; PO: ${e.po || 'N/A'}</span>
+                    </div>
+                    <span class="badge bg-success fs-12">${Number(e.amount).toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+
+        function logExpense(e) {
+            e.preventDefault();
+            const item = document.getElementById('expItemInput').value.trim();
+            const amount = parseFloat(document.getElementById('expAmountInput').value);
+            const po = document.getElementById('expPoInput').value.trim();
+            const vendor = document.getElementById('expVendorInput').value.trim();
+            if (!item || !amount || !currentActiveTicket) return;
+
+            currentActiveTicket.expenses = currentActiveTicket.expenses || [];
+            currentActiveTicket.expenses.push({
+                id: 'exp_' + Date.now(),
+                item,
+                amount,
+                po: po || 'PO-AUTO',
+                vendor: vendor || 'Direct Vendor'
+            });
+
+            currentActiveTicket.history.unshift({ action: `Logged expense: ${item} ($ ${amount.toFixed(2)})`, by: 'Scott Karan', time: 'Just now' });
+            renderDrawerExpenses(currentActiveTicket);
+            renderDrawerAudit(currentActiveTicket);
+
+            document.getElementById('expItemInput').value = '';
+            document.getElementById('expAmountInput').value = '';
+            document.getElementById('expPoInput').value = '';
+            document.getElementById('expVendorInput').value = '';
+
+            triggerNotification('Expense Added', `Logged ${amount.toFixed(2)} for ${item}`, 'ti-currency-dollar', currentActiveTicket.id);
+        }
+
+        function renderDrawerAudit(ticket) {
+            const container = document.getElementById('drawerAuditTimeline');
+            const history = ticket.history || [];
+            container.innerHTML = history.map(h => `
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <strong class="fs-13 text-dark d-block">${h.action}</strong>
+                    <span class="text-muted fs-11"><i class="ti ti-user fs-11"></i> ${h.by} &middot; ${h.time}</span>
+                </div>
+            `).join('');
+        }
+
+        // Knowledgebase & Trends Renderers
+        function renderMachineTrends() {
+            const container = document.getElementById('machineTrendsContainer');
+            if (!container) return;
+
+            const models = [
+                {
+                    name: 'Antari 2000 Elite',
+                    ticketsCount: 8,
+                    defectRates: [
+                        { symptom: 'Silkscreen Hole Alignment Tolerance', rate: '45%' },
+                        { symptom: 'Carton 5-Ply Burst Test & Corner Cushioning', rate: '35%' },
+                        { symptom: 'User Manual Multilingual Compliance', rate: '20%' }
+                    ],
+                    kbCode: 'SOP-014'
+                },
+                {
+                    name: 'LilyPad Solar Telemetry Gateway',
+                    ticketsCount: 5,
+                    defectRates: [
+                        { symptom: 'RS-485 Modbus Termination Resistor Missing', rate: '60%' },
+                        { symptom: 'Ground Loop Noise & Baud Mismatch', rate: '40%' }
+                    ],
+                    kbCode: 'SOP-022'
+                },
+                {
+                    name: 'Industrial LFP Battery Array 480V',
+                    ticketsCount: 4,
+                    defectRates: [
+                        { symptom: 'String #4 Voltage Delta Drift (>35mV)', rate: '70%' },
+                        { symptom: 'Thermistor Wiring Crimp J2 Loose', rate: '30%' }
+                    ],
+                    kbCode: 'SOP-031'
+                }
+            ];
+
+            container.innerHTML = models.map(m => `
+                <div class="col-md-4">
+                    <div class="card border rounded-3 p-3 h-100 shadow-none">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge bg-soft-primary text-primary fw-bold fs-11">
+                                <i class="ti ti-box me-1"></i>${m.name}
+                            </span>
+                            <span class="badge bg-light text-dark border fs-11">${m.ticketsCount} tickets</span>
+                        </div>
+
+                        <h6 class="fw-bold fs-13 text-dark mb-2">Top Recurring Defects:</h6>
+                        <div class="d-flex flex-column gap-2 mb-3">
+                            ${m.defectRates.map(d => `
+                                <div>
+                                    <div class="d-flex justify-content-between fs-11 text-muted mb-1">
+                                        <span class="text-truncate" style="max-width:180px;">${d.symptom}</span>
+                                        <strong class="text-dark">${d.rate}</strong>
+                                    </div>
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-success" style="width: ${d.rate};"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <button class="btn btn-sm btn-outline-success w-100 mt-auto" onclick="filterKbByProduct('${m.name}')">
+                            <i class="ti ti-book me-1"></i> View Check First Playbook (${m.kbCode})
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterKbByProduct(productName) {
+            const tabBtn = document.querySelector('#kbModalTabs button[data-bs-target="#tabKbArticles"]');
+            if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+
+            const select = document.getElementById('kbModelFilter');
+            if (select) {
+                select.value = productName;
+                renderKbArticlesList();
+            }
+        }
+
+        function updateKbModelFilter() {
+            const select = document.getElementById('kbModelFilter');
+            if (!select) return;
+            select.innerHTML = '<option value="">All Machines / Products</option>' + PRODUCTS.map(p => `<option value="${p}">${p}</option>`).join('');
+        }
+
+        function renderKbArticlesList() {
+            const container = document.getElementById('kbArticlesListContainer');
+            const countBadge = document.getElementById('kbArticlesCountBadge');
+            if (!container) return;
+
+            const search = document.getElementById('kbSearchInput')?.value.toLowerCase() || '';
+            const modelFilter = document.getElementById('kbModelFilter')?.value || '';
+
+            const filtered = KB_ARTICLES.filter(k => {
+                const matchSearch = !search || k.title.toLowerCase().includes(search) || k.symptom.toLowerCase().includes(search) || k.product.toLowerCase().includes(search);
+                const matchModel = !modelFilter || k.product === modelFilter;
+                return matchSearch && matchModel;
+            });
+
+            if (countBadge) countBadge.textContent = KB_ARTICLES.length;
+
+            if (!filtered.length) {
+                container.innerHTML = '<div class="col-12 text-center py-4 text-muted">No diagnostic articles found matching search.</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(k => `
+                <div class="col-md-6">
+                    <div class="kb-article-card h-100 d-flex flex-column" onclick="viewKbArticleModal('${k.id}')">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge bg-dark text-white fs-11 px-2 py-1">${k.code}</span>
+                            <span class="badge bg-soft-primary text-primary fs-11"><i class="ti ti-box me-1"></i>${k.product}</span>
+                        </div>
+
+                        <h6 class="fw-bold fs-14 text-dark mb-1">${k.title}</h6>
+                        <p class="text-muted fs-12 mb-2 text-truncate"><strong>Symptom:</strong> ${k.symptom}</p>
+
+                        <div class="bg-light p-2 rounded border mb-2 fs-12">
+                            <strong class="text-success d-block mb-1"><i class="ti ti-check-circle me-1"></i>Check First Steps:</strong>
+                            <ul class="ps-3 mb-0 text-dark">
+                                ${k.checkFirstSteps.slice(0, 2).map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto fs-11 text-muted">
+                            <span><i class="ti ti-user me-1"></i>${k.author} &middot; ${k.updatedAt}</span>
+                            <span class="text-success fw-semibold">Open SOP &rarr;</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        let activeSopArticle = null;
+
+        function viewKbArticleModal(id) {
+            const article = KB_ARTICLES.find(k => k.id === id);
+            if (!article) return;
+            activeSopArticle = article;
+
+            document.getElementById('sopModalCode').textContent = article.code;
+            document.getElementById('sopModalProduct').textContent = article.product;
+            document.getElementById('sopModalTitle').textContent = article.title;
+            document.getElementById('sopModalAuthor').textContent = article.author || 'Scott Karan';
+            document.getElementById('sopModalUpdated').textContent = article.updatedAt || 'Recent';
+            document.getElementById('sopModalSymptom').textContent = article.symptom;
+            document.getElementById('sopModalResolution').textContent = article.resolution;
+
+            const stepsContainer = document.getElementById('sopModalStepsList');
+            stepsContainer.innerHTML = article.checkFirstSteps.map((s, idx) => `
+                <div class="diagnostic-step p-2 rounded border bg-white d-flex align-items-center gap-2">
+                    <input type="checkbox" class="form-check-input mt-0" id="sop_step_${idx}">
+                    <label for="sop_step_${idx}" class="text-dark fs-13 mb-0 fw-medium" style="cursor: pointer;">
+                        <span class="badge bg-light text-dark border me-1">Step ${idx + 1}</span> ${s}
+                    </label>
+                </div>
+            `).join('');
+
+            const modalEl = document.getElementById('sopDetailModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+
+        function openEnterSopModal(defaultProduct) {
+            if (defaultProduct) {
+                const prodSelect = document.getElementById('standaloneSopProduct');
+                if (prodSelect) prodSelect.value = defaultProduct;
+            }
+            const modalEl = document.getElementById('enterSopModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+
+        function copySopToActiveTicket() {
+            if (!activeSopArticle) return;
+            const stepsText = activeSopArticle.checkFirstSteps.map((s, i) => `${i + 1}. ${s}`).join(' · ');
+            insertMacro(`Standard SOP Check (${activeSopArticle.code} - ${activeSopArticle.title}): Checked diagnostic checkpoints -> ${stepsText}`);
+            
+            triggerNotification('SOP Attached to Ticket', `Copied ${activeSopArticle.code} checklist to ticket draft`, 'ti-clipboard-check');
+            
+            const modalEl = document.getElementById('sopDetailModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+
+        function printSop() {
+            if (!activeSopArticle) return;
+            window.print();
+        }
+
+        function saveStandaloneSop(e) {
+            e.preventDefault();
+            const product = document.getElementById('standaloneSopProduct').value;
+            const title = document.getElementById('standaloneSopTitle').value.trim();
+            const symptom = document.getElementById('standaloneSopSymptom').value.trim();
+            const stepsRaw = document.getElementById('standaloneSopSteps').value.trim();
+            const resolution = document.getElementById('standaloneSopResolution').value.trim();
+
+            const checkFirstSteps = stepsRaw.split('
+').map(s => s.replace(/^[0-9]+[.)]s*/, '').trim()).filter(Boolean);
+            const newCode = 'SOP-0' + (KB_ARTICLES.length + 12);
+            
+            const newArticle = {
+                id: 'kb_' + Date.now(),
+                code: newCode,
+                product,
+                title,
+                symptom,
+                checkFirstSteps,
+                resolution: resolution || 'Follow standard quality guidelines.',
+                updatedAt: 'Just now',
+                author: 'Scott Karan'
+            };
+
+            KB_ARTICLES.unshift(newArticle);
+            renderKbArticlesList();
+            renderMachineTrends();
+            if (currentActiveTicket) renderDrawerCheckFirstBox(currentActiveTicket);
+
+            triggerNotification('SOP Published', `Published ${newCode}: ${title}`, 'ti-book-upload');
+
+            document.getElementById('standaloneCreateSopForm').reset();
+            const modalEl = document.getElementById('enterSopModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+
+        function saveNewKbArticle(e) {
+            e.preventDefault();
+            const product = document.getElementById('newKbProduct').value;
+            const title = document.getElementById('newKbTitle').value.trim();
+            const symptom = document.getElementById('newKbSymptom').value.trim();
+            const stepsRaw = document.getElementById('newKbSteps').value.trim();
+            const resolution = document.getElementById('newKbResolution').value.trim();
+
+            const checkFirstSteps = stepsRaw.split('
+').map(s => s.replace(/^[0-9]+[.)]s*/, '').trim()).filter(Boolean);
+
+            const newCode = 'SOP-0' + (KB_ARTICLES.length + 12);
+            const newArticle = {
+                id: 'kb_' + Date.now(),
+                code: newCode,
+                product,
+                title,
+                symptom,
+                checkFirstSteps,
+                resolution: resolution || 'Follow standard quality guidelines.',
+                updatedAt: 'Just now',
+                author: 'Scott Karan'
+            };
+
+            KB_ARTICLES.unshift(newArticle);
+            renderKbArticlesList();
+            renderMachineTrends();
+            triggerNotification('Knowledgebase Updated', `Published ${newCode}: ${title}`, 'ti-book-upload');
+
+            document.getElementById('createKbForm').reset();
+            const tabBtn = document.querySelector('#kbModalTabs button[data-bs-target="#tabKbArticles"]');
+            if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+        }
+
+        // Promote Ticket to KB Action
+        function openPromoteToKbModal() {
+            if (!currentActiveTicket) return;
+            document.getElementById('promotedProduct').value = currentActiveTicket.linkedProduct || 'Antari 2000 Elite';
+            document.getElementById('promotedSourceTicket').value = currentActiveTicket.formattedUid + ' - ' + currentActiveTicket.title;
+            document.getElementById('promotedTitle').value = `Diagnostic Playbook: ${currentActiveTicket.title}`;
+            document.getElementById('promotedSteps').value = '1. Check component tolerances.\n2. Verify cable connections & test checkpoints.';
+            document.getElementById('promotedResolution').value = currentActiveTicket.comments.map(c => c.text).join('\n') || currentActiveTicket.description;
+
+            const modal = new bootstrap.Modal(document.getElementById('promoteKbModal'));
+            modal.show();
+        }
+
+        function submitPromotedKb(e) {
+            e.preventDefault();
+            const product = document.getElementById('promotedProduct').value;
+            const title = document.getElementById('promotedTitle').value.trim();
+            const stepsRaw = document.getElementById('promotedSteps').value.trim();
+            const resolution = document.getElementById('promotedResolution').value.trim();
+
+            const checkFirstSteps = stepsRaw.split('\n').map(s => s.replace(/^[0-9]+[.)]\s*/, '').trim()).filter(Boolean);
+            const newCode = 'SOP-0' + (KB_ARTICLES.length + 15);
+
+            KB_ARTICLES.unshift({
+                id: 'kb_' + Date.now(),
+                code: newCode,
+                product,
+                title,
+                symptom: currentActiveTicket ? currentActiveTicket.title : 'Recurring machine defect',
+                checkFirstSteps,
+                resolution,
+                updatedAt: 'Just now',
+                author: 'Scott Karan'
+            });
+
+            renderKbArticlesList();
+            renderMachineTrends();
+            if (currentActiveTicket) renderDrawerCheckFirstBox(currentActiveTicket);
+
+            triggerNotification('Solution Promoted to KB', `Created ${newCode} from ${currentActiveTicket ? currentActiveTicket.formattedUid : 'Ticket'}`, 'ti-bulb');
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('promoteKbModal'));
+            modal.hide();
+        }
+
+        // Inbound Email Gateway & Anti-Spam Engine
+        let QUARANTINE_QUEUE = [
+            {
+                id: 'q_1',
+                sender: 'spambot-crawler@marketing-lead-harvester.xyz',
+                subject: 'ATTN: Urgent SEO Backlink & Casino Promo',
+                snippet: 'Boost your website ranking with 5000 high authority backlinks...',
+                reason: 'AI Spam Filter (Keywords: Backlink, Casino)',
+                time: '10 mins ago'
+            },
+            {
+                id: 'q_2',
+                sender: 'auto-mailer@out-of-office-loop.net',
+                subject: 'Automatic reply: Out of Office (March 15-22)',
+                snippet: 'I am currently away from the office with limited access to email...',
+                reason: 'Mail Loop Deflector (Auto-Submitted: auto-generated)',
+                time: '25 mins ago'
+            }
+        ];
+
+        function renderQuarantineTable() {
+            const tbody = document.getElementById('quarantineTableBody');
+            const badge = document.getElementById('quarantineCountBadge');
+            if (badge) badge.textContent = QUARANTINE_QUEUE.length;
+            if (!tbody) return;
+
+            if (!QUARANTINE_QUEUE.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><i class="ti ti-shield-check text-success fs-20 d-block mb-1"></i>Spam quarantine is clean. No blocked emails.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = QUARANTINE_QUEUE.map(q => `
+                <tr>
+                    <td><strong class="text-danger"><i class="ti ti-user-x me-1"></i>${q.sender}</strong></td>
+                    <td>
+                        <strong class="text-dark d-block">${q.subject}</strong>
+                        <span class="text-muted fs-11 text-truncate d-block" style="max-width:280px;">${q.snippet}</span>
+                    </td>
+                    <td><span class="badge bg-danger-subtle text-danger border border-danger-subtle fs-11">${q.reason}</span></td>
+                    <td><span class="text-muted fs-11">${q.time}</span></td>
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end gap-1">
+                            <button class="btn btn-sm btn-outline-success py-0 px-2 fs-11" onclick="releaseQuarantinedEmail('${q.id}')" title="Release to Ticket">
+                                <i class="ti ti-check me-1"></i> Release
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-2 fs-11" onclick="deleteQuarantineItem('${q.id}')" title="Delete Spam">
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function clearQuarantine() {
+            QUARANTINE_QUEUE = [];
+            renderQuarantineTable();
+            triggerNotification('Quarantine Cleared', 'All blocked spam items removed', 'ti-trash');
+        }
+
+        function deleteQuarantineItem(id) {
+            QUARANTINE_QUEUE = QUARANTINE_QUEUE.filter(q => q.id !== id);
+            renderQuarantineTable();
+        }
+
+        function releaseQuarantinedEmail(id) {
+            const item = QUARANTINE_QUEUE.find(q => q.id === id);
+            if (!item) return;
+
+            const newTicket = {
+                id: String(Date.now()),
+                uid: 1000 + tickets.length + 1,
+                formattedUid: `LP-${1000 + tickets.length + 1}`,
+                title: item.subject.replace(/^[Rr][Ee]:\s*/, ''),
+                description: item.snippet,
+                status: 'To-Do',
+                priority: 'Normal',
+                categoryName: 'Customer Support Request',
+                linkedProduct: 'General Asset / None',
+                dueDate: new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10),
+                reporterName: item.sender,
+                assigneeName: 'Scott Karan',
+                watchers: ['Scott Karan'],
+                formData: { releasedFromQuarantine: true },
+                attachments: [],
+                expenses: [],
+                history: [
+                    { action: `Released from Anti-Spam Quarantine by Scott Karan`, by: 'Scott Karan', time: 'Just now' }
+                ],
+                comments: [],
+                workLogs: [],
+                createdAt: new Date().toISOString()
+            };
+
+            tickets.unshift(newTicket);
+            QUARANTINE_QUEUE = QUARANTINE_QUEUE.filter(q => q.id !== id);
+            renderQuarantineTable();
+            renderTickets();
+            updateKpis();
+            triggerNotification('Email Released as Ticket', `Generated ticket ${newTicket.formattedUid} from ${item.sender}`, 'ti-mail-check', newTicket.id);
+        }
+
+        function runEmailSimulation(e) {
+            e.preventDefault();
+            const fromEmail = document.getElementById('simFromEmail').value.trim();
+            const toEmail = document.getElementById('simToEmail').value;
+            const subject = document.getElementById('simSubject').value.trim();
+            const body = document.getElementById('simBody').value.trim();
+            const isLoop = document.getElementById('simFlagLoop').checked;
+            const isFlood = document.getElementById('simFlagFlood').checked;
+            const hasAttachment = document.getElementById('simFlagAttach').checked;
+
+            const consoleBox = document.getElementById('simConsoleLog');
+            const statusBadge = document.getElementById('simStatusBadge');
+            
+            function logLine(msg, color = '#a3e635') {
+                const time = new Date().toLocaleTimeString();
+                consoleBox.innerHTML += `<div style="color:${color}">[${time}] ${msg}</div>`;
+                consoleBox.scrollTop = consoleBox.scrollHeight;
+            }
+
+            logLine(`Incoming SMTP connection from ${fromEmail} -> ${toEmail}...`, '#38bdf8');
+            statusBadge.className = 'badge bg-warning text-dark';
+            statusBadge.textContent = 'INSPECTING';
+
+            setTimeout(() => {
+                // Layer 1: Mail loop check
+                if (isLoop) {
+                    logLine('[SECURITY BLOCK] Header "Auto-Submitted: auto-generated" detected! Dropping bounce loop.', '#f87171');
+                    statusBadge.className = 'badge bg-danger';
+                    statusBadge.textContent = 'BLOCKED (LOOP)';
+                    QUARANTINE_QUEUE.unshift({
+                        id: 'q_' + Date.now(),
+                        sender: fromEmail,
+                        subject,
+                        snippet: body,
+                        reason: 'Mail Loop Deflector (Auto-Submitted header)',
+                        time: 'Just now'
+                    });
+                    renderQuarantineTable();
+                    triggerNotification('Spam Blocked', `Auto-responder loop from ${fromEmail} quarantined`, 'ti-shield-x');
+                    return;
+                }
+                logLine('  ✓ Layer 1 (Mail Loop & Bounce Deflector): PASSED', '#4ade80');
+
+                // Layer 2: SPF / DKIM
+                logLine('  ✓ Layer 2 (SPF/DKIM Cryptographic Auth): PASSED (Domain verified)', '#4ade80');
+
+                // Layer 3: Rate Limiting
+                if (isFlood) {
+                    logLine('[SECURITY BLOCK] Rate limit exceeded (>3 emails/hr from ' + fromEmail + ')! Quarantined.', '#f87171');
+                    statusBadge.className = 'badge bg-danger';
+                    statusBadge.textContent = 'BLOCKED (FLOOD)';
+                    QUARANTINE_QUEUE.unshift({
+                        id: 'q_' + Date.now(),
+                        sender: fromEmail,
+                        subject,
+                        snippet: body,
+                        reason: 'Rate Limit Exceeded (>3 emails/hr)',
+                        time: 'Just now'
+                    });
+                    renderQuarantineTable();
+                    triggerNotification('Bot Flood Blocked', `Rate limit triggered for ${fromEmail}`, 'ti-flame-off');
+                    return;
+                }
+                logLine('  ✓ Layer 3 (Rate Limiting Threshold): PASSED (1/3 per hr)', '#4ade80');
+
+                // Layer 4: AI & Heuristic Content Scanner
+                logLine('  ✓ Layer 4 (AI Content & Malware Scan): PASSED (Clean payload)', '#4ade80');
+
+                // Layer 5: Target Category Aliasing & Threading
+                let targetCategory = 'Customer Support Request';
+                let defaultModel = 'General Asset / None';
+
+                if (toEmail.includes('fx-support')) {
+                    targetCategory = 'FX Machine Support';
+                    defaultModel = 'Antari 2000 Elite';
+                } else if (toEmail.includes('fluid-finder')) {
+                    targetCategory = 'Fluid Finder Update';
+                    defaultModel = 'Antari 2000 Elite';
+                } else if (toEmail.includes('po')) {
+                    targetCategory = 'Vendor Purchase Order';
+                    defaultModel = 'Antari 2000 Elite';
+                } else if (toEmail.includes('it-help')) {
+                    targetCategory = 'Computer/Laptop Issue';
+                }
+
+                // Check for ticket thread in subject e.g. [#10] or LP-1001
+                const matchTicket = tickets.find(t => subject.includes(t.formattedUid) || subject.includes(`[#${t.id}]`));
+
+                if (matchTicket) {
+                    logLine(`  ↪ Thread detected: Appending discussion to existing ticket ${matchTicket.formattedUid}...`, '#fbbf24');
+                    matchTicket.comments = matchTicket.comments || [];
+                    matchTicket.comments.push({
+                        author: fromEmail,
+                        text: body,
+                        isInternal: false,
+                        time: 'Just now'
+                    });
+                    if (hasAttachment) {
+                        matchTicket.attachments = matchTicket.attachments || [];
+                        matchTicket.attachments.push({
+                            id: 'att_' + Date.now(),
+                            name: 'Antari_Plate_Proof_v3.ai',
+                            size: '4.2 MB',
+                            type: 'vector',
+                            uploadedBy: fromEmail,
+                            uploadedAt: 'Just now'
+                        });
+                        logLine('  ✓ Auto-attached file: Antari_Plate_Proof_v3.ai (4.2 MB) to ticket vault', '#38bdf8');
+                    }
+                    matchTicket.history.unshift({ action: `Inbound email replied by ${fromEmail}`, by: fromEmail, time: 'Just now' });
+                    renderTickets();
+                    triggerNotification('Email Thread Appended', `New email response on ${matchTicket.formattedUid} from ${fromEmail}`, 'ti-mail-forward', matchTicket.id);
+                } else {
+                    logLine(`  ✓ Generating new ticket under category: "${targetCategory}"...`, '#38bdf8');
+                    const newUidNum = 1000 + tickets.length + 1;
+                    const createdTicket = {
+                        id: String(Date.now()),
+                        uid: newUidNum,
+                        formattedUid: `LP-${newUidNum}`,
+                        title: subject,
+                        description: body,
+                        status: 'To-Do',
+                        priority: targetCategory === 'Vendor Purchase Order' || targetCategory === 'FX Machine Support' ? 'High' : 'Normal',
+                        categoryName: targetCategory,
+                        linkedProduct: defaultModel,
+                        dueDate: new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10),
+                        reporterName: fromEmail,
+                        assigneeName: 'Scott Karan',
+                        watchers: ['Scott Karan'],
+                        formData: {
+                            inboundSource: 'Inbound Gateway (' + toEmail + ')',
+                            senderEmail: fromEmail
+                        },
+                        attachments: hasAttachment ? [{
+                            id: 'att_' + Date.now(),
+                            name: 'Antari_Plate_Proof_v3.ai',
+                            size: '4.2 MB',
+                            type: 'vector',
+                            uploadedBy: fromEmail,
+                            uploadedAt: 'Just now'
+                        }] : [],
+                        expenses: [],
+                        history: [
+                            { action: `Ticket Created via Inbound Email (${toEmail})`, by: fromEmail, time: 'Just now' }
+                        ],
+                        comments: [],
+                        workLogs: [],
+                        createdAt: new Date().toISOString()
+                    };
+
+                    tickets.unshift(createdTicket);
+                    renderTickets();
+                    updateKpis();
+                    logLine(`[SUCCESS] Ticket ${createdTicket.formattedUid} created and assigned to Scott Karan!`, '#4ade80');
+                    triggerNotification('Ticket Created via Email', `${createdTicket.formattedUid}: "${subject}" from ${fromEmail}`, 'ti-mail-check', createdTicket.id);
+                }
+
+                statusBadge.className = 'badge bg-success';
+                statusBadge.textContent = 'PROCESSED (OK)';
+            }, 600);
+        }
+
+        // Form Builder & User Management
+        function initFormBuilder() {
+            addBuilderFieldRow('artworkRevision', 'Artwork Rev (e.g. Rev C.2)', 'text');
+            addBuilderFieldRow('cartonDimensions', 'Carton Dieline Spec', 'text');
+        }
+
+        function addBuilderFieldRow(name = '', label = '', type = 'text', options = '') {
+            const container = document.getElementById('builderFieldsList');
+            if (!container) return;
+            const row = document.createElement('div');
+            row.className = 'row g-2 align-items-center p-2 bg-light rounded border';
+            row.innerHTML = `
+                <div class="col-4">
+                    <input type="text" class="form-control form-control-sm bld-name" placeholder="Field Key" value="${name}">
+                </div>
+                <div class="col-4">
+                    <input type="text" class="form-control form-control-sm bld-label" placeholder="Display Label" value="${label}">
+                </div>
+                <div class="col-3">
+                    <select class="form-select form-select-sm bld-type">
+                        <option value="text" ${type === 'text' ? 'selected' : ''}>Text</option>
+                        <option value="number" ${type === 'number' ? 'selected' : ''}>Number</option>
+                        <option value="select" ${type === 'select' ? 'selected' : ''}>Dropdown Select</option>
+                        <option value="textarea" ${type === 'textarea' ? 'selected' : ''}>Textarea</option>
+                        <option value="date" ${type === 'date' ? 'selected' : ''}>Date</option>
+                        <option value="checkbox" ${type === 'checkbox' ? 'selected' : ''}>Checkbox</option>
+                    </select>
+                </div>
+                <div class="col-1 text-end">
+                    <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('.row').remove()"><i class="ti ti-trash"></i></button>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        function saveNewCategoryForm() {
+            const name = document.getElementById('builderCategoryName').value.trim();
+            const icon = document.getElementById('builderCategoryIcon').value.trim() || 'ti-package';
+            if (!name) return alert('Please enter a category name.');
+
+            const fields = [];
+            document.querySelectorAll('#builderFieldsList .row').forEach(r => {
+                const fName = r.querySelector('.bld-name').value.trim();
+                const fLabel = r.querySelector('.bld-label').value.trim();
+                const fType = r.querySelector('.bld-type').value;
+                if (fName && fLabel) {
+                    fields.push({
+                        name: fName,
+                        label: fLabel,
+                        type: fType,
+                        options: ['Option A', 'Option B'],
+                        required: false
+                    });
+                }
+            });
+
+            const slug = name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-');
+            const newCat = { name, slug, icon, defaultPriority: 'High', fields };
+            CATEGORIES.push(newCat);
+
+            renderCategoryChips();
+            updateCategoryFilterDropdown();
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('formBuilderModal'));
+            modal.hide();
+            triggerNotification('New Category Created', `Category "${name}" created with custom fields`, 'ti-folder-plus');
+        }
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('userTableBody');
+            if (!tbody) return;
+            document.getElementById('userCountBadge').textContent = USERS.length;
+            tbody.innerHTML = USERS.map(u => {
+                const assignedCount = tickets.filter(t => t.assigneeName === u.fullname).length;
+                return `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-11" style="width: 30px; height: 30px;">
+                                    ${u.initials}
+                                </div>
+                                <div>
+                                    <strong class="d-block text-dark">${u.fullname}</strong>
+                                    <span class="text-muted fs-11">${u.email}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge ${u.role === 'Admin' ? 'bg-dark' : (u.role === 'Support Lead' ? 'bg-primary' : 'bg-secondary')} fs-11">${u.role}</span></td>
+                        <td><span class="text-muted">${u.department}</span></td>
+                        <td><span class="badge bg-light text-dark border fs-11">${assignedCount} tickets</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteUser('${u.id}')"><i class="ti ti-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function saveNewUser(e) {
+            e.preventDefault();
+            const fullname = document.getElementById('newFullName').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
+            const username = document.getElementById('newUsername').value.trim();
+            const role = document.getElementById('newRole').value;
+            const department = document.getElementById('newDepartment').value;
+            if (!fullname || !email) return;
+
+            const initials = fullname.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'LP';
+            const newUser = { id: 'u' + (USERS.length + 1), fullname, username, email, role, department, initials, active: true };
+            USERS.push(newUser);
+            renderUsersTable();
+            updateAllAssigneeDropdowns();
+            renderTickets();
+            document.getElementById('addUserForm').reset();
+            const tabEl = document.querySelector('#userModalTabs button[data-bs-target="#tabTeamList"]');
+            bootstrap.Tab.getInstance(tabEl) ? bootstrap.Tab.getInstance(tabEl).show() : new bootstrap.Tab(tabEl).show();
+        }
+
+        function deleteUser(id) {
+            USERS = USERS.filter(u => u.id !== id);
+            renderUsersTable();
+            updateAllAssigneeDropdowns();
+            renderTickets();
+        }
+
+        function updateAllAssigneeDropdowns() {
+            const optionsHtml = '<option value="Unassigned">Unassigned</option>' + USERS.map(u => `<option value="${u.fullname}">${u.fullname}</option>`).join('');
+            const drawerSelect = document.getElementById('drawerAssigneeSelect');
+            if (drawerSelect) {
+                const currentVal = drawerSelect.value;
+                drawerSelect.innerHTML = optionsHtml;
+                drawerSelect.value = currentVal;
+            }
+        }
+    </script>
 </body>
 
 </html>

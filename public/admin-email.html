@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Inbound Email Gateway | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="keywords"
+		content="LilyPad ERP, operations, CRM, ticketing">
+	<meta name="author" content="LilyPad Systems">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Datatable CSS -->
+	<link rel="stylesheet" href="assets/plugins/datatables/css3/dataTables.bootstrap5.min.css">
+
+	<!-- Daterangepicker CSS -->
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="assets/plugins/flatpickr/flatpickr.min.css">
+
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+
+					<!-- Sidebar Mobile Button -->
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+
+				</div>
+
+				<!-- Centered & Larger Global Search Bar -->
+				<div class="header-search d-none d-md-flex align-items-center justify-content-center mx-auto" style="width: 100%; max-width: 520px;">
+					<div class="input-icon position-relative w-100">
+						<input type="text" class="form-control rounded-pill py-2 px-4 shadow-sm" placeholder="Search anything in LilyPad ERP... (Ctrl + K)" style="font-size: 14px; height: 42px;">
+						<span class="input-icon-addon d-inline-flex p-0 header-search-icon pe-3"><i class="ti ti-command fs-16 text-muted"></i></span>
+					</div>
+				</div>
+
+				<div class="d-flex align-items-center">
+
+					<!-- Direct Ticket Suite Button -->
+					<div class="header-item me-2">
+						<a href="/tickets" class="btn btn-sm d-flex align-items-center gap-2 px-3 py-2 text-white shadow-sm fw-semibold rounded-pill" style="background-color: #047d24; font-size: 13px;">
+							<i class="ti ti-ticket fs-16"></i>
+							<span>Ticket Suite</span>
+						</a>
+					</div>
+
+					<!-- Search for Mobile -->
+					<div class="header-item d-flex d-lg-none me-2">
+						<button class="topbar-link btn" data-bs-toggle="modal" data-bs-target="#searchModal"
+							type="button">
+							<i class="ti ti-search fs-16"></i>
+						</button>
+					</div>
+
+
+					<!-- Minimize -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link btnFullscreen"><i
+									class="ti ti-maximize"></i></a>
+						</div>
+					</div>
+					<!-- Minimize -->
+
+					<!-- Light/Dark Mode Button -->
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<!-- pages -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link topbar-teal-link"
+								data-bs-toggle="dropdown">
+								<i class="ti ti-layout-grid-add"></i>
+							</a>
+							<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+								<!-- Item-->
+								<a href="contacts.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Contacts</span>
+											<span class="fs-13">View All the Contacts</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="pipeline.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Pipeline</span>
+											<span class="fs-13">View All the Pipeline</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="activities.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Activities</span>
+											<span class="fs-13">Activities</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="analytics.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Analytics</span>
+											<span class="fs-13">Analytics</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- faq -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="faq.html" class="btn topbar-link topbar-indigo-link"><i
+									class="ti ti-help-hexagon"></i></a>
+						</div>
+					</div>
+
+					<!-- report -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="lead-reports.html" class="btn topbar-link topbar-warning-link"><i
+									class="ti ti-chart-pie"></i></a>
+						</div>
+					</div>
+
+					<div class="header-line"></div>
+
+					<!-- message -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="chat.html" class="btn topbar-link">
+								<i class="ti ti-message-circle-exclamation"></i>
+								<span class="badge rounded-pill">&nbsp;</span>
+							</a>
+						</div>
+					</div>
+
+					<!-- Notification Dropdown -->
+					<div class="header-item">
+						<div class="dropdown me-2 position-relative">
+
+							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative"
+								data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false"
+								aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
+								<i class="ti ti-bell fs-19" id="notificationBellIcon"></i>
+								<span class="notification-badge" id="notificationBadge" data-notif-badge style="display:none;">0</span>
+							</button>
+
+							<div class="dropdown-menu p-0 dropdown-menu-end shadow-lg border-0"
+								style="min-width: 360px; max-width: 380px; z-index: 1060;">
+
+								<div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+									<div class="d-flex align-items-center gap-2">
+										<h6 class="m-0 fs-15 fw-bold text-dark">Notifications</h6>
+										<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold">Live Feed</span>
+									</div>
+									<a href="javascript:void(0);" onclick="LilypadNotifications.markAllAsRead(event)" class="fs-12 text-decoration-none fw-semibold" style="color: #047d24;">
+										Mark all read
+									</a>
+								</div>
+
+								<!-- Notification Dynamic Body -->
+								<div class="notification-body position-relative z-2" id="notificationListContainer" style="max-height: 360px; overflow-y: auto;">
+								</div>
+
+								<!-- Direct Ticket Operations Button -->
+								<div class="p-2 rounded-bottom border-top text-center bg-light">
+									<a href="/tickets" class="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2" style="background-color: #047d24;">
+										<i class="ti ti-ticket fs-16"></i>
+										<span>Open Ticket Operations</span>
+									</a>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- User Dropdown -->
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);"
+							class="topbar-link dropdown-toggle drop-arrow-none position-relative"
+							data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex"
+								alt="user-image">
+							<span class="online text-success"><i
+									class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42"
+									alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0">Katherine Brooks</p>
+									<span class="d-block fs-13">Installer</span>
+								</div>
+							</div>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+
+							<!-- item -->
+							<div
+								class="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
+								<label class="form-check-label" for="notify"><i
+										class="ti ti-bell"></i>Notifications</label>
+								<input class="form-check-input me-0" type="checkbox" role="switch" id="notify">
+							</div>
+
+							<!-- Item-->
+							<a href="javascript:void(0);" class="dropdown-item">
+								<i class="ti ti-help-circle me-1 align-middle"></i>
+								<span class="align-middle">Help & Support</span>
+							</a>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-settings me-1 align-middle"></i>
+								<span class="align-middle">Settings</span>
+							</a>
+
+							<!-- Item-->
+							<div class="pt-2 mt-2 border-top">
+								<a href="login.html" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Search Modal -->
+		<div class="modal fade" id="searchModal">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content bg-transparent">
+					<div class="card shadow-none mb-0">
+						<div class="px-3 py-2 d-flex flex-row align-items-center" id="search-top">
+							<i class="ti ti-search fs-22"></i>
+							<input type="search" class="form-control border-0" placeholder="Search">
+							<button type="button" class="btn p-0" data-bs-dismiss="modal" aria-label="Close"><i
+									class="ti ti-x fs-22"></i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+
+			<!-- Start Logo -->
+			<div class="sidebar-logo">
+				<div>
+					<!-- Logo Normal -->
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span style="color:#047d24;">ERP</span></span>
+					</a>
+
+					<!-- Logo Small (shown when sidebar is minimized) -->
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+
+				<!-- Sidebar Menu Close -->
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+			<!-- End Logo -->
+
+			<!-- Sidenav Menu -->
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu">
+					<ul>
+						<li class="menu-title"><span>Main Operations</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="dashboard.html" class="active">
+										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
+									</a>
+								</li>
+								<li>
+									<a href="tickets.html">
+										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
+									</a>
+								</li>
+								<li>
+									<a href="javascript:void(0);" onclick="openKnowledgeBaseModal()">
+										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Administration & Setup</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);" class="subdrop">
+										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="javascript:void(0);" onclick="openEmailGatewayModal()"><i class="ti ti-mail-shield me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="javascript:void(0);" onclick="openUserManagementModal()"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="javascript:void(0);" onclick="openFormBuilderModal()"><i class="ti ti-tool me-2 text-primary"></i>Dynamic Form Builder</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Account</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="login.html" onclick="sessionStorage.removeItem('lilypad_auth_user'); localStorage.removeItem('lilypad_logged_in');">
+										<i class="ti ti-logout text-danger"></i><span class="text-danger fw-semibold">Sign Out</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<!-- ========================
+			Start Page Content
+		========================= -->
+
+		<div class="page-wrapper">
+
+			<!-- Start Content -->
+			<div class="content pb-0">
+				<!-- Page Header -->
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+							<span>Inbound Email & Anti-Spam Gateway</span>
+							<span class="badge bg-soft-success text-success fs-12 rounded-pill fw-semibold"><i class="ti ti-shield-check"></i> Shield Active</span>
+						</h4>
+						<p class="text-muted fs-13 mb-0">Automated ticket creation from email, SPF/DKIM verification, category routing, and quarantine management.</p>
+					</div>
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<a href="tickets.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+							<i class="ti ti-ticket me-1"></i> Ticket Operations
+						</a>
+						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#emailTabs button[data-bs-target=\'#tabSimulator\']')).show()">
+							<i class="ti ti-flask me-1"></i> Launch Simulator
+						</button>
+					</div>
+				</div>
+
+				<!-- Email Gateway Metrics -->
+				<div class="row g-3 mb-4">
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<div class="d-flex align-items-center justify-content-between">
+								<div>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Primary Help Desk Address</span>
+									<h5 class="fw-bold mb-0 mt-1" style="color:#047d24;">support@froggysfog.com</h5>
+									<span class="fs-11 text-muted">All incoming emails parsed & routed</span>
+								</div>
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:44px; height:44px;">
+									<i class="ti ti-mail fs-22"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<div class="d-flex align-items-center justify-content-between">
+								<div>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Security Bot Shield</span>
+									<h5 class="fw-bold mb-0 mt-1 text-primary">5 Active Protection Rules</h5>
+									<span class="fs-11 text-success"><i class="ti ti-shield-check me-1"></i>SPF / DKIM / Anti-Loop Enabled</span>
+								</div>
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-primary" style="width:44px; height:44px;">
+									<i class="ti ti-shield-lock fs-22"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<div class="d-flex align-items-center justify-content-between">
+								<div>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Active Department Aliases</span>
+									<h5 class="fw-bold mb-0 mt-1 text-dark">4 Dedicated Mailboxes</h5>
+									<span class="fs-11 text-muted">Auto-categorization & priority</span>
+								</div>
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-dark" style="width:44px; height:44px;">
+									<i class="ti ti-arrows-split fs-22"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<div class="d-flex align-items-center justify-content-between">
+								<div>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Spam Quarantine</span>
+									<h5 class="fw-bold mb-0 mt-1 text-danger" id="quarantineCountDisplay">0 Intercepted</h5>
+									<span class="fs-11 text-muted">Clean inbox threshold: 3/hr</span>
+								</div>
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-danger" style="width:44px; height:44px;">
+									<i class="ti ti-ban fs-22"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Main Navigation Tabs -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-header bg-transparent border-bottom py-3">
+						<ul class="nav nav-pills gap-2" id="emailTabs">
+							<li class="nav-item">
+								<button class="nav-link active py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabRouting">
+									<i class="ti ti-mail me-1"></i> 1. Mailbox & Category Routing
+								</button>
+							</li>
+							<li class="nav-item">
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabShield">
+									<i class="ti ti-shield-lock me-1"></i> 2. Anti-Spam & Bot Protection
+								</button>
+							</li>
+							<li class="nav-item">
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-danger" data-bs-toggle="tab" data-bs-target="#tabQuarantine">
+									<i class="ti ti-ban me-1"></i> 3. Spam Quarantine Queue (<span id="quarantineBadge">0</span>)
+								</button>
+							</li>
+							<li class="nav-item">
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-success" data-bs-toggle="tab" data-bs-target="#tabSimulator">
+									<i class="ti ti-flask me-1"></i> 4. Live Inbound Simulator
+								</button>
+							</li>
+						</ul>
+					</div>
+
+					<div class="card-body p-4">
+						<div class="tab-content">
+							<!-- Tab 1: Routing -->
+							<div class="tab-pane fade show active" id="tabRouting">
+								<div class="card border bg-light rounded-3 p-3 mb-4">
+									<div class="row g-3 align-items-center">
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Primary Inbound Help Desk Address</label>
+											<div class="input-group input-group-sm">
+												<span class="input-group-text bg-white"><i class="ti ti-mail"></i></span>
+												<input type="text" class="form-control fw-bold text-dark" value="support@froggysfog.com" readonly>
+												<button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('support@froggysfog.com'); alert('Copied support@froggysfog.com to clipboard!')">Copy</button>
+											</div>
+											<span class="fs-11 text-muted">All emails sent here are parsed, anti-spam verified, and converted to tickets.</span>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Ingestion Mode</label>
+											<select class="form-select form-select-sm">
+												<option value="webhook" selected>Instant Cloud Webhook (SendGrid / Postmark / AWS SES / Mailgun)</option>
+												<option value="imap">Direct IMAP / Exchange Polling (Every 60s)</option>
+											</select>
+											<span class="fs-11 text-muted">Webhook Endpoint: <code>https://lilypad-erp-dev.onrender.com/api/email-webhook</code></span>
+										</div>
+									</div>
+								</div>
+
+								<div class="d-flex align-items-center justify-content-between mb-3">
+									<h6 class="fw-bold fs-14 text-dark mb-0 d-flex align-items-center gap-1">
+										<i class="ti ti-arrows-split text-primary"></i> Category Direct Routing Aliases
+									</h6>
+									<button class="btn btn-sm btn-outline-primary" onclick="alert('Alias added to routing registry!')">
+										<i class="ti ti-plus me-1"></i> Add Department Alias
+									</button>
+								</div>
+
+								<div class="table-responsive">
+									<table class="table table-hover align-middle mb-0 fs-13 border rounded-3">
+										<thead class="table-light">
+											<tr>
+												<th>Incoming Email Alias</th>
+												<th>Target Category</th>
+												<th>Default Priority</th>
+												<th>Linked Machine / Model</th>
+												<th>Status</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td><code>fx-support@froggysfog.com</code></td>
+												<td><span class="badge bg-soft-primary text-primary">FX Machine Support</span></td>
+												<td><span class="badge bg-danger-subtle text-danger">High</span></td>
+												<td><strong>Antari 2000 Elite</strong></td>
+												<td><span class="badge bg-success-subtle text-success">Active</span></td>
+											</tr>
+											<tr>
+												<td><code>fluid-finder@froggysfog.com</code></td>
+												<td><span class="badge bg-soft-primary text-primary">Fluid Finder Update</span></td>
+												<td><span class="badge bg-info-subtle text-info">Normal</span></td>
+												<td><strong>All Fog / Haze Formulas</strong></td>
+												<td><span class="badge bg-success-subtle text-success">Active</span></td>
+											</tr>
+											<tr>
+												<td><code>po@froggysfog.com</code></td>
+												<td><span class="badge bg-soft-primary text-primary">Vendor Purchase Order</span></td>
+												<td><span class="badge bg-danger-subtle text-danger">High</span></td>
+												<td><strong>Tooling & Dielines</strong></td>
+												<td><span class="badge bg-success-subtle text-success">Active</span></td>
+											</tr>
+											<tr>
+												<td><code>it-help@froggysfog.com</code></td>
+												<td><span class="badge bg-soft-primary text-primary">Computer/Laptop Issue</span></td>
+												<td><span class="badge bg-info-subtle text-info">Normal</span></td>
+												<td><strong>IT Hardware</strong></td>
+												<td><span class="badge bg-success-subtle text-success">Active</span></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+
+							<!-- Tab 2: Anti-Spam Shield -->
+							<div class="tab-pane fade" id="tabShield">
+								<div class="row g-3">
+									<div class="col-md-6">
+										<div class="card border rounded-3 p-3 h-100">
+											<h6 class="fw-bold fs-13 text-dark mb-3 d-flex align-items-center gap-2">
+												<i class="ti ti-shield-check text-success fs-16"></i> Active Anti-Spam Protection Rules
+											</h6>
+											
+											<div class="form-check form-switch mb-3">
+												<input class="form-check-input" type="checkbox" id="chkLoopBlock" checked>
+												<label class="form-check-label fs-13 fw-semibold text-dark" for="chkLoopBlock">
+													1. Block Infinite Mail Loops & Auto-Responders
+												</label>
+												<span class="d-block fs-11 text-muted">Drops <code>Auto-Submitted: auto-generated</code>, <code>X-Autoreply</code>, and <code>mailer-daemon</code> bounces.</span>
+											</div>
+
+											<div class="form-check form-switch mb-3">
+												<input class="form-check-input" type="checkbox" id="chkSpfDkim" checked>
+												<label class="form-check-label fs-13 fw-semibold text-dark" for="chkSpfDkim">
+													2. SPF / DKIM / DMARC Cryptographic Verification
+												</label>
+												<span class="d-block fs-11 text-muted">Rejects spoofed sender domains and unauthenticated SMTP relays.</span>
+											</div>
+
+											<div class="form-check form-switch mb-3">
+												<input class="form-check-input" type="checkbox" id="chkRateLimit" checked>
+												<label class="form-check-label fs-13 fw-semibold text-dark" for="chkRateLimit">
+													3. Rate Limiting & Anti-Flooding Threshold
+												</label>
+												<span class="d-block fs-11 text-muted">Maximum 3 tickets per email address per hour. Excess emails routed to quarantine.</span>
+											</div>
+
+											<div class="form-check form-switch mb-3">
+												<input class="form-check-input" type="checkbox" id="chkAiSpam" checked>
+												<label class="form-check-label fs-13 fw-semibold text-dark" for="chkAiSpam">
+													4. AI & Heuristic Content Scanner
+												</label>
+												<span class="d-block fs-11 text-muted">Scans for SEO spam keywords, phishing URLs, empty payloads, and suspicious links.</span>
+											</div>
+
+											<div class="form-check form-switch">
+												<input class="form-check-input" type="checkbox" id="chkFirstTimeChallenge" checked>
+												<label class="form-check-label fs-13 fw-semibold text-dark" for="chkFirstTimeChallenge">
+													5. First-Time Sender 1-Click Verification Challenge
+												</label>
+												<span class="d-block fs-11 text-muted">Sends a quick 1-click confirmation email to new senders to block crawlers and web scrapers.</span>
+											</div>
+										</div>
+									</div>
+
+									<div class="col-md-6">
+										<div class="card border rounded-3 p-3 h-100">
+											<h6 class="fw-bold fs-13 text-dark mb-2 d-flex align-items-center gap-2">
+												<i class="ti ti-list-check text-primary fs-16"></i> Trusted Domain Whitelist & Blacklist
+											</h6>
+											
+											<div class="mb-3">
+												<label class="form-label fs-12 fw-semibold text-success">Trusted Whitelist (Always bypass challenges)</label>
+												<textarea class="form-control form-control-sm" rows="3" readonly style="font-family:monospace; font-size:12px;">@froggysfog.com&#10;@antari.com&#10;@apexprints.com&#10;@packcraft.com&#10;@livenation.com&#10;@lilypad.local</textarea>
+											</div>
+
+											<div class="mb-3">
+												<label class="form-label fs-12 fw-semibold text-danger">Blacklisted Senders & Domains (Auto-dropped)</label>
+												<textarea class="form-control form-control-sm" rows="3" readonly style="font-family:monospace; font-size:12px;">*@marketing-crawler.xyz&#10;*@crypto-leads.ru&#10;*@phish-invoices.net&#10;mailer-daemon@*</textarea>
+											</div>
+
+											<button class="btn btn-sm btn-primary w-100" onclick="alert('Anti-Spam security rules saved!')">
+												<i class="ti ti-check me-1"></i> Save Anti-Spam Security Rules
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Tab 3: Quarantine -->
+							<div class="tab-pane fade" id="tabQuarantine">
+								<div class="alert alert-danger border-0 rounded-3 d-flex align-items-center justify-content-between mb-3 py-2 px-3 fs-13">
+									<div class="d-flex align-items-center gap-2">
+										<i class="ti ti-shield-x fs-20 text-danger"></i>
+										<span>These incoming messages were intercepted by the Anti-Spam Shield and held securely for review.</span>
+									</div>
+									<button class="btn btn-sm btn-outline-danger py-1" onclick="clearQuarantine()"><i class="ti ti-trash"></i> Clear All</button>
+								</div>
+
+								<div class="table-responsive">
+									<table class="table table-hover align-middle mb-0 fs-13 border rounded-3">
+										<thead class="table-light">
+											<tr>
+												<th>Sender</th>
+												<th>Subject & Snippet</th>
+												<th>Block Reason</th>
+												<th>Time</th>
+												<th class="text-end">Action</th>
+											</tr>
+										</thead>
+										<tbody id="quarantineTableBody">
+											<tr><td colspan="5" class="text-center py-4 text-muted"><i class="ti ti-shield-check fs-24 d-block mb-1 text-success"></i>Quarantine clean. No spam threats intercepted.</td></tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+
+							<!-- Tab 4: Simulator -->
+							<div class="tab-pane fade" id="tabSimulator">
+								<div class="row g-3">
+									<div class="col-md-6">
+										<div class="card border rounded-3 p-3 bg-light">
+											<h6 class="fw-bold fs-13 text-dark mb-3 d-flex align-items-center gap-2">
+												<i class="ti ti-send text-success"></i> Simulate Incoming Customer / Vendor Email
+											</h6>
+
+											<form id="emailSimForm" onsubmit="runEmailSimulation(event)">
+												<div class="mb-2">
+													<label class="form-label fs-12 fw-semibold">From (Sender Email):</label>
+													<input type="email" id="simFromEmail" class="form-control form-control-sm" value="mark.henderson@apexprints.com" required>
+												</div>
+
+												<div class="mb-2">
+													<label class="form-label fs-12 fw-semibold">To (Inbound Gateway Alias):</label>
+													<select id="simToEmail" class="form-select form-select-sm">
+														<option value="fx-support@froggysfog.com">fx-support@froggysfog.com (➔ FX Machine Support)</option>
+														<option value="fluid-finder@froggysfog.com">fluid-finder@froggysfog.com (➔ Fluid Finder Update)</option>
+														<option value="po@froggysfog.com">po@froggysfog.com (➔ Vendor Purchase Order)</option>
+														<option value="support@froggysfog.com">support@froggysfog.com (➔ Triage / Customer Support)</option>
+													</select>
+												</div>
+
+												<div class="mb-2">
+													<label class="form-label fs-12 fw-semibold">Subject:</label>
+													<input type="text" id="simSubject" class="form-control form-control-sm" value="Antari 2000 Elite Silkscreen Plate Proof Attached" required>
+												</div>
+
+												<div class="mb-2">
+													<label class="form-label fs-12 fw-semibold">Body Content:</label>
+													<textarea id="simBody" class="form-control form-control-sm" rows="3" required>Attached is the updated vector silkscreen plate artwork Rev C.2 for the Antari 2000 Elite front chassis. Please review tolerances.</textarea>
+												</div>
+
+												<div class="p-2 border rounded bg-white mb-3 fs-12">
+													<strong class="text-dark d-block mb-1">Simulate Attack / Spam Conditions:</strong>
+													<div class="form-check">
+														<input class="form-check-input" type="checkbox" id="simFlagLoop">
+														<label class="form-check-label text-danger" for="simFlagLoop">Inject <code>Auto-Submitted: auto-generated</code> (Mail Loop Test)</label>
+													</div>
+													<div class="form-check">
+														<input class="form-check-input" type="checkbox" id="simFlagFlood">
+														<label class="form-check-label text-danger" for="simFlagFlood">Simulate Rapid Bot Flood (>3 emails in 1 hour)</label>
+													</div>
+													<div class="form-check">
+														<input class="form-check-input" type="checkbox" id="simFlagAttach" checked>
+														<label class="form-check-label text-success" for="simFlagAttach">Attach Test Artwork Vector Proof (<code>Antari_Plate_Proof_v3.ai</code>, 4.2 MB)</label>
+													</div>
+												</div>
+
+												<button type="submit" class="btn btn-sm btn-primary w-100 shadow-sm">
+													<i class="ti ti-rocket me-1"></i> Send Inbound Email to Gateway
+												</button>
+											</form>
+										</div>
+									</div>
+
+									<div class="col-md-6">
+										<div class="card border rounded-3 p-3 h-100 bg-dark text-light" style="font-family:monospace; font-size:12px;">
+											<h6 class="fw-bold text-white mb-2 d-flex align-items-center justify-content-between">
+												<span><i class="ti ti-terminal me-1 text-success"></i> Gateway Security Inspection Log</span>
+												<span class="badge bg-success" id="simStatusBadge">IDLE</span>
+											</h6>
+											<div id="simConsoleLog" class="overflow-y-auto p-2 bg-black rounded" style="height: 340px;">
+												<span class="text-muted">[SYSTEM] Inbound SMTP/Webhook Gateway Ready on port 8118...</span><br>
+												<span class="text-muted">[ANTI-SPAM] SPF/DKIM filter active. Rate limiter: 3/hr. Bot deflector active.</span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+<!-- Start Footer -->
+			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+				<p class="mb-md-0 mb-1">Copyright &copy;
+					<script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank"
+						class="link-primary text-decoration-underline" style="color: #047d24 !important; font-weight: 600;">Froggy's Fog</a>. All rights reserved.
+				</p>
+				<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
+					<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
+					<a href="tickets.html?view=kb" class="text-muted fs-13">Knowledge Base</a>
+					<a href="tickets.html?admin=email" class="text-muted fs-13">Email Gateway</a>
+				</div>
+			</footer>
+			<!-- End Footer -->
+
+		</div>
+
+		<!-- ========================
+			End Page Content
+		========================= -->
+
+	</div>
+	<!-- End Wrapper -->
+
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+
+	<!-- Datatable JS -->
+	<script src="assets/plugins/datatables/js3/dataTables.min.js"></script>
+    <script src="assets/plugins/datatables/js3/dataTables.bootstrap5.min.js"></script>
+
+	<!-- Daterangepicker JS -->
+	<!-- Apexchart JS -->
+	<script src="assets/plugins/apexchart/apexcharts.min.js"></script>
+	<script src="assets/plugins/apexchart/chart-data.js"></script>
+
+	<!-- Custom Json Js -->
+	<script src="assets/json/dashboard.js"></script>
+
+	<!-- Main JS -->
+	<!-- Flatpickr JS -->
+    <script src="assets/plugins/flatpickr/flatpickr.min.js"></script>
+
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/lilypad-notifications.js"></script>
+
+
+	<script>
+        let QUARANTINE_QUEUE = [];
+
+        function renderQuarantineTable() {
+            const tbody = document.getElementById('quarantineTableBody');
+            const badge = document.getElementById('quarantineBadge');
+            const display = document.getElementById('quarantineCountDisplay');
+            if (badge) badge.textContent = QUARANTINE_QUEUE.length;
+            if (display) display.textContent = QUARANTINE_QUEUE.length + ' Intercepted';
+            if (!tbody) return;
+
+            if (!QUARANTINE_QUEUE.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><i class="ti ti-shield-check fs-24 d-block mb-1 text-success"></i>Quarantine clean. No spam threats intercepted.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = QUARANTINE_QUEUE.map(q => `
+                <tr>
+                    <td><strong class="text-dark">${q.sender}</strong></td>
+                    <td>
+                        <strong class="d-block text-dark fs-12">${q.subject}</strong>
+                        <span class="text-muted fs-11 text-truncate d-block" style="max-width: 280px;">${q.snippet}</span>
+                    </td>
+                    <td><span class="badge bg-danger-subtle text-danger fs-11">${q.reason}</span></td>
+                    <td><span class="text-muted fs-11">${q.time}</span></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-success py-0 px-2 fs-11" onclick="releaseQuarantinedEmail('${q.id}')">Release</button>
+                        <button class="btn btn-sm btn-link text-danger p-0 ms-1" onclick="deleteQuarantine('${q.id}')"><i class="ti ti-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function releaseQuarantinedEmail(id) {
+            QUARANTINE_QUEUE = QUARANTINE_QUEUE.filter(q => q.id !== id);
+            renderQuarantineTable();
+            alert('Email released from quarantine and routed to active queue.');
+        }
+
+        function deleteQuarantine(id) {
+            QUARANTINE_QUEUE = QUARANTINE_QUEUE.filter(q => q.id !== id);
+            renderQuarantineTable();
+        }
+
+        function clearQuarantine() {
+            QUARANTINE_QUEUE = [];
+            renderQuarantineTable();
+        }
+
+        function runEmailSimulation(e) {
+            e.preventDefault();
+            const fromEmail = document.getElementById('simFromEmail').value;
+            const toEmail = document.getElementById('simToEmail').value;
+            const subject = document.getElementById('simSubject').value;
+            const body = document.getElementById('simBody').value;
+            const isLoop = document.getElementById('simFlagLoop').checked;
+            const isFlood = document.getElementById('simFlagFlood').checked;
+
+            const consoleEl = document.getElementById('simConsoleLog');
+            const statusBadge = document.getElementById('simStatusBadge');
+
+            consoleEl.innerHTML = '';
+            statusBadge.className = 'badge bg-warning';
+            statusBadge.textContent = 'INSPECTING';
+
+            function logLine(text, color = '#ffffff') {
+                const p = document.createElement('div');
+                p.style.color = color;
+                p.textContent = text;
+                consoleEl.appendChild(p);
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+
+            logLine('[GATEWAY] Incoming SMTP Envelope received from: ' + fromEmail, '#38bdf8');
+            logLine('[GATEWAY] Recipient alias: ' + toEmail, '#38bdf8');
+
+            setTimeout(() => {
+                if (isLoop) {
+                    logLine('[SECURITY BLOCK] Infinite mail loop header detected (Auto-Submitted: auto-generated)! Dropped.', '#f87171');
+                    statusBadge.className = 'badge bg-danger';
+                    statusBadge.textContent = 'BLOCKED (MAIL LOOP)';
+                    QUARANTINE_QUEUE.unshift({
+                        id: 'q_' + Date.now(),
+                        sender: fromEmail,
+                        subject,
+                        snippet: body,
+                        reason: 'Auto-Submitted: auto-generated (Mail Loop)',
+                        time: 'Just now'
+                    });
+                    renderQuarantineTable();
+                    return;
+                }
+                logLine('  ✓ Layer 1 (Mail Loop & Auto-Reply Filter): PASSED', '#4ade80');
+                logLine('  ✓ Layer 2 (SPF/DKIM Cryptographic Check): PASSED (Domain verified)', '#4ade80');
+
+                if (isFlood) {
+                    logLine('[SECURITY BLOCK] Rate limit exceeded (>3 emails/hr from ' + fromEmail + ')! Quarantined.', '#f87171');
+                    statusBadge.className = 'badge bg-danger';
+                    statusBadge.textContent = 'BLOCKED (FLOOD)';
+                    QUARANTINE_QUEUE.unshift({
+                        id: 'q_' + Date.now(),
+                        sender: fromEmail,
+                        subject,
+                        snippet: body,
+                        reason: 'Rate Limit Exceeded (>3 emails/hr)',
+                        time: 'Just now'
+                    });
+                    renderQuarantineTable();
+                    return;
+                }
+                logLine('  ✓ Layer 3 (Rate Limiting Threshold): PASSED (1/3 per hr)', '#4ade80');
+                logLine('  ✓ Layer 4 (AI Content & Malware Scan): PASSED (Clean payload)', '#4ade80');
+
+                logLine('[SUCCESS] Payload authenticated. Operational ticket created & notified!', '#4ade80');
+                statusBadge.className = 'badge bg-success';
+                statusBadge.textContent = 'PROCESSED (OK)';
+            }, 500);
+        }
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Dynamic Form Builder | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="keywords"
+		content="LilyPad ERP, operations, CRM, ticketing">
+	<meta name="author" content="LilyPad Systems">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Datatable CSS -->
+	<link rel="stylesheet" href="assets/plugins/datatables/css3/dataTables.bootstrap5.min.css">
+
+	<!-- Daterangepicker CSS -->
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="assets/plugins/flatpickr/flatpickr.min.css">
+
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+
+					<!-- Sidebar Mobile Button -->
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+
+				</div>
+
+				<!-- Centered & Larger Global Search Bar -->
+				<div class="header-search d-none d-md-flex align-items-center justify-content-center mx-auto" style="width: 100%; max-width: 520px;">
+					<div class="input-icon position-relative w-100">
+						<input type="text" class="form-control rounded-pill py-2 px-4 shadow-sm" placeholder="Search anything in LilyPad ERP... (Ctrl + K)" style="font-size: 14px; height: 42px;">
+						<span class="input-icon-addon d-inline-flex p-0 header-search-icon pe-3"><i class="ti ti-command fs-16 text-muted"></i></span>
+					</div>
+				</div>
+
+				<div class="d-flex align-items-center">
+
+					<!-- Direct Ticket Suite Button -->
+					<div class="header-item me-2">
+						<a href="/tickets" class="btn btn-sm d-flex align-items-center gap-2 px-3 py-2 text-white shadow-sm fw-semibold rounded-pill" style="background-color: #047d24; font-size: 13px;">
+							<i class="ti ti-ticket fs-16"></i>
+							<span>Ticket Suite</span>
+						</a>
+					</div>
+
+					<!-- Search for Mobile -->
+					<div class="header-item d-flex d-lg-none me-2">
+						<button class="topbar-link btn" data-bs-toggle="modal" data-bs-target="#searchModal"
+							type="button">
+							<i class="ti ti-search fs-16"></i>
+						</button>
+					</div>
+
+
+					<!-- Minimize -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link btnFullscreen"><i
+									class="ti ti-maximize"></i></a>
+						</div>
+					</div>
+					<!-- Minimize -->
+
+					<!-- Light/Dark Mode Button -->
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<!-- pages -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link topbar-teal-link"
+								data-bs-toggle="dropdown">
+								<i class="ti ti-layout-grid-add"></i>
+							</a>
+							<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+								<!-- Item-->
+								<a href="contacts.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Contacts</span>
+											<span class="fs-13">View All the Contacts</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="pipeline.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Pipeline</span>
+											<span class="fs-13">View All the Pipeline</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="activities.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Activities</span>
+											<span class="fs-13">Activities</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="analytics.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Analytics</span>
+											<span class="fs-13">Analytics</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- faq -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="faq.html" class="btn topbar-link topbar-indigo-link"><i
+									class="ti ti-help-hexagon"></i></a>
+						</div>
+					</div>
+
+					<!-- report -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="lead-reports.html" class="btn topbar-link topbar-warning-link"><i
+									class="ti ti-chart-pie"></i></a>
+						</div>
+					</div>
+
+					<div class="header-line"></div>
+
+					<!-- message -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="chat.html" class="btn topbar-link">
+								<i class="ti ti-message-circle-exclamation"></i>
+								<span class="badge rounded-pill">&nbsp;</span>
+							</a>
+						</div>
+					</div>
+
+					<!-- Notification Dropdown -->
+					<div class="header-item">
+						<div class="dropdown me-2 position-relative">
+
+							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative"
+								data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false"
+								aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
+								<i class="ti ti-bell fs-19" id="notificationBellIcon"></i>
+								<span class="notification-badge" id="notificationBadge" data-notif-badge style="display:none;">0</span>
+							</button>
+
+							<div class="dropdown-menu p-0 dropdown-menu-end shadow-lg border-0"
+								style="min-width: 360px; max-width: 380px; z-index: 1060;">
+
+								<div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+									<div class="d-flex align-items-center gap-2">
+										<h6 class="m-0 fs-15 fw-bold text-dark">Notifications</h6>
+										<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold">Live Feed</span>
+									</div>
+									<a href="javascript:void(0);" onclick="LilypadNotifications.markAllAsRead(event)" class="fs-12 text-decoration-none fw-semibold" style="color: #047d24;">
+										Mark all read
+									</a>
+								</div>
+
+								<!-- Notification Dynamic Body -->
+								<div class="notification-body position-relative z-2" id="notificationListContainer" style="max-height: 360px; overflow-y: auto;">
+								</div>
+
+								<!-- Direct Ticket Operations Button -->
+								<div class="p-2 rounded-bottom border-top text-center bg-light">
+									<a href="/tickets" class="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2" style="background-color: #047d24;">
+										<i class="ti ti-ticket fs-16"></i>
+										<span>Open Ticket Operations</span>
+									</a>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- User Dropdown -->
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);"
+							class="topbar-link dropdown-toggle drop-arrow-none position-relative"
+							data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex"
+								alt="user-image">
+							<span class="online text-success"><i
+									class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42"
+									alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0">Katherine Brooks</p>
+									<span class="d-block fs-13">Installer</span>
+								</div>
+							</div>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+
+							<!-- item -->
+							<div
+								class="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
+								<label class="form-check-label" for="notify"><i
+										class="ti ti-bell"></i>Notifications</label>
+								<input class="form-check-input me-0" type="checkbox" role="switch" id="notify">
+							</div>
+
+							<!-- Item-->
+							<a href="javascript:void(0);" class="dropdown-item">
+								<i class="ti ti-help-circle me-1 align-middle"></i>
+								<span class="align-middle">Help & Support</span>
+							</a>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-settings me-1 align-middle"></i>
+								<span class="align-middle">Settings</span>
+							</a>
+
+							<!-- Item-->
+							<div class="pt-2 mt-2 border-top">
+								<a href="login.html" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Search Modal -->
+		<div class="modal fade" id="searchModal">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content bg-transparent">
+					<div class="card shadow-none mb-0">
+						<div class="px-3 py-2 d-flex flex-row align-items-center" id="search-top">
+							<i class="ti ti-search fs-22"></i>
+							<input type="search" class="form-control border-0" placeholder="Search">
+							<button type="button" class="btn p-0" data-bs-dismiss="modal" aria-label="Close"><i
+									class="ti ti-x fs-22"></i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+
+			<!-- Start Logo -->
+			<div class="sidebar-logo">
+				<div>
+					<!-- Logo Normal -->
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span style="color:#047d24;">ERP</span></span>
+					</a>
+
+					<!-- Logo Small (shown when sidebar is minimized) -->
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+
+				<!-- Sidebar Menu Close -->
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+			<!-- End Logo -->
+
+			<!-- Sidenav Menu -->
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu">
+					<ul>
+						<li class="menu-title"><span>Main Operations</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="dashboard.html" class="active">
+										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
+									</a>
+								</li>
+								<li>
+									<a href="tickets.html">
+										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
+									</a>
+								</li>
+								<li>
+									<a href="javascript:void(0);" onclick="openKnowledgeBaseModal()">
+										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Administration & Setup</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);" class="subdrop">
+										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="javascript:void(0);" onclick="openEmailGatewayModal()"><i class="ti ti-mail-shield me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="javascript:void(0);" onclick="openUserManagementModal()"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="javascript:void(0);" onclick="openFormBuilderModal()"><i class="ti ti-tool me-2 text-primary"></i>Dynamic Form Builder</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Account</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="login.html" onclick="sessionStorage.removeItem('lilypad_auth_user'); localStorage.removeItem('lilypad_logged_in');">
+										<i class="ti ti-logout text-danger"></i><span class="text-danger fw-semibold">Sign Out</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<!-- ========================
+			Start Page Content
+		========================= -->
+
+		<div class="page-wrapper">
+
+			<!-- Start Content -->
+			<div class="content pb-0">
+				<!-- Page Header -->
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+							<span>Dynamic Intake Form Builder</span>
+							<span class="badge bg-soft-success text-success fs-12 rounded-pill fw-semibold"><i class="ti ti-tool"></i> Schema Architect</span>
+						</h4>
+						<p class="text-muted fs-13 mb-0">Design custom category fields, dynamic checklists, and structured intake forms across your operational workflow.</p>
+					</div>
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<a href="tickets.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+							<i class="ti ti-ticket me-1"></i> Open Tickets
+						</a>
+						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="saveCategoryForm()">
+							<i class="ti ti-check me-1"></i> Save Changes
+						</button>
+					</div>
+				</div>
+
+				<div class="row g-3">
+					<!-- Category Selection Side -->
+					<div class="col-md-4">
+						<div class="card border-0 shadow-sm rounded-3 h-100">
+							<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
+								<h6 class="fw-bold mb-0 text-dark"><i class="ti ti-folders me-1 text-primary"></i> Intake Categories</h6>
+								<span class="badge bg-soft-primary text-primary fs-11">8 Active</span>
+							</div>
+							<div class="card-body p-2">
+								<div class="list-group list-group-flush" id="builderCategoryList">
+									<!-- Dynamically Rendered Categories -->
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Field Architect Panel -->
+					<div class="col-md-8">
+						<div class="card border-0 shadow-sm rounded-3 h-100">
+							<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
+								<div>
+									<h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+										<i class="ti ti-adjustments-alt text-primary"></i>
+										<span id="selectedCategoryTitle">FX Machine Support</span>
+									</h6>
+									<span class="fs-12 text-muted">Configured dynamic attributes for this category</span>
+								</div>
+								<button class="btn btn-sm btn-outline-primary" onclick="addNewFieldRow()">
+									<i class="ti ti-plus me-1"></i> + Add Custom Field
+								</button>
+							</div>
+
+							<div class="card-body p-4">
+								<div id="fieldsEditorContainer" class="d-flex flex-column gap-3 mb-4">
+									<!-- Dynamic Field Rows -->
+								</div>
+
+								<div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+									<div>
+										<strong class="d-block text-dark fs-13">Ready to deploy form schema?</strong>
+										<span class="fs-12 text-muted">Updates will apply instantly to all new tickets created under this category.</span>
+									</div>
+									<button class="btn btn-primary btn-sm px-4 shadow-sm" onclick="saveCategoryForm()">
+										<i class="ti ti-check me-1"></i> Deploy Form Schema
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+<!-- Start Footer -->
+			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+				<p class="mb-md-0 mb-1">Copyright &copy;
+					<script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank"
+						class="link-primary text-decoration-underline" style="color: #047d24 !important; font-weight: 600;">Froggy's Fog</a>. All rights reserved.
+				</p>
+				<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
+					<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
+					<a href="tickets.html?view=kb" class="text-muted fs-13">Knowledge Base</a>
+					<a href="tickets.html?admin=email" class="text-muted fs-13">Email Gateway</a>
+				</div>
+			</footer>
+			<!-- End Footer -->
+
+		</div>
+
+		<!-- ========================
+			End Page Content
+		========================= -->
+
+	</div>
+	<!-- End Wrapper -->
+
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+
+	<!-- Datatable JS -->
+	<script src="assets/plugins/datatables/js3/dataTables.min.js"></script>
+    <script src="assets/plugins/datatables/js3/dataTables.bootstrap5.min.js"></script>
+
+	<!-- Daterangepicker JS -->
+	<!-- Apexchart JS -->
+	<script src="assets/plugins/apexchart/apexcharts.min.js"></script>
+	<script src="assets/plugins/apexchart/chart-data.js"></script>
+
+	<!-- Custom Json Js -->
+	<script src="assets/json/dashboard.js"></script>
+
+	<!-- Main JS -->
+	<!-- Flatpickr JS -->
+    <script src="assets/plugins/flatpickr/flatpickr.min.js"></script>
+
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/lilypad-notifications.js"></script>
+
+
+	<script>
+        const PRODUCTION_CATEGORIES = [
+            {
+                name: 'FX Machine Support',
+                icon: 'ti-tool',
+                fields: [
+                    { name: 'machineModel', label: 'Machine / Product Model', type: 'select', options: ['Antari 2000 Elite', 'Solar Telemetry Gateway', 'LFP Battery Array 480V'] },
+                    { name: 'serialNumber', label: 'Unit Serial Number / Batch #', type: 'text' },
+                    { name: 'firmwareVersion', label: 'Firmware / Hardware Rev', type: 'text' },
+                    { name: 'defectSymptom', label: 'Defect / Failure Observed', type: 'textarea' }
+                ]
+            },
+            {
+                name: 'Vendor Purchase Order',
+                icon: 'ti-receipt',
+                fields: [
+                    { name: 'poNumber', label: 'Purchase Order #', type: 'text' },
+                    { name: 'vendorName', label: 'Vendor / Supplier Name', type: 'text' },
+                    { name: 'totalAmount', label: 'Total Value ($ USD)', type: 'number' },
+                    { name: 'deliveryDueDate', label: 'Agreed Delivery Date', type: 'date' }
+                ]
+            },
+            {
+                name: 'Fluid Finder Update',
+                icon: 'ti-flask',
+                fields: [
+                    { name: 'fluidType', label: 'Fluid Formula Name', type: 'text' },
+                    { name: 'safetyDataSheet', label: 'SDS Sheet Attached', type: 'checkbox' },
+                    { name: 'revisionNotes', label: 'Formula Revision Notes', type: 'textarea' }
+                ]
+            },
+            {
+                name: 'Computer/Laptop Issue',
+                icon: 'ti-device-laptop',
+                fields: [
+                    { name: 'assetTag', label: 'IT Asset Tag #', type: 'text' },
+                    { name: 'operatingSystem', label: 'Operating System', type: 'select', options: ['Windows 11', 'macOS Sequoia', 'Ubuntu Linux'] },
+                    { name: 'urgencyLevel', label: 'Work Impact', type: 'select', options: ['Completely blocked', 'Minor inconvenience', 'Software install'] }
+                ]
+            },
+            {
+                name: 'Customer Support Request',
+                icon: 'ti-headset',
+                fields: [
+                    { name: 'clientName', label: 'Client / Account Name', type: 'text' },
+                    { name: 'orderNumber', label: 'Original Invoice #', type: 'text' },
+                    { name: 'preferredContact', label: 'Preferred Contact Method', type: 'select', options: ['Email', 'Phone', 'Slack'] }
+                ]
+            },
+            {
+                name: 'Website Frontend Update',
+                icon: 'ti-world',
+                fields: [
+                    { name: 'targetUrl', label: 'Target Page URL', type: 'text' },
+                    { name: 'browserTested', label: 'Tested Browsers', type: 'text' }
+                ]
+            },
+            {
+                name: 'Rep Assignment Change',
+                icon: 'ti-user-check',
+                fields: [
+                    { name: 'accountName', label: 'Customer Account', type: 'text' },
+                    { name: 'newRepName', label: 'New Sales Rep Assigned', type: 'text' }
+                ]
+            },
+            {
+                name: 'IT AI Process/UI Development',
+                icon: 'ti-brain',
+                fields: [
+                    { name: 'modelEngine', label: 'Target Model Architecture', type: 'text' },
+                    { name: 'specRequirement', label: 'Feature Specification', type: 'textarea' }
+                ]
+            }
+        ];
+
+        let selectedCatIndex = 0;
+
+        function renderCategoryList() {
+            const listEl = document.getElementById('builderCategoryList');
+            if (!listEl) return;
+
+            listEl.innerHTML = PRODUCTION_CATEGORIES.map((cat, idx) => `
+                <a href="javascript:void(0);" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 ${idx === selectedCatIndex ? 'active' : ''}" onclick="selectCategory(${idx})" style="${idx === selectedCatIndex ? 'background-color: #047d24; border-color: #047d24; color: #fff;' : ''}">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="ti ${cat.icon} fs-16"></i>
+                        <span class="fw-semibold fs-13">${cat.name}</span>
+                    </div>
+                    <span class="badge ${idx === selectedCatIndex ? 'bg-white text-success' : 'bg-light text-dark border'} fs-11">${cat.fields.length} fields</span>
+                </a>
+            `).join('');
+
+            renderFieldsEditor();
+        }
+
+        function selectCategory(idx) {
+            selectedCatIndex = idx;
+            renderCategoryList();
+        }
+
+        function renderFieldsEditor() {
+            const cat = PRODUCTION_CATEGORIES[selectedCatIndex];
+            const titleEl = document.getElementById('selectedCategoryTitle');
+            const container = document.getElementById('fieldsEditorContainer');
+            if (titleEl) titleEl.textContent = cat.name;
+            if (!container) return;
+
+            container.innerHTML = cat.fields.map((f, fIdx) => `
+                <div class="row g-2 align-items-center p-3 bg-light rounded-3 border">
+                    <div class="col-md-4">
+                        <label class="form-label fs-11 text-muted text-uppercase fw-bold mb-1">Field Identifier</label>
+                        <input type="text" class="form-control form-control-sm fw-medium" value="${f.name}" onchange="updateField(${fIdx}, 'name', this.value)">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fs-11 text-muted text-uppercase fw-bold mb-1">Display Label</label>
+                        <input type="text" class="form-control form-control-sm" value="${f.label}" onchange="updateField(${fIdx}, 'label', this.value)">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fs-11 text-muted text-uppercase fw-bold mb-1">Type</label>
+                        <select class="form-select form-select-sm" onchange="updateField(${fIdx}, 'type', this.value)">
+                            <option value="text" ${f.type === 'text' ? 'selected' : ''}>Text</option>
+                            <option value="number" ${f.type === 'number' ? 'selected' : ''}>Number</option>
+                            <option value="select" ${f.type === 'select' ? 'selected' : ''}>Select</option>
+                            <option value="textarea" ${f.type === 'textarea' ? 'selected' : ''}>Textarea</option>
+                            <option value="date" ${f.type === 'date' ? 'selected' : ''}>Date</option>
+                            <option value="checkbox" ${f.type === 'checkbox' ? 'selected' : ''}>Checkbox</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 text-end pt-3">
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeFieldRow(${fIdx})"><i class="ti ti-trash fs-16"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addNewFieldRow() {
+            PRODUCTION_CATEGORIES[selectedCatIndex].fields.push({
+                name: 'customField' + (PRODUCTION_CATEGORIES[selectedCatIndex].fields.length + 1),
+                label: 'New Dynamic Field',
+                type: 'text'
+            });
+            renderCategoryList();
+        }
+
+        function updateField(idx, prop, val) {
+            PRODUCTION_CATEGORIES[selectedCatIndex].fields[idx][prop] = val;
+        }
+
+        function removeFieldRow(idx) {
+            PRODUCTION_CATEGORIES[selectedCatIndex].fields.splice(idx, 1);
+            renderCategoryList();
+        }
+
+        function saveCategoryForm() {
+            alert('Dynamic form schema for ' + PRODUCTION_CATEGORIES[selectedCatIndex].name + ' deployed successfully!');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCategoryList();
+        });
+	</script>
+</body>
+
+</html>

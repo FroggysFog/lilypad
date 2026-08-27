@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Team & Permissions | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="keywords"
+		content="LilyPad ERP, operations, CRM, ticketing">
+	<meta name="author" content="LilyPad Systems">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Datatable CSS -->
+	<link rel="stylesheet" href="assets/plugins/datatables/css3/dataTables.bootstrap5.min.css">
+
+	<!-- Daterangepicker CSS -->
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="assets/plugins/flatpickr/flatpickr.min.css">
+
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+
+					<!-- Sidebar Mobile Button -->
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+
+				</div>
+
+				<!-- Centered & Larger Global Search Bar -->
+				<div class="header-search d-none d-md-flex align-items-center justify-content-center mx-auto" style="width: 100%; max-width: 520px;">
+					<div class="input-icon position-relative w-100">
+						<input type="text" class="form-control rounded-pill py-2 px-4 shadow-sm" placeholder="Search anything in LilyPad ERP... (Ctrl + K)" style="font-size: 14px; height: 42px;">
+						<span class="input-icon-addon d-inline-flex p-0 header-search-icon pe-3"><i class="ti ti-command fs-16 text-muted"></i></span>
+					</div>
+				</div>
+
+				<div class="d-flex align-items-center">
+
+					<!-- Direct Ticket Suite Button -->
+					<div class="header-item me-2">
+						<a href="/tickets" class="btn btn-sm d-flex align-items-center gap-2 px-3 py-2 text-white shadow-sm fw-semibold rounded-pill" style="background-color: #047d24; font-size: 13px;">
+							<i class="ti ti-ticket fs-16"></i>
+							<span>Ticket Suite</span>
+						</a>
+					</div>
+
+					<!-- Search for Mobile -->
+					<div class="header-item d-flex d-lg-none me-2">
+						<button class="topbar-link btn" data-bs-toggle="modal" data-bs-target="#searchModal"
+							type="button">
+							<i class="ti ti-search fs-16"></i>
+						</button>
+					</div>
+
+
+					<!-- Minimize -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link btnFullscreen"><i
+									class="ti ti-maximize"></i></a>
+						</div>
+					</div>
+					<!-- Minimize -->
+
+					<!-- Light/Dark Mode Button -->
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<!-- pages -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link topbar-teal-link"
+								data-bs-toggle="dropdown">
+								<i class="ti ti-layout-grid-add"></i>
+							</a>
+							<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+								<!-- Item-->
+								<a href="contacts.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Contacts</span>
+											<span class="fs-13">View All the Contacts</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="pipeline.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Pipeline</span>
+											<span class="fs-13">View All the Pipeline</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="activities.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Activities</span>
+											<span class="fs-13">Activities</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="analytics.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Analytics</span>
+											<span class="fs-13">Analytics</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- faq -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="faq.html" class="btn topbar-link topbar-indigo-link"><i
+									class="ti ti-help-hexagon"></i></a>
+						</div>
+					</div>
+
+					<!-- report -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="lead-reports.html" class="btn topbar-link topbar-warning-link"><i
+									class="ti ti-chart-pie"></i></a>
+						</div>
+					</div>
+
+					<div class="header-line"></div>
+
+					<!-- message -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="chat.html" class="btn topbar-link">
+								<i class="ti ti-message-circle-exclamation"></i>
+								<span class="badge rounded-pill">&nbsp;</span>
+							</a>
+						</div>
+					</div>
+
+					<!-- Notification Dropdown -->
+					<div class="header-item">
+						<div class="dropdown me-2 position-relative">
+
+							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative"
+								data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false"
+								aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
+								<i class="ti ti-bell fs-19" id="notificationBellIcon"></i>
+								<span class="notification-badge" id="notificationBadge" data-notif-badge style="display:none;">0</span>
+							</button>
+
+							<div class="dropdown-menu p-0 dropdown-menu-end shadow-lg border-0"
+								style="min-width: 360px; max-width: 380px; z-index: 1060;">
+
+								<div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+									<div class="d-flex align-items-center gap-2">
+										<h6 class="m-0 fs-15 fw-bold text-dark">Notifications</h6>
+										<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold">Live Feed</span>
+									</div>
+									<a href="javascript:void(0);" onclick="LilypadNotifications.markAllAsRead(event)" class="fs-12 text-decoration-none fw-semibold" style="color: #047d24;">
+										Mark all read
+									</a>
+								</div>
+
+								<!-- Notification Dynamic Body -->
+								<div class="notification-body position-relative z-2" id="notificationListContainer" style="max-height: 360px; overflow-y: auto;">
+								</div>
+
+								<!-- Direct Ticket Operations Button -->
+								<div class="p-2 rounded-bottom border-top text-center bg-light">
+									<a href="/tickets" class="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2" style="background-color: #047d24;">
+										<i class="ti ti-ticket fs-16"></i>
+										<span>Open Ticket Operations</span>
+									</a>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- User Dropdown -->
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);"
+							class="topbar-link dropdown-toggle drop-arrow-none position-relative"
+							data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex"
+								alt="user-image">
+							<span class="online text-success"><i
+									class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42"
+									alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0">Katherine Brooks</p>
+									<span class="d-block fs-13">Installer</span>
+								</div>
+							</div>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+
+							<!-- item -->
+							<div
+								class="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
+								<label class="form-check-label" for="notify"><i
+										class="ti ti-bell"></i>Notifications</label>
+								<input class="form-check-input me-0" type="checkbox" role="switch" id="notify">
+							</div>
+
+							<!-- Item-->
+							<a href="javascript:void(0);" class="dropdown-item">
+								<i class="ti ti-help-circle me-1 align-middle"></i>
+								<span class="align-middle">Help & Support</span>
+							</a>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-settings me-1 align-middle"></i>
+								<span class="align-middle">Settings</span>
+							</a>
+
+							<!-- Item-->
+							<div class="pt-2 mt-2 border-top">
+								<a href="login.html" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Search Modal -->
+		<div class="modal fade" id="searchModal">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content bg-transparent">
+					<div class="card shadow-none mb-0">
+						<div class="px-3 py-2 d-flex flex-row align-items-center" id="search-top">
+							<i class="ti ti-search fs-22"></i>
+							<input type="search" class="form-control border-0" placeholder="Search">
+							<button type="button" class="btn p-0" data-bs-dismiss="modal" aria-label="Close"><i
+									class="ti ti-x fs-22"></i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+
+			<!-- Start Logo -->
+			<div class="sidebar-logo">
+				<div>
+					<!-- Logo Normal -->
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span style="color:#047d24;">ERP</span></span>
+					</a>
+
+					<!-- Logo Small (shown when sidebar is minimized) -->
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+
+				<!-- Sidebar Menu Close -->
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+			<!-- End Logo -->
+
+			<!-- Sidenav Menu -->
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu">
+					<ul>
+						<li class="menu-title"><span>Main Operations</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="dashboard.html" class="active">
+										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
+									</a>
+								</li>
+								<li>
+									<a href="tickets.html">
+										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
+									</a>
+								</li>
+								<li>
+									<a href="javascript:void(0);" onclick="openKnowledgeBaseModal()">
+										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Administration & Setup</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);" class="subdrop">
+										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="javascript:void(0);" onclick="openEmailGatewayModal()"><i class="ti ti-mail-shield me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="javascript:void(0);" onclick="openUserManagementModal()"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="javascript:void(0);" onclick="openFormBuilderModal()"><i class="ti ti-tool me-2 text-primary"></i>Dynamic Form Builder</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Account</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="login.html" onclick="sessionStorage.removeItem('lilypad_auth_user'); localStorage.removeItem('lilypad_logged_in');">
+										<i class="ti ti-logout text-danger"></i><span class="text-danger fw-semibold">Sign Out</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<!-- ========================
+			Start Page Content
+		========================= -->
+
+		<div class="page-wrapper">
+
+			<!-- Start Content -->
+			<div class="content pb-0">
+				<!-- Page Header -->
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+							<span>Team & User Permissions</span>
+							<span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold"><i class="ti ti-users"></i> Staff Directory</span>
+						</h4>
+						<p class="text-muted fs-13 mb-0">Manage operational users, assign department roles, and control access permissions across LilyPad ERP.</p>
+					</div>
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<a href="tickets.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+							<i class="ti ti-ticket me-1"></i> View Tickets
+						</a>
+						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#teamTabs button[data-bs-target=\'#tabAdd\']')).show()">
+							<i class="ti ti-user-plus me-1"></i> + Add Team Member
+						</button>
+					</div>
+				</div>
+
+				<!-- Team Metrics -->
+				<div class="row g-3 mb-4">
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<div class="d-flex align-items-center justify-content-between">
+								<div>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Total Active Users</span>
+									<h3 class="fw-bold mb-0 mt-1" id="teamCountTotal" style="color:#047d24;">5</h3>
+								</div>
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:44px; height:44px;">
+									<i class="ti ti-users fs-22"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<div class="d-flex align-items-center justify-content-between">
+								<div>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Operations Admins</span>
+									<h3 class="fw-bold mb-0 mt-1 text-primary">1</h3>
+								</div>
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-primary" style="width:44px; height:44px;">
+									<i class="ti ti-shield-lock fs-22"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<div class="d-flex align-items-center justify-content-between">
+								<div>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Support Leads & Agents</span>
+									<h3 class="fw-bold mb-0 mt-1 text-dark">4</h3>
+								</div>
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-dark" style="width:44px; height:44px;">
+									<i class="ti ti-headset fs-22"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<div class="d-flex align-items-center justify-content-between">
+								<div>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Departments</span>
+									<h3 class="fw-bold mb-0 mt-1 text-secondary">5 Active</h3>
+								</div>
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-secondary" style="width:44px; height:44px;">
+									<i class="ti ti-building fs-22"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Team Directory & Form -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-header bg-transparent border-bottom py-3">
+						<ul class="nav nav-pills gap-2" id="teamTabs">
+							<li class="nav-item">
+								<button class="nav-link active py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabDirectory">
+									<i class="ti ti-users me-1"></i> Active Team Members
+								</button>
+							</li>
+							<li class="nav-item">
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-primary" data-bs-toggle="tab" data-bs-target="#tabAdd">
+									<i class="ti ti-user-plus me-1"></i> + Add New User
+								</button>
+							</li>
+							<li class="nav-item">
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabRoles">
+									<i class="ti ti-key me-1"></i> Role Permissions Matrix
+								</button>
+							</li>
+						</ul>
+					</div>
+
+					<div class="card-body p-4">
+						<div class="tab-content">
+							<!-- Tab 1: Directory -->
+							<div class="tab-pane fade show active" id="tabDirectory">
+								<div class="table-responsive">
+									<table class="table table-hover align-middle mb-0 fs-13 border rounded-3">
+										<thead class="table-light">
+											<tr>
+												<th>Team Member</th>
+												<th>Role</th>
+												<th>Department</th>
+												<th>Status</th>
+												<th class="text-end">Actions</th>
+											</tr>
+										</thead>
+										<tbody id="adminTeamTableBody">
+											<!-- Rendered Dynamically -->
+										</tbody>
+									</table>
+								</div>
+							</div>
+
+							<!-- Tab 2: Add User -->
+							<div class="tab-pane fade" id="tabAdd">
+								<form id="teamAddUserForm" onsubmit="saveTeamUser(event)">
+									<div class="row g-3">
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Full Name <span class="text-danger">*</span></label>
+											<input type="text" id="tNewFullName" class="form-control" placeholder="e.g. Jordan Hayes" required>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Email Address <span class="text-danger">*</span></label>
+											<input type="email" id="tNewEmail" class="form-control" placeholder="jordan@froggysfog.com" required>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Username <span class="text-danger">*</span></label>
+											<input type="text" id="tNewUsername" class="form-control" placeholder="jhayes" required>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Temporary Password <span class="text-danger">*</span></label>
+											<input type="password" id="tNewPassword" class="form-control" placeholder="••••••••" value="Password123!" required>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Role <span class="text-danger">*</span></label>
+											<select id="tNewRole" class="form-select">
+												<option value="Admin">Admin</option>
+												<option value="Support Lead">Support Lead</option>
+												<option value="Agent" selected>Agent</option>
+												<option value="Viewer">Viewer</option>
+											</select>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Department <span class="text-danger">*</span></label>
+											<select id="tNewDepartment" class="form-select">
+												<option value="Engineering">Engineering</option>
+												<option value="Operations" selected>Operations</option>
+												<option value="Customer Support">Customer Support</option>
+												<option value="Finance">Finance</option>
+												<option value="Sales & Marketing">Sales & Marketing</option>
+											</select>
+										</div>
+									</div>
+									<div class="text-end mt-4 pt-3 border-top">
+										<button type="submit" class="btn btn-primary px-4 shadow-sm">
+											<i class="ti ti-user-plus me-1"></i> Create Team Member
+										</button>
+									</div>
+								</form>
+							</div>
+
+							<!-- Tab 3: Permissions Matrix -->
+							<div class="tab-pane fade" id="tabRoles">
+								<div class="table-responsive">
+									<table class="table table-bordered align-middle fs-13">
+										<thead class="table-light">
+											<tr>
+												<th>Permission / Capability</th>
+												<th class="text-center">Admin</th>
+												<th class="text-center">Support Lead</th>
+												<th class="text-center">Agent</th>
+												<th class="text-center">Viewer</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>Create, Edit, & Resolve Operational Tickets</td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-muted"><i class="ti ti-minus"></i></td>
+											</tr>
+											<tr>
+												<td>Configure Inbound Email Aliases & Spam Shield</td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-muted"><i class="ti ti-minus"></i></td>
+												<td class="text-center text-muted"><i class="ti ti-minus"></i></td>
+											</tr>
+											<tr>
+												<td>Build Custom Dynamic Form Categories</td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-muted"><i class="ti ti-minus"></i></td>
+												<td class="text-center text-muted"><i class="ti ti-minus"></i></td>
+											</tr>
+											<tr>
+												<td>Publish Diagnostic SOPs to Knowledge Base</td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-muted"><i class="ti ti-minus"></i></td>
+											</tr>
+											<tr>
+												<td>Manage Staff User Accounts & Roles</td>
+												<td class="text-center text-success"><i class="ti ti-check fs-18"></i></td>
+												<td class="text-center text-muted"><i class="ti ti-minus"></i></td>
+												<td class="text-center text-muted"><i class="ti ti-minus"></i></td>
+												<td class="text-center text-muted"><i class="ti ti-minus"></i></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+<!-- Start Footer -->
+			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+				<p class="mb-md-0 mb-1">Copyright &copy;
+					<script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank"
+						class="link-primary text-decoration-underline" style="color: #047d24 !important; font-weight: 600;">Froggy's Fog</a>. All rights reserved.
+				</p>
+				<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
+					<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
+					<a href="tickets.html?view=kb" class="text-muted fs-13">Knowledge Base</a>
+					<a href="tickets.html?admin=email" class="text-muted fs-13">Email Gateway</a>
+				</div>
+			</footer>
+			<!-- End Footer -->
+
+		</div>
+
+		<!-- ========================
+			End Page Content
+		========================= -->
+
+	</div>
+	<!-- End Wrapper -->
+
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+
+	<!-- Datatable JS -->
+	<script src="assets/plugins/datatables/js3/dataTables.min.js"></script>
+    <script src="assets/plugins/datatables/js3/dataTables.bootstrap5.min.js"></script>
+
+	<!-- Daterangepicker JS -->
+	<!-- Apexchart JS -->
+	<script src="assets/plugins/apexchart/apexcharts.min.js"></script>
+	<script src="assets/plugins/apexchart/chart-data.js"></script>
+
+	<!-- Custom Json Js -->
+	<script src="assets/json/dashboard.js"></script>
+
+	<!-- Main JS -->
+	<!-- Flatpickr JS -->
+    <script src="assets/plugins/flatpickr/flatpickr.min.js"></script>
+
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/lilypad-notifications.js"></script>
+
+
+	<script>
+        let TEAM_USERS = [
+            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@froggysfog.com', role: 'Admin', department: 'Operations', initials: 'SK', active: true },
+            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@froggysfog.com', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true },
+            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'DM', active: true },
+            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'SC', active: true },
+            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@froggysfog.com', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true }
+        ];
+
+        function renderTeamTable() {
+            const tbody = document.getElementById('adminTeamTableBody');
+            const countDisplay = document.getElementById('teamCountTotal');
+            if (countDisplay) countDisplay.textContent = TEAM_USERS.length;
+            if (!tbody) return;
+
+            tbody.innerHTML = TEAM_USERS.map(u => `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-11" style="width: 32px; height: 32px; background: #047d24;">
+                                ${u.initials}
+                            </div>
+                            <div>
+                                <strong class="d-block text-dark">${u.fullname}</strong>
+                                <span class="text-muted fs-11">${u.email}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge ${u.role === 'Admin' ? 'bg-dark' : (u.role === 'Support Lead' ? 'bg-primary' : 'bg-secondary')} fs-11">${u.role}</span></td>
+                    <td><span class="text-dark fw-medium">${u.department}</span></td>
+                    <td><span class="badge bg-success-subtle text-success fs-11">Active</span></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteTeamUser('${u.id}')"><i class="ti ti-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function saveTeamUser(e) {
+            e.preventDefault();
+            const fullname = document.getElementById('tNewFullName').value.trim();
+            const email = document.getElementById('tNewEmail').value.trim();
+            const username = document.getElementById('tNewUsername').value.trim();
+            const role = document.getElementById('tNewRole').value;
+            const department = document.getElementById('tNewDepartment').value;
+            if (!fullname || !email) return;
+
+            const initials = fullname.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'FF';
+            const newUser = { id: 'u' + (TEAM_USERS.length + 1), fullname, username, email, role, department, initials, active: true };
+            TEAM_USERS.push(newUser);
+            renderTeamTable();
+            document.getElementById('teamAddUserForm').reset();
+            const tabBtn = document.querySelector('#teamTabs button[data-bs-target="#tabDirectory"]');
+            if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+            alert('New team member ' + fullname + ' (' + role + ') added successfully!');
+        }
+
+        function deleteTeamUser(id) {
+            if (confirm('Are you sure you want to remove this team member?')) {
+                TEAM_USERS = TEAM_USERS.filter(u => u.id !== id);
+                renderTeamTable();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTeamTable();
+        });
+	</script>
+</body>
+
+</html>

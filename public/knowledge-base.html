@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Knowledge Base & SOPs | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="keywords"
+		content="LilyPad ERP, operations, CRM, ticketing">
+	<meta name="author" content="LilyPad Systems">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Datatable CSS -->
+	<link rel="stylesheet" href="assets/plugins/datatables/css3/dataTables.bootstrap5.min.css">
+
+	<!-- Daterangepicker CSS -->
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="assets/plugins/flatpickr/flatpickr.min.css">
+
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+
+					<!-- Sidebar Mobile Button -->
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+
+				</div>
+
+				<!-- Centered & Larger Global Search Bar -->
+				<div class="header-search d-none d-md-flex align-items-center justify-content-center mx-auto" style="width: 100%; max-width: 520px;">
+					<div class="input-icon position-relative w-100">
+						<input type="text" class="form-control rounded-pill py-2 px-4 shadow-sm" placeholder="Search anything in LilyPad ERP... (Ctrl + K)" style="font-size: 14px; height: 42px;">
+						<span class="input-icon-addon d-inline-flex p-0 header-search-icon pe-3"><i class="ti ti-command fs-16 text-muted"></i></span>
+					</div>
+				</div>
+
+				<div class="d-flex align-items-center">
+
+					<!-- Direct Ticket Suite Button -->
+					<div class="header-item me-2">
+						<a href="/tickets" class="btn btn-sm d-flex align-items-center gap-2 px-3 py-2 text-white shadow-sm fw-semibold rounded-pill" style="background-color: #047d24; font-size: 13px;">
+							<i class="ti ti-ticket fs-16"></i>
+							<span>Ticket Suite</span>
+						</a>
+					</div>
+
+					<!-- Search for Mobile -->
+					<div class="header-item d-flex d-lg-none me-2">
+						<button class="topbar-link btn" data-bs-toggle="modal" data-bs-target="#searchModal"
+							type="button">
+							<i class="ti ti-search fs-16"></i>
+						</button>
+					</div>
+
+
+					<!-- Minimize -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link btnFullscreen"><i
+									class="ti ti-maximize"></i></a>
+						</div>
+					</div>
+					<!-- Minimize -->
+
+					<!-- Light/Dark Mode Button -->
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<!-- pages -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link topbar-teal-link"
+								data-bs-toggle="dropdown">
+								<i class="ti ti-layout-grid-add"></i>
+							</a>
+							<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+								<!-- Item-->
+								<a href="contacts.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Contacts</span>
+											<span class="fs-13">View All the Contacts</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="pipeline.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Pipeline</span>
+											<span class="fs-13">View All the Pipeline</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="activities.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Activities</span>
+											<span class="fs-13">Activities</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="analytics.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Analytics</span>
+											<span class="fs-13">Analytics</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- faq -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="faq.html" class="btn topbar-link topbar-indigo-link"><i
+									class="ti ti-help-hexagon"></i></a>
+						</div>
+					</div>
+
+					<!-- report -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="lead-reports.html" class="btn topbar-link topbar-warning-link"><i
+									class="ti ti-chart-pie"></i></a>
+						</div>
+					</div>
+
+					<div class="header-line"></div>
+
+					<!-- message -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="chat.html" class="btn topbar-link">
+								<i class="ti ti-message-circle-exclamation"></i>
+								<span class="badge rounded-pill">&nbsp;</span>
+							</a>
+						</div>
+					</div>
+
+					<!-- Notification Dropdown -->
+					<div class="header-item">
+						<div class="dropdown me-2 position-relative">
+
+							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative"
+								data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false"
+								aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
+								<i class="ti ti-bell fs-19" id="notificationBellIcon"></i>
+								<span class="notification-badge" id="notificationBadge" data-notif-badge style="display:none;">0</span>
+							</button>
+
+							<div class="dropdown-menu p-0 dropdown-menu-end shadow-lg border-0"
+								style="min-width: 360px; max-width: 380px; z-index: 1060;">
+
+								<div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+									<div class="d-flex align-items-center gap-2">
+										<h6 class="m-0 fs-15 fw-bold text-dark">Notifications</h6>
+										<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold">Live Feed</span>
+									</div>
+									<a href="javascript:void(0);" onclick="LilypadNotifications.markAllAsRead(event)" class="fs-12 text-decoration-none fw-semibold" style="color: #047d24;">
+										Mark all read
+									</a>
+								</div>
+
+								<!-- Notification Dynamic Body -->
+								<div class="notification-body position-relative z-2" id="notificationListContainer" style="max-height: 360px; overflow-y: auto;">
+								</div>
+
+								<!-- Direct Ticket Operations Button -->
+								<div class="p-2 rounded-bottom border-top text-center bg-light">
+									<a href="/tickets" class="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2" style="background-color: #047d24;">
+										<i class="ti ti-ticket fs-16"></i>
+										<span>Open Ticket Operations</span>
+									</a>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- User Dropdown -->
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);"
+							class="topbar-link dropdown-toggle drop-arrow-none position-relative"
+							data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex"
+								alt="user-image">
+							<span class="online text-success"><i
+									class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42"
+									alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0">Katherine Brooks</p>
+									<span class="d-block fs-13">Installer</span>
+								</div>
+							</div>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+
+							<!-- item -->
+							<div
+								class="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
+								<label class="form-check-label" for="notify"><i
+										class="ti ti-bell"></i>Notifications</label>
+								<input class="form-check-input me-0" type="checkbox" role="switch" id="notify">
+							</div>
+
+							<!-- Item-->
+							<a href="javascript:void(0);" class="dropdown-item">
+								<i class="ti ti-help-circle me-1 align-middle"></i>
+								<span class="align-middle">Help & Support</span>
+							</a>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-settings me-1 align-middle"></i>
+								<span class="align-middle">Settings</span>
+							</a>
+
+							<!-- Item-->
+							<div class="pt-2 mt-2 border-top">
+								<a href="login.html" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Search Modal -->
+		<div class="modal fade" id="searchModal">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content bg-transparent">
+					<div class="card shadow-none mb-0">
+						<div class="px-3 py-2 d-flex flex-row align-items-center" id="search-top">
+							<i class="ti ti-search fs-22"></i>
+							<input type="search" class="form-control border-0" placeholder="Search">
+							<button type="button" class="btn p-0" data-bs-dismiss="modal" aria-label="Close"><i
+									class="ti ti-x fs-22"></i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+
+			<!-- Start Logo -->
+			<div class="sidebar-logo">
+				<div>
+					<!-- Logo Normal -->
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span style="color:#047d24;">ERP</span></span>
+					</a>
+
+					<!-- Logo Small (shown when sidebar is minimized) -->
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+
+				<!-- Sidebar Menu Close -->
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+			<!-- End Logo -->
+
+			<!-- Sidenav Menu -->
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu">
+					<ul>
+						<li class="menu-title"><span>Main Operations</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="dashboard.html" class="active">
+										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
+									</a>
+								</li>
+								<li>
+									<a href="tickets.html">
+										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
+									</a>
+								</li>
+								<li>
+									<a href="javascript:void(0);" onclick="openKnowledgeBaseModal()">
+										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Administration & Setup</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);" class="subdrop">
+										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="javascript:void(0);" onclick="openEmailGatewayModal()"><i class="ti ti-mail-shield me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="javascript:void(0);" onclick="openUserManagementModal()"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="javascript:void(0);" onclick="openFormBuilderModal()"><i class="ti ti-tool me-2 text-primary"></i>Dynamic Form Builder</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Account</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="login.html" onclick="sessionStorage.removeItem('lilypad_auth_user'); localStorage.removeItem('lilypad_logged_in');">
+										<i class="ti ti-logout text-danger"></i><span class="text-danger fw-semibold">Sign Out</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<!-- ========================
+			Start Page Content
+		========================= -->
+
+		<div class="page-wrapper">
+
+			<!-- Start Content -->
+			<div class="content pb-0">
+				<!-- Page Header -->
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+							<span>Machine Trends & Knowledgebase Hub</span>
+							<span class="badge bg-soft-success text-success fs-12 rounded-pill fw-semibold"><i class="ti ti-book"></i> Diagnostic SOPs</span>
+						</h4>
+						<p class="text-muted fs-13 mb-0">Recurring defect analytics, root cause playbooks, and standardized step-by-step diagnostic SOPs.</p>
+					</div>
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<a href="tickets.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+							<i class="ti ti-ticket me-1"></i> Ticket Operations
+						</a>
+						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#kbTabs button[data-bs-target=\'#tabKbCreate\']')).show()">
+							<i class="ti ti-plus me-1"></i> + Create New SOP
+						</button>
+					</div>
+				</div>
+
+				<!-- SOP Detail Modal Popup -->
+				<div class="modal fade" id="sopDetailModal" tabindex="-1" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered modal-lg">
+						<div class="modal-content border-0 shadow-lg">
+							<div class="modal-header py-3 px-4 border-bottom bg-light d-flex align-items-center justify-content-between">
+								<div class="d-flex align-items-center gap-2">
+									<span class="badge bg-dark text-white fw-bold fs-12 px-2 py-1" id="sopModalCode">SOP-014</span>
+									<span class="badge bg-soft-primary text-primary fw-semibold fs-12" id="sopModalProduct">Antari 2000 Elite</span>
+								</div>
+								<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+							</div>
+							<div class="modal-body p-4">
+								<h4 class="fw-bold text-dark mb-2" id="sopModalTitle">Silkscreen Artwork Alignment & Emulsion Curing Protocol</h4>
+								<div class="d-flex align-items-center gap-3 fs-12 text-muted mb-3 pb-2 border-bottom">
+									<span><i class="ti ti-user me-1"></i> Author: <strong class="text-dark" id="sopModalAuthor">Scott Karan</strong></span>
+									<span><i class="ti ti-clock me-1"></i> Updated: <span id="sopModalUpdated">2 days ago</span></span>
+									<span class="badge bg-soft-success text-success"><i class="ti ti-shield-check me-1"></i> Verified Factory SOP</span>
+								</div>
+
+								<div class="alert alert-warning border-0 rounded-3 mb-3 p-3 fs-13">
+									<strong class="d-block text-warning-emphasis mb-1"><i class="ti ti-alert-triangle me-1"></i> Observed Failure Symptom:</strong>
+									<span id="sopModalSymptom" class="text-dark">Silkscreen lettering offset or smudging after powder-coat bake.</span>
+								</div>
+
+								<h6 class="fw-bold text-dark text-uppercase fs-12 mb-2 d-flex align-items-center gap-1">
+									<i class="ti ti-list-check text-success"></i> Pre-Flight "Check First" Diagnostic Steps:
+								</h6>
+								<div class="d-flex flex-column gap-2 mb-3" id="sopModalStepsList"></div>
+
+								<div class="p-3 bg-light rounded-3 border">
+									<h6 class="fw-bold text-dark text-uppercase fs-12 mb-1"><i class="ti ti-bulb text-primary me-1"></i> Permanent Resolution & Prevention:</h6>
+									<p class="mb-0 fs-13 text-dark" id="sopModalResolution">Use high-adhesion 2-part epoxy ink with 300-mesh screen.</p>
+								</div>
+							</div>
+							<div class="modal-footer border-top py-2 px-4 bg-light d-flex align-items-center justify-content-between">
+								<button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>
+								<button type="button" class="btn btn-sm btn-success px-3" onclick="alert('Diagnostic checklist verified and logged to audit trail!')">
+									<i class="ti ti-check me-1"></i> Mark Diagnostics Verified
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Main Navigation Tabs -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-header bg-transparent border-bottom py-3">
+						<ul class="nav nav-pills gap-2" id="kbTabs">
+							<li class="nav-item">
+								<button class="nav-link active py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabKbTrends">
+									<i class="ti ti-chart-bar me-1"></i> 1. Machine Failure Trends & Reliability
+								</button>
+							</li>
+							<li class="nav-item">
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabKbArticles">
+									<i class="ti ti-book me-1"></i> 2. Troubleshooting Knowledgebase (<span id="kbArticlesCountBadge">4</span>)
+								</button>
+							</li>
+							<li class="nav-item">
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-success" data-bs-toggle="tab" data-bs-target="#tabKbCreate">
+									<i class="ti ti-plus me-1"></i> + Create New Diagnostic SOP
+								</button>
+							</li>
+						</ul>
+					</div>
+
+					<div class="card-body p-4">
+						<div class="tab-content">
+							<!-- Tab 1: Machine Failure Trends -->
+							<div class="tab-pane fade show active" id="tabKbTrends">
+								<div class="alert alert-info border-0 rounded-3 d-flex align-items-center gap-2 mb-4 py-2 px-3 fs-13">
+									<i class="ti ti-info-circle fs-18 text-info"></i>
+									<span>These defect patterns are computed directly from past resolved tickets to prioritize what to inspect first on any machine.</span>
+								</div>
+
+								<div class="row g-3" id="machineTrendsContainer"></div>
+							</div>
+
+							<!-- Tab 2: Searchable Knowledgebase SOPs -->
+							<div class="tab-pane fade" id="tabKbArticles">
+								<div class="row g-2 mb-3">
+									<div class="col-md-6">
+										<input type="text" id="kbSearchInput" class="form-control form-control-sm" placeholder="Search by symptom, machine, or keyword (e.g. Silkscreen, Modbus)..." oninput="renderKbArticlesList()">
+									</div>
+									<div class="col-md-6">
+										<select id="kbModelFilter" class="form-select form-select-sm" onchange="renderKbArticlesList()">
+											<option value="">All Machines / Products</option>
+										</select>
+									</div>
+								</div>
+
+								<div class="row g-3" id="kbArticlesListContainer"></div>
+							</div>
+
+							<!-- Tab 3: Create New SOP -->
+							<div class="tab-pane fade" id="tabKbCreate">
+								<form id="createKbForm" onsubmit="saveNewKbArticle(event)">
+									<div class="row g-3">
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">Machine / Product Model <span class="text-danger">*</span></label>
+											<select id="newKbProduct" class="form-select form-select-sm" required>
+												<option value="Antari 2000 Elite">Antari 2000 Elite</option>
+												<option value="LilyPad Solar Telemetry Gateway">LilyPad Solar Telemetry Gateway</option>
+												<option value="Industrial LFP Battery Array 480V">Industrial LFP Battery Array 480V</option>
+												<option value="Enterprise ERP Server Node X1">Enterprise ERP Server Node X1</option>
+											</select>
+										</div>
+										<div class="col-md-6">
+											<label class="form-label fs-13 fw-semibold">SOP Guide Title <span class="text-danger">*</span></label>
+											<input type="text" id="newKbTitle" class="form-control form-control-sm" placeholder="e.g. SOP-014: Silkscreen Alignment & Emulsion Curing Protocol" required>
+										</div>
+										<div class="col-12">
+											<label class="form-label fs-13 fw-semibold">Common Symptom / Problem Observed <span class="text-danger">*</span></label>
+											<input type="text" id="newKbSymptom" class="form-control form-control-sm" placeholder="e.g. Silkscreen lettering misaligned or smudging during assembly" required>
+										</div>
+										<div class="col-12">
+											<label class="form-label fs-13 fw-semibold">"Check First" Diagnostic Steps (1 per line) <span class="text-danger">*</span></label>
+											<textarea id="newKbSteps" class="form-control form-control-sm" rows="4" placeholder="1. Inspect chassis alignment pin tolerances (±0.2mm)&#10;2. Check UV curing oven temperature (must reach 140°C for 8 mins)&#10;3. Verify mesh tension gauge reads 24 N/cm" required></textarea>
+										</div>
+										<div class="col-12">
+											<label class="form-label fs-13 fw-semibold">Permanent Resolution & Root Cause</label>
+											<textarea id="newKbResolution" class="form-control form-control-sm" rows="3" placeholder="Explain the underlying fix and how to prevent reoccurrence..."></textarea>
+										</div>
+									</div>
+									<div class="text-end mt-4 pt-3 border-top">
+										<button type="submit" class="btn btn-primary px-4 shadow-sm">
+											<i class="ti ti-check me-1"></i> Publish to Knowledgebase
+										</button>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+<!-- Start Footer -->
+			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+				<p class="mb-md-0 mb-1">Copyright &copy;
+					<script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank"
+						class="link-primary text-decoration-underline" style="color: #047d24 !important; font-weight: 600;">Froggy's Fog</a>. All rights reserved.
+				</p>
+				<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
+					<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
+					<a href="tickets.html?view=kb" class="text-muted fs-13">Knowledge Base</a>
+					<a href="tickets.html?admin=email" class="text-muted fs-13">Email Gateway</a>
+				</div>
+			</footer>
+			<!-- End Footer -->
+
+		</div>
+
+		<!-- ========================
+			End Page Content
+		========================= -->
+
+	</div>
+	<!-- End Wrapper -->
+
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+
+	<!-- Datatable JS -->
+	<script src="assets/plugins/datatables/js3/dataTables.min.js"></script>
+    <script src="assets/plugins/datatables/js3/dataTables.bootstrap5.min.js"></script>
+
+	<!-- Daterangepicker JS -->
+	<!-- Apexchart JS -->
+	<script src="assets/plugins/apexchart/apexcharts.min.js"></script>
+	<script src="assets/plugins/apexchart/chart-data.js"></script>
+
+	<!-- Custom Json Js -->
+	<script src="assets/json/dashboard.js"></script>
+
+	<!-- Main JS -->
+	<!-- Flatpickr JS -->
+    <script src="assets/plugins/flatpickr/flatpickr.min.js"></script>
+
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/lilypad-notifications.js"></script>
+
+
+	<script>
+        const KB_ARTICLES = [
+            {
+                id: 'kb_1',
+                code: 'SOP-014',
+                product: 'Antari 2000 Elite',
+                title: 'Silkscreen Artwork Alignment & Emulsion Curing Protocol',
+                symptom: 'Silkscreen graphics offset by 2-3mm on front chassis or smudging after powder-coat bake.',
+                checkFirstSteps: [
+                    'Verify chassis alignment guide pins are calibrated to ±0.15mm tolerance.',
+                    'Check UV emulsion curing temperature: must reach 140°C for minimum 8 minutes.',
+                    'Inspect silkscreen mesh tension: must read between 22-26 N/cm.'
+                ],
+                resolution: 'Use high-adhesion 2-part epoxy ink (Series 9600) with 300-mesh monofilament polyester screen. Ensure pre-wipe with isopropyl alcohol before screening.',
+                updatedAt: '2 days ago',
+                author: 'Scott Karan'
+            },
+            {
+                id: 'kb_2',
+                code: 'SOP-015',
+                product: 'Antari 2000 Elite',
+                title: 'Master Carton Burst Resistance & Corner Drop Inspection',
+                symptom: 'Carton corner crushing during multi-tier container freight and transit.',
+                checkFirstSteps: [
+                    'Confirm corrugated grade is minimum 5-ply Double Wall (200# Mullen burst test rating).',
+                    'Ensure foam corner buffer density is minimum 28 kg/m³ EPE.',
+                    'Verify moisture desiccant bag (50g) is placed inside PE bag seal.'
+                ],
+                resolution: 'Switch supplier spec to 5-ply BC flute with reinforced edge protectors for international air & sea shipments.',
+                updatedAt: '3 days ago',
+                author: 'Mark Henderson'
+            },
+            {
+                id: 'kb_3',
+                code: 'SOP-022',
+                product: 'LilyPad Solar Telemetry Gateway',
+                title: 'Modbus RTU RS-485 Communication Timeout & Noise Suppression',
+                symptom: 'Telemetry drops packet bursts when inverters spin up to peak wattage.',
+                checkFirstSteps: [
+                    'Check RS-485 bus 120-ohm termination resistors at both ends of daisy-chain.',
+                    'Verify shield drain wire is grounded at one end only (prevents ground loop current).',
+                    'Confirm baud rate is matched across all inverter slaves (typically 9600-8-N-1).'
+                ],
+                resolution: 'Installed isolated RS-485 repeater at 25th inverter node to boost SNR voltage margin.',
+                updatedAt: '1 week ago',
+                author: 'Sarah Connor'
+            },
+            {
+                id: 'kb_4',
+                code: 'SOP-031',
+                product: 'Industrial LFP Battery Array 480V',
+                title: 'Cell Balancing Voltage Drift & Lockout Reset',
+                symptom: 'Array BMS enters high-voltage protection lockout on string #4 during rapid charging.',
+                checkFirstSteps: [
+                    'Check individual cell delta voltage across string (must not exceed 35mV).',
+                    'Inspect thermistor wiring harness connection J2 for loose crimp.',
+                    'Execute passive balancing cycle at 3.45V per cell.'
+                ],
+                resolution: 'Replaced cell #14 on tray 4 which had internal high impedance (>1.8 mΩ).',
+                updatedAt: '2 weeks ago',
+                author: 'David Miller'
+            }
+        ];
+
+        function renderMachineTrends() {
+            const container = document.getElementById('machineTrendsContainer');
+            if (!container) return;
+
+            const models = [
+                {
+                    name: 'Antari 2000 Elite',
+                    ticketsCount: 8,
+                    defectRates: [
+                        { symptom: 'Silkscreen Hole Alignment Tolerance', rate: '45%' },
+                        { symptom: 'Carton 5-Ply Burst Test & Corner Cushioning', rate: '35%' },
+                        { symptom: 'User Manual Multilingual Compliance', rate: '20%' }
+                    ],
+                    kbCode: 'SOP-014'
+                },
+                {
+                    name: 'LilyPad Solar Telemetry Gateway',
+                    ticketsCount: 5,
+                    defectRates: [
+                        { symptom: 'RS-485 Modbus Termination Resistor Missing', rate: '60%' },
+                        { symptom: 'Ground Loop Noise & Baud Mismatch', rate: '40%' }
+                    ],
+                    kbCode: 'SOP-022'
+                },
+                {
+                    name: 'Industrial LFP Battery Array 480V',
+                    ticketsCount: 4,
+                    defectRates: [
+                        { symptom: 'String #4 Voltage Delta Drift (>35mV)', rate: '70%' },
+                        { symptom: 'Thermistor Wiring Crimp J2 Loose', rate: '30%' }
+                    ],
+                    kbCode: 'SOP-031'
+                }
+            ];
+
+            container.innerHTML = models.map(m => `
+                <div class="col-md-4">
+                    <div class="card border rounded-3 p-3 h-100 shadow-none bg-light">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge bg-soft-primary text-primary fw-bold fs-11">
+                                <i class="ti ti-box me-1"></i>${m.name}
+                            </span>
+                            <span class="badge bg-white text-dark border fs-11">${m.ticketsCount} tickets</span>
+                        </div>
+
+                        <h6 class="fw-bold fs-13 text-dark mb-2">Top Recurring Defects:</h6>
+                        <div class="d-flex flex-column gap-2 mb-3">
+                            ${m.defectRates.map(d => `
+                                <div>
+                                    <div class="d-flex justify-content-between fs-11 text-muted mb-1">
+                                        <span class="text-truncate" style="max-width:180px;">${d.symptom}</span>
+                                        <strong class="text-dark">${d.rate}</strong>
+                                    </div>
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-success" style="width: ${d.rate};"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <button class="btn btn-sm btn-outline-success w-100 mt-auto" onclick="filterKbByProduct('${m.name}')">
+                            <i class="ti ti-book me-1"></i> View Check First Playbook (${m.kbCode})
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterKbByProduct(productName) {
+            const tabBtn = document.querySelector('#kbTabs button[data-bs-target="#tabKbArticles"]');
+            if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+
+            const select = document.getElementById('kbModelFilter');
+            if (select) {
+                select.value = productName;
+                renderKbArticlesList();
+            }
+        }
+
+        function renderKbArticlesList() {
+            const container = document.getElementById('kbArticlesListContainer');
+            const countBadge = document.getElementById('kbArticlesCountBadge');
+            if (!container) return;
+
+            const search = document.getElementById('kbSearchInput')?.value.toLowerCase() || '';
+            const modelFilter = document.getElementById('kbModelFilter')?.value || '';
+
+            const filtered = KB_ARTICLES.filter(k => {
+                const matchSearch = !search || k.title.toLowerCase().includes(search) || k.symptom.toLowerCase().includes(search) || k.product.toLowerCase().includes(search);
+                const matchModel = !modelFilter || k.product === modelFilter;
+                return matchSearch && matchModel;
+            });
+
+            if (countBadge) countBadge.textContent = KB_ARTICLES.length;
+
+            if (!filtered.length) {
+                container.innerHTML = '<div class="col-12 text-center py-4 text-muted">No diagnostic articles found matching search.</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(k => `
+                <div class="col-md-6">
+                    <div class="card p-3 border rounded-3 h-100 d-flex flex-column" style="cursor:pointer; transition: transform 0.15s ease;" onclick="viewKbArticleModal('${k.id}')" onmouseover="this.style.borderColor='#047d24';" onmouseout="this.style.borderColor='#e2e8f0';">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge bg-dark text-white fs-11 px-2 py-1">${k.code}</span>
+                            <span class="badge bg-soft-primary text-primary fs-11"><i class="ti ti-box me-1"></i>${k.product}</span>
+                        </div>
+
+                        <h6 class="fw-bold fs-14 text-dark mb-1">${k.title}</h6>
+                        <p class="text-muted fs-12 mb-2 text-truncate"><strong>Symptom:</strong> ${k.symptom}</p>
+
+                        <div class="bg-light p-2 rounded border mb-2 fs-12">
+                            <strong class="text-success d-block mb-1"><i class="ti ti-check-circle me-1"></i>Check First Steps:</strong>
+                            <ul class="ps-3 mb-0 text-dark">
+                                ${k.checkFirstSteps.slice(0, 2).map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto fs-11 text-muted">
+                            <span><i class="ti ti-user me-1"></i>${k.author} &middot; ${k.updatedAt}</span>
+                            <span class="text-success fw-semibold">Open SOP &rarr;</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewKbArticleModal(id) {
+            const article = KB_ARTICLES.find(k => k.id === id);
+            if (!article) return;
+
+            document.getElementById('sopModalCode').textContent = article.code;
+            document.getElementById('sopModalProduct').textContent = article.product;
+            document.getElementById('sopModalTitle').textContent = article.title;
+            document.getElementById('sopModalAuthor').textContent = article.author || 'Scott Karan';
+            document.getElementById('sopModalUpdated').textContent = article.updatedAt || 'Recent';
+            document.getElementById('sopModalSymptom').textContent = article.symptom;
+            document.getElementById('sopModalResolution').textContent = article.resolution;
+
+            const stepsContainer = document.getElementById('sopModalStepsList');
+            if (stepsContainer) {
+                stepsContainer.innerHTML = article.checkFirstSteps.map((s, idx) => `
+                    <div class="p-2 rounded border bg-white d-flex align-items-center gap-2">
+                        <input type="checkbox" class="form-check-input mt-0" id="sop_step_${idx}">
+                        <label for="sop_step_${idx}" class="text-dark mb-0 fw-medium fs-13" style="cursor: pointer;">${s}</label>
+                    </div>
+                `).join('');
+            }
+
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('sopDetailModal'));
+            modal.show();
+        }
+
+        function saveNewKbArticle(e) {
+            e.preventDefault();
+            const product = document.getElementById('newKbProduct').value;
+            const title = document.getElementById('newKbTitle').value.trim();
+            const symptom = document.getElementById('newKbSymptom').value.trim();
+            const stepsRaw = document.getElementById('newKbSteps').value.trim();
+            const resolution = document.getElementById('newKbResolution').value.trim();
+
+            const checkFirstSteps = stepsRaw.split('\n').map(s => s.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+            const nextNum = KB_ARTICLES.length + 10;
+            const newArticle = {
+                id: 'kb_' + Date.now(),
+                code: `SOP-0${nextNum}`,
+                product,
+                title,
+                symptom,
+                checkFirstSteps,
+                resolution,
+                updatedAt: 'Just now',
+                author: 'Scott Karan'
+            };
+
+            KB_ARTICLES.unshift(newArticle);
+            renderKbArticlesList();
+            document.getElementById('createKbForm').reset();
+            const tabBtn = document.querySelector('#kbTabs button[data-bs-target="#tabKbArticles"]');
+            if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+            alert(`Published ${newArticle.code}: ${newArticle.title} to Knowledgebase!`);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMachineTrends();
+            renderKbArticlesList();
+        });
+	</script>
+</body>
+
+</html>
