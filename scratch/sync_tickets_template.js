@@ -13,54 +13,10 @@ const footerScriptsPart = indexHtml.substring(indexHtml.indexOf(footerStartMarke
 // Custom Ticketing CSS
 const ticketingCustomCss = `
     <style>
-        :root {
-            --primary: #047d24;
-            --primary-hover: #035c1a;
-            --primary-light: #eefaf1;
-            --lp-primary: #047d24;
-            --lp-primary-hover: #035c1a;
-            --lp-primary-light: #eefaf1;
-        }
-
-        .text-primary { color: #047d24 !important; }
-        .btn-primary {
-            background-color: #047d24 !important;
-            border-color: #047d24 !important;
-            box-shadow: 0 4px 12px rgba(4, 125, 36, 0.25) !important;
-        }
-        .btn-primary:hover, .btn-primary:focus {
-            background-color: #035c1a !important;
-            border-color: #035c1a !important;
-            box-shadow: 0 6px 16px rgba(4, 125, 36, 0.35) !important;
-        }
-        .btn-outline-primary {
-            color: #047d24 !important;
-            border-color: #047d24 !important;
-        }
-        .btn-outline-primary:hover, .btn-outline-primary.active {
-            background-color: #047d24 !important;
-            border-color: #047d24 !important;
-            color: #ffffff !important;
-        }
-
-        .nav-pills .nav-link.active {
-            background-color: #047d24 !important;
-        }
-
-        .form-check-input:checked {
-            background-color: #047d24 !important;
-            border-color: #047d24 !important;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #047d24 !important;
-            box-shadow: 0 0 0 3px rgba(4, 125, 36, 0.2) !important;
-        }
-
-        .badge-todo { background-color: #eefaf1; color: #047d24; font-weight: 600; }
-        .badge-inprogress { background-color: #fef3c7; color: #b45309; font-weight: 600; }
-        .badge-complete { background-color: #dcfce7; color: #047d24; font-weight: 600; }
-        .badge-blocked { background-color: #fee2e2; color: #b91c1c; font-weight: 600; }
+        .badge-todo { background-color: rgba(var(--bs-primary-rgb), 0.12); color: var(--bs-primary); font-weight: 600; }
+        .badge-inprogress { background-color: rgba(13, 110, 253, 0.12); color: #0d6efd; font-weight: 600; }
+        .badge-complete { background-color: rgba(25, 135, 84, 0.12); color: #198754; font-weight: 600; }
+        .badge-blocked { background-color: rgba(220, 53, 69, 0.12); color: #dc3545; font-weight: 600; }
 
         .priority-urgent { color: #dc2626; background: #fee2e2; border: 1px solid #fecaca; font-weight: 700; }
         .priority-high { color: #d97706; background: #fef3c7; border: 1px solid #fde68a; font-weight: 600; }
@@ -80,8 +36,8 @@ const ticketingCustomCss = `
             gap: 16px;
         }
         .ticket-row:hover {
-            border-color: #047d24;
-            box-shadow: 0 4px 12px rgba(4, 125, 36, 0.08);
+            border-color: var(--bs-primary);
+            box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.08);
         }
 
         .category-chip {
@@ -93,9 +49,9 @@ const ticketingCustomCss = `
             transition: all 0.15s ease;
         }
         .category-chip:hover, .category-chip.active {
-            border-color: #047d24;
-            background: #eefaf1;
-            color: #047d24;
+            border-color: var(--bs-primary);
+            background: rgba(var(--bs-primary-rgb), 0.1);
+            color: var(--bs-primary);
         }
 
         .metadata-pill {
@@ -142,8 +98,8 @@ const ticketingCustomCss = `
         .kanban-card:active { cursor: grabbing; }
         .kanban-card:hover {
             transform: translateY(-2px);
-            border-color: #047d24;
-            box-shadow: 0 6px 16px rgba(4,125,36,0.12);
+            border-color: var(--bs-primary);
+            box-shadow: 0 6px 16px rgba(var(--bs-primary-rgb), 0.12);
         }
 
         .bulk-bar {
@@ -184,7 +140,7 @@ const ticketingCustomCss = `
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: #047d24;
+            background: var(--bs-primary);
         }
 
         .file-attachment-card {
@@ -198,8 +154,8 @@ const ticketingCustomCss = `
             transition: all 0.15s ease;
         }
         .file-attachment-card:hover {
-            border-color: #047d24;
-            background: #eefaf1;
+            border-color: var(--bs-primary);
+            background: rgba(var(--bs-primary-rgb), 0.1);
         }
 
         .watcher-pill {
@@ -252,9 +208,9 @@ const ticketingCustomCss = `
             cursor: pointer;
         }
         .kb-article-card:hover {
-            border-color: #047d24;
+            border-color: var(--bs-primary);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(4,125,36,0.1);
+            box-shadow: 0 6px 16px rgba(var(--bs-primary-rgb), 0.1);
         }
     </style>
 </head>
@@ -757,7 +713,7 @@ const ticketingModalsHtml = `
 			<div class="modal-content border-0 shadow">
 				<div class="modal-header py-3 px-4 border-bottom bg-light">
 					<div class="d-flex align-items-center gap-2">
-						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:34px; height:34px;">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">
 							<i class="ti ti-brain fs-18"></i>
 						</div>
 						<div>
@@ -912,7 +868,7 @@ const ticketingModalsHtml = `
 			<div class="modal-content border-0 shadow-lg">
 				<div class="modal-header py-3 px-4 border-bottom bg-light d-flex align-items-center justify-content-between">
 					<div class="d-flex align-items-center gap-2">
-						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:34px; height:34px;">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">
 							<i class="ti ti-mail-shield fs-18"></i>
 						</div>
 						<div>

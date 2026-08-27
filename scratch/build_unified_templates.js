@@ -110,10 +110,10 @@ const emailPageContent = `
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
 									<span class="fs-12 text-muted fw-semibold text-uppercase">Primary Help Desk Address</span>
-									<h5 class="fw-bold mb-0 mt-1" style="color:#047d24;">support@froggysfog.com</h5>
+									<h5 class="fw-bold mb-0 mt-1 text-primary">support@froggysfog.com</h5>
 									<span class="fs-11 text-muted">All incoming emails parsed & routed</span>
 								</div>
-								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:44px; height:44px;">
+								<div class="rounded-3 p-2 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:44px; height:44px;">
 									<i class="ti ti-mail fs-22"></i>
 								</div>
 							</div>
@@ -608,9 +608,9 @@ const teamPageContent = `
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
 									<span class="fs-12 text-muted fw-semibold text-uppercase">Total Active Users</span>
-									<h3 class="fw-bold mb-0 mt-1" id="teamCountTotal" style="color:#047d24;">5</h3>
+									<h3 class="fw-bold mb-0 mt-1 text-primary" id="teamCountTotal">5</h3>
 								</div>
-								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:44px; height:44px;">
+								<div class="rounded-3 p-2 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:44px; height:44px;">
 									<i class="ti ti-users fs-22"></i>
 								</div>
 							</div>
@@ -829,7 +829,7 @@ const teamPageScripts = `
                 <tr>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-11 shadow-sm" style="width: 34px; height: 34px; background: #047d24;">
+                            <div class="rounded-circle text-white bg-primary d-flex align-items-center justify-content-center fw-bold fs-11 shadow-sm" style="width: 34px; height: 34px;">
                                 \${u.initials}
                             </div>
                             <div>
@@ -922,7 +922,7 @@ const userDetailPageContent = `
 				<div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
 					<div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
 						<div class="d-flex align-items-center gap-3">
-							<div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-22 shadow" id="uProfileAvatar" style="width: 68px; height: 68px; background: #047d24;">
+							<div class="rounded-circle text-white bg-primary d-flex align-items-center justify-content-center fw-bold fs-22 shadow" id="uProfileAvatar" style="width: 68px; height: 68px;">
 								SK
 							</div>
 							<div>
@@ -983,7 +983,7 @@ const userDetailPageContent = `
 					<div class="col-xl-2 col-md-4 col-sm-6">
 						<div class="card border-0 shadow-sm rounded-3 p-3 h-100 bg-white">
 							<span class="fs-11 text-muted text-uppercase fw-bold">Completed</span>
-							<h3 class="fw-bold mb-1 mt-1 text-success" id="statCompleted" style="color:#047d24;">0</h3>
+							<h3 class="fw-bold mb-1 mt-1 text-success" id="statCompleted">0</h3>
 							<span class="fs-11 text-success"><i class="ti ti-circle-check me-1"></i>Resolved</span>
 						</div>
 					</div>
@@ -1635,12 +1635,12 @@ const formsPageScripts = `
             if (!listEl) return;
 
             listEl.innerHTML = PRODUCTION_CATEGORIES.map((cat, idx) => \`
-                <a href="javascript:void(0);" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 \${idx === selectedCatIndex ? 'active' : ''}" onclick="selectCategory(\${idx})" style="\${idx === selectedCatIndex ? 'background-color: #047d24; border-color: #047d24; color: #fff;' : ''}">
+                <a href="javascript:void(0);" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 \${idx === selectedCatIndex ? 'active' : ''}" onclick="selectCategory(\${idx})" style="\${idx === selectedCatIndex ? 'background-color: var(--bs-primary); border-color: var(--bs-primary); color: #fff;' : ''}">
                     <div class="d-flex align-items-center gap-2">
                         <i class="ti \${cat.icon} fs-16"></i>
                         <span class="fw-semibold fs-13">\${cat.name}</span>
                     </div>
-                    <span class="badge \${idx === selectedCatIndex ? 'bg-white text-success' : 'bg-light text-dark border'} fs-11">\${cat.fields.length} fields</span>
+                    <span class="badge \${idx === selectedCatIndex ? 'bg-white text-primary' : 'bg-light text-dark border'} fs-11">\${cat.fields.length} fields</span>
                 </a>
             \`).join('');
 
@@ -2044,7 +2044,7 @@ const kbPageScripts = `
 
             container.innerHTML = filtered.map(k => \`
                 <div class="col-md-6">
-                    <div class="card p-3 border rounded-3 h-100 d-flex flex-column" style="cursor:pointer; transition: transform 0.15s ease;" onclick="viewKbArticleModal('\${k.id}')" onmouseover="this.style.borderColor='#047d24';" onmouseout="this.style.borderColor='#e2e8f0';">
+                    <div class="card p-3 border rounded-3 h-100 d-flex flex-column shadow-sm" style="cursor:pointer; transition: transform 0.15s ease;" onclick="viewKbArticleModal('\${k.id}')" onmouseover="this.style.borderColor='var(--bs-primary)';" onmouseout="this.style.borderColor='#e2e8f0';">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="badge bg-dark text-white fs-11 px-2 py-1">\${k.code}</span>
                             <span class="badge bg-soft-primary text-primary fs-11"><i class="ti ti-box me-1"></i>\${k.product}</span>

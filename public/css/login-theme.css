@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary: #047d24;
-  --primary-hover: #035c1a;
-  --primary-light: rgba(4, 125, 36, 0.12);
+  --primary: var(--bs-primary, #0d6efd);
+  --primary-hover: #0b5ed7;
+  --primary-light: rgba(13, 110, 253, 0.12);
   --secondary: #64748b;
   --dark: #0f172a;
   --light-bg: #f8fafc;
