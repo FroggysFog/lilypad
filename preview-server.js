@@ -128,14 +128,16 @@ const server = http.createServer((req, res) => {
     }));
   }
 
-  if (pathname === '/' || pathname === '/dashboard') {
+  if (pathname === '/') {
+    pathname = '/login.html';
+  } else if (pathname === '/login') {
+    pathname = '/login.html';
+  } else if (pathname === '/dashboard') {
     pathname = '/dashboard.html';
   } else if (pathname === '/tickets') {
     pathname = '/tickets.html';
   } else if (pathname === '/client-portal' || pathname === '/portal') {
     pathname = '/client-portal.html';
-  } else if (pathname === '/login') {
-    pathname = '/login-preview.html';
   }
 
   // Handle Mock POST endpoints
