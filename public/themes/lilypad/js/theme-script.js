@@ -1,13 +1,50 @@
-
-
 ! function() {
+    const THEME_PRESET_COLORS = {
+        primary: '#0d6efd',
+        emerald: '#047d24',
+        teal: '#0E9384',
+        purple: '#800080',
+        orange: '#ea580c',
+        indigo: '#3538CD',
+        crimson: '#dc2626',
+        secondary: '#FFA201',
+        info: '#2F80ED'
+    };
+
+    function hexToRgb(hex) {
+        if (!hex) return "13, 110, 253";
+        hex = hex.replace('#', '').trim();
+        if (hex.length === 3) {
+            hex = hex.split('').map(c => c + c).join('');
+        }
+        if (hex.length !== 6) return "13, 110, 253";
+        const num = parseInt(hex, 16);
+        return `${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}`;
+    }
+
+    function applyThemeColorAccent(colorVal) {
+        if (!colorVal) return;
+        let hex = THEME_PRESET_COLORS[colorVal] || colorVal;
+        if (!hex.startsWith('#') && /^[0-9A-Fa-f]{6}$/.test(hex)) hex = '#' + hex;
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex) || /^#[0-9A-Fa-f]{3}$/.test(hex)) {
+            const rgb = hexToRgb(hex);
+            document.documentElement.style.setProperty('--bs-primary', hex);
+            document.documentElement.style.setProperty('--primary', hex);
+            document.documentElement.style.setProperty('--bs-primary-rgb', rgb);
+        }
+    }
+    window.applyThemeColorAccent = applyThemeColorAccent;
+    window.THEME_PRESET_COLORS = THEME_PRESET_COLORS;
+
 	var t = localStorage.getItem("__THEME_CONFIG__") || sessionStorage.getItem("__THEME_CONFIG__"),
+		e = document.getElementsByTagName("html")[0],
 		i = {
 			theme: "light",
 			nav: "vertical",
 			color: {
 				color: "primary"
 			},
+            customColor: "#0d6efd",
 			layout: {
 				mode: "fluid"
 			},
@@ -22,7 +59,7 @@
 				user: !1
 			}
 		};
-var config;
+    var config;
     var html = document.getElementsByTagName("html")[0];
 
     config = Object.assign({}, i);
@@ -51,134 +88,254 @@ var config;
     window.defaultConfig = JSON.parse(JSON.stringify(config));
 
     if (null !== t) {
-        config = JSON.parse(t);
+        try { config = JSON.parse(t); } catch(e) {}
     }
 
     window.config = config;
-		if ("vertical" == config.nav) {
-			let t = config.sidenav.size;
-			window.innerWidth <= 767 ? t = "full-width" : 767 <= window.innerWidth && window.innerWidth <= 1140 && "full-width" !== self.config.sidenav.size && "hidden" !== self.config.sidenav.size && (t = "condensed"), e.setAttribute("data-layout", t), config.sidenav.user && "true" === config.sidenav.user.toString() ? e.setAttribute("data-sidenav-user", !0) : e.removeAttribute("data-sidenav-user")
-		}
-		e.setAttribute("data-bs-theme", config.theme), e.setAttribute("data-sidebar", config.menu.color), e.setAttribute("data-topbar", config.topbar.color), e.setAttribute("data-color", config.color.color);
+    if ("vertical" == config.nav) {
+        let t = config.sidenav.size;
+        window.innerWidth <= 767 ? t = "full-width" : 767 <= window.innerWidth && window.innerWidth <= 1140 && "full-width" !== self.config.sidenav.size && "hidden" !== self.config.sidenav.size && (t = "condensed"), e.setAttribute("data-layout", t), config.sidenav.user && "true" === config.sidenav.user.toString() ? e.setAttribute("data-sidenav-user", !0) : e.removeAttribute("data-sidenav-user")
+    }
+    e.setAttribute("data-bs-theme", config.theme);
+    e.setAttribute("data-sidebar", config.menu.color);
+    e.setAttribute("data-topbar", config.topbar.color);
+    e.setAttribute("data-color", config.color.color);
+
+    if (config.customColor) {
+        applyThemeColorAccent(config.customColor);
+    } else if (config.color && config.color.color) {
+        applyThemeColorAccent(config.color.color);
+    }
 }();
+
 class ThemeCustomizer {
 	constructor() {
-		this.html = document.getElementsByTagName("html")[0], this.config = {}, this.defaultConfig = window.config
+		this.html = document.getElementsByTagName("html")[0];
+        this.config = {};
+        this.defaultConfig = window.config;
 	}
 	initConfig() {
-		this.defaultConfig = JSON.parse(JSON.stringify(window.defaultConfig)), this.config = JSON.parse(JSON.stringify(window.config)), this.setSwitchFromConfig()
+		this.defaultConfig = JSON.parse(JSON.stringify(window.defaultConfig));
+        this.config = JSON.parse(JSON.stringify(window.config));
+        this.setSwitchFromConfig();
 	}
 	changeMenuColor(e) {
-		this.config.menu.color = e, this.html.setAttribute("data-sidebar", e), this.setSwitchFromConfig()
+		this.config.menu.color = e;
+        this.html.setAttribute("data-sidebar", e);
+        this.setSwitchFromConfig();
 	}
 	changeLeftbarSize(e, t = !0) {
 		this.html.setAttribute("data-layout", e);
-		
 		if (document.body) {
 			if (e === "mini") {
-			document.body.classList.add("mini-sidebar");
+			    document.body.classList.add("mini-sidebar");
 			} else {
-			document.body.classList.remove("mini-sidebar");
+			    document.body.classList.remove("mini-sidebar");
 			}
 		}
-
 		t && (this.config.sidenav.size = e, this.setSwitchFromConfig());
 	}	
 	changeThemeColor(e) {
-		this.config.color.color = e, this.html.setAttribute("data-color", e), this.setSwitchFromConfig()
+		this.config.color.color = e;
+        this.config.customColor = window.THEME_PRESET_COLORS[e] || e;
+        this.html.setAttribute("data-color", e);
+        window.applyThemeColorAccent(this.config.customColor);
+        this.setSwitchFromConfig();
 	}
+    setCustomColor(hex) {
+        if (!hex.startsWith('#')) hex = '#' + hex;
+        if (!/^#[0-9A-Fa-f]{6}$/.test(hex) && !/^#[0-9A-Fa-f]{3}$/.test(hex)) return;
+        this.config.color.color = 'custom';
+        this.config.customColor = hex;
+        this.html.setAttribute("data-color", "custom");
+        window.applyThemeColorAccent(hex);
+        this.setSwitchFromConfig();
+    }
 	changeLayoutColor(e) {
-		this.config.theme = e, this.html.setAttribute("data-bs-theme", e), this.setSwitchFromConfig()
+		this.config.theme = e;
+        this.html.setAttribute("data-bs-theme", e);
+        this.setSwitchFromConfig();
 	}
 	changeTopbarColor(e) {
-		this.config.topbar.color = e, this.html.setAttribute("data-topbar", e), this.setSwitchFromConfig()
+		this.config.topbar.color = e;
+        this.html.setAttribute("data-topbar", e);
+        this.setSwitchFromConfig();
 	}
 	resetTheme() {
-		this.config = JSON.parse(JSON.stringify(window.defaultConfig)), this.changeMenuColor(this.config.menu.color), this.changeLeftbarSize(this.config.sidenav.size), this.changeLayoutColor(this.config.theme), this.changeTopbarColor(this.config.topbar.color), this.changeThemeColor(this.config.color.color), this._adjustLayout()
+		this.config = JSON.parse(JSON.stringify(window.defaultConfig));
+        this.config.customColor = "#0d6efd";
+        this.changeMenuColor(this.config.menu.color);
+        this.changeLeftbarSize(this.config.sidenav.size);
+        this.changeLayoutColor(this.config.theme);
+        this.changeTopbarColor(this.config.topbar.color);
+        this.changeThemeColor(this.config.color.color);
+        this._adjustLayout();
 	}
 	initSwitchListener() {
-		var a = this,
-			e = (document.querySelectorAll("input[name=data-sidebar]").forEach(function(t) {
-				t.addEventListener("change", function(e) {
-					a.changeMenuColor(t.value)
-				})
-			}), document.querySelectorAll("input[name=data-color]").forEach(function(t) {
-				t.addEventListener("change", function(e) {
-					a.changeThemeColor(t.value)
-				})
-			}), document.querySelectorAll("input[name=data-layout]").forEach(function(t) {
-				t.addEventListener("change", function(e) {
-					a.changeLeftbarSize(t.value)
-				})
-			}), document.querySelectorAll("input[name=data-bs-theme]").forEach(function(t) {
-				t.addEventListener("change", function(e) {
-					a.changeLayoutColor(t.value)
-				})
-			}), document.querySelectorAll("input[name=data-topbar]").forEach(function(t) {
-				t.addEventListener("change", function(e) {
-					a.changeTopbarColor(t.value)
-				})
-			}), document.getElementById("light-dark-mode")),
-			e = (e && e.addEventListener("click", function(e) {
-				"light" === a.config.theme ? a.changeLayoutColor("dark") : a.changeLayoutColor("light")
-			}), document.querySelector("#reset-layout")),
-			e = (e && e.addEventListener("click", function(e) {
-				a.resetTheme()
-			}), document.querySelector(".sidenav-toggle-button")),
-			e = (e && e.addEventListener("click", function() {
-				var e = a.config.sidenav.size,
-					t = a.html.getAttribute("data-layout", e);
-				"full-width" === t ? a.showBackdrop() : "hidden" == e ? "hidden" === t ? a.changeLeftbarSize("hidden" == e ? "default" : e, !1) : a.changeLeftbarSize("hidden", !1) : "condensed" === t ? a.changeLeftbarSize("condensed" == e ? "default" : e, !1) : a.changeLeftbarSize("condensed", !1), a.html.classList.toggle("sidebar-enable")
-			}), document.querySelector(".button-close-fullsidebar"));
-		e && e.addEventListener("click", function() {
-			a.html.classList.remove("sidebar-enable"), a.hideBackdrop()
-		}), document.querySelectorAll(".button-sm-hover").forEach(function(e) {
-			e.addEventListener("click", function() {
-				var e = a.config.sidenav.size;
-				"sm-hover-active" === a.html.getAttribute("data-layout", e) ? a.changeLeftbarSize("hover-view", !1) : a.changeLeftbarSize("sm-hover-active", !1)
-			})
-		})
+		var a = this;
+        document.querySelectorAll("input[name=data-sidebar]").forEach(function(t) {
+            t.addEventListener("change", function(e) {
+                a.changeMenuColor(t.value);
+            });
+        });
+        document.querySelectorAll("input[name=data-color]").forEach(function(t) {
+            t.addEventListener("change", function(e) {
+                a.changeThemeColor(t.value);
+            });
+        });
+        document.querySelectorAll("input[name=data-layout]").forEach(function(t) {
+            t.addEventListener("change", function(e) {
+                a.changeLeftbarSize(t.value);
+            });
+        });
+        document.querySelectorAll("input[name=data-bs-theme]").forEach(function(t) {
+            t.addEventListener("change", function(e) {
+                a.changeLayoutColor(t.value);
+            });
+        });
+        document.querySelectorAll("input[name=data-topbar]").forEach(function(t) {
+            t.addEventListener("change", function(e) {
+                a.changeTopbarColor(t.value);
+            });
+        });
+
+        // Custom Color Picker & Hex Input
+        const picker = document.getElementById("customThemeColorPicker");
+        const hexInput = document.getElementById("customThemeColorHex");
+        const btnApply = document.getElementById("btnApplyCustomColor");
+
+        if (picker && hexInput) {
+            picker.addEventListener("input", function() {
+                hexInput.value = picker.value.toUpperCase();
+                a.setCustomColor(picker.value);
+            });
+            if (btnApply) {
+                btnApply.addEventListener("click", function() {
+                    const val = hexInput.value.trim();
+                    if (val) {
+                        picker.value = val.startsWith('#') ? val : '#' + val;
+                        a.setCustomColor(val);
+                    }
+                });
+            }
+            hexInput.addEventListener("keyup", function(e) {
+                if (e.key === "Enter") {
+                    const val = hexInput.value.trim();
+                    if (val) {
+                        picker.value = val.startsWith('#') ? val : '#' + val;
+                        a.setCustomColor(val);
+                    }
+                }
+            });
+        }
+
+        var e = document.getElementById("light-dark-mode");
+        if (e) {
+            e.addEventListener("click", function(e) {
+                "light" === a.config.theme ? a.changeLayoutColor("dark") : a.changeLayoutColor("light");
+            });
+        }
+
+        var resetBtn = document.querySelector("#reset-layout");
+        if (resetBtn) {
+            resetBtn.addEventListener("click", function(e) {
+                a.resetTheme();
+            });
+        }
+
+        var navToggle = document.querySelector(".sidenav-toggle-button");
+        if (navToggle) {
+            navToggle.addEventListener("click", function() {
+                var e = a.config.sidenav.size,
+                    t = a.html.getAttribute("data-layout", e);
+                "full-width" === t ? a.showBackdrop() : "hidden" == e ? "hidden" === t ? a.changeLeftbarSize("hidden" == e ? "default" : e, !1) : a.changeLeftbarSize("hidden", !1) : "condensed" === t ? a.changeLeftbarSize("condensed" == e ? "default" : e, !1) : a.changeLeftbarSize("condensed", !1);
+                a.html.classList.toggle("sidebar-enable");
+            });
+        }
+
+        var closeFull = document.querySelector(".button-close-fullsidebar");
+        if (closeFull) {
+            closeFull.addEventListener("click", function() {
+                a.html.classList.remove("sidebar-enable");
+                a.hideBackdrop();
+            });
+        }
+
+        document.querySelectorAll(".button-sm-hover").forEach(function(e) {
+            e.addEventListener("click", function() {
+                var e = a.config.sidenav.size;
+                "sm-hover-active" === a.html.getAttribute("data-layout", e) ? a.changeLeftbarSize("hover-view", !1) : a.changeLeftbarSize("sm-hover-active", !1);
+            });
+        });
 	}
 	showBackdrop() {
 		const e = document.createElement("div"),
 			t = (e.id = "custom-backdrop", e.classList = "offcanvas-backdrop fade show", document.body.appendChild(e), document.body.style.overflow = "hidden", 767 < window.innerWidth && (document.body.style.paddingRight = "15px"), this);
 		e.addEventListener("click", function(e) {
-			t.html.classList.remove("sidebar-enable"), t.hideBackdrop()
-		})
+			t.html.classList.remove("sidebar-enable"), t.hideBackdrop();
+		});
 	}
 	hideBackdrop() {
 		var e = document.getElementById("custom-backdrop");
-		e && (document.body.removeChild(e), document.body.style.overflow = null, document.body.style.paddingRight = null)
+		e && (document.body.removeChild(e), document.body.style.overflow = null, document.body.style.paddingRight = null);
 	}
 	initWindowSize() {
 		var t = this;
 		window.addEventListener("resize", function(e) {
-			t._adjustLayout()
-		})
+			t._adjustLayout();
+		});
 	}
 	_adjustLayout() {
 		var e = this;
-		window.innerWidth <= 767.98 ? e.changeLeftbarSize("full-width", !1) : 767 <= window.innerWidth && window.innerWidth <= 1140 ? "full-width" !== e.config.sidenav.size && "hidden" !== e.config.sidenav.size && ("hover-view" === e.config.sidenav.size ? e.changeLeftbarSize("condensed") : e.changeLeftbarSize("condensed", !1)) : (e.changeLeftbarSize(e.config.sidenav.size))
+		window.innerWidth <= 767.98 ? e.changeLeftbarSize("full-width", !1) : 767 <= window.innerWidth && window.innerWidth <= 1140 ? "full-width" !== e.config.sidenav.size && "hidden" !== e.config.sidenav.size && ("hover-view" === e.config.sidenav.size ? e.changeLeftbarSize("condensed") : e.changeLeftbarSize("condensed", !1)) : (e.changeLeftbarSize(e.config.sidenav.size));
 	}
 	setSwitchFromConfig() {
 		try { localStorage.setItem("__THEME_CONFIG__", JSON.stringify(this.config)); } catch(e) {}
 		try { sessionStorage.setItem("__THEME_CONFIG__", JSON.stringify(this.config)); } catch(e) {}
+		document.querySelectorAll(".right-bar input[type=checkbox]").forEach(function(e) {
+			e.checked = !1;
+		});
 		var e, t, a, n, i, o = this.config;
-		o && (e = document.querySelector("input[type=radio][name=data-layout][value=" + o.nav + "]"), t = document.querySelector("input[type=radio][name=data-bs-theme][value=" + o.theme + "]"), a = document.querySelector("input[type=radio][name=data-color][value=" + o.color.color + "]"), n = document.querySelector("input[type=radio][name=data-topbar][value=" + o.topbar.color + "]"), i = document.querySelector("input[type=radio][name=data-sidebar][value=" + o.menu.color + "]"), o = document.querySelector("input[type=radio][name=data-layout][value=" + o.sidenav.size + "]"), e && (e.checked = !0), t && (t.checked = !0), a && (a.checked = !0), n && (n.checked = !0), i && (i.checked = !0), o && (o.checked = !0))
+		if (o) {
+            e = document.querySelector("input[type=radio][name=data-layout][value=" + o.nav + "]");
+            t = document.querySelector("input[type=radio][name=data-bs-theme][value=" + o.theme + "]");
+            a = document.querySelector("input[type=radio][name=data-color][value=" + o.color.color + "]");
+            n = document.querySelector("input[type=radio][name=data-topbar][value=" + o.topbar.color + "]");
+            i = document.querySelector("input[type=radio][name=data-sidebar][value=" + o.menu.color + "]");
+            var s = document.querySelector("input[type=radio][name=data-layout][value=" + o.sidenav.size + "]");
+            e && (e.checked = !0);
+            t && (t.checked = !0);
+            a && (a.checked = !0);
+            n && (n.checked = !0);
+            i && (i.checked = !0);
+            s && (s.checked = !0);
+
+            // Sync color picker values
+            const picker = document.getElementById("customThemeColorPicker");
+            const hexInput = document.getElementById("customThemeColorHex");
+            if (picker && hexInput && o.customColor) {
+                picker.value = o.customColor;
+                hexInput.value = o.customColor.toUpperCase();
+            }
+        }
 	}
 	init() {
-		this.initConfig(), this.initSwitchListener(), this.initWindowSize(), this._adjustLayout(), this.setSwitchFromConfig()
+		this.initConfig();
+        this.initSwitchListener();
+        this.initWindowSize();
+        this._adjustLayout();
+        this.setSwitchFromConfig();
 	}
 }
+
 document.addEventListener("DOMContentLoaded", function(e) {
 	let themesetting = `
 	<div class="sidebar-contact">
-    	<div class="toggle-theme"  data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas"><i class="ti ti-settings"></i></div>
+    	<div class="toggle-theme" data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas" title="Customize Theme & Colors"><i class="ti ti-settings"></i></div>
     </div>
 	<div class="sidebar-themesettings offcanvas offcanvas-end" tabindex="-1" id="theme-settings-offcanvas">
-        <div class="d-flex align-items-center gap-2 px-3 py-3 offcanvas-header border-bottom bg-primary">
-            <h5 class="flex-grow-1 mb-0">Theme Customizer</h5>
-
+        <div class="d-flex align-items-center gap-2 px-3 py-3 offcanvas-header border-bottom bg-primary text-white">
+            <h5 class="flex-grow-1 mb-0 text-white"><i class="ti ti-palette me-2"></i>Theme & Color Customizer</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
 
@@ -189,7 +346,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				<div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button fw-semibold fs-16" type="button" data-bs-toggle="collapse" data-bs-target="#modesetting" aria-expanded="true">
-                            Color Mode
+                            <i class="ti ti-sun-moon me-2 text-primary"></i> Color Mode
                         </button>
                     </h2>
                     <div id="modesetting" class="accordion-collapse collapse show">
@@ -215,14 +372,71 @@ document.addEventListener("DOMContentLoaded", function(e) {
 						</div>
 					</div>
 				</div>
+
+                <!-- Custom Button & Accent Color -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button fw-semibold fs-16" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarcolor" aria-expanded="true">
+                            <i class="ti ti-color-filter me-2 text-primary"></i> Button & Accent Color
+                        </button>
+                    </h2>
+                    <div id="sidebarcolor" class="accordion-collapse collapse show">
+                        <div class="accordion-body">
+                            <div class="theme-content">
+                                <p class="fs-12 text-muted mb-2">Select a popular color palette or pick your custom hex shade:</p>
+                                <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+                                    <div class="theme-colorsset" title="Classic Ocean Blue (#0D6EFD)">
+                                        <input type="radio" name="data-color" id="primaryColor" value="primary">
+                                        <label for="primaryColor" style="background:#0d6efd; width:30px; height:30px; border-radius:8px; cursor:pointer; display:inline-block; border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></label>
+                                    </div>
+                                    <div class="theme-colorsset" title="Froggy's Emerald (#047D24)">
+                                        <input type="radio" name="data-color" id="emeraldColor" value="emerald">
+                                        <label for="emeraldColor" style="background:#047d24; width:30px; height:30px; border-radius:8px; cursor:pointer; display:inline-block; border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></label>
+                                    </div>  
+                                    <div class="theme-colorsset" title="Teal Cyan (#0E9384)">
+                                        <input type="radio" name="data-color" id="tealColor" value="teal">
+                                        <label for="tealColor" style="background:#0E9384; width:30px; height:30px; border-radius:8px; cursor:pointer; display:inline-block; border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></label>
+                                    </div>  
+                                    <div class="theme-colorsset" title="Royal Purple (#800080)">
+                                        <input type="radio" name="data-color" id="purpleColor" value="purple">
+                                        <label for="purpleColor" style="background:#800080; width:30px; height:30px; border-radius:8px; cursor:pointer; display:inline-block; border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></label>
+                                    </div>
+                                    <div class="theme-colorsset" title="Sunset Orange (#EA580C)">
+                                        <input type="radio" name="data-color" id="orangeColor" value="orange">
+                                        <label for="orangeColor" style="background:#ea580c; width:30px; height:30px; border-radius:8px; cursor:pointer; display:inline-block; border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></label>
+                                    </div>
+                                    <div class="theme-colorsset" title="Electric Indigo (#3538CD)">
+                                        <input type="radio" name="data-color" id="indigoColor" value="indigo">
+                                        <label for="indigoColor" style="background:#3538CD; width:30px; height:30px; border-radius:8px; cursor:pointer; display:inline-block; border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></label>
+                                    </div>
+                                    <div class="theme-colorsset" title="Crimson Red (#DC2626)">
+                                        <input type="radio" name="data-color" id="crimsonColor" value="crimson">
+                                        <label for="crimsonColor" style="background:#dc2626; width:30px; height:30px; border-radius:8px; cursor:pointer; display:inline-block; border:2px solid #fff; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></label>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-2 d-flex align-items-center gap-1">
+                                        <i class="ti ti-color-swatch text-primary"></i> Custom Button Color:
+                                    </label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="color" id="customThemeColorPicker" class="form-control form-control-color border-0 p-0 shadow-sm" value="#0d6efd" style="width:40px; height:36px; cursor:pointer; border-radius:6px;" title="Pick custom button color">
+                                        <input type="text" id="customThemeColorHex" class="form-control form-control-sm font-monospace text-uppercase" placeholder="#0D6EFD" style="max-width:120px;" maxlength="7">
+                                        <button type="button" class="btn btn-sm btn-primary px-3 shadow-sm" id="btnApplyCustomColor">Apply</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
                 
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button fw-semibold fs-16" type="button" data-bs-toggle="collapse" data-bs-target="#layoutsetting" aria-expanded="true" aria-controls="collapsecustomicon1One">
-                            Select Layouts
+                        <button class="accordion-button fw-semibold fs-16" type="button" data-bs-toggle="collapse" data-bs-target="#layoutsetting" aria-expanded="false">
+                            <i class="ti ti-layout-grid me-2 text-primary"></i> Sidenav Layout Mode
                         </button>
                     </h2>
-                    <div id="layoutsetting" class="accordion-collapse collapse show">
+                    <div id="layoutsetting" class="accordion-collapse collapse">
                         <div class="accordion-body">
                             <div class="theme-content">
                                 <div class="row g-3">
@@ -291,13 +505,14 @@ document.addEventListener("DOMContentLoaded", function(e) {
                         </div>
                     </div>
                 </div> 
+
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button fw-semibold fs-16" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarcolorsetting" aria-expanded="true">
-                            Sidebar Color
+                        <button class="accordion-button fw-semibold fs-16" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarcolorsetting" aria-expanded="false">
+                            <i class="ti ti-layout-sidebar me-2 text-primary"></i> Sidebar Color
                         </button>
                     </h2>
-                    <div id="sidebarcolorsetting" class="accordion-collapse collapse show">
+                    <div id="sidebarcolorsetting" class="accordion-collapse collapse">
                         <div class="accordion-body">
                         	<div class="theme-content">
 								<h6 class="fs-14 fw-medium mb-2">Solid Colors</h6>
@@ -345,51 +560,6 @@ document.addEventListener("DOMContentLoaded", function(e) {
 										</label>
 									</div>      
 								</div>
-								<h6 class="fs-14 fw-medium mb-2">Gradient Colors</h6>
-								<div class="d-flex align-items-center flex-wrap gap-3">
-									<div class="theme-colorselect">
-										<input type="radio" name="data-sidebar" id="gradientsidebar1Sidebar" value="gradientsidebar1">
-										<label for="gradientsidebar1Sidebar" class="d-block rounded bg-indigo-gradient">
-											<span class="theme-check rounded-circle"><i class="ti ti-check"></i></span>
-										</label>
-									</div>
-									<div class="theme-colorselect">
-										<input type="radio" name="data-sidebar" id="gradientsidebar2Sidebar" value="gradientsidebar2">
-										<label for="gradientsidebar2Sidebar" class="d-block rounded bg-primary-gradient">
-											<span class="theme-check rounded-circle"><i class="ti ti-check"></i></span>
-										</label>
-									</div>
-									<div class="theme-colorselect">
-										<input type="radio" name="data-sidebar" id="gradientsidebar3Sidebar" value="gradientsidebar3">
-										<label for="gradientsidebar3Sidebar" class="d-block rounded bg-secondary-gradient">
-											<span class="theme-check rounded-circle"><i class="ti ti-check"></i></span>
-										</label>
-									</div>
-									<div class="theme-colorselect">
-										<input type="radio" name="data-sidebar" id="gradientsidebar4Sidebar" value="gradientsidebar4">
-										<label for="gradientsidebar4Sidebar" class="d-block rounded bg-dark-gradient">
-											<span class="theme-check rounded-circle"><i class="ti ti-check"></i></span>
-										</label>
-									</div>
-									<div class="theme-colorselect">
-										<input type="radio" name="data-sidebar" id="gradientsidebar5Sidebar" value="gradientsidebar5">
-										<label for="gradientsidebar5Sidebar" class="d-block rounded bg-purple-gradient">
-											<span class="theme-check rounded-circle"><i class="ti ti-check"></i></span>
-										</label>
-									</div>
-									<div class="theme-colorselect">
-										<input type="radio" name="data-sidebar" id="gradientsidebar6Sidebar" value="gradientsidebar6">
-										<label for="gradientsidebar6Sidebar" class="d-block rounded bg-orange-gradient">
-											<span class="theme-check rounded-circle"><i class="ti ti-check"></i></span>
-										</label>
-									</div>    
-									<div class="theme-colorselect">
-										<input type="radio" name="data-sidebar" id="gradientsidebar7Sidebar" value="gradientsidebar7">
-										<label for="gradientsidebar7Sidebar" class="d-block rounded bg-info-gradient">
-											<span class="theme-check rounded-circle"><i class="ti ti-check"></i></span>
-										</label>
-									</div>    
-								</div>
 							</div>
                         </div>
                     </div>
@@ -397,11 +567,11 @@ document.addEventListener("DOMContentLoaded", function(e) {
 
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button fw-semibold fs-16" type="button" data-bs-toggle="collapse" data-bs-target="#colorsetting" aria-expanded="true">
-                            Top Bar Color
+                        <button class="accordion-button fw-semibold fs-16" type="button" data-bs-toggle="collapse" data-bs-target="#colorsetting" aria-expanded="false">
+                            <i class="ti ti-layout-navbar me-2 text-primary"></i> Top Bar Color
                         </button>
                     </h2>
-                    <div id="colorsetting" class="accordion-collapse collapse show">
+                    <div id="colorsetting" class="accordion-collapse collapse">
                         <div class="accordion-body">
                             <div class="theme-content">
                                 <h6 class="fs-14 fw-medium mb-2">Solid Colors</h6>
@@ -437,104 +607,24 @@ document.addEventListener("DOMContentLoaded", function(e) {
                                         <label for="topbar6Topbar" class="bg-indigo"><span class="theme-check rounded-circle"><i class="ti ti-check"></i></span></label>
                                     </div> 
                                 </div>
-                                <h6 class="fs-14 fw-medium mb-2">Gradient Colors</h6>
-                                <div class="d-flex align-items-center flex-wrap topbar-background gap-3">
-                                    <div class="theme-colorselect">
-                                        <input type="radio" name="data-topbar" id="gradienttopbar1Topbar" value="gradienttopbar1">
-                                        <label for="gradienttopbar1Topbar" class="bg-indigo-gradient">
-                                            <span class="theme-check rounded-circle"><i class="ti ti-check"></i></span>
-                                        </label>
-                                    </div>
-                                    <div class="theme-colorselect">
-                                        <input type="radio" name="data-topbar" id="gradienttopbar2Topbar" value="gradienttopbar2">
-                                        <label for="gradienttopbar2Topbar" class="bg-primary-gradient"><span class="theme-check rounded-circle"><i class="ti ti-check"></i></span></label>
-                                    </div>
-                                    <div class="theme-colorselect">
-                                        <input type="radio" name="data-topbar" id="gradienttopbar3Topbar" value="gradienttopbar3">
-                                        <label for="gradienttopbar3Topbar" class="bg-secondary-gradient"><span class="theme-check rounded-circle"><i class="ti ti-check"></i></span></label>
-                                    </div>
-                                    <div class="theme-colorselect">
-                                        <input type="radio" name="data-topbar" id="gradienttopbar4Topbar" value="gradienttopbar4">
-                                        <label for="gradienttopbar4Topbar" class="bg-dark-gradient"><span class="theme-check rounded-circle"><i class="ti ti-check"></i></span></label>
-                                    </div>
-                                    <div class="theme-colorselect">
-                                        <input type="radio" name="data-topbar" id="gradienttopbar5Topbar" value="gradienttopbar5">
-                                        <label for="gradienttopbar5Topbar" class="bg-purple-gradient"><span class="theme-check rounded-circle"><i class="ti ti-check"></i></span></label>
-                                    </div>                   
-                                    <div class="theme-colorselect">
-                                        <input type="radio" name="data-topbar" id="gradienttopbar6Topbar" value="gradienttopbar6">
-                                        <label for="gradienttopbar6Topbar" class="bg-orange-gradient"><span class="theme-check rounded-circle"><i class="ti ti-check"></i></span></label>
-                                    </div>                    
-                                    <div class="theme-colorselect">
-                                        <input type="radio" name="data-topbar" id="gradienttopbar7Topbar" value="gradienttopbar7">
-                                        <label for="gradienttopbar7Topbar" class="bg-info-gradient"><span class="theme-check rounded-circle"><i class="ti ti-check"></i></span></label>
-                                    </div>                 
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>    
-                
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button fw-semibold fs-16" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarcolor" aria-expanded="true">
-                            Theme Colors
-                        </button>
-                    </h2>
-                    <div id="sidebarcolor" class="accordion-collapse collapse show">
-                        <div class="accordion-body">
-                            <div class="theme-content">
-                                <div class="d-flex align-items-center flex-wrap gap-3">
-                                    <div class="theme-colorsset">
-                                        <input type="radio" name="data-color" id="primaryColor" value="primary" checked>
-                                        <label for="primaryColor" class="primary-clr"></label>
-                                    </div>
-                                    <div class="theme-colorsset">
-                                        <input type="radio" name="data-color" id="secondaryColor" value="secondary">
-                                        <label for="secondaryColor" class="secondary-clr"></label>
-                                    </div>  
-                                    <div class="theme-colorsset">
-                                        <input type="radio" name="data-color" id="orangeColor" value="orange">
-                                        <label for="orangeColor" class="orange-clr"></label>
-                                    </div>
-                                    <div class="theme-colorsset">
-                                        <input type="radio" name="data-color" id="tealColor" value="teal">
-                                        <label for="tealColor" class="teal-clr"></label>
-                                    </div>  
-                                    <div class="theme-colorsset">
-                                        <input type="radio" name="data-color" id="purpleColor" value="purple">
-                                        <label for="purpleColor" class="purple-clr"></label>
-                                    </div>
-                                    <div class="theme-colorsset">
-                                        <input type="radio" name="data-color" id="indigoColor" value="indigo">
-                                        <label for="indigoColor" class="indigo-clr"></label>
-                                    </div>
-                                    <div class="theme-colorsset">
-                                        <input type="radio" name="data-color" id="infoColor" value="info">
-                                        <label for="infoColor" class="info-clr"></label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> 
             </div>
 
         </div>
 
-        <div class="d-flex align-items-center gap-2 px-3 py-2 offcanvas-header border-top">
-            <button type="button" class="btn w-50 btn-light" id="reset-layout"><i class="ti ti-restore me-1"></i>Reset</button>
-            <button type="button" class="btn w-50 btn-primary">Buy Product</button>
+        <div class="d-flex align-items-center gap-2 px-3 py-3 offcanvas-header border-top">
+            <button type="button" class="btn w-100 btn-light shadow-sm fw-semibold" id="reset-layout"><i class="ti ti-restore me-1"></i>Reset to Default Theme</button>
         </div>
 
-    </div>`
+    </div>`;
 	let wrapper = document.createElement("div");
 	wrapper.innerHTML = themesetting;
 
-	// Append ALL child nodes
 	while (wrapper.firstChild) {
 		document.body.appendChild(wrapper.firstChild);
 	}
-	(new ThemeCustomizer).init()
+	(new ThemeCustomizer).init();
 });
-
