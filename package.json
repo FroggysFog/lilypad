@@ -3,7 +3,7 @@
   "version": "1.2.11",
   "private": true,
   "engines": {
-    "node": ">=16.0.0"
+    "node": "16.20.2"
   },
   "bin": "./app.js",
   "scripts": {
