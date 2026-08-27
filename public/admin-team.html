@@ -365,17 +365,17 @@
 						<li>
 							<ul>
 								<li>
-									<a href="dashboard.html" class="">
+									<a href="dashboard.html" class="active">
 										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
 									</a>
 								</li>
 								<li>
-									<a href="tickets.html" class="">
+									<a href="tickets.html">
 										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
 									</a>
 								</li>
 								<li>
-									<a href="knowledge-base.html" class="">
+									<a href="knowledge-base.html">
 										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
 									</a>
 								</li>
@@ -386,13 +386,13 @@
 						<li>
 							<ul>
 								<li class="submenu">
-									<a href="javascript:void(0);" class="subdrop active">
+									<a href="javascript:void(0);" class="subdrop">
 										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
 									</a>
 									<ul style="display: block;">
-										<li><a href="admin-email.html" class=""><i class="ti ti-mail-cog me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
-										<li><a href="admin-team.html" class="active"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
-										<li><a href="admin-forms.html" class=""><i class="ti ti-forms me-2 text-primary"></i>Dynamic Form Builder</a></li>
+										<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -411,7 +411,7 @@
 					</ul>
 				</div>
 			</div>
-    
+
 		</div>
 		<!-- Sidenav Menu End -->
 
@@ -463,9 +463,9 @@
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
 									<span class="fs-12 text-muted fw-semibold text-uppercase">Operations Admins</span>
-									<h3 class="fw-bold mb-0 mt-1 text-primary">1</h3>
+									<h3 class="fw-bold mb-0 mt-1 text-primary" id="teamCountAdmins">1</h3>
 								</div>
-								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-primary" style="width:44px; height:44px;">
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-primary shadow-sm" style="width:44px; height:44px;">
 									<i class="ti ti-shield-lock fs-22"></i>
 								</div>
 							</div>
@@ -477,9 +477,9 @@
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
 									<span class="fs-12 text-muted fw-semibold text-uppercase">Support Leads & Agents</span>
-									<h3 class="fw-bold mb-0 mt-1 text-dark">4</h3>
+									<h3 class="fw-bold mb-0 mt-1 text-dark" id="teamCountAgents">4</h3>
 								</div>
-								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-dark" style="width:44px; height:44px;">
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-dark shadow-sm" style="width:44px; height:44px;">
 									<i class="ti ti-headset fs-22"></i>
 								</div>
 							</div>
@@ -490,10 +490,10 @@
 						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
-									<span class="fs-12 text-muted fw-semibold text-uppercase">Departments</span>
-									<h3 class="fw-bold mb-0 mt-1 text-secondary">5 Active</h3>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Active Departments</span>
+									<h3 class="fw-bold mb-0 mt-1 text-secondary" id="teamCountDepts">5 Active</h3>
 								</div>
-								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-secondary" style="width:44px; height:44px;">
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-secondary shadow-sm" style="width:44px; height:44px;">
 									<i class="ti ti-building fs-22"></i>
 								</div>
 							</div>
@@ -562,8 +562,8 @@
 											<input type="text" id="tNewUsername" class="form-control" placeholder="jhayes" required>
 										</div>
 										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Temporary Password <span class="text-danger">*</span></label>
-											<input type="password" id="tNewPassword" class="form-control" placeholder="••••••••" value="Password123!" required>
+											<label class="form-label fs-13 fw-semibold">Direct Phone / Extension</label>
+											<input type="text" id="tNewPhone" class="form-control" placeholder="(615) 555-0188">
 										</div>
 										<div class="col-md-6">
 											<label class="form-label fs-13 fw-semibold">Role <span class="text-danger">*</span></label>
@@ -571,6 +571,7 @@
 												<option value="Admin">Admin</option>
 												<option value="Support Lead">Support Lead</option>
 												<option value="Agent" selected>Agent</option>
+												<option value="Packaging Lead">Packaging Lead</option>
 												<option value="Viewer">Viewer</option>
 											</select>
 										</div>
@@ -583,6 +584,20 @@
 												<option value="Finance">Finance</option>
 												<option value="Sales & Marketing">Sales & Marketing</option>
 											</select>
+										</div>
+
+										<!-- Automated Welcome Email Checkbox -->
+										<div class="col-12">
+											<div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2">
+												<div class="form-check mb-0">
+													<input class="form-check-input" type="checkbox" id="tSendWelcomeEmail" checked>
+													<label class="form-check-label fs-13 fw-semibold text-dark" for="tSendWelcomeEmail">
+														<i class="ti ti-mail-forward text-primary me-1"></i> Automatically send Onboarding Email with Password Setup & Hub Getting Started Guide
+													</label>
+													<span class="d-block fs-11 text-muted">Sends a direct invitation link to set up their password, access the Operations Hub, and review quick-start procedures.</span>
+												</div>
+												<span class="badge bg-soft-success text-success fs-11 fw-semibold"><i class="ti ti-shield-check me-1"></i>Auto-Delivery Active</span>
+											</div>
 										</div>
 									</div>
 									<div class="text-end mt-4 pt-3 border-top">
@@ -649,6 +664,67 @@
 						</div>
 					</div>
 				</div>
+
+				<!-- Onboarding / Welcome Email Dispatched Modal -->
+				<div class="modal fade" id="onboardingEmailModal" tabindex="-1" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered modal-lg">
+						<div class="modal-content border-0 shadow-lg">
+							<div class="modal-header py-3 px-4 bg-primary text-white d-flex align-items-center justify-content-between">
+								<div class="d-flex align-items-center gap-2">
+									<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold" style="width:34px; height:34px;">
+										<i class="ti ti-mail-check fs-18"></i>
+									</div>
+									<div>
+										<h5 class="mb-0 text-white fw-bold">Onboarding & Setup Email Dispatched</h5>
+										<span class="fs-12 text-white-50">Sent via LilyPad Outbound Email Service (SMTP/SES)</span>
+									</div>
+								</div>
+								<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+							</div>
+							<div class="modal-body p-4">
+								<div class="alert alert-success d-flex align-items-center gap-2 py-2 px-3 fs-13 mb-3 border-0 rounded-3">
+									<i class="ti ti-circle-check fs-18 text-success"></i>
+									<div>
+										<strong>Email delivered successfully!</strong> A welcome invitation has been sent to <span id="onboardingEmailRecipient" class="fw-bold"></span>.
+									</div>
+								</div>
+
+								<!-- Email Message Live Preview Box -->
+								<div class="card border rounded-3 p-0 mb-3 shadow-none bg-white">
+									<div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between flex-wrap gap-2">
+										<div>
+											<span class="fs-12 text-muted d-block">Subject:</span>
+											<strong class="fs-14 text-dark" id="onboardingEmailSubject">Welcome to Froggy's Fog Hub | Set Up Your Account</strong>
+										</div>
+										<span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Delivered</span>
+									</div>
+									<div class="p-4" id="onboardingEmailBodyPreview" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;">
+										<!-- Rendered email content -->
+									</div>
+								</div>
+
+								<!-- Direct Action Links -->
+								<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 p-3 bg-light rounded-3 border">
+									<div class="text-truncate" style="max-width: 480px;">
+										<span class="fs-12 text-muted d-block">Password Setup & Activation URL:</span>
+										<code class="fs-12 text-primary text-truncate d-block" id="onboardingSetupUrl"></code>
+									</div>
+									<div class="d-flex gap-2">
+										<button type="button" class="btn btn-sm btn-outline-primary shadow-sm" onclick="copyOnboardingUrl()">
+											<i class="ti ti-copy me-1"></i> Copy Link
+										</button>
+										<a id="btnSimulateSetup" href="#" target="_blank" class="btn btn-sm btn-primary shadow-sm">
+											<i class="ti ti-external-link me-1"></i> Open Password Setup
+										</a>
+									</div>
+								</div>
+							</div>
+							<div class="modal-footer py-2 px-4 bg-light">
+								<button type="button" class="btn btn-sm btn-light px-3" data-bs-dismiss="modal">Close</button>
+							</div>
+						</div>
+					</div>
+				</div>
 <!-- Start Footer -->
 			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
 				<p class="mb-md-0 mb-1">Copyright &copy;
@@ -678,69 +754,204 @@
     <script src="assets/js/lilypad-notifications.js"></script>
 
 	<script>
-        let TEAM_USERS = [
-            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@froggysfog.com', role: 'Admin', department: 'Operations', initials: 'SK', active: true },
-            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@froggysfog.com', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true },
-            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'DM', active: true },
-            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'SC', active: true },
-            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@froggysfog.com', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true }
+        const STORAGE_TEAM_KEY = "lilypad_team_users_v2";
+        const DEFAULT_TEAM_USERS = [
+            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@froggysfog.com', role: 'Admin', department: 'Operations', initials: 'SK', active: true, phone: '(615) 555-0100', joined: 'Jan 2026', password: 'Password123!' },
+            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@froggysfog.com', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true, phone: '(615) 555-0102', joined: 'Feb 2026', password: 'Password123!' },
+            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'DM', active: true, phone: '(615) 555-0104', joined: 'Feb 2026', password: 'Password123!' },
+            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'SC', active: true, phone: '(615) 555-0106', joined: 'Mar 2026', password: 'Password123!' },
+            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@froggysfog.com', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true, phone: '(615) 555-0108', joined: 'Mar 2026', password: 'Password123!' }
         ];
 
+        function getTeamUsers() {
+            try {
+                const stored = localStorage.getItem(STORAGE_TEAM_KEY);
+                if (!stored) {
+                    localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(DEFAULT_TEAM_USERS));
+                    return DEFAULT_TEAM_USERS;
+                }
+                return JSON.parse(stored);
+            } catch(e) {
+                return DEFAULT_TEAM_USERS;
+            }
+        }
+
+        function saveTeamUsersToStorage(users) {
+            try {
+                localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(users));
+            } catch(e) {
+                console.error("Failed to save team users:", e);
+            }
+        }
+
         function renderTeamTable() {
+            const users = getTeamUsers();
             const tbody = document.getElementById('adminTeamTableBody');
             const countDisplay = document.getElementById('teamCountTotal');
-            if (countDisplay) countDisplay.textContent = TEAM_USERS.length;
+            const countAdmins = document.getElementById('teamCountAdmins');
+            const countAgents = document.getElementById('teamCountAgents');
+            const countDepts = document.getElementById('teamCountDepts');
+
+            if (countDisplay) countDisplay.textContent = users.length;
+            if (countAdmins) countAdmins.textContent = users.filter(u => u.role === 'Admin').length;
+            if (countAgents) countAgents.textContent = users.filter(u => u.role !== 'Admin').length;
+            
+            const depts = new Set(users.map(u => u.department));
+            if (countDepts) countDepts.textContent = depts.size + ' Active';
+
             if (!tbody) return;
-            tbody.innerHTML = TEAM_USERS.map(u => `
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle text-white bg-primary d-flex align-items-center justify-content-center fw-bold fs-11 shadow-sm" style="width: 34px; height: 34px;">
-                                ${u.initials}
-                            </div>
-                            <div>
-                                <a href="admin-user-detail.html?id=${u.id}" class="d-block text-dark fw-bold text-decoration-none">${u.fullname}</a>
-                                <span class="text-muted fs-11">${u.email}</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td><span class="badge ${u.role === 'Admin' ? 'bg-dark' : (u.role === 'Support Lead' ? 'bg-primary' : 'bg-secondary')} fs-11">${u.role}</span></td>
-                    <td><span class="text-dark fw-medium">${u.department}</span></td>
-                    <td><span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Active</span></td>
-                    <td class="text-end">
-                        <a href="admin-user-detail.html?id=${u.id}" class="btn btn-sm btn-outline-primary py-1 px-2 fs-12 me-1 shadow-sm">
-                            <i class="ti ti-edit me-1"></i>Edit
-                        </a>
-                        <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteTeamUser('${u.id}')"><i class="ti ti-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = users.map(u => '<tr>' +
+                '<td>' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-circle text-white bg-primary d-flex align-items-center justify-content-center fw-bold fs-11 shadow-sm" style="width: 34px; height: 34px;">' +
+                            (u.initials || 'FF') +
+                        '</div>' +
+                        '<div>' +
+                            '<a href="admin-user-detail.html?id=' + u.id + '" class="d-block text-dark fw-bold text-decoration-none">' + u.fullname + '</a>' +
+                            '<span class="text-muted fs-11">' + u.email + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</td>' +
+                '<td><span class="badge ' + (u.role === 'Admin' ? 'bg-dark' : (u.role === 'Support Lead' ? 'bg-primary' : 'bg-secondary')) + ' fs-11">' + u.role + '</span></td>' +
+                '<td><span class="text-dark fw-medium">' + u.department + '</span></td>' +
+                '<td><span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Active</span></td>' +
+                '<td class="text-end">' +
+                    '<button class="btn btn-sm btn-outline-info py-1 px-2 fs-12 me-1 shadow-sm" onclick="sendOnboardingEmail('' + u.id + '')" title="Send Onboarding & Password Setup Email">' +
+                        '<i class="ti ti-mail-forward me-1"></i>Invite' +
+                    '</button>' +
+                    '<a href="admin-user-detail.html?id=' + u.id + '" class="btn btn-sm btn-outline-primary py-1 px-2 fs-12 me-1 shadow-sm">' +
+                        '<i class="ti ti-edit me-1"></i>Edit' +
+                    '</a>' +
+                    '<button class="btn btn-sm btn-link text-danger p-0" onclick="deleteTeamUser('' + u.id + '')" title="Delete User"><i class="ti ti-trash"></i></button>' +
+                '</td>' +
+            '</tr>').join('');
         }
 
         function saveTeamUser(e) {
             e.preventDefault();
             const fullname = document.getElementById('tNewFullName').value.trim();
             const email = document.getElementById('tNewEmail').value.trim();
-            const username = document.getElementById('tNewUsername').value.trim();
+            const username = document.getElementById('tNewUsername').value.trim() || email.split('@')[0];
+            const phone = document.getElementById('tNewPhone').value.trim() || '(615) 555-0188';
             const role = document.getElementById('tNewRole').value;
             const department = document.getElementById('tNewDepartment').value;
+            const sendEmail = document.getElementById('tSendWelcomeEmail').checked;
+
             if (!fullname || !email) return;
 
+            const users = getTeamUsers();
             const initials = fullname.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'FF';
-            const newUser = { id: 'u' + (TEAM_USERS.length + 1), fullname, username, email, role, department, initials, active: true };
-            TEAM_USERS.push(newUser);
+            const newUser = { 
+                id: 'u_' + Date.now(), 
+                fullname: fullname, 
+                username: username, 
+                email: email, 
+                phone: phone, 
+                role: role, 
+                department: department, 
+                initials: initials, 
+                active: true, 
+                joined: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                password: 'Password123!' 
+            };
+
+            users.push(newUser);
+            saveTeamUsersToStorage(users);
             renderTeamTable();
             document.getElementById('teamAddUserForm').reset();
+
+            // Switch to directory tab
             const tabBtn = document.querySelector('#teamTabs button[data-bs-target="#tabDirectory"]');
             if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
-            alert('New team member ' + fullname + ' (' + role + ') added successfully!');
+
+            // Send automated onboarding email if selected
+            if (sendEmail) {
+                sendOnboardingEmail(newUser);
+            } else {
+                alert('New team member ' + fullname + ' (' + role + ') created successfully!');
+            }
         }
 
         function deleteTeamUser(id) {
-            if (confirm('Are you sure you want to remove this team member?')) {
-                TEAM_USERS = TEAM_USERS.filter(u => u.id !== id);
+            const users = getTeamUsers();
+            const target = users.find(u => u.id === id);
+            if (!target) return;
+            if (confirm('Are you sure you want to remove team member ' + target.fullname + '?')) {
+                const updated = users.filter(u => u.id !== id);
+                saveTeamUsersToStorage(updated);
                 renderTeamTable();
             }
+        }
+
+        function sendOnboardingEmail(target) {
+            let user = target;
+            if (typeof target === 'string') {
+                const users = getTeamUsers();
+                user = users.find(u => u.id === target) || { fullname: 'Staff Member', email: target, role: 'Agent', department: 'Operations' };
+            }
+
+            const origin = window.location.origin || (window.location.protocol + '//' + window.location.host);
+            const token = 'tok_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+            const setupUrl = origin + '/login.html?action=setup-password&email=' + encodeURIComponent(user.email) + '&user=' + encodeURIComponent(user.username || '') + '&token=' + token;
+            const hubUrl = origin + '/dashboard.html';
+            const subject = 'Welcome to Froggy's Fog Hub | Set Up Your Account (' + user.fullname + ')';
+
+            const emailHtml = '<div style="max-width: 620px; margin: 0 auto; color: #1e293b;">' +
+                '<div style="border-bottom: 2px solid var(--bs-primary, #0d6efd); padding-bottom: 14px; margin-bottom: 20px;">' +
+                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy's Fog Operations Hub</h4>' +
+                    '<span style="font-size: 13px; color: #64748b;">Enterprise ERP & Diagnostic Portal</span>' +
+                '</div>' +
+                '<p style="font-size: 15px; margin-bottom: 16px;">Hi <strong>' + user.fullname + '</strong>,</p>' +
+                '<p style="font-size: 14px; line-height: 1.6; margin-bottom: 20px;">' +
+                    'An account has been created for you on the <strong>Froggy's Fog Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
+                '</p>' +
+                '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; text-align: center; margin-bottom: 24px;">' +
+                    '<p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">Please activate your profile and establish your private password:</p>' +
+                    '<a href="' + setupUrl + '" target="_blank" style="background-color: var(--bs-primary, #0d6efd); color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block; box-shadow: 0 2px 8px rgba(13,110,253,0.35);">' +
+                        '🔑 Set Password & Activate Account &rarr;' +
+                    '</a>' +
+                '</div>' +
+                '<h5 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 10px;">🚀 Getting Started on the Hub:</h5>' +
+                '<ol style="font-size: 13px; color: #334155; line-height: 1.7; padding-left: 20px; margin-bottom: 24px;">' +
+                    '<li><strong>Establish Your Password:</strong> Click the button above to set up your password.</li>' +
+                    '<li><strong>Main Operations Dashboard:</strong> Monitor real-time factory feeds and ticket movements at <a href="' + hubUrl + '" target="_blank" style="color: var(--bs-primary, #0d6efd);">' + hubUrl + '</a>.</li>' +
+                    '<li><strong>Ticket Suite:</strong> Manage assigned machine maintenance, production requests, and dynamic field entries.</li>' +
+                    '<li><strong>Diagnostic SOPs & Knowledge Base:</strong> Search symptom checklists and pre-flight factory testing protocols.</li>' +
+                '</ol>' +
+                '<div style="border-top: 1px solid #e2e8f0; padding-top: 14px; font-size: 12px; color: #64748b;">' +
+                    '<p style="margin: 0;">Need assistance? Contact Operations Admin at <a href="mailto:scott@froggysfog.com" style="color: #64748b;">scott@froggysfog.com</a> or visit <a href="https://froggysfog.com" target="_blank" style="color: #64748b;">froggysfog.com</a>.</p>' +
+                '</div>' +
+            '</div>';
+
+            if (window.LilypadNotifications && LilypadNotifications.addNotification) {
+                LilypadNotifications.addNotification({
+                    title: 'Outbound Email Dispatched to ' + user.fullname,
+                    message: 'Onboarding setup email delivered to ' + user.email,
+                    type: 'email',
+                    link: 'admin-team.html'
+                });
+            }
+
+            document.getElementById('onboardingEmailRecipient').textContent = user.fullname + ' (' + user.email + ')';
+            document.getElementById('onboardingEmailSubject').textContent = subject;
+            document.getElementById('onboardingEmailBodyPreview').innerHTML = emailHtml;
+            document.getElementById('onboardingSetupUrl').textContent = setupUrl;
+            document.getElementById('btnSimulateSetup').href = setupUrl;
+
+            const modalEl = document.getElementById('onboardingEmailModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            }
+        }
+
+        function copyOnboardingUrl() {
+            const url = document.getElementById('onboardingSetupUrl').textContent;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Password setup URL copied to clipboard!');
+            }).catch(() => {
+                alert('Setup URL: ' + url);
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {

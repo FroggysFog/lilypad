@@ -365,17 +365,17 @@
 						<li>
 							<ul>
 								<li>
-									<a href="dashboard.html" class="">
+									<a href="dashboard.html" class="active">
 										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
 									</a>
 								</li>
 								<li>
-									<a href="tickets.html" class="">
+									<a href="tickets.html">
 										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
 									</a>
 								</li>
 								<li>
-									<a href="knowledge-base.html" class="">
+									<a href="knowledge-base.html">
 										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
 									</a>
 								</li>
@@ -386,13 +386,13 @@
 						<li>
 							<ul>
 								<li class="submenu">
-									<a href="javascript:void(0);" class="subdrop active">
+									<a href="javascript:void(0);" class="subdrop">
 										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
 									</a>
 									<ul style="display: block;">
-										<li><a href="admin-email.html" class=""><i class="ti ti-mail-cog me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
-										<li><a href="admin-team.html" class=""><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
-										<li><a href="admin-forms.html" class="active"><i class="ti ti-forms me-2 text-primary"></i>Dynamic Form Builder</a></li>
+										<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -411,7 +411,7 @@
 					</ul>
 				</div>
 			</div>
-    
+
 		</div>
 		<!-- Sidenav Menu End -->
 
@@ -427,41 +427,41 @@
 				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 					<div>
 						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
-							<span>Dynamic Intake Form Builder</span>
-							<span class="badge bg-soft-success text-success fs-12 rounded-pill fw-semibold"><i class="ti ti-tool"></i> Schema Architect</span>
+							<span>Dynamic Form Builder & Ticket Categories</span>
+							<span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold"><i class="ti ti-forms"></i> Schema v2.4</span>
 						</h4>
-						<p class="text-muted fs-13 mb-0">Design custom category fields, dynamic checklists, and structured intake forms across your operational workflow.</p>
+						<p class="text-muted fs-13 mb-0">Configure dynamic custom attributes, dropdown options, and validation rules per operational ticket category.</p>
 					</div>
 					<div class="d-flex align-items-center gap-2 flex-wrap">
 						<a href="tickets.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-							<i class="ti ti-ticket me-1"></i> Open Tickets
+							<i class="ti ti-ticket me-1"></i> View Tickets
 						</a>
-						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="saveCategoryForm()">
-							<i class="ti ti-check me-1"></i> Save Changes
+						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="addNewCategoryModal()">
+							<i class="ti ti-plus me-1"></i> Add Category
 						</button>
 					</div>
 				</div>
 
-				<div class="row g-3">
-					<!-- Category Selection Side -->
-					<div class="col-md-4">
-						<div class="card border-0 shadow-sm rounded-3 h-100">
-							<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
-								<h6 class="fw-bold mb-0 text-dark"><i class="ti ti-folders me-1 text-primary"></i> Intake Categories</h6>
-								<span class="badge bg-soft-primary text-primary fs-11">8 Active</span>
+				<div class="row g-4">
+					<!-- Category List Selector -->
+					<div class="col-lg-4">
+						<div class="card border-0 shadow-sm rounded-3">
+							<div class="card-header bg-transparent border-bottom py-3">
+								<h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+									<i class="ti ti-category text-primary"></i>
+									<span>Operational Categories (8)</span>
+								</h6>
 							</div>
-							<div class="card-body p-2">
-								<div class="list-group list-group-flush" id="builderCategoryList">
-									<!-- Dynamically Rendered Categories -->
-								</div>
+							<div class="list-group list-group-flush p-2" id="categorySelectionList">
+								<!-- Rendered Dynamically -->
 							</div>
 						</div>
 					</div>
 
-					<!-- Field Architect Panel -->
-					<div class="col-md-8">
-						<div class="card border-0 shadow-sm rounded-3 h-100">
-							<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
+					<!-- Field Schema Editor for Selected Category -->
+					<div class="col-lg-8">
+						<div class="card border-0 shadow-sm rounded-3">
+							<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
 								<div>
 									<h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
 										<i class="ti ti-adjustments-alt text-primary"></i>
@@ -479,13 +479,12 @@
 									<!-- Dynamic Field Rows -->
 								</div>
 
-								<div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
-									<div>
-										<strong class="d-block text-dark fs-13">Ready to deploy form schema?</strong>
-										<span class="fs-12 text-muted">Updates will apply instantly to all new tickets created under this category.</span>
-									</div>
-									<button class="btn btn-primary btn-sm px-4 shadow-sm" onclick="saveCategoryForm()">
-										<i class="ti ti-check me-1"></i> Deploy Form Schema
+								<div class="d-flex align-items-center justify-content-between pt-3 border-top flex-wrap gap-2">
+									<button class="btn btn-sm btn-outline-secondary" onclick="resetDefaultCategoryFields()">
+										<i class="ti ti-rotate-clockwise me-1"></i> Reset Category Defaults
+									</button>
+									<button class="btn btn-primary btn-sm px-4 shadow-sm" onclick="saveCategoryFields()">
+										<i class="ti ti-device-floppy me-1"></i> Save Category Form Schema
 									</button>
 								</div>
 							</div>
@@ -521,76 +520,57 @@
     <script src="assets/js/lilypad-notifications.js"></script>
 
 	<script>
-        const PRODUCTION_CATEGORIES = [
+        let PRODUCTION_CATEGORIES = [
             {
+                id: 'cat1',
                 name: 'FX Machine Support',
-                icon: 'ti-tool',
+                icon: 'ti-cpu',
+                color: 'primary',
+                desc: 'Fog, Faze, Bubble, Snow & Cryo machines hardware diagnostics',
                 fields: [
-                    { name: 'machineModel', label: 'Machine / Product Model', type: 'select', options: ['Antari 2000 Elite', 'Solar Telemetry Gateway', 'LFP Battery Array 480V'] },
-                    { name: 'serialNumber', label: 'Unit Serial Number / Batch #', type: 'text' },
-                    { name: 'firmwareVersion', label: 'Firmware / Hardware Rev', type: 'text' },
-                    { name: 'defectSymptom', label: 'Defect / Failure Observed', type: 'textarea' }
+                    { name: 'machineModel', label: 'Machine Model / Series', type: 'select', options: ['Titan 1500', 'Poseidon 2000', 'CryoJet Pro', 'MiniFaze 500', 'Bubbler Max'], required: true },
+                    { name: 'serialNumber', label: 'Unit Serial Number', type: 'text', placeholder: 'e.g. SN-TITAN-9948', required: true },
+                    { name: 'heaterWatts', label: 'Heater Wattage Core', type: 'text', placeholder: 'e.g. 1500W', required: false },
+                    { name: 'pumpPressure', label: 'Fluid Pump Pressure (PSI)', type: 'number', placeholder: '60', required: false },
+                    { name: 'voltageRequirement', label: 'Operating Voltage', type: 'select', options: ['120V / 60Hz', '230V / 50Hz', '12V DC'], required: true }
                 ]
             },
             {
-                name: 'Vendor Purchase Order',
-                icon: 'ti-receipt',
-                fields: [
-                    { name: 'poNumber', label: 'Purchase Order #', type: 'text' },
-                    { name: 'vendorName', label: 'Vendor / Supplier Name', type: 'text' },
-                    { name: 'totalAmount', label: 'Total Value ($ USD)', type: 'number' },
-                    { name: 'deliveryDueDate', label: 'Agreed Delivery Date', type: 'date' }
-                ]
-            },
-            {
-                name: 'Fluid Finder Update',
+                id: 'cat2',
+                name: 'Custom Fluid Formulation',
                 icon: 'ti-flask',
+                color: 'info',
+                desc: 'Specialized optical density, hang-time & scent recipes',
                 fields: [
-                    { name: 'fluidType', label: 'Fluid Formula Name', type: 'text' },
-                    { name: 'safetyDataSheet', label: 'SDS Sheet Attached', type: 'checkbox' },
-                    { name: 'revisionNotes', label: 'Formula Revision Notes', type: 'textarea' }
+                    { name: 'fluidType', label: 'Base Fluid Chemistry', type: 'select', options: ['Glycol High-Density', 'Water-Based Fast Dissipating', 'Glycerin Ultra-Dense', 'Cryo Fog Carrier'], required: true },
+                    { name: 'batchNumber', label: 'Production Batch #', type: 'text', placeholder: 'e.g. LOT-2026-F09', required: true },
+                    { name: 'opticalDensityTarget', label: 'Target Optical Density (OD %)', type: 'text', placeholder: '92%', required: false },
+                    { name: 'scentAdditive', label: 'Scent Infusion Profile', type: 'text', placeholder: 'e.g. Crisp Apple / None', required: false }
                 ]
             },
             {
-                name: 'Computer/Laptop Issue',
-                icon: 'ti-device-laptop',
+                id: 'cat3',
+                name: 'Warranty & RMA Returns',
+                icon: 'ti-package',
+                color: 'secondary',
+                desc: 'Incoming factory repairs, replacements, and RMA inspection',
                 fields: [
-                    { name: 'assetTag', label: 'IT Asset Tag #', type: 'text' },
-                    { name: 'operatingSystem', label: 'Operating System', type: 'select', options: ['Windows 11', 'macOS Sequoia', 'Ubuntu Linux'] },
-                    { name: 'urgencyLevel', label: 'Work Impact', type: 'select', options: ['Completely blocked', 'Minor inconvenience', 'Software install'] }
+                    { name: 'rmaNumber', label: 'Factory RMA Tracking #', type: 'text', placeholder: 'e.g. RMA-2026-081', required: true },
+                    { name: 'purchaseDate', label: 'Original Invoice / Purchase Date', type: 'date', required: true },
+                    { name: 'warrantyStatus', label: 'Warranty Status', type: 'select', options: ['Under Standard 1-Year Warranty', 'Extended 3-Year Protection', 'Out of Warranty (Billable)'], required: true },
+                    { name: 'returnAction', label: 'Requested Action', type: 'select', options: ['Bench Repair & Recalibration', 'Direct Replacement Unit', 'Parts Supply Only'], required: true }
                 ]
             },
             {
-                name: 'Customer Support Request',
-                icon: 'ti-headset',
+                id: 'cat4',
+                name: 'Vendor Purchase Order',
+                icon: 'ti-building-store',
+                color: 'dark',
+                desc: 'Raw fluid stock, heater blocks, valves, brass fittings',
                 fields: [
-                    { name: 'clientName', label: 'Client / Account Name', type: 'text' },
-                    { name: 'orderNumber', label: 'Original Invoice #', type: 'text' },
-                    { name: 'preferredContact', label: 'Preferred Contact Method', type: 'select', options: ['Email', 'Phone', 'Slack'] }
-                ]
-            },
-            {
-                name: 'Website Frontend Update',
-                icon: 'ti-world',
-                fields: [
-                    { name: 'targetUrl', label: 'Target Page URL', type: 'text' },
-                    { name: 'browserTested', label: 'Tested Browsers', type: 'text' }
-                ]
-            },
-            {
-                name: 'Rep Assignment Change',
-                icon: 'ti-user-check',
-                fields: [
-                    { name: 'accountName', label: 'Customer Account', type: 'text' },
-                    { name: 'newRepName', label: 'New Sales Rep Assigned', type: 'text' }
-                ]
-            },
-            {
-                name: 'IT AI Process/UI Development',
-                icon: 'ti-brain',
-                fields: [
-                    { name: 'modelEngine', label: 'Target Model Architecture', type: 'text' },
-                    { name: 'specRequirement', label: 'Feature Specification', type: 'textarea' }
+                    { name: 'poNumber', label: 'PO Tracking Number', type: 'text', placeholder: 'PO-FF-8849', required: true },
+                    { name: 'vendorSupplier', label: 'Supplier Name', type: 'text', placeholder: 'e.g. Advanced Thermals Inc', required: true },
+                    { name: 'deliveryWarehouse', label: 'Delivery Dock Destination', type: 'select', options: ['Columbia Facility - Warehouse A', 'Nashville Logistics Hub', 'Main Testing Dock'], required: true }
                 ]
             }
         ];
@@ -598,25 +578,26 @@
         let selectedCatIndex = 0;
 
         function renderCategoryList() {
-            const listEl = document.getElementById('builderCategoryList');
-            if (!listEl) return;
-
-            listEl.innerHTML = PRODUCTION_CATEGORIES.map((cat, idx) => `
-                <a href="javascript:void(0);" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 ${idx === selectedCatIndex ? 'active' : ''}" onclick="selectCategory(${idx})" style="${idx === selectedCatIndex ? 'background-color: var(--bs-primary); border-color: var(--bs-primary); color: #fff;' : ''}">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="ti ${cat.icon} fs-16"></i>
-                        <span class="fw-semibold fs-13">${cat.name}</span>
-                    </div>
-                    <span class="badge ${idx === selectedCatIndex ? 'bg-white text-primary' : 'bg-light text-dark border'} fs-11">${cat.fields.length} fields</span>
-                </a>
-            `).join('');
-
-            renderFieldsEditor();
+            const container = document.getElementById('categorySelectionList');
+            if (!container) return;
+            container.innerHTML = PRODUCTION_CATEGORIES.map((c, i) => 
+                '<a href="javascript:void(0);" onclick="selectCategory(' + i + ')" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 rounded-2 border-0 mb-1 ' + (i === selectedCatIndex ? 'active text-white' : '') + '">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<i class="ti ' + c.icon + ' fs-18"></i>' +
+                        '<div>' +
+                            '<strong class="d-block fs-13">' + c.name + '</strong>' +
+                            '<span class="fs-11 ' + (i === selectedCatIndex ? 'text-white-50' : 'text-muted') + '">' + c.fields.length + ' Custom Fields</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<i class="ti ti-chevron-right fs-14"></i>' +
+                '</a>'
+            ).join('');
         }
 
         function selectCategory(idx) {
             selectedCatIndex = idx;
             renderCategoryList();
+            renderFieldsEditor();
         }
 
         function renderFieldsEditor() {
@@ -626,58 +607,89 @@
             if (titleEl) titleEl.textContent = cat.name;
             if (!container) return;
 
-            container.innerHTML = cat.fields.map((f, fIdx) => `
-                <div class="row g-2 align-items-center p-3 bg-light rounded-3 border">
-                    <div class="col-md-4">
-                        <label class="form-label fs-11 text-muted text-uppercase fw-bold mb-1">Field Identifier</label>
-                        <input type="text" class="form-control form-control-sm fw-medium" value="${f.name}" onchange="updateField(${fIdx}, 'name', this.value)">
-                    </div>
-                    <div class="col-md-5">
-                        <label class="form-label fs-11 text-muted text-uppercase fw-bold mb-1">Display Label</label>
-                        <input type="text" class="form-control form-control-sm" value="${f.label}" onchange="updateField(${fIdx}, 'label', this.value)">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fs-11 text-muted text-uppercase fw-bold mb-1">Type</label>
-                        <select class="form-select form-select-sm" onchange="updateField(${fIdx}, 'type', this.value)">
-                            <option value="text" ${f.type === 'text' ? 'selected' : ''}>Text</option>
-                            <option value="number" ${f.type === 'number' ? 'selected' : ''}>Number</option>
-                            <option value="select" ${f.type === 'select' ? 'selected' : ''}>Select</option>
-                            <option value="textarea" ${f.type === 'textarea' ? 'selected' : ''}>Textarea</option>
-                            <option value="date" ${f.type === 'date' ? 'selected' : ''}>Date</option>
-                            <option value="checkbox" ${f.type === 'checkbox' ? 'selected' : ''}>Checkbox</option>
-                        </select>
-                    </div>
-                    <div class="col-md-1 text-end pt-3">
-                        <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeFieldRow(${fIdx})"><i class="ti ti-trash fs-16"></i></button>
-                    </div>
-                </div>
-            `).join('');
+            container.innerHTML = cat.fields.map((f, fIdx) => 
+                '<div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between gap-3 flex-wrap">' +
+                    '<div class="d-flex align-items-center gap-2" style="min-width: 220px;">' +
+                        '<span class="badge bg-secondary rounded-pill">' + (fIdx + 1) + '</span>' +
+                        '<div>' +
+                            '<strong class="fs-13 text-dark d-block">' + f.label + '</strong>' +
+                            '<span class="fs-11 text-muted">Key: <code>' + f.name + '</code></span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="d-flex align-items-center gap-2 flex-grow-1">' +
+                        '<span class="badge bg-light text-dark border fs-11 text-uppercase">' + f.type + '</span>' +
+                        (f.required ? '<span class="badge bg-danger-subtle text-danger fs-11">Required</span>' : '<span class="badge bg-light text-muted border fs-11">Optional</span>') +
+                        (f.options ? '<span class="fs-11 text-muted text-truncate" style="max-width:200px;">[' + f.options.join(', ') + ']</span>' : '') +
+                    '</div>' +
+                    '<div class="d-flex align-items-center gap-1">' +
+                        '<button class="btn btn-sm btn-link text-danger p-0" onclick="deleteFieldRow(' + fIdx + ')" title="Remove Field"><i class="ti ti-trash"></i></button>' +
+                    '</div>' +
+                '</div>'
+            ).join('');
         }
 
         function addNewFieldRow() {
+            const fieldName = prompt('Enter Field Display Label (e.g., Pump Cycle Frequency):');
+            if (!fieldName) return;
+            const type = prompt('Enter Field Type: select, text, number, date', 'text') || 'text';
+            const req = confirm('Is this field mandatory (required)?');
+
+            let options = null;
+            if (type === 'select') {
+                const optStr = prompt('Enter comma-separated options:', 'Option A, Option B, Option C');
+                if (optStr) options = optStr.split(',').map(s => s.trim());
+            }
+
             PRODUCTION_CATEGORIES[selectedCatIndex].fields.push({
                 name: 'customField' + (PRODUCTION_CATEGORIES[selectedCatIndex].fields.length + 1),
-                label: 'New Dynamic Field',
-                type: 'text'
+                label: fieldName,
+                type: type,
+                options: options,
+                required: req
             });
+            renderFieldsEditor();
             renderCategoryList();
         }
 
-        function updateField(idx, prop, val) {
-            PRODUCTION_CATEGORIES[selectedCatIndex].fields[idx][prop] = val;
+        function deleteFieldRow(fIdx) {
+            if (confirm('Delete this field from schema?')) {
+                PRODUCTION_CATEGORIES[selectedCatIndex].fields.splice(fIdx, 1);
+                renderFieldsEditor();
+                renderCategoryList();
+            }
         }
 
-        function removeFieldRow(idx) {
-            PRODUCTION_CATEGORIES[selectedCatIndex].fields.splice(idx, 1);
+        function saveCategoryFields() {
+            alert('✓ Dynamic Schema for "' + PRODUCTION_CATEGORIES[selectedCatIndex].name + '" saved and synchronized with operational ticket forms!');
+        }
+
+        function resetDefaultCategoryFields() {
+            if (confirm('Reset to factory default schema fields for this category?')) {
+                renderFieldsEditor();
+            }
+        }
+
+        function addNewCategoryModal() {
+            const name = prompt('Enter New Ticket Category Name:');
+            if (!name) return;
+            PRODUCTION_CATEGORIES.push({
+                id: 'cat' + (PRODUCTION_CATEGORIES.length + 1),
+                name: name,
+                icon: 'ti-folder',
+                color: 'primary',
+                desc: 'Custom operational ticket workflow',
+                fields: [
+                    { name: 'itemIdentifier', label: 'Item / Asset Tag', type: 'text', required: true }
+                ]
+            });
+            selectedCatIndex = PRODUCTION_CATEGORIES.length - 1;
             renderCategoryList();
-        }
-
-        function saveCategoryForm() {
-            alert('Dynamic form schema for ' + PRODUCTION_CATEGORIES[selectedCatIndex].name + ' deployed successfully!');
+            renderFieldsEditor();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             renderCategoryList();
+            renderFieldsEditor();
         });
 	</script>
 </body>

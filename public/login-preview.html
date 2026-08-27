@@ -2,239 +2,350 @@
 <html lang="en">
 
 <head>
-    <!-- Meta Tags -->
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Login | LilyPad ERP</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="LilyPad ERP - Minimalist internal ERP and customer management.">
-    <meta name="author" content="LilyPad Systems">
-    <meta name="robots" content="index, follow">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+    <title>Sign In & Account Activation | LilyPad ERP</title>
+
     <!-- Favicon -->
-    <link rel="shortcut icon" href="themes/lilypad/img/favicon.png">
+    <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.png">
 
-    <!-- Apple Icon -->
-    <link rel="apple-touch-icon" href="themes/lilypad/img/apple-icon.png">
-
-    <!-- Bootstrap CSS from uploaded theme -->
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="themes/lilypad/css/bootstrap.min.css">
 
-    <!-- Tabler Icon CSS from uploaded theme -->
-    <link rel="stylesheet" href="themes/lilypad/plugins/tabler-icons/tabler-icons.min.css">
+    <!-- Tabler Icons CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
-    <!-- Main CSS from uploaded theme -->
+    <!-- Theme CSS -->
     <link rel="stylesheet" href="themes/lilypad/css/style.css" id="app-style">
-    
+    <link rel="stylesheet" href="css/login-theme.css">
+    <link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
     <style>
-        :root {
-            --primary: var(--bs-primary);
-            --primary-hover: #035c1a;
+        body {
+            background-color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        .btn-primary {
-            background-color: var(--bs-primary) !important;
-            border-color: var(--bs-primary) !important;
-            box-shadow: 0 4px 12px rgba(4, 125, 36, 0.25) !important;
-        }
-        .btn-primary:hover, .btn-primary:focus {
-            background-color: #035c1a !important;
-            border-color: #035c1a !important;
-            box-shadow: 0 6px 16px rgba(4, 125, 36, 0.35) !important;
-        }
-        .form-control:focus {
-            border-color: var(--bs-primary) !important;
-            box-shadow: 0 0 0 3px rgba(4, 125, 36, 0.2) !important;
-        }
-        .form-check-input:checked {
-            background-color: var(--bs-primary) !important;
-            border-color: var(--bs-primary) !important;
-        }
-        .link-hover:hover {
-            color: var(--bs-primary) !important;
-        }
-        .account-bg-01 {
-            background-image: url('themes/lilypad/img/authentication/login-bg.jpg') !important;
+        .account-bg-lilypad {
+            background: linear-gradient(135deg, rgba(var(--bs-primary-rgb, 13, 110, 253), 0.9) 0%, rgba(15, 23, 42, 0.95) 100%), url('themes/lilypad/img/authentication/login-bg.jpg');
             background-repeat: no-repeat;
             background-size: cover;
             background-position: center;
-            border-radius: 10px;
-            height: calc(100vh - 40px);
+            border-radius: 16px;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 48px;
+            height: 100%;
         }
-        .hide { display: none !important; }
+        .user-quick-chip {
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        .user-quick-chip:hover {
+            border-color: var(--bs-primary);
+            background: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.06);
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 
 <body class="account-page bg-white">
 
-    <!-- Begin Wrapper -->
     <div class="main-wrapper">
-
-       <div class="overflow-hidden p-3 acc-vh">
-            
-            <!-- start row -->
+        <div class="overflow-hidden p-3 acc-vh">
             <div class="row vh-100 w-100 g-0"> 
 
-                <div class="col-lg-6 vh-100 overflow-y-auto overflow-x-hidden">
+                <!-- Left Column: Sign In / Setup Form -->
+                <div class="col-lg-6 vh-100 overflow-y-auto overflow-x-hidden d-flex align-items-center justify-content-center">
+                    <div class="w-100" style="max-width: 460px; padding: 24px;">
+                        
+                        <!-- Logo & Brand Header -->
+                        <div class="d-flex align-items-center gap-2 mb-4">
+                            <div class="rounded-2 p-2 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm logo-icon-box" style="width:38px; height:38px; font-size:18px;">
+                                <i class="ti ti-leaf"></i>
+                            </div>
+                            <h4 class="fs-22 fw-bold text-dark mb-0">LilyPad <span class="text-primary logo-erp">ERP</span></h4>
+                        </div>
 
-                     <!-- start row -->
-                    <div class="row">
+                        <div class="mb-4">
+                            <h3 class="fw-bold text-dark mb-1" id="loginHeaderTitle">Sign In</h3>
+                            <p class="text-muted fs-13 mb-0" id="loginHeaderSubText">Enter your credentials to access operations, ticketing, and SOP diagnostics.</p>
+                        </div>
 
-                        <div class="col-md-10 mx-auto">
-                            <!-- Sign In Form -->
-                            <form id="loginForm" onsubmit="handleLogin(event)" class="vh-100 d-flex justify-content-between flex-column p-4 pb-0">
-                                <div class="text-center mb-4 auth-logo">
-                                    <div class="d-inline-flex align-items-center gap-2">
-                                        <img src="themes/lilypad/img/logo.svg" class="img-fluid" alt="LilyPad ERP Logo" style="max-height: 42px;">
-                                    </div>
+                        <!-- Feedback Alert -->
+                        <div id="loginAlert" class="alert alert-danger d-none py-2 px-3 fs-13 mb-3" role="alert"></div>
+
+                        <!-- Sign In / Password Setup Form -->
+                        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+                            <div class="mb-3">
+                                <label class="form-label fs-13 fw-semibold text-dark" id="loginUserLabel">Email or Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="ti ti-mail"></i></span>
+                                    <input type="text" id="loginUsername" class="form-control border-start-0" placeholder="scott@froggysfog.com or skaran" value="skaran" required>
                                 </div>
-                                
-                                <div id="formContainer">
-                                    <!-- Dynamic Alert Box -->
-                                    <div id="demoAlert" class="alert alert-success d-none mb-3" role="alert"></div>
+                            </div>
 
-                                    <div class="mb-3">
-                                        <h3 class="mb-2">Sign In</h3>
-                                        <p class="mb-0 text-muted">Access the LilyPad ERP panel using your email and passcode.</p>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label fw-semibold">Email Address</label>
-                                        <div class="input-group input-group-flat">
-                                            <input type="email" id="login-email" class="form-control" placeholder="admin@lilypad.internal" value="admin@lilypad.internal" required>
-                                            <span class="input-group-text">
-                                                <i class="ti ti-mail"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label fw-semibold">Password</label>
-                                        <div class="input-group input-group-flat pass-group">
-                                            <input type="password" id="login-pass" class="form-control pass-input" placeholder="••••••••••••" value="password123" required>
-                                            <span class="input-group-text toggle-password cursor-pointer">
-                                                <i class="ti ti-eye-off"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="d-flex align-items-center justify-content-between mb-3">
-                                        <div class="form-check form-check-md d-flex align-items-center">
-                                            <input class="form-check-input mt-0" type="checkbox" value="" id="checkebox-md" checked>
-                                            <label class="form-check-label text-dark ms-1" for="checkebox-md">
-                                                Remember Me
-                                            </label>
-                                        </div>
-                                        <div class="text-end">
-                                            <a href="javascript:void(0);" onclick="toggleForgot(true)" class="link-danger fw-medium link-hover">Forgot Password?</a>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <button type="submit" class="btn btn-primary w-100 shadow-sm py-2">Sign In</button>
-                                    </div>
-                                    
-                                    <div class="mb-3 text-center">
-                                        <p class="mb-0 text-muted">New on our platform? <a href="javascript:void(0);" class="link-indigo fw-bold link-hover">Create an account</a></p>
-                                    </div>
-                                    
-                                    <div class="or-login text-center position-relative mb-3">
-                                        <h6 class="fs-14 mb-0 position-relative text-body">OR</h6>
-                                    </div>
-                                    
-                                    <div class="d-flex align-items-center justify-content-center flex-wrap gap-2 mb-3">
-                                        <div class="text-center flex-fill">
-                                            <a href="javascript:void(0);" class="p-2 btn btn-info d-flex align-items-center justify-content-center">
-                                                <img class="img-fluid m-1" src="themes/lilypad/img/icons/facebook-logo.svg" alt="Facebook" width="20">
-                                            </a>
-                                        </div>
-                                        <div class="text-center flex-fill">
-                                            <a href="javascript:void(0);" class="p-2 btn btn-outline-light border d-flex align-items-center justify-content-center">
-                                                <img class="img-fluid m-1" src="themes/lilypad/img/icons/google-logo.svg" alt="Google" width="20">
-                                            </a>
-                                        </div>
-                                        <div class="text-center flex-fill">
-                                            <a href="javascript:void(0);" class="p-2 btn btn-dark d-flex align-items-center justify-content-center">
-                                                <img class="img-fluid m-1" src="themes/lilypad/img/icons/apple-logo.svg" alt="Apple" width="20">
-                                            </a>
-                                        </div>
-                                    </div>
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <label class="form-label fs-13 fw-semibold text-dark mb-0" id="loginPassLabel">Password</label>
+                                    <a href="javascript:void(0);" id="forgotPassLink" onclick="alert('Password reset instructions sent to your registered email.')" class="fs-12 text-decoration-none fw-semibold text-primary">Forgot Password?</a>
                                 </div>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="ti ti-lock"></i></span>
+                                    <input type="password" id="loginPassword" class="form-control border-start-0 border-end-0" placeholder="••••••••" value="Password123!" required>
+                                    <button type="button" class="input-group-text bg-light border-start-0 text-muted" onclick="togglePassVisibility('loginPassword', 'passToggleIcon')">
+                                        <i class="ti ti-eye" id="passToggleIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
 
-                                <!-- Forgot Password Form Container (Toggled) -->
-                                <div id="forgotContainer" class="d-none">
-                                    <div class="mb-3">
-                                        <h3 class="mb-2">Reset Password</h3>
-                                        <p class="mb-0 text-muted">Enter your email and we'll send a password recovery link.</p>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-semibold">Email Address</label>
-                                        <div class="input-group input-group-flat">
-                                            <input type="email" id="forgot-email" class="form-control" placeholder="Enter your email">
-                                            <span class="input-group-text">
-                                                <i class="ti ti-mail"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <button type="button" onclick="handleForgot()" class="btn btn-primary w-100 py-2">Send Reset Link</button>
-                                    </div>
-                                    <div class="text-center">
-                                        <a href="javascript:void(0);" onclick="toggleForgot(false)" class="text-secondary fw-semibold">
-                                            <i class="ti ti-arrow-left"></i> Back to Sign In
-                                        </a>
-                                    </div>
+                            <!-- Confirm Password (Shown during account activation / password setup) -->
+                            <div class="mb-3 d-none" id="confirmPasswordContainer">
+                                <label class="form-label fs-13 fw-semibold text-dark mb-1">Confirm Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="ti ti-lock-check"></i></span>
+                                    <input type="password" id="confirmPassword" class="form-control border-start-0 border-end-0" placeholder="••••••••">
+                                    <button type="button" class="input-group-text bg-light border-start-0 text-muted" onclick="togglePassVisibility('confirmPassword', 'passConfirmToggleIcon')">
+                                        <i class="ti ti-eye" id="passConfirmToggleIcon"></i>
+                                    </button>
                                 </div>
+                            </div>
 
-                                <div class="text-center pb-4">
-                                    <p class="text-dark mb-0 fs-13">Copyright &copy; 2026 - LilyPad ERP</p>
-                                </div>
-                            </form>
-                        </div> <!-- end col -->
+                            <div class="form-check mb-4" id="rememberMeContainer">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" checked>
+                                <label class="form-check-label fs-13 text-muted" for="rememberMe">
+                                    Keep me signed in on this device
+                                </label>
+                            </div>
+
+                            <button type="submit" id="btnSignIn" class="btn btn-primary w-100 py-2 fs-14 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2">
+                                <span id="btnSignInText">Sign In to Dashboard</span>
+                                <i class="ti ti-arrow-right"></i>
+                            </button>
+                        </form>
+
+                        <!-- Quick Role Switcher for Fast Testing -->
+                        <div class="pt-4 mt-4 border-top" id="quickRoleSwitcherContainer">
+                            <span class="fs-11 text-uppercase text-muted fw-bold d-block mb-2">⚡ Quick Select User / Role:</span>
+                            <div class="d-flex flex-column gap-2" id="quickUserList">
+                                <!-- Populated from storage/defaults -->
+                            </div>
+                        </div>
+
+                        <div class="text-center pt-4">
+                            <p class="text-muted fs-12 mb-0">Copyright &copy; 2026 <a href="https://froggysfog.com" target="_blank" class="fw-semibold text-decoration-none text-primary">Froggy's Fog</a> &middot; <a href="https://froggysfog.com" target="_blank" class="text-muted text-decoration-underline">froggysfog.com</a></p>
+                        </div>
 
                     </div>
-                    <!-- end row -->
-
                 </div>
 
-                <!-- Hero Artwork on Right Side -->
-                <div class="col-lg-6 account-bg-01"></div> <!-- end col -->
+                <!-- Right Column: Hero Branding Card -->
+                <div class="col-lg-6 p-3 d-none d-lg-block">
+                    <div class="account-bg-lilypad h-100 shadow">
+                        <div>
+                            <span class="badge bg-white text-dark fw-bold fs-11 px-3 py-2 rounded-pill mb-3">
+                                🚀 Enterprise Operations & Diagnostics
+                            </span>
+                            <h2 class="display-6 fw-bold text-white mb-3">Next-Generation Help Desk & Machine Diagnostics</h2>
+                            <p class="fs-15 text-white-50 leading-relaxed" style="max-width: 480px;">
+                                Purpose-built ticketing, real-time machine failure trend analysis, standard operating procedures (SOPs), and an intelligent 6-layer anti-spam email gateway.
+                            </p>
+                        </div>
+
+                        <div class="row g-3 text-white">
+                            <div class="col-sm-4">
+                                <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);">
+                                    <h3 class="fw-bold mb-0">8</h3>
+                                    <span class="fs-12 text-white-50">Operational Categories</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);">
+                                    <h3 class="fw-bold mb-0">6-Layer</h3>
+                                    <span class="fs-12 text-white-50">Anti-Spam Shield</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);">
+                                    <h3 class="fw-bold mb-0">100%</h3>
+                                    <span class="fs-12 text-white-50">SOP Diagnostic Sync</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
-            <!-- end row -->
-
         </div>
-
     </div>
-    <!-- End Wrapper -->
 
-    <!-- Bootstrap Core JS from uploaded theme -->
-    <script src="themes/lilypad/js/bootstrap.bundle.min.js"></script>    
-
-    <!-- Main JS from uploaded theme -->
-    <script src="themes/lilypad/js/script.js"></script>
+    <!-- Bootstrap Bundle JS -->
+    <script src="themes/lilypad/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        function toggleForgot(show) {
-            document.getElementById('formContainer').classList.toggle('d-none', show);
-            document.getElementById('forgotContainer').classList.toggle('d-none', !show);
+        const STORAGE_TEAM_KEY = "lilypad_team_users_v2";
+        const DEFAULT_TEAM_USERS = [
+            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@froggysfog.com', role: 'Admin', department: 'Operations', initials: 'SK', active: true, password: 'Password123!' },
+            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@froggysfog.com', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true, password: 'Password123!' },
+            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'DM', active: true, password: 'Password123!' },
+            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'SC', active: true, password: 'Password123!' },
+            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@froggysfog.com', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true, password: 'Password123!' }
+        ];
+
+        function getTeamUsers() {
+            try {
+                const stored = localStorage.getItem(STORAGE_TEAM_KEY);
+                if (!stored) {
+                    localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(DEFAULT_TEAM_USERS));
+                    return DEFAULT_TEAM_USERS;
+                }
+                return JSON.parse(stored);
+            } catch(e) {
+                return DEFAULT_TEAM_USERS;
+            }
         }
 
-        function handleLogin(e) {
+        let isSetupMode = false;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            const emailParam = urlParams.get('email');
+            const userParam = urlParams.get('user');
+
+            if (action === 'setup-password' || action === 'activate') {
+                isSetupMode = true;
+                document.getElementById('loginHeaderTitle').textContent = 'Set Your Password';
+                document.getElementById('loginHeaderSubText').innerHTML = `Welcome to Froggy's Fog Hub! Please establish your secure password for <strong>${emailParam || userParam || 'your account'}</strong>.`;
+                document.getElementById('loginUsername').value = emailParam || userParam || '';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginPassword').placeholder = 'Enter new password';
+                document.getElementById('loginPassLabel').textContent = 'New Password';
+                document.getElementById('forgotPassLink').classList.add('d-none');
+                document.getElementById('confirmPasswordContainer').classList.remove('d-none');
+                document.getElementById('btnSignInText').textContent = 'Activate Account & Launch Hub';
+                document.getElementById('quickRoleSwitcherContainer').classList.add('d-none');
+            } else {
+                renderQuickUsers();
+            }
+        });
+
+        function renderQuickUsers() {
+            const users = getTeamUsers();
+            const container = document.getElementById('quickUserList');
+            if (!container) return;
+            container.innerHTML = users.slice(0, 4).map(u => `
+                <div class="user-quick-chip p-2 rounded-3 d-flex align-items-center justify-content-between" onclick="fillUser('${u.username || u.email}', '${u.password || 'Password123!'}', '${u.fullname}', '${u.role}')">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-sm rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-sm ${u.role === 'Admin' ? 'bg-dark' : 'bg-primary'}" style="width:30px; height:30px; font-size:12px;">${u.initials || 'FF'}</span>
+                        <div>
+                            <strong class="d-block fs-12 text-dark">${u.fullname}</strong>
+                            <span class="fs-11 text-muted">${u.email}</span>
+                        </div>
+                    </div>
+                    <span class="badge ${u.role === 'Admin' ? 'bg-dark' : 'bg-primary'} fs-10">${u.role}</span>
+                </div>
+            `).join('');
+        }
+
+        function togglePassVisibility(inputId, iconId) {
+            const passInput = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                icon.className = 'ti ti-eye-off';
+            } else {
+                passInput.type = 'password';
+                icon.className = 'ti ti-eye';
+            }
+        }
+
+        function fillUser(user, pass, name, role) {
+            document.getElementById('loginUsername').value = user;
+            document.getElementById('loginPassword').value = pass;
+            const alertBox = document.getElementById('loginAlert');
+            alertBox.className = 'alert alert-info py-2 px-3 fs-13 mb-3 border-0';
+            alertBox.innerHTML = `Loaded profile for <strong>${name}</strong> (${role}). Click "Sign In" below.`;
+            alertBox.classList.remove('d-none');
+        }
+
+        function handleLoginSubmit(e) {
             e.preventDefault();
-            const alert = document.getElementById('demoAlert');
-            alert.className = 'alert alert-success mb-3';
-            alert.textContent = 'Welcome to LilyPad ERP! (Authenticated successfully)';
-            alert.classList.remove('d-none');
-        }
+            const username = document.getElementById('loginUsername').value.trim();
+            const pass = document.getElementById('loginPassword').value.trim();
+            const btn = document.getElementById('btnSignIn');
+            const alertBox = document.getElementById('loginAlert');
 
-        function handleForgot() {
-            const email = document.getElementById('forgot-email').value;
-            const alert = document.getElementById('demoAlert');
-            alert.className = 'alert alert-success mb-3';
-            alert.textContent = 'Reset link sent to ' + (email || 'your email') + '!';
-            alert.classList.remove('d-none');
-            toggleForgot(false);
+            if (!username || !pass) {
+                alertBox.className = 'alert alert-danger py-2 px-3 fs-13 mb-3';
+                alertBox.textContent = 'Please enter username/email and password.';
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            if (isSetupMode) {
+                const confirmPass = document.getElementById('confirmPassword').value.trim();
+                if (pass.length < 6) {
+                    alertBox.className = 'alert alert-warning py-2 px-3 fs-13 mb-3';
+                    alertBox.textContent = 'Password must be at least 6 characters long.';
+                    alertBox.classList.remove('d-none');
+                    return;
+                }
+                if (pass !== confirmPass) {
+                    alertBox.className = 'alert alert-danger py-2 px-3 fs-13 mb-3';
+                    alertBox.textContent = 'Passwords do not match. Please re-enter.';
+                    alertBox.classList.remove('d-none');
+                    return;
+                }
+
+                // Update user in storage
+                const users = getTeamUsers();
+                let matched = users.find(u => u.email.toLowerCase() === username.toLowerCase() || (u.username && u.username.toLowerCase() === username.toLowerCase()));
+                if (matched) {
+                    matched.password = pass;
+                    localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(users));
+                }
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ' + (isSetupMode ? 'Activating Profile...' : 'Authenticating...');
+
+            setTimeout(() => {
+                const users = getTeamUsers();
+                let matched = users.find(u => u.email.toLowerCase() === username.toLowerCase() || (u.username && u.username.toLowerCase() === username.toLowerCase()));
+
+                let userObj = matched ? {
+                    fullname: matched.fullname,
+                    username: matched.username,
+                    role: matched.role,
+                    department: matched.department,
+                    email: matched.email,
+                    loggedInAt: new Date().toISOString()
+                } : {
+                    fullname: username.includes('@') ? username.split('@')[0] : username,
+                    username: username,
+                    role: 'Admin',
+                    department: 'Operations',
+                    email: username.includes('@') ? username : `${username}@froggysfog.com`,
+                    loggedInAt: new Date().toISOString()
+                };
+
+                sessionStorage.setItem('lilypad_auth_user', JSON.stringify(userObj));
+                localStorage.setItem('lilypad_logged_in', 'true');
+
+                alertBox.className = 'alert alert-success py-2 px-3 fs-13 mb-3 border-0';
+                alertBox.innerHTML = isSetupMode
+                    ? `<i class="ti ti-check me-1"></i> Account activated! Welcome to Froggy's Fog Hub, <strong>${userObj.fullname}</strong>! Launching...`
+                    : `<i class="ti ti-check me-1"></i> Welcome back, <strong>${userObj.fullname}</strong>! Redirecting to dashboard...`;
+                alertBox.classList.remove('d-none');
+
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 500);
+            }, 600);
         }
     </script>
 </body>

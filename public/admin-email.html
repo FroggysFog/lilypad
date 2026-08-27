@@ -365,17 +365,17 @@
 						<li>
 							<ul>
 								<li>
-									<a href="dashboard.html" class="">
+									<a href="dashboard.html" class="active">
 										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
 									</a>
 								</li>
 								<li>
-									<a href="tickets.html" class="">
+									<a href="tickets.html">
 										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
 									</a>
 								</li>
 								<li>
-									<a href="knowledge-base.html" class="">
+									<a href="knowledge-base.html">
 										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
 									</a>
 								</li>
@@ -386,13 +386,13 @@
 						<li>
 							<ul>
 								<li class="submenu">
-									<a href="javascript:void(0);" class="subdrop active">
+									<a href="javascript:void(0);" class="subdrop">
 										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
 									</a>
 									<ul style="display: block;">
-										<li><a href="admin-email.html" class="active"><i class="ti ti-mail-cog me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
-										<li><a href="admin-team.html" class=""><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
-										<li><a href="admin-forms.html" class=""><i class="ti ti-forms me-2 text-primary"></i>Dynamic Form Builder</a></li>
+										<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -411,7 +411,7 @@
 					</ul>
 				</div>
 			</div>
-    
+
 		</div>
 		<!-- Sidenav Menu End -->
 
@@ -427,30 +427,29 @@
 				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 					<div>
 						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
-							<span>Inbound Email & Anti-Spam Gateway</span>
-							<span class="badge bg-soft-success text-success fs-12 rounded-pill fw-semibold"><i class="ti ti-shield-check"></i> Shield Active</span>
+							<span>Inbound Email & Anti-Spam Shield</span>
+							<span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold"><i class="ti ti-shield-check"></i> 6-Layer Active</span>
 						</h4>
-						<p class="text-muted fs-13 mb-0">Automated ticket creation from email, SPF/DKIM verification, category routing, and quarantine management.</p>
+						<p class="text-muted fs-13 mb-0">Configure inbound support email gateways, IMAP/SMTP mailboxes, SPF/DKIM verification, and anti-spam heuristic filters.</p>
 					</div>
 					<div class="d-flex align-items-center gap-2 flex-wrap">
 						<a href="tickets.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-							<i class="ti ti-ticket me-1"></i> Ticket Operations
+							<i class="ti ti-ticket me-1"></i> View Tickets
 						</a>
 						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#emailTabs button[data-bs-target=\'#tabSimulator\']')).show()">
-							<i class="ti ti-flask me-1"></i> Launch Simulator
+							<i class="ti ti-player-play me-1"></i> Launch Email Simulator
 						</button>
 					</div>
 				</div>
 
-				<!-- Email Gateway Metrics -->
+				<!-- Gateway Metric Cards -->
 				<div class="row g-3 mb-4">
 					<div class="col-xl-3 col-sm-6">
 						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
-									<span class="fs-12 text-muted fw-semibold text-uppercase">Primary Help Desk Address</span>
-									<h5 class="fw-bold mb-0 mt-1 text-primary">support@froggysfog.com</h5>
-									<span class="fs-11 text-muted">All incoming emails parsed & routed</span>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Inbound Mailboxes</span>
+									<h3 class="fw-bold mb-0 mt-1 text-primary">3 Connected</h3>
 								</div>
 								<div class="rounded-3 p-2 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:44px; height:44px;">
 									<i class="ti ti-mail fs-22"></i>
@@ -463,27 +462,11 @@
 						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
-									<span class="fs-12 text-muted fw-semibold text-uppercase">Security Bot Shield</span>
-									<h5 class="fw-bold mb-0 mt-1 text-primary">5 Active Protection Rules</h5>
-									<span class="fs-11 text-success"><i class="ti ti-shield-check me-1"></i>SPF / DKIM / Anti-Loop Enabled</span>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Spam Shield Status</span>
+									<h3 class="fw-bold mb-0 mt-1 text-success">99.8% Clean</h3>
 								</div>
-								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-primary" style="width:44px; height:44px;">
-									<i class="ti ti-shield-lock fs-22"></i>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="col-xl-3 col-sm-6">
-						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
-							<div class="d-flex align-items-center justify-content-between">
-								<div>
-									<span class="fs-12 text-muted fw-semibold text-uppercase">Active Department Aliases</span>
-									<h5 class="fw-bold mb-0 mt-1 text-dark">4 Dedicated Mailboxes</h5>
-									<span class="fs-11 text-muted">Auto-categorization & priority</span>
-								</div>
-								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-dark" style="width:44px; height:44px;">
-									<i class="ti ti-arrows-split fs-22"></i>
+								<div class="rounded-3 p-2 text-white bg-success d-flex align-items-center justify-content-center shadow-sm" style="width:44px; height:44px;">
+									<i class="ti ti-shield-check fs-22"></i>
 								</div>
 							</div>
 						</div>
@@ -493,40 +476,53 @@
 						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
-									<span class="fs-12 text-muted fw-semibold text-uppercase">Spam Quarantine</span>
-									<h5 class="fw-bold mb-0 mt-1 text-danger" id="quarantineCountDisplay">0 Intercepted</h5>
-									<span class="fs-11 text-muted">Clean inbox threshold: 3/hr</span>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Quarantined Floods</span>
+									<h3 class="fw-bold mb-0 mt-1 text-danger" id="quarantineCountDisplay">14</h3>
 								</div>
-								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-danger" style="width:44px; height:44px;">
+								<div class="rounded-3 p-2 text-white bg-danger d-flex align-items-center justify-content-center shadow-sm" style="width:44px; height:44px;">
 									<i class="ti ti-ban fs-22"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<div class="d-flex align-items-center justify-content-between">
+								<div>
+									<span class="fs-12 text-muted fw-semibold text-uppercase">Auto-Created Tickets</span>
+									<h3 class="fw-bold mb-0 mt-1 text-info">284 Total</h3>
+								</div>
+								<div class="rounded-3 p-2 text-white bg-info d-flex align-items-center justify-content-center shadow-sm" style="width:44px; height:44px;">
+									<i class="ti ti-bolt fs-22"></i>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 
-				<!-- Main Navigation Tabs -->
+				<!-- Navigation Tabs -->
 				<div class="card border-0 shadow-sm rounded-3 mb-4">
 					<div class="card-header bg-transparent border-bottom py-3">
 						<ul class="nav nav-pills gap-2" id="emailTabs">
 							<li class="nav-item">
-								<button class="nav-link active py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabRouting">
-									<i class="ti ti-mail me-1"></i> 1. Mailbox & Category Routing
+								<button class="nav-link active py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabMailboxes">
+									<i class="ti ti-mailbox me-1"></i> Connected Inboxes (3)
 								</button>
 							</li>
 							<li class="nav-item">
-								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabShield">
-									<i class="ti ti-shield-lock me-1"></i> 2. Anti-Spam & Bot Protection
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabRules">
+									<i class="ti ti-shield-cog me-1"></i> Anti-Spam Security Shield
 								</button>
 							</li>
 							<li class="nav-item">
-								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-danger" data-bs-toggle="tab" data-bs-target="#tabQuarantine">
-									<i class="ti ti-ban me-1"></i> 3. Spam Quarantine Queue (<span id="quarantineBadge">0</span>)
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabQuarantine">
+									<i class="ti ti-archive me-1"></i> Quarantine Queue (<span id="tabQuarantineCount">14</span>)
 								</button>
 							</li>
 							<li class="nav-item">
-								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-success" data-bs-toggle="tab" data-bs-target="#tabSimulator">
-									<i class="ti ti-flask me-1"></i> 4. Live Inbound Simulator
+								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-primary" data-bs-toggle="tab" data-bs-target="#tabSimulator">
+									<i class="ti ti-test-pipe me-1"></i> Live Email Simulator
 								</button>
 							</li>
 						</ul>
@@ -534,254 +530,246 @@
 
 					<div class="card-body p-4">
 						<div class="tab-content">
-							<!-- Tab 1: Routing -->
-							<div class="tab-pane fade show active" id="tabRouting">
-								<div class="card border bg-light rounded-3 p-3 mb-4">
-									<div class="row g-3 align-items-center">
-										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Primary Inbound Help Desk Address</label>
-											<div class="input-group input-group-sm">
-												<span class="input-group-text bg-white"><i class="ti ti-mail"></i></span>
-												<input type="text" class="form-control fw-bold text-dark" value="support@froggysfog.com" readonly>
-												<button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('support@froggysfog.com'); alert('Copied support@froggysfog.com to clipboard!')">Copy</button>
-											</div>
-											<span class="fs-11 text-muted">All emails sent here are parsed, anti-spam verified, and converted to tickets.</span>
-										</div>
-										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Ingestion Mode</label>
-											<select class="form-select form-select-sm">
-												<option value="webhook" selected>Instant Cloud Webhook (SendGrid / Postmark / AWS SES / Mailgun)</option>
-												<option value="imap">Direct IMAP / Exchange Polling (Every 60s)</option>
-											</select>
-											<span class="fs-11 text-muted">Webhook Endpoint: <code>https://lilypad-erp-dev.onrender.com/api/email-webhook</code></span>
-										</div>
-									</div>
-								</div>
-
-								<div class="d-flex align-items-center justify-content-between mb-3">
-									<h6 class="fw-bold fs-14 text-dark mb-0 d-flex align-items-center gap-1">
-										<i class="ti ti-arrows-split text-primary"></i> Category Direct Routing Aliases
-									</h6>
-									<button class="btn btn-sm btn-outline-primary" onclick="alert('Alias added to routing registry!')">
-										<i class="ti ti-plus me-1"></i> Add Department Alias
-									</button>
-								</div>
-
+							<!-- Tab 1: Mailboxes -->
+							<div class="tab-pane fade show active" id="tabMailboxes">
 								<div class="table-responsive">
 									<table class="table table-hover align-middle mb-0 fs-13 border rounded-3">
 										<thead class="table-light">
 											<tr>
-												<th>Incoming Email Alias</th>
-												<th>Target Category</th>
-												<th>Default Priority</th>
-												<th>Linked Machine / Model</th>
-												<th>Status</th>
+												<th>Account & Alias</th>
+												<th>Protocol / Server</th>
+												<th>Route To Category</th>
+												<th>Auto-Assign Team</th>
+												<th>Health Status</th>
+												<th class="text-end">Actions</th>
 											</tr>
 										</thead>
 										<tbody>
 											<tr>
-												<td><code>fx-support@froggysfog.com</code></td>
-												<td><span class="badge bg-soft-primary text-primary">FX Machine Support</span></td>
-												<td><span class="badge bg-danger-subtle text-danger">High</span></td>
-												<td><strong>Antari 2000 Elite</strong></td>
-												<td><span class="badge bg-success-subtle text-success">Active</span></td>
+												<td>
+													<div class="d-flex align-items-center gap-2">
+														<div class="rounded-circle p-2 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;">
+															<i class="ti ti-mail fs-14"></i>
+														</div>
+														<div>
+															<strong class="d-block text-dark">support@froggysfog.com</strong>
+															<span class="text-muted fs-11">Primary Technical Support Queue</span>
+														</div>
+													</div>
+												</td>
+												<td><span class="badge bg-light text-dark border">IMAP : 993 (SSL)</span></td>
+												<td><span class="badge bg-primary fs-11">FX Machine Support</span></td>
+												<td><span class="text-dark fw-medium">David Miller</span></td>
+												<td><span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Syncing (Every 1m)</span></td>
+												<td class="text-end">
+													<button class="btn btn-sm btn-outline-secondary py-1 px-2 fs-12 me-1" onclick="testConnection('support@froggysfog.com')"><i class="ti ti-refresh me-1"></i>Test</button>
+													<button class="btn btn-sm btn-link text-primary p-0"><i class="ti ti-edit"></i></button>
+												</td>
 											</tr>
 											<tr>
-												<td><code>fluid-finder@froggysfog.com</code></td>
-												<td><span class="badge bg-soft-primary text-primary">Fluid Finder Update</span></td>
-												<td><span class="badge bg-info-subtle text-info">Normal</span></td>
-												<td><strong>All Fog / Haze Formulas</strong></td>
-												<td><span class="badge bg-success-subtle text-success">Active</span></td>
+												<td>
+													<div class="d-flex align-items-center gap-2">
+														<div class="rounded-circle p-2 text-white bg-secondary d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;">
+															<i class="ti ti-building-store fs-14"></i>
+														</div>
+														<div>
+															<strong class="d-block text-dark">rma@froggysfog.com</strong>
+															<span class="text-muted fs-11">Factory Returns & Warranty</span>
+														</div>
+													</div>
+												</td>
+												<td><span class="badge bg-light text-dark border">IMAP : 993 (SSL)</span></td>
+												<td><span class="badge bg-secondary fs-11">Warranty & RMA Returns</span></td>
+												<td><span class="text-dark fw-medium">Sarah Connor</span></td>
+												<td><span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Syncing (Every 2m)</span></td>
+												<td class="text-end">
+													<button class="btn btn-sm btn-outline-secondary py-1 px-2 fs-12 me-1" onclick="testConnection('rma@froggysfog.com')"><i class="ti ti-refresh me-1"></i>Test</button>
+													<button class="btn btn-sm btn-link text-primary p-0"><i class="ti ti-edit"></i></button>
+												</td>
 											</tr>
 											<tr>
-												<td><code>po@froggysfog.com</code></td>
-												<td><span class="badge bg-soft-primary text-primary">Vendor Purchase Order</span></td>
-												<td><span class="badge bg-danger-subtle text-danger">High</span></td>
-												<td><strong>Tooling & Dielines</strong></td>
-												<td><span class="badge bg-success-subtle text-success">Active</span></td>
-											</tr>
-											<tr>
-												<td><code>it-help@froggysfog.com</code></td>
-												<td><span class="badge bg-soft-primary text-primary">Computer/Laptop Issue</span></td>
-												<td><span class="badge bg-info-subtle text-info">Normal</span></td>
-												<td><strong>IT Hardware</strong></td>
-												<td><span class="badge bg-success-subtle text-success">Active</span></td>
+												<td>
+													<div class="d-flex align-items-center gap-2">
+														<div class="rounded-circle p-2 text-white bg-dark d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;">
+															<i class="ti ti-file-invoice fs-14"></i>
+														</div>
+														<div>
+															<strong class="d-block text-dark">orders@froggysfog.com</strong>
+															<span class="text-muted fs-11">Purchase Orders & Shipments</span>
+														</div>
+													</div>
+												</td>
+												<td><span class="badge bg-light text-dark border">IMAP : 993 (SSL)</span></td>
+												<td><span class="badge bg-dark fs-11">Vendor Purchase Order</span></td>
+												<td><span class="text-dark fw-medium">Mark Henderson</span></td>
+												<td><span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Syncing (Every 5m)</span></td>
+												<td class="text-end">
+													<button class="btn btn-sm btn-outline-secondary py-1 px-2 fs-12 me-1" onclick="testConnection('orders@froggysfog.com')"><i class="ti ti-refresh me-1"></i>Test</button>
+													<button class="btn btn-sm btn-link text-primary p-0"><i class="ti ti-edit"></i></button>
+												</td>
 											</tr>
 										</tbody>
 									</table>
 								</div>
 							</div>
 
-							<!-- Tab 2: Anti-Spam Shield -->
-							<div class="tab-pane fade" id="tabShield">
-								<div class="row g-3">
-									<div class="col-md-6">
-										<div class="card border rounded-3 p-3 h-100">
-											<h6 class="fw-bold fs-13 text-dark mb-3 d-flex align-items-center gap-2">
-												<i class="ti ti-shield-check text-success fs-16"></i> Active Anti-Spam Protection Rules
+							<!-- Tab 2: Anti-Spam Security Shield -->
+							<div class="tab-pane fade" id="tabRules">
+								<div class="row g-4">
+									<div class="col-lg-6">
+										<div class="card border rounded-3 p-3 h-100 shadow-none bg-light">
+											<h6 class="fw-bold mb-2 text-dark d-flex align-items-center gap-2">
+												<i class="ti ti-shield-lock text-primary fs-18"></i> 6-Layer Security Policy Pipeline
 											</h6>
+											<p class="text-muted fs-12 mb-3">Every inbound email passes through these filters sequentially before ticket creation.</p>
 											
-											<div class="form-check form-switch mb-3">
-												<input class="form-check-input" type="checkbox" id="chkLoopBlock" checked>
-												<label class="form-check-label fs-13 fw-semibold text-dark" for="chkLoopBlock">
-													1. Block Infinite Mail Loops & Auto-Responders
-												</label>
-												<span class="d-block fs-11 text-muted">Drops <code>Auto-Submitted: auto-generated</code>, <code>X-Autoreply</code>, and <code>mailer-daemon</code> bounces.</span>
-											</div>
-
-											<div class="form-check form-switch mb-3">
-												<input class="form-check-input" type="checkbox" id="chkSpfDkim" checked>
-												<label class="form-check-label fs-13 fw-semibold text-dark" for="chkSpfDkim">
-													2. SPF / DKIM / DMARC Cryptographic Verification
-												</label>
-												<span class="d-block fs-11 text-muted">Rejects spoofed sender domains and unauthenticated SMTP relays.</span>
-											</div>
-
-											<div class="form-check form-switch mb-3">
-												<input class="form-check-input" type="checkbox" id="chkRateLimit" checked>
-												<label class="form-check-label fs-13 fw-semibold text-dark" for="chkRateLimit">
-													3. Rate Limiting & Anti-Flooding Threshold
-												</label>
-												<span class="d-block fs-11 text-muted">Maximum 3 tickets per email address per hour. Excess emails routed to quarantine.</span>
-											</div>
-
-											<div class="form-check form-switch mb-3">
-												<input class="form-check-input" type="checkbox" id="chkAiSpam" checked>
-												<label class="form-check-label fs-13 fw-semibold text-dark" for="chkAiSpam">
-													4. AI & Heuristic Content Scanner
-												</label>
-												<span class="d-block fs-11 text-muted">Scans for SEO spam keywords, phishing URLs, empty payloads, and suspicious links.</span>
-											</div>
-
-											<div class="form-check form-switch">
-												<input class="form-check-input" type="checkbox" id="chkFirstTimeChallenge" checked>
-												<label class="form-check-label fs-13 fw-semibold text-dark" for="chkFirstTimeChallenge">
-													5. First-Time Sender 1-Click Verification Challenge
-												</label>
-												<span class="d-block fs-11 text-muted">Sends a quick 1-click confirmation email to new senders to block crawlers and web scrapers.</span>
+											<div class="d-flex flex-column gap-2">
+												<div class="p-2 bg-white rounded-2 border d-flex align-items-center justify-content-between">
+													<div>
+														<strong class="fs-13 d-block text-dark">1. Mail Loop & Auto-Reply Filter</strong>
+														<span class="fs-11 text-muted">Blocks <code>Auto-Submitted: auto-generated</code> and <code>X-Autoreply</code></span>
+													</div>
+													<div class="form-check form-switch mb-0">
+														<input class="form-check-input" type="checkbox" checked disabled>
+													</div>
+												</div>
+												<div class="p-2 bg-white rounded-2 border d-flex align-items-center justify-content-between">
+													<div>
+														<strong class="fs-13 d-block text-dark">2. SPF & DKIM Verification</strong>
+														<span class="fs-11 text-muted">Drops unauthenticated spoofed domains</span>
+													</div>
+													<div class="form-check form-switch mb-0">
+														<input class="form-check-input" type="checkbox" checked>
+													</div>
+												</div>
+												<div class="p-2 bg-white rounded-2 border d-flex align-items-center justify-content-between">
+													<div>
+														<strong class="fs-13 d-block text-dark">3. Rate Limiting Threshold</strong>
+														<span class="fs-11 text-muted">Max 3 emails/hour per sender IP / address</span>
+													</div>
+													<div class="form-check form-switch mb-0">
+														<input class="form-check-input" type="checkbox" checked>
+													</div>
+												</div>
+												<div class="p-2 bg-white rounded-2 border d-flex align-items-center justify-content-between">
+													<div>
+														<strong class="fs-13 d-block text-dark">4. AI Phishing & Malware Scan</strong>
+														<span class="fs-11 text-muted">Inspects attachments (.exe, .scr, .vbs) & suspicious links</span>
+													</div>
+													<div class="form-check form-switch mb-0">
+														<input class="form-check-input" type="checkbox" checked>
+													</div>
+												</div>
 											</div>
 										</div>
 									</div>
 
-									<div class="col-md-6">
-										<div class="card border rounded-3 p-3 h-100">
-											<h6 class="fw-bold fs-13 text-dark mb-2 d-flex align-items-center gap-2">
-												<i class="ti ti-list-check text-primary fs-16"></i> Trusted Domain Whitelist & Blacklist
+									<div class="col-lg-6">
+										<div class="card border rounded-3 p-3 h-100 shadow-none bg-light">
+											<h6 class="fw-bold mb-2 text-dark d-flex align-items-center gap-2">
+												<i class="ti ti-ban text-danger fs-18"></i> Blocked Senders & Blacklisted Domains
 											</h6>
+											<p class="text-muted fs-12 mb-3">Add domains or specific sender emails to drop immediately without generating tickets.</p>
 											
-											<div class="mb-3">
-												<label class="form-label fs-12 fw-semibold text-success">Trusted Whitelist (Always bypass challenges)</label>
-												<textarea class="form-control form-control-sm" rows="3" readonly style="font-family:monospace; font-size:12px;">@froggysfog.com&#10;@antari.com&#10;@apexprints.com&#10;@packcraft.com&#10;@livenation.com&#10;@lilypad.local</textarea>
+											<div class="input-group mb-3">
+												<input type="text" id="newBlockedDomain" class="form-control form-control-sm" placeholder="e.g. @spammer-hub.xyz or badactor@domain.com">
+												<button class="btn btn-sm btn-danger" onclick="addBlockedSender()"><i class="ti ti-plus me-1"></i>Block</button>
 											</div>
 
-											<div class="mb-3">
-												<label class="form-label fs-12 fw-semibold text-danger">Blacklisted Senders & Domains (Auto-dropped)</label>
-												<textarea class="form-control form-control-sm" rows="3" readonly style="font-family:monospace; font-size:12px;">*@marketing-crawler.xyz&#10;*@crypto-leads.ru&#10;*@phish-invoices.net&#10;mailer-daemon@*</textarea>
+											<div id="blockedSendersList" class="d-flex flex-wrap gap-1">
+												<span class="badge bg-danger-subtle text-danger fs-11 p-2 rounded-2">@marketing-blast.biz <i class="ti ti-x ms-1 cursor-pointer" onclick="this.parentElement.remove()"></i></span>
+												<span class="badge bg-danger-subtle text-danger fs-11 p-2 rounded-2">@promo-deals.com <i class="ti ti-x ms-1 cursor-pointer" onclick="this.parentElement.remove()"></i></span>
+												<span class="badge bg-danger-subtle text-danger fs-11 p-2 rounded-2">crawler-bot@auto-mailer.xyz <i class="ti ti-x ms-1 cursor-pointer" onclick="this.parentElement.remove()"></i></span>
 											</div>
-
-											<button class="btn btn-sm btn-primary w-100" onclick="alert('Anti-Spam security rules saved!')">
-												<i class="ti ti-check me-1"></i> Save Anti-Spam Security Rules
-											</button>
 										</div>
 									</div>
 								</div>
 							</div>
 
-							<!-- Tab 3: Quarantine -->
+							<!-- Tab 3: Quarantine Queue -->
 							<div class="tab-pane fade" id="tabQuarantine">
-								<div class="alert alert-danger border-0 rounded-3 d-flex align-items-center justify-content-between mb-3 py-2 px-3 fs-13">
-									<div class="d-flex align-items-center gap-2">
-										<i class="ti ti-shield-x fs-20 text-danger"></i>
-										<span>These incoming messages were intercepted by the Anti-Spam Shield and held securely for review.</span>
-									</div>
-									<button class="btn btn-sm btn-outline-danger py-1" onclick="clearQuarantine()"><i class="ti ti-trash"></i> Clear All</button>
+								<div class="d-flex align-items-center justify-content-between mb-3">
+									<h6 class="fw-bold text-dark mb-0">Quarantined Inbound Messages</h6>
+									<button class="btn btn-sm btn-outline-danger" onclick="clearQuarantine()"><i class="ti ti-trash me-1"></i>Clear Quarantine Queue</button>
 								</div>
-
 								<div class="table-responsive">
 									<table class="table table-hover align-middle mb-0 fs-13 border rounded-3">
 										<thead class="table-light">
 											<tr>
-												<th>Sender</th>
-												<th>Subject & Snippet</th>
-												<th>Block Reason</th>
-												<th>Time</th>
-												<th class="text-end">Action</th>
+												<th>Sender Address</th>
+												<th>Subject</th>
+												<th>Quarantine Reason</th>
+												<th>Time Intercepted</th>
+												<th class="text-end">Actions</th>
 											</tr>
 										</thead>
 										<tbody id="quarantineTableBody">
-											<tr><td colspan="5" class="text-center py-4 text-muted"><i class="ti ti-shield-check fs-24 d-block mb-1 text-success"></i>Quarantine clean. No spam threats intercepted.</td></tr>
+											<!-- Rendered Dynamically -->
 										</tbody>
 									</table>
 								</div>
 							</div>
 
-							<!-- Tab 4: Simulator -->
+							<!-- Tab 4: Live Email Simulator -->
 							<div class="tab-pane fade" id="tabSimulator">
-								<div class="row g-3">
-									<div class="col-md-6">
-										<div class="card border rounded-3 p-3 bg-light">
-											<h6 class="fw-bold fs-13 text-dark mb-3 d-flex align-items-center gap-2">
-												<i class="ti ti-send text-success"></i> Simulate Incoming Customer / Vendor Email
-											</h6>
+								<div class="row g-4">
+									<div class="col-lg-6">
+										<h6 class="fw-bold text-dark mb-2">Simulate Inbound SMTP Transmission</h6>
+										<p class="text-muted fs-12 mb-3">Inject a test email into the gateway pipeline to verify spam triggers, classification, and auto-ticket generation.</p>
 
-											<form id="emailSimForm" onsubmit="runEmailSimulation(event)">
-												<div class="mb-2">
-													<label class="form-label fs-12 fw-semibold">From (Sender Email):</label>
-													<input type="email" id="simFromEmail" class="form-control form-control-sm" value="mark.henderson@apexprints.com" required>
-												</div>
-
-												<div class="mb-2">
-													<label class="form-label fs-12 fw-semibold">To (Inbound Gateway Alias):</label>
-													<select id="simToEmail" class="form-select form-select-sm">
-														<option value="fx-support@froggysfog.com">fx-support@froggysfog.com (➔ FX Machine Support)</option>
-														<option value="fluid-finder@froggysfog.com">fluid-finder@froggysfog.com (➔ Fluid Finder Update)</option>
-														<option value="po@froggysfog.com">po@froggysfog.com (➔ Vendor Purchase Order)</option>
-														<option value="support@froggysfog.com">support@froggysfog.com (➔ Triage / Customer Support)</option>
-													</select>
-												</div>
-
-												<div class="mb-2">
-													<label class="form-label fs-12 fw-semibold">Subject:</label>
-													<input type="text" id="simSubject" class="form-control form-control-sm" value="Antari 2000 Elite Silkscreen Plate Proof Attached" required>
-												</div>
-
-												<div class="mb-2">
-													<label class="form-label fs-12 fw-semibold">Body Content:</label>
-													<textarea id="simBody" class="form-control form-control-sm" rows="3" required>Attached is the updated vector silkscreen plate artwork Rev C.2 for the Antari 2000 Elite front chassis. Please review tolerances.</textarea>
-												</div>
-
-												<div class="p-2 border rounded bg-white mb-3 fs-12">
-													<strong class="text-dark d-block mb-1">Simulate Attack / Spam Conditions:</strong>
-													<div class="form-check">
-														<input class="form-check-input" type="checkbox" id="simFlagLoop">
-														<label class="form-check-label text-danger" for="simFlagLoop">Inject <code>Auto-Submitted: auto-generated</code> (Mail Loop Test)</label>
-													</div>
-													<div class="form-check">
-														<input class="form-check-input" type="checkbox" id="simFlagFlood">
-														<label class="form-check-label text-danger" for="simFlagFlood">Simulate Rapid Bot Flood (>3 emails in 1 hour)</label>
-													</div>
-													<div class="form-check">
-														<input class="form-check-input" type="checkbox" id="simFlagAttach" checked>
-														<label class="form-check-label text-success" for="simFlagAttach">Attach Test Artwork Vector Proof (<code>Antari_Plate_Proof_v3.ai</code>, 4.2 MB)</label>
-													</div>
-												</div>
-
-												<button type="submit" class="btn btn-sm btn-primary w-100 shadow-sm">
-													<i class="ti ti-rocket me-1"></i> Send Inbound Email to Gateway
-												</button>
-											</form>
+										<div class="mb-3">
+											<label class="form-label fs-13 fw-semibold">Target Support Inbox</label>
+											<select id="simTargetInbox" class="form-select form-select-sm">
+												<option value="support@froggysfog.com">support@froggysfog.com (FX Machine Support)</option>
+												<option value="rma@froggysfog.com">rma@froggysfog.com (Warranty & RMA)</option>
+												<option value="orders@froggysfog.com">orders@froggysfog.com (Vendor Purchase Order)</option>
+											</select>
 										</div>
+
+										<div class="mb-3">
+											<label class="form-label fs-13 fw-semibold">Sender Email Address</label>
+											<input type="email" id="simSenderEmail" class="form-control form-control-sm" value="customer@amusement-park.com">
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label fs-13 fw-semibold">Email Subject</label>
+											<input type="text" id="simSubject" class="form-control form-control-sm" value="Titan Fog Generator Heater Thermostat Tripped E-04">
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label fs-13 fw-semibold">Email Body Content</label>
+											<textarea id="simBody" class="form-control form-control-sm" rows="3">Our main Titan 1500 unit on stage 2 stopped heating and threw error E-04 after 45 minutes of run time. Please assist ASAP.</textarea>
+										</div>
+
+										<div class="d-flex align-items-center gap-2 mb-3">
+											<div class="form-check">
+												<input class="form-check-input" type="checkbox" id="simFlagLoop">
+												<label class="form-check-label fs-12 text-muted" for="simFlagLoop">
+													Simulate Auto-Reply / Mail Loop
+												</label>
+											</div>
+											<div class="form-check">
+												<input class="form-check-input" type="checkbox" id="simFlagFlood">
+												<label class="form-check-label fs-12 text-muted" for="simFlagFlood">
+													Simulate Rate Flood (>3/hr)
+												</label>
+											</div>
+										</div>
+
+										<button class="btn btn-primary btn-sm px-4 shadow-sm" onclick="runEmailSimulation()">
+											<i class="ti ti-send me-1"></i> Transmit Inbound Email
+										</button>
 									</div>
 
-									<div class="col-md-6">
-										<div class="card border rounded-3 p-3 h-100 bg-dark text-light" style="font-family:monospace; font-size:12px;">
-											<h6 class="fw-bold text-white mb-2 d-flex align-items-center justify-content-between">
-												<span><i class="ti ti-terminal me-1 text-success"></i> Gateway Security Inspection Log</span>
-												<span class="badge bg-success" id="simStatusBadge">IDLE</span>
-											</h6>
-											<div id="simConsoleLog" class="overflow-y-auto p-2 bg-black rounded" style="height: 340px;">
-												<span class="text-muted">[SYSTEM] Inbound SMTP/Webhook Gateway Ready on port 8118...</span><br>
-												<span class="text-muted">[ANTI-SPAM] SPF/DKIM filter active. Rate limiter: 3/hr. Bot deflector active.</span>
+									<div class="col-lg-6">
+										<div class="card bg-dark text-light border-0 rounded-3 p-3 h-100 font-monospace fs-12 shadow-sm">
+											<div class="d-flex align-items-center justify-content-between border-bottom border-secondary pb-2 mb-2">
+												<span class="text-success"><i class="ti ti-terminal me-1"></i>GATEWAY LOG & PACKET TRACE</span>
+												<span class="badge bg-secondary" id="simStatusBadge">IDLE</span>
+											</div>
+											<div id="simGatewayConsole" style="max-height: 280px; overflow-y: auto;">
+												<div class="text-muted">> Gateway daemon listening on port 25/587...</div>
+												<div class="text-muted">> IMAP workers active (3/3 pools healthy).</div>
 											</div>
 										</div>
 									</div>
@@ -819,42 +807,35 @@
     <script src="assets/js/lilypad-notifications.js"></script>
 
 	<script>
-        let QUARANTINE_QUEUE = [];
+        let QUARANTINE_QUEUE = [
+            { id: 'q1', sender: 'newsletter@promo-discounts.biz', subject: 'Huge Savings on Industrial Parts', reason: 'SPF/DKIM Mismatch + Blacklisted Domain', time: '10 mins ago' },
+            { id: 'q2', sender: 'mailer-daemon@external-server.com', subject: 'Delivery Failure Notification (Auto)', reason: 'Mail Loop Header (Auto-Submitted)', time: '42 mins ago' },
+            { id: 'q3', sender: 'bot-flood@suspicious-ip.net', subject: 'Inquiry #988472', reason: 'Rate Limit Exceeded (>3/hr)', time: '1 hour ago' }
+        ];
 
         function renderQuarantineTable() {
             const tbody = document.getElementById('quarantineTableBody');
-            const badge = document.getElementById('quarantineBadge');
-            const display = document.getElementById('quarantineCountDisplay');
-            if (badge) badge.textContent = QUARANTINE_QUEUE.length;
-            if (display) display.textContent = QUARANTINE_QUEUE.length + ' Intercepted';
+            const countDisplay = document.getElementById('quarantineCountDisplay');
+            const tabCount = document.getElementById('tabQuarantineCount');
+            if (countDisplay) countDisplay.textContent = QUARANTINE_QUEUE.length;
+            if (tabCount) tabCount.textContent = QUARANTINE_QUEUE.length;
             if (!tbody) return;
-
-            if (!QUARANTINE_QUEUE.length) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><i class="ti ti-shield-check fs-24 d-block mb-1 text-success"></i>Quarantine clean. No spam threats intercepted.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = QUARANTINE_QUEUE.map(q => `
-                <tr>
-                    <td><strong class="text-dark">${q.sender}</strong></td>
-                    <td>
-                        <strong class="d-block text-dark fs-12">${q.subject}</strong>
-                        <span class="text-muted fs-11 text-truncate d-block" style="max-width: 280px;">${q.snippet}</span>
-                    </td>
-                    <td><span class="badge bg-danger-subtle text-danger fs-11">${q.reason}</span></td>
-                    <td><span class="text-muted fs-11">${q.time}</span></td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-success py-0 px-2 fs-11" onclick="releaseQuarantinedEmail('${q.id}')">Release</button>
-                        <button class="btn btn-sm btn-link text-danger p-0 ms-1" onclick="deleteQuarantine('${q.id}')"><i class="ti ti-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = QUARANTINE_QUEUE.map(q => '<tr>' +
+                '<td><strong class="text-danger">' + q.sender + '</strong></td>' +
+                '<td>' + q.subject + '</td>' +
+                '<td><span class="badge bg-danger-subtle text-danger">' + q.reason + '</span></td>' +
+                '<td class="text-muted">' + q.time + '</td>' +
+                '<td class="text-end">' +
+                    '<button class="btn btn-sm btn-link text-success p-0 me-2" onclick="releaseQuarantine('' + q.id + '')"><i class="ti ti-check me-1"></i>Release</button>' +
+                    '<button class="btn btn-sm btn-link text-danger p-0" onclick="deleteQuarantine('' + q.id + '')"><i class="ti ti-trash"></i></button>' +
+                '</td>' +
+            '</tr>').join('');
         }
 
-        function releaseQuarantinedEmail(id) {
+        function releaseQuarantine(id) {
             QUARANTINE_QUEUE = QUARANTINE_QUEUE.filter(q => q.id !== id);
             renderQuarantineTable();
-            alert('Email released from quarantine and routed to active queue.');
+            alert('Quarantine item released and forwarded to support queue as ticket.');
         }
 
         function deleteQuarantine(id) {
@@ -863,24 +844,41 @@
         }
 
         function clearQuarantine() {
-            QUARANTINE_QUEUE = [];
-            renderQuarantineTable();
+            if (confirm('Clear all quarantined messages?')) {
+                QUARANTINE_QUEUE = [];
+                renderQuarantineTable();
+            }
         }
 
-        function runEmailSimulation(e) {
-            e.preventDefault();
-            const fromEmail = document.getElementById('simFromEmail').value;
-            const toEmail = document.getElementById('simToEmail').value;
-            const subject = document.getElementById('simSubject').value;
-            const body = document.getElementById('simBody').value;
+        function testConnection(email) {
+            alert('✓ Connection test passed for ' + email + ' (IMAP SSL latency: 24ms, TLS 1.3 handshake verified)');
+        }
+
+        function addBlockedSender() {
+            const input = document.getElementById('newBlockedDomain');
+            const val = input.value.trim();
+            if (!val) return;
+            const container = document.getElementById('blockedSendersList');
+            const span = document.createElement('span');
+            span.className = 'badge bg-danger-subtle text-danger fs-11 p-2 rounded-2';
+            span.innerHTML = val + ' <i class="ti ti-x ms-1 cursor-pointer" onclick="this.parentElement.remove()"></i>';
+            container.appendChild(span);
+            input.value = '';
+        }
+
+        function runEmailSimulation() {
+            const toEmail = document.getElementById('simTargetInbox').value;
+            const fromEmail = document.getElementById('simSenderEmail').value.trim();
+            const subject = document.getElementById('simSubject').value.trim();
+            const body = document.getElementById('simBody').value.trim();
             const isLoop = document.getElementById('simFlagLoop').checked;
             const isFlood = document.getElementById('simFlagFlood').checked;
 
-            const consoleEl = document.getElementById('simConsoleLog');
+            const consoleEl = document.getElementById('simGatewayConsole');
             const statusBadge = document.getElementById('simStatusBadge');
 
             consoleEl.innerHTML = '';
-            statusBadge.className = 'badge bg-warning';
+            statusBadge.className = 'badge bg-warning text-dark';
             statusBadge.textContent = 'INSPECTING';
 
             function logLine(text, color = '#ffffff') {
@@ -902,8 +900,7 @@
                     QUARANTINE_QUEUE.unshift({
                         id: 'q_' + Date.now(),
                         sender: fromEmail,
-                        subject,
-                        snippet: body,
+                        subject: subject,
                         reason: 'Auto-Submitted: auto-generated (Mail Loop)',
                         time: 'Just now'
                     });
@@ -920,8 +917,7 @@
                     QUARANTINE_QUEUE.unshift({
                         id: 'q_' + Date.now(),
                         sender: fromEmail,
-                        subject,
-                        snippet: body,
+                        subject: subject,
                         reason: 'Rate Limit Exceeded (>3 emails/hr)',
                         time: 'Just now'
                     });
@@ -936,6 +932,10 @@
                 statusBadge.textContent = 'PROCESSED (OK)';
             }, 500);
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderQuarantineTable();
+        });
 	</script>
 </body>
 </html>

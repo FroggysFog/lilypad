@@ -365,17 +365,17 @@
 						<li>
 							<ul>
 								<li>
-									<a href="dashboard.html" class="">
+									<a href="dashboard.html" class="active">
 										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
 									</a>
 								</li>
 								<li>
-									<a href="tickets.html" class="">
+									<a href="tickets.html">
 										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
 									</a>
 								</li>
 								<li>
-									<a href="knowledge-base.html" class="active">
+									<a href="knowledge-base.html">
 										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
 									</a>
 								</li>
@@ -386,13 +386,13 @@
 						<li>
 							<ul>
 								<li class="submenu">
-									<a href="javascript:void(0);" class="subdrop active">
+									<a href="javascript:void(0);" class="subdrop">
 										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
 									</a>
 									<ul style="display: block;">
-										<li><a href="admin-email.html" class=""><i class="ti ti-mail-cog me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
-										<li><a href="admin-team.html" class=""><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
-										<li><a href="admin-forms.html" class=""><i class="ti ti-forms me-2 text-primary"></i>Dynamic Form Builder</a></li>
+										<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -411,7 +411,7 @@
 					</ul>
 				</div>
 			</div>
-    
+
 		</div>
 		<!-- Sidenav Menu End -->
 
@@ -427,154 +427,41 @@
 				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 					<div>
 						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
-							<span>Machine Trends & Knowledgebase Hub</span>
-							<span class="badge bg-soft-success text-success fs-12 rounded-pill fw-semibold"><i class="ti ti-book"></i> Diagnostic SOPs</span>
+							<span>Knowledge Base & Diagnostic SOPs</span>
+							<span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold"><i class="ti ti-book-2"></i> Verified Factory Standards</span>
 						</h4>
-						<p class="text-muted fs-13 mb-0">Recurring defect analytics, root cause playbooks, and standardized step-by-step diagnostic SOPs.</p>
+						<p class="text-muted fs-13 mb-0">Searchable repository of standard operating procedures, component schematics, and automated machine diagnostic checklists.</p>
 					</div>
 					<div class="d-flex align-items-center gap-2 flex-wrap">
 						<a href="tickets.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-							<i class="ti ti-ticket me-1"></i> Ticket Operations
+							<i class="ti ti-ticket me-1"></i> View Tickets
 						</a>
-						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#kbTabs button[data-bs-target=\'#tabKbCreate\']')).show()">
+						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="addNewSopModal()">
 							<i class="ti ti-plus me-1"></i> Create New SOP
 						</button>
 					</div>
 				</div>
 
-				<!-- SOP Detail Modal Popup -->
-				<div class="modal fade" id="sopDetailModal" tabindex="-1" aria-hidden="true">
-					<div class="modal-dialog modal-dialog-centered modal-lg">
-						<div class="modal-content border-0 shadow-lg">
-							<div class="modal-header py-3 px-4 border-bottom bg-light d-flex align-items-center justify-content-between">
-								<div class="d-flex align-items-center gap-2">
-									<span class="badge bg-dark text-white fw-bold fs-12 px-2 py-1" id="sopModalCode">SOP-014</span>
-									<span class="badge bg-soft-primary text-primary fw-semibold fs-12" id="sopModalProduct">Antari 2000 Elite</span>
-								</div>
-								<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				<!-- Search Banner -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4 text-white p-4" style="background: linear-gradient(135deg, var(--bs-primary) 0%, #0f172a 100%);">
+					<div class="row align-items-center">
+						<div class="col-lg-7">
+							<h3 class="fw-bold mb-2 text-white">Find Diagnostic & Testing Procedures</h3>
+							<p class="text-white-50 fs-13 mb-3">Search through 48 factory-verified SOPs, machine schematics, and failure resolution playbooks.</p>
+							<div class="input-group input-group-lg shadow-sm">
+								<span class="input-group-text bg-white border-0 text-muted"><i class="ti ti-search fs-18"></i></span>
+								<input type="text" id="kbSearchInput" class="form-control border-0 fs-14" placeholder="Search by machine model, error code (e.g. E-04), symptom, or chemical formula..." onkeyup="filterKbArticles()">
 							</div>
-							<div class="modal-body p-4">
-								<h4 class="fw-bold text-dark mb-2" id="sopModalTitle">Silkscreen Artwork Alignment & Emulsion Curing Protocol</h4>
-								<div class="d-flex align-items-center gap-3 fs-12 text-muted mb-3 pb-2 border-bottom">
-									<span><i class="ti ti-user me-1"></i> Author: <strong class="text-dark" id="sopModalAuthor">Scott Karan</strong></span>
-									<span><i class="ti ti-clock me-1"></i> Updated: <span id="sopModalUpdated">2 days ago</span></span>
-									<span class="badge bg-soft-success text-success"><i class="ti ti-shield-check me-1"></i> Verified Factory SOP</span>
-								</div>
-
-								<div class="alert alert-warning border-0 rounded-3 mb-3 p-3 fs-13">
-									<strong class="d-block text-warning-emphasis mb-1"><i class="ti ti-alert-triangle me-1"></i> Observed Failure Symptom:</strong>
-									<span id="sopModalSymptom" class="text-dark">Silkscreen lettering offset or smudging after powder-coat bake.</span>
-								</div>
-
-								<h6 class="fw-bold text-dark text-uppercase fs-12 mb-2 d-flex align-items-center gap-1">
-									<i class="ti ti-list-check text-success"></i> Pre-Flight "Check First" Diagnostic Steps:
-								</h6>
-								<div class="d-flex flex-column gap-2 mb-3" id="sopModalStepsList"></div>
-
-								<div class="p-3 bg-light rounded-3 border">
-									<h6 class="fw-bold text-dark text-uppercase fs-12 mb-1"><i class="ti ti-bulb text-primary me-1"></i> Permanent Resolution & Prevention:</h6>
-									<p class="mb-0 fs-13 text-dark" id="sopModalResolution">Use high-adhesion 2-part epoxy ink with 300-mesh screen.</p>
-								</div>
-							</div>
-							<div class="modal-footer border-top py-2 px-4 bg-light d-flex align-items-center justify-content-between">
-								<button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>
-								<button type="button" class="btn btn-sm btn-success px-3" onclick="alert('Diagnostic checklist verified and logged to audit trail!')">
-									<i class="ti ti-check me-1"></i> Mark Diagnostics Verified
-								</button>
-							</div>
+						</div>
+						<div class="col-lg-5 text-center d-none d-lg-block">
+							<i class="ti ti-books display-4 text-white-50"></i>
 						</div>
 					</div>
 				</div>
 
-				<!-- Main Navigation Tabs -->
-				<div class="card border-0 shadow-sm rounded-3 mb-4">
-					<div class="card-header bg-transparent border-bottom py-3">
-						<ul class="nav nav-pills gap-2" id="kbTabs">
-							<li class="nav-item">
-								<button class="nav-link active py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabKbTrends">
-									<i class="ti ti-chart-bar me-1"></i> 1. Machine Failure Trends & Reliability
-								</button>
-							</li>
-							<li class="nav-item">
-								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill" data-bs-toggle="tab" data-bs-target="#tabKbArticles">
-									<i class="ti ti-book me-1"></i> 2. Troubleshooting Knowledgebase (<span id="kbArticlesCountBadge">4</span>)
-								</button>
-							</li>
-							<li class="nav-item">
-								<button class="nav-link py-2 px-3 fs-13 fw-semibold rounded-pill text-success" data-bs-toggle="tab" data-bs-target="#tabKbCreate">
-									<i class="ti ti-plus me-1"></i> Create New Diagnostic SOP
-								</button>
-							</li>
-						</ul>
-					</div>
-
-					<div class="card-body p-4">
-						<div class="tab-content">
-							<!-- Tab 1: Machine Failure Trends -->
-							<div class="tab-pane fade show active" id="tabKbTrends">
-								<div class="alert alert-info border-0 rounded-3 d-flex align-items-center gap-2 mb-4 py-2 px-3 fs-13">
-									<i class="ti ti-info-circle fs-18 text-info"></i>
-									<span>These defect patterns are computed directly from past resolved tickets to prioritize what to inspect first on any machine.</span>
-								</div>
-
-								<div class="row g-3" id="machineTrendsContainer"></div>
-							</div>
-
-							<!-- Tab 2: Searchable Knowledgebase SOPs -->
-							<div class="tab-pane fade" id="tabKbArticles">
-								<div class="row g-2 mb-3">
-									<div class="col-md-6">
-										<input type="text" id="kbSearchInput" class="form-control form-control-sm" placeholder="Search by symptom, machine, or keyword (e.g. Silkscreen, Modbus)..." oninput="renderKbArticlesList()">
-									</div>
-									<div class="col-md-6">
-										<select id="kbModelFilter" class="form-select form-select-sm" onchange="renderKbArticlesList()">
-											<option value="">All Machines / Products</option>
-										</select>
-									</div>
-								</div>
-
-								<div class="row g-3" id="kbArticlesListContainer"></div>
-							</div>
-
-							<!-- Tab 3: Create New SOP -->
-							<div class="tab-pane fade" id="tabKbCreate">
-								<form id="createKbForm" onsubmit="saveNewKbArticle(event)">
-									<div class="row g-3">
-										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Machine / Product Model <span class="text-danger">*</span></label>
-											<select id="newKbProduct" class="form-select form-select-sm" required>
-												<option value="Antari 2000 Elite">Antari 2000 Elite</option>
-												<option value="LilyPad Solar Telemetry Gateway">LilyPad Solar Telemetry Gateway</option>
-												<option value="Industrial LFP Battery Array 480V">Industrial LFP Battery Array 480V</option>
-												<option value="Enterprise ERP Server Node X1">Enterprise ERP Server Node X1</option>
-											</select>
-										</div>
-										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">SOP Guide Title <span class="text-danger">*</span></label>
-											<input type="text" id="newKbTitle" class="form-control form-control-sm" placeholder="e.g. SOP-014: Silkscreen Alignment & Emulsion Curing Protocol" required>
-										</div>
-										<div class="col-12">
-											<label class="form-label fs-13 fw-semibold">Common Symptom / Problem Observed <span class="text-danger">*</span></label>
-											<input type="text" id="newKbSymptom" class="form-control form-control-sm" placeholder="e.g. Silkscreen lettering misaligned or smudging during assembly" required>
-										</div>
-										<div class="col-12">
-											<label class="form-label fs-13 fw-semibold">"Check First" Diagnostic Steps (1 per line) <span class="text-danger">*</span></label>
-											<textarea id="newKbSteps" class="form-control form-control-sm" rows="4" placeholder="1. Inspect chassis alignment pin tolerances (±0.2mm)&#10;2. Check UV curing oven temperature (must reach 140°C for 8 mins)&#10;3. Verify mesh tension gauge reads 24 N/cm" required></textarea>
-										</div>
-										<div class="col-12">
-											<label class="form-label fs-13 fw-semibold">Permanent Resolution & Root Cause</label>
-											<textarea id="newKbResolution" class="form-control form-control-sm" rows="3" placeholder="Explain the underlying fix and how to prevent reoccurrence..."></textarea>
-										</div>
-									</div>
-									<div class="text-end mt-4 pt-3 border-top">
-										<button type="submit" class="btn btn-primary px-4 shadow-sm">
-											<i class="ti ti-check me-1"></i> Publish to Knowledgebase
-										</button>
-									</div>
-								</form>
-							</div>
-						</div>
-					</div>
+				<!-- SOP Category Cards -->
+				<div class="row g-3 mb-4" id="kbArticlesContainer">
+					<!-- Rendered Dynamically -->
 				</div>
 <!-- Start Footer -->
 			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
@@ -605,255 +492,169 @@
     <script src="assets/js/lilypad-notifications.js"></script>
 
 	<script>
-        const KB_ARTICLES = [
+        let SOP_DATABASE = [
             {
-                id: 'kb_1',
-                code: 'SOP-014',
-                product: 'Antari 2000 Elite',
-                title: 'Silkscreen Artwork Alignment & Emulsion Curing Protocol',
-                symptom: 'Silkscreen graphics offset by 2-3mm on front chassis or smudging after powder-coat bake.',
-                checkFirstSteps: [
-                    'Verify chassis alignment guide pins are calibrated to ±0.15mm tolerance.',
-                    'Check UV emulsion curing temperature: must reach 140°C for minimum 8 minutes.',
-                    'Inspect silkscreen mesh tension: must read between 22-26 N/cm.'
-                ],
-                resolution: 'Use high-adhesion 2-part epoxy ink (Series 9600) with 300-mesh monofilament polyester screen. Ensure pre-wipe with isopropyl alcohol before screening.',
-                updatedAt: '2 days ago',
-                author: 'Scott Karan'
+                id: 'SOP-001',
+                code: 'SOP-001',
+                title: 'Titan 1500 Fog Machine Heater Block & Thermostat Diagnostic',
+                category: 'FX Machine Support',
+                categoryColor: 'primary',
+                errorCode: 'E-04 / Overheat',
+                summary: 'Step-by-step diagnostic tree for heater element thermal cutoff switch, PID temperature sensors, and 120V relay failure.',
+                readTime: '4 min read',
+                updated: 'Updated Yesterday',
+                steps: [
+                    'Disconnect unit from main 120V/230V power before removing chassis cover.',
+                    'Measure resistance across heater core terminals with a calibrated multimeter (Normal: 14.5 - 16.2 Ohms).',
+                    'Inspect thermal cutoff fuse (TF-240C) for continuity. If open-circuit, replace with certified Froggy's Fog OEM harness.',
+                    'Check thermistor wire leads for pinching or fraying against heater casing.',
+                    'Power unit in test mode; verify LED status indicators cycle from Amber (Heating) to Green (Ready).'
+                ]
             },
             {
-                id: 'kb_2',
-                code: 'SOP-015',
-                product: 'Antari 2000 Elite',
-                title: 'Master Carton Burst Resistance & Corner Drop Inspection',
-                symptom: 'Carton corner crushing during multi-tier container freight and transit.',
-                checkFirstSteps: [
-                    'Confirm corrugated grade is minimum 5-ply Double Wall (200# Mullen burst test rating).',
-                    'Ensure foam corner buffer density is minimum 28 kg/m³ EPE.',
-                    'Verify moisture desiccant bag (50g) is placed inside PE bag seal.'
-                ],
-                resolution: 'Switch supplier spec to 5-ply BC flute with reinforced edge protectors for international air & sea shipments.',
-                updatedAt: '3 days ago',
-                author: 'Mark Henderson'
+                id: 'SOP-002',
+                code: 'SOP-002',
+                title: 'Poseidon 2000 Fluid Pump Cavitation & Pressure Stall Resolution',
+                category: 'FX Machine Support',
+                categoryColor: 'primary',
+                errorCode: 'P-02 / Cavitation',
+                summary: 'Techniques for purging micro-air locks in high-pressure brass piston pumps and testing check valve integrity.',
+                readTime: '6 min read',
+                updated: 'Updated 3 days ago',
+                steps: [
+                    'Ensure fluid reservoir is filled with fresh Froggy's Fog Poseidon-grade formula.',
+                    'Inspect inline 50-micron fluid filter for crystallization or sediment buildup.',
+                    'Attach pressure gauge manifold to pump outlet port; execute manual 10-second pump prime sequence.',
+                    'Verify output reaches minimum 55 PSI steady operational pressure.',
+                    'If pump vibrates loudly without fluid flow, prime check valve using 10ml syringe with fluid solution.'
+                ]
             },
             {
-                id: 'kb_3',
-                code: 'SOP-022',
-                product: 'LilyPad Solar Telemetry Gateway',
-                title: 'Modbus RTU RS-485 Communication Timeout & Noise Suppression',
-                symptom: 'Telemetry drops packet bursts when inverters spin up to peak wattage.',
-                checkFirstSteps: [
-                    'Check RS-485 bus 120-ohm termination resistors at both ends of daisy-chain.',
-                    'Verify shield drain wire is grounded at one end only (prevents ground loop current).',
-                    'Confirm baud rate is matched across all inverter slaves (typically 9600-8-N-1).'
-                ],
-                resolution: 'Installed isolated RS-485 repeater at 25th inverter node to boost SNR voltage margin.',
-                updatedAt: '1 week ago',
-                author: 'Sarah Connor'
+                id: 'SOP-003',
+                code: 'SOP-003',
+                title: 'Optical Fluid Level Sensor Calibration & Signal Cleaning',
+                category: 'Warranty & RMA Returns',
+                categoryColor: 'secondary',
+                errorCode: 'SEN-01 / Dry Run',
+                summary: 'Bench procedure for IR optical level sensors, cleaning prism surfaces, and setting ADC voltage thresholds.',
+                readTime: '3 min read',
+                updated: 'Updated Last Week',
+                steps: [
+                    'Remove optical sensor housing from tank side-mount port.',
+                    'Clean optical prism tip using 99% Isopropyl alcohol and lint-free microfiber swab.',
+                    'Check 5V DC supply rail on motherboard header pin 3.',
+                    'Adjust potentiometer R14 until sensor output reads 4.8V (Dry) and 0.4V (Submerged).',
+                    'Verify dry-run auto-shutoff circuit triggers pump shutdown within 3 seconds of fluid depletion.'
+                ]
             },
             {
-                id: 'kb_4',
-                code: 'SOP-031',
-                product: 'Industrial LFP Battery Array 480V',
-                title: 'Cell Balancing Voltage Drift & Lockout Reset',
-                symptom: 'Array BMS enters high-voltage protection lockout on string #4 during rapid charging.',
-                checkFirstSteps: [
-                    'Check individual cell delta voltage across string (must not exceed 35mV).',
-                    'Inspect thermistor wiring harness connection J2 for loose crimp.',
-                    'Execute passive balancing cycle at 3.45V per cell.'
-                ],
-                resolution: 'Replaced cell #14 on tray 4 which had internal high impedance (>1.8 mΩ).',
-                updatedAt: '2 weeks ago',
-                author: 'David Miller'
+                id: 'SOP-004',
+                code: 'SOP-004',
+                title: 'Custom Fluid Batch Refractive Index & Hang-Time Quality Control',
+                category: 'Custom Fluid Formulation',
+                categoryColor: 'info',
+                errorCode: 'QC-CHEM-09',
+                summary: 'Standard laboratory QC protocol for verifying specific gravity, refractive index, and flash-point safety.',
+                readTime: '5 min read',
+                updated: 'Updated 2 weeks ago',
+                steps: [
+                    'Draw 50ml composite sample from 500-gallon blending vat.',
+                    'Measure sample with digital refractometer at 20°C (Brix range: 24.2 - 25.8).',
+                    'Check specific gravity using hydrometer (Target: 1.054 ± 0.003 g/cm³).',
+                    'Perform particle suspension stability test under 400nm UV inspection lamp.',
+                    'Log analytical findings into batch record and release QA sign-off stamp.'
+                ]
             }
         ];
 
-        function renderMachineTrends() {
-            const container = document.getElementById('machineTrendsContainer');
+        function renderKbArticles(articles = SOP_DATABASE) {
+            const container = document.getElementById('kbArticlesContainer');
             if (!container) return;
 
-            const models = [
-                {
-                    name: 'Antari 2000 Elite',
-                    ticketsCount: 8,
-                    defectRates: [
-                        { symptom: 'Silkscreen Hole Alignment Tolerance', rate: '45%' },
-                        { symptom: 'Carton 5-Ply Burst Test & Corner Cushioning', rate: '35%' },
-                        { symptom: 'User Manual Multilingual Compliance', rate: '20%' }
-                    ],
-                    kbCode: 'SOP-014'
-                },
-                {
-                    name: 'LilyPad Solar Telemetry Gateway',
-                    ticketsCount: 5,
-                    defectRates: [
-                        { symptom: 'RS-485 Modbus Termination Resistor Missing', rate: '60%' },
-                        { symptom: 'Ground Loop Noise & Baud Mismatch', rate: '40%' }
-                    ],
-                    kbCode: 'SOP-022'
-                },
-                {
-                    name: 'Industrial LFP Battery Array 480V',
-                    ticketsCount: 4,
-                    defectRates: [
-                        { symptom: 'String #4 Voltage Delta Drift (>35mV)', rate: '70%' },
-                        { symptom: 'Thermistor Wiring Crimp J2 Loose', rate: '30%' }
-                    ],
-                    kbCode: 'SOP-031'
-                }
-            ];
-
-            container.innerHTML = models.map(m => `
-                <div class="col-md-4">
-                    <div class="card border rounded-3 p-3 h-100 shadow-none bg-light">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="badge bg-soft-primary text-primary fw-bold fs-11">
-                                <i class="ti ti-box me-1"></i>${m.name}
-                            </span>
-                            <span class="badge bg-white text-dark border fs-11">${m.ticketsCount} tickets</span>
-                        </div>
-
-                        <h6 class="fw-bold fs-13 text-dark mb-2">Top Recurring Defects:</h6>
-                        <div class="d-flex flex-column gap-2 mb-3">
-                            ${m.defectRates.map(d => `
-                                <div>
-                                    <div class="d-flex justify-content-between fs-11 text-muted mb-1">
-                                        <span class="text-truncate" style="max-width:180px;">${d.symptom}</span>
-                                        <strong class="text-dark">${d.rate}</strong>
-                                    </div>
-                                    <div class="progress" style="height: 5px;">
-                                        <div class="progress-bar bg-success" style="width: ${d.rate};"></div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-
-                        <button class="btn btn-sm btn-outline-success w-100 mt-auto" onclick="filterKbByProduct('${m.name}')">
-                            <i class="ti ti-book me-1"></i> View Check First Playbook (${m.kbCode})
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function filterKbByProduct(productName) {
-            const tabBtn = document.querySelector('#kbTabs button[data-bs-target="#tabKbArticles"]');
-            if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
-
-            const select = document.getElementById('kbModelFilter');
-            if (select) {
-                select.value = productName;
-                renderKbArticlesList();
-            }
-        }
-
-        function renderKbArticlesList() {
-            const container = document.getElementById('kbArticlesListContainer');
-            const countBadge = document.getElementById('kbArticlesCountBadge');
-            if (!container) return;
-
-            const search = document.getElementById('kbSearchInput')?.value.toLowerCase() || '';
-            const modelFilter = document.getElementById('kbModelFilter')?.value || '';
-
-            const filtered = KB_ARTICLES.filter(k => {
-                const matchSearch = !search || k.title.toLowerCase().includes(search) || k.symptom.toLowerCase().includes(search) || k.product.toLowerCase().includes(search);
-                const matchModel = !modelFilter || k.product === modelFilter;
-                return matchSearch && matchModel;
-            });
-
-            if (countBadge) countBadge.textContent = KB_ARTICLES.length;
-
-            if (!filtered.length) {
-                container.innerHTML = '<div class="col-12 text-center py-4 text-muted">No diagnostic articles found matching search.</div>';
+            if (articles.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center py-5 text-muted"><i class="ti ti-search-off fs-32 d-block mb-2"></i>No matching SOP diagnostic procedures found. Try a different search term.</div>';
                 return;
             }
 
-            container.innerHTML = filtered.map(k => `
-                <div class="col-md-6">
-                    <div class="card p-3 border rounded-3 h-100 d-flex flex-column shadow-sm" style="cursor:pointer; transition: transform 0.15s ease;" onclick="viewKbArticleModal('${k.id}')" onmouseover="this.style.borderColor='var(--bs-primary)';" onmouseout="this.style.borderColor='#e2e8f0';">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="badge bg-dark text-white fs-11 px-2 py-1">${k.code}</span>
-                            <span class="badge bg-soft-primary text-primary fs-11"><i class="ti ti-box me-1"></i>${k.product}</span>
-                        </div>
+            container.innerHTML = articles.map(a => 
+                '<div class="col-lg-6">' +
+                    '<div class="card border-0 shadow-sm rounded-3 h-100 p-4">' +
+                        '<div class="d-flex align-items-center justify-content-between mb-3">' +
+                            '<span class="badge bg-' + a.categoryColor + ' fs-11">' + a.category + '</span>' +
+                            '<span class="badge bg-light text-dark border fs-11 font-monospace">' + a.code + '</span>' +
+                        '</div>' +
+                        '<h5 class="fw-bold text-dark mb-2">' + a.title + '</h5>' +
+                        '<p class="text-muted fs-13 mb-3">' + a.summary + '</p>' +
+                        
+                        '<div class="p-3 bg-light rounded-2 border mb-3">' +
+                            '<strong class="fs-12 text-dark d-block mb-2"><i class="ti ti-checklist text-primary me-1"></i>Key Protocol Steps:</strong>' +
+                            '<ol class="fs-12 text-muted ps-3 mb-0" style="line-height: 1.6;">' +
+                                a.steps.slice(0, 3).map(s => '<li class="mb-1">' + s + '</li>').join('') +
+                            '</ol>' +
+                        '</div>' +
 
-                        <h6 class="fw-bold fs-14 text-dark mb-1">${k.title}</h6>
-                        <p class="text-muted fs-12 mb-2 text-truncate"><strong>Symptom:</strong> ${k.symptom}</p>
-
-                        <div class="bg-light p-2 rounded border mb-2 fs-12">
-                            <strong class="text-success d-block mb-1"><i class="ti ti-check-circle me-1"></i>Check First Steps:</strong>
-                            <ul class="ps-3 mb-0 text-dark">
-                                ${k.checkFirstSteps.slice(0, 2).map(s => `<li>${s}</li>`).join('')}
-                            </ul>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto fs-11 text-muted">
-                            <span><i class="ti ti-user me-1"></i>${k.author} &middot; ${k.updatedAt}</span>
-                            <span class="text-success fw-semibold">Open SOP &rarr;</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+                        '<div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">' +
+                            '<div class="fs-11 text-muted">' +
+                                '<span><i class="ti ti-clock me-1"></i>' + a.readTime + '</span> &middot; ' +
+                                '<span>' + a.updated + '</span>' +
+                            '</div>' +
+                            '<button class="btn btn-sm btn-outline-primary" onclick="viewSopFullModal('' + a.id + '')"><i class="ti ti-file-text me-1"></i>Full Protocol</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            ).join('');
         }
 
-        function viewKbArticleModal(id) {
-            const article = KB_ARTICLES.find(k => k.id === id);
-            if (!article) return;
-
-            document.getElementById('sopModalCode').textContent = article.code;
-            document.getElementById('sopModalProduct').textContent = article.product;
-            document.getElementById('sopModalTitle').textContent = article.title;
-            document.getElementById('sopModalAuthor').textContent = article.author || 'Scott Karan';
-            document.getElementById('sopModalUpdated').textContent = article.updatedAt || 'Recent';
-            document.getElementById('sopModalSymptom').textContent = article.symptom;
-            document.getElementById('sopModalResolution').textContent = article.resolution;
-
-            const stepsContainer = document.getElementById('sopModalStepsList');
-            if (stepsContainer) {
-                stepsContainer.innerHTML = article.checkFirstSteps.map((s, idx) => `
-                    <div class="p-2 rounded border bg-white d-flex align-items-center gap-2">
-                        <input type="checkbox" class="form-check-input mt-0" id="sop_step_${idx}">
-                        <label for="sop_step_${idx}" class="text-dark mb-0 fw-medium fs-13" style="cursor: pointer;">${s}</label>
-                    </div>
-                `).join('');
+        function filterKbArticles() {
+            const query = document.getElementById('kbSearchInput').value.toLowerCase().trim();
+            if (!query) {
+                renderKbArticles(SOP_DATABASE);
+                return;
             }
-
-            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('sopDetailModal'));
-            modal.show();
+            const filtered = SOP_DATABASE.filter(a => 
+                a.title.toLowerCase().includes(query) ||
+                a.summary.toLowerCase().includes(query) ||
+                a.code.toLowerCase().includes(query) ||
+                a.errorCode.toLowerCase().includes(query) ||
+                a.steps.some(s => s.toLowerCase().includes(query))
+            );
+            renderKbArticles(filtered);
         }
 
-        function saveNewKbArticle(e) {
-            e.preventDefault();
-            const product = document.getElementById('newKbProduct').value;
-            const title = document.getElementById('newKbTitle').value.trim();
-            const symptom = document.getElementById('newKbSymptom').value.trim();
-            const stepsRaw = document.getElementById('newKbSteps').value.trim();
-            const resolution = document.getElementById('newKbResolution').value.trim();
+        function viewSopFullModal(id) {
+            const sop = SOP_DATABASE.find(s => s.id === id);
+            if (!sop) return;
+            alert('Protocol [' + sop.code + '] ' + sop.title + ':
 
-            const checkFirstSteps = stepsRaw.split('\n').map(s => s.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
-            const nextNum = KB_ARTICLES.length + 10;
-            const newArticle = {
-                id: 'kb_' + Date.now(),
-                code: `SOP-0${nextNum}`,
-                product,
-                title,
-                symptom,
-                checkFirstSteps,
-                resolution,
-                updatedAt: 'Just now',
-                author: 'Scott Karan'
-            };
+' + sop.steps.map((s, i) => (i+1) + '. ' + s).join('
 
-            KB_ARTICLES.unshift(newArticle);
-            renderKbArticlesList();
-            document.getElementById('createKbForm').reset();
-            const tabBtn = document.querySelector('#kbTabs button[data-bs-target="#tabKbArticles"]');
-            if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
-            alert(`Published ${newArticle.code}: ${newArticle.title} to Knowledgebase!`);
+'));
+        }
+
+        function addNewSopModal() {
+            const title = prompt('Enter Standard Operating Procedure (SOP) Title:');
+            if (!title) return;
+            const errCode = prompt('Enter Associated Error Code / Trigger (e.g., E-04):', 'GEN-01');
+            const step1 = prompt('Enter First Diagnostic Step:');
+            if (!step1) return;
+
+            SOP_DATABASE.unshift({
+                id: 'SOP-' + (SOP_DATABASE.length + 1),
+                code: 'SOP-0' + (SOP_DATABASE.length + 1),
+                title: title,
+                category: 'FX Machine Support',
+                categoryColor: 'primary',
+                errorCode: errCode || 'GEN-01',
+                summary: 'Factory verified procedure for ' + title,
+                readTime: '3 min read',
+                updated: 'Just now',
+                steps: [step1, 'Perform live machine test run to verify normal operational parameters.']
+            });
+            renderKbArticles();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderMachineTrends();
-            renderKbArticlesList();
+            renderKbArticles();
         });
 	</script>
 </body>

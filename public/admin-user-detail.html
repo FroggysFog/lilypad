@@ -6,7 +6,7 @@
 	<!-- Meta Tags -->
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Team Member Profile | LilyPad ERP</title>
+	<title>User Profile & Performance | LilyPad ERP</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description"
 		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
@@ -365,17 +365,17 @@
 						<li>
 							<ul>
 								<li>
-									<a href="dashboard.html" class="">
+									<a href="dashboard.html" class="active">
 										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
 									</a>
 								</li>
 								<li>
-									<a href="tickets.html" class="">
+									<a href="tickets.html">
 										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
 									</a>
 								</li>
 								<li>
-									<a href="knowledge-base.html" class="">
+									<a href="knowledge-base.html">
 										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
 									</a>
 								</li>
@@ -386,13 +386,13 @@
 						<li>
 							<ul>
 								<li class="submenu">
-									<a href="javascript:void(0);" class="subdrop active">
+									<a href="javascript:void(0);" class="subdrop">
 										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
 									</a>
 									<ul style="display: block;">
-										<li><a href="admin-email.html" class=""><i class="ti ti-mail-cog me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
-										<li><a href="admin-team.html" class="active"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
-										<li><a href="admin-forms.html" class=""><i class="ti ti-forms me-2 text-primary"></i>Dynamic Form Builder</a></li>
+										<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -411,7 +411,7 @@
 					</ul>
 				</div>
 			</div>
-    
+
 		</div>
 		<!-- Sidenav Menu End -->
 
@@ -471,7 +471,10 @@
 						</div>
 
 						<div class="d-flex align-items-center gap-2">
-							<button type="button" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#userDetailTabs button[data-bs-target='#tabEditProfile']')).show()">
+							<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" onclick="sendUserDetailOnboardingEmail()">
+								<i class="ti ti-mail-forward me-1"></i> Send Setup Email
+							</button>
+							<button type="button" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#userDetailTabs button[data-bs-target=\'#tabEditProfile\']')).show()">
 								<i class="ti ti-edit me-1"></i> Edit Profile & Role
 							</button>
 						</div>
@@ -632,53 +635,93 @@
 											<input type="text" id="editPhone" class="form-control" placeholder="(615) 555-0100">
 										</div>
 										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Role & Access Level <span class="text-danger">*</span></label>
+											<label class="form-label fs-13 fw-semibold">Role <span class="text-danger">*</span></label>
 											<select id="editRole" class="form-select">
-												<option value="Admin">Admin (Full System Access)</option>
-												<option value="Support Lead">Support Lead (Manage Queues & SOPs)</option>
-												<option value="Agent">Agent (Ticket Resolution)</option>
-												<option value="Viewer">Viewer (Read-Only)</option>
+												<option value="Admin">Admin</option>
+												<option value="Support Lead">Support Lead</option>
+												<option value="Agent">Agent</option>
+												<option value="Packaging Lead">Packaging Lead</option>
+												<option value="Viewer">Viewer</option>
 											</select>
 										</div>
 										<div class="col-md-6">
 											<label class="form-label fs-13 fw-semibold">Department <span class="text-danger">*</span></label>
 											<select id="editDepartment" class="form-select">
 												<option value="Operations">Operations</option>
-												<option value="Engineering">Engineering</option>
 												<option value="Customer Support">Customer Support</option>
+												<option value="Engineering">Engineering</option>
 												<option value="Finance">Finance</option>
 												<option value="Sales & Marketing">Sales & Marketing</option>
 											</select>
 										</div>
-										<div class="col-12">
-											<hr class="my-3">
-											<h6 class="fw-bold fs-13 text-dark mb-2">Notification & Security Preferences</h6>
-											<div class="d-flex flex-column gap-2">
-												<div class="form-check form-switch">
-													<input class="form-check-input" type="checkbox" id="chkNotifAssign" checked>
-													<label class="form-check-label fs-13 text-dark" for="chkNotifAssign">Send immediate email notifications on new ticket assignments</label>
-												</div>
-												<div class="form-check form-switch">
-													<input class="form-check-input" type="checkbox" id="chkNotifSla" checked>
-													<label class="form-check-label fs-13 text-dark" for="chkNotifSla">Alert when assigned tickets approach SLA deadline (< 2 hrs remaining)</label>
-												</div>
-												<div class="form-check form-switch">
-													<input class="form-check-input" type="checkbox" id="chkNotifDaily" checked>
-													<label class="form-check-label fs-13 text-dark" for="chkNotifDaily">Receive daily operational digest summary</label>
-												</div>
-											</div>
-										</div>
 									</div>
-
-									<div class="text-end mt-4 pt-3 border-top d-flex align-items-center justify-content-between">
-										<button type="button" class="btn btn-outline-danger btn-sm" onclick="alert('Password reset link sent to ' + document.getElementById('editEmail').value)">
-											<i class="ti ti-key me-1"></i> Send Password Reset Link
-										</button>
+									<div class="text-end mt-4 pt-3 border-top">
 										<button type="submit" class="btn btn-primary px-4 shadow-sm">
-											<i class="ti ti-check me-1"></i> Save Changes
+											<i class="ti ti-device-floppy me-1"></i> Save Changes
 										</button>
 									</div>
 								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Onboarding / Welcome Email Dispatched Modal -->
+				<div class="modal fade" id="onboardingEmailModal" tabindex="-1" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered modal-lg">
+						<div class="modal-content border-0 shadow-lg">
+							<div class="modal-header py-3 px-4 bg-primary text-white d-flex align-items-center justify-content-between">
+								<div class="d-flex align-items-center gap-2">
+									<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold" style="width:34px; height:34px;">
+										<i class="ti ti-mail-check fs-18"></i>
+									</div>
+									<div>
+										<h5 class="mb-0 text-white fw-bold">Onboarding & Setup Email Dispatched</h5>
+										<span class="fs-12 text-white-50">Sent via LilyPad Outbound Email Service (SMTP/SES)</span>
+									</div>
+								</div>
+								<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+							</div>
+							<div class="modal-body p-4">
+								<div class="alert alert-success d-flex align-items-center gap-2 py-2 px-3 fs-13 mb-3 border-0 rounded-3">
+									<i class="ti ti-circle-check fs-18 text-success"></i>
+									<div>
+										<strong>Email delivered successfully!</strong> A welcome invitation has been sent to <span id="onboardingEmailRecipient" class="fw-bold"></span>.
+									</div>
+								</div>
+
+								<!-- Email Message Live Preview Box -->
+								<div class="card border rounded-3 p-0 mb-3 shadow-none bg-white">
+									<div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between flex-wrap gap-2">
+										<div>
+											<span class="fs-12 text-muted d-block">Subject:</span>
+											<strong class="fs-14 text-dark" id="onboardingEmailSubject">Welcome to Froggy's Fog Hub | Set Up Your Account</strong>
+										</div>
+										<span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Delivered</span>
+									</div>
+									<div class="p-4" id="onboardingEmailBodyPreview" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;">
+										<!-- Rendered email content -->
+									</div>
+								</div>
+
+								<!-- Direct Action Links -->
+								<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 p-3 bg-light rounded-3 border">
+									<div class="text-truncate" style="max-width: 480px;">
+										<span class="fs-12 text-muted d-block">Password Setup & Activation URL:</span>
+										<code class="fs-12 text-primary text-truncate d-block" id="onboardingSetupUrl"></code>
+									</div>
+									<div class="d-flex gap-2">
+										<button type="button" class="btn btn-sm btn-outline-primary shadow-sm" onclick="copyOnboardingUrl()">
+											<i class="ti ti-copy me-1"></i> Copy Link
+										</button>
+										<a id="btnSimulateSetup" href="#" target="_blank" class="btn btn-sm btn-primary shadow-sm">
+											<i class="ti ti-external-link me-1"></i> Open Password Setup
+										</a>
+									</div>
+								</div>
+							</div>
+							<div class="modal-footer py-2 px-4 bg-light">
+								<button type="button" class="btn btn-sm btn-light px-3" data-bs-dismiss="modal">Close</button>
 							</div>
 						</div>
 					</div>
@@ -712,7 +755,9 @@
     <script src="assets/js/lilypad-notifications.js"></script>
 
 	<script>
-        const USER_DATABASE = {
+        const STORAGE_TEAM_KEY = "lilypad_team_users_v2";
+
+        let USER_DATABASE = {
             'u1': {
                 id: 'u1',
                 fullname: 'Scott Karan',
@@ -720,29 +765,27 @@
                 email: 'scott@froggysfog.com',
                 role: 'Admin',
                 department: 'Operations',
-                phone: '(615) 555-0142',
+                phone: '(615) 555-0100',
                 initials: 'SK',
                 active: true,
                 joinDate: 'Jan 2024',
                 stats: {
-                    'today': { open: 1, inProgress: 2, completed: 3, low: 0, normal: 2, high: 3, urgent: 1, avgRes: '1.8 hrs', sla: '100%' },
-                    'week': { open: 4, inProgress: 5, completed: 14, low: 2, normal: 8, high: 9, urgent: 4, avgRes: '2.4 hrs', sla: '99.1%' },
-                    'month': { open: 6, inProgress: 8, completed: 48, low: 6, normal: 24, high: 22, urgent: 10, avgRes: '3.1 hrs', sla: '98.5%' },
-                    'quarter': { open: 8, inProgress: 12, completed: 136, low: 18, normal: 68, high: 54, urgent: 24, avgRes: '2.9 hrs', sla: '98.8%' },
-                    'all': { open: 8, inProgress: 12, completed: 312, low: 42, normal: 156, high: 104, urgent: 38, avgRes: '3.0 hrs', sla: '99.0%' }
+                    'today': { open: 1, inProgress: 2, completed: 3, low: 1, normal: 3, high: 2, urgent: 0, avgRes: '1.2 hrs', sla: '100%' },
+                    'week': { open: 4, inProgress: 6, completed: 18, low: 3, normal: 12, high: 9, urgent: 4, avgRes: '1.8 hrs', sla: '98.5%' },
+                    'month': { open: 8, inProgress: 12, completed: 54, low: 10, normal: 32, high: 24, urgent: 8, avgRes: '2.1 hrs', sla: '99.1%' },
+                    'quarter': { open: 12, inProgress: 18, completed: 142, low: 22, normal: 85, high: 51, urgent: 14, avgRes: '2.4 hrs', sla: '98.9%' },
+                    'all': { open: 15, inProgress: 20, completed: 320, low: 45, normal: 180, high: 105, urgent: 25, avgRes: '2.2 hrs', sla: '99.2%' }
                 },
                 activities: [
-                    { type: 'status', title: 'Moved Ticket to Resolved', desc: 'Resolved #TICK-8092 (Antari 2000 Silkscreen Alignment Offset) after verifying 2-part epoxy bake.', time: '2 hours ago', icon: 'ti-check', color: 'success' },
-                    { type: 'note', title: 'Added Technical Note & Proof', desc: 'Uploaded Antari_Plate_Proof_v3.ai to #TICK-8095 (Vendor Purchase Order - Apex Prints).', time: '4 hours ago', icon: 'ti-message-circle', color: 'primary' },
-                    { type: 'sop', title: 'Verified Diagnostic Checklist', desc: 'Logged Pre-Flight Diagnostic Checklist verification for SOP-014 on Antari 2000 chassis batch #408.', time: 'Yesterday at 3:45 PM', icon: 'ti-book', color: 'info' },
-                    { type: 'sop', title: 'Updated Inbound Anti-Spam Security Rules', desc: 'Enabled first-time sender challenge and updated domain whitelist for @packcraft.com.', time: '2 days ago', icon: 'ti-shield-check', color: 'warning' },
-                    { type: 'status', title: 'Logged Operational Repair Time', desc: 'Recorded 2.5 hours diagnostic work on #TICK-8092.', time: '3 days ago', icon: 'ti-clock', color: 'secondary' }
+                    { type: 'status', title: 'Resolved Ticket #TICK-8088', desc: 'Diagnosed thermal cutoff fuse on Poseidon 2000 Fog Generator.', time: '12 mins ago', icon: 'ti-check', color: 'success' },
+                    { type: 'note', title: 'Added Internal Note to #TICK-8086', desc: 'Requested high-pressure hose pressure test results from QC.', time: '1 hour ago', icon: 'ti-message-dots', color: 'info' },
+                    { type: 'sop', title: 'Published New SOP', desc: 'Created SOP-044: Fog Fluid Pump Motor Cavitation Diagnostic Protocol.', time: '4 hours ago', icon: 'ti-book', color: 'primary' },
+                    { type: 'status', title: 'Updated Priority #TICK-8082', desc: 'Elevated priority to Urgent due to facility tour deadline.', time: 'Yesterday', icon: 'ti-arrow-up', color: 'danger' }
                 ],
                 tickets: [
-                    { id: 'TICK-8092', subject: 'Antari 2000 Silkscreen Front Plate Alignment Proof', category: 'FX Machine Support', priority: 'High', status: 'In Progress', updated: '2 hrs ago' },
-                    { id: 'TICK-8095', subject: 'Master Carton Burst Test Flute Spec Revision', category: 'Vendor Purchase Order', priority: 'Urgent', status: 'To-Do', updated: '4 hrs ago' },
-                    { id: 'TICK-8088', subject: 'Solar Telemetry Modbus RTU 120-Ohm Termination Resistor', category: 'FX Machine Support', priority: 'Normal', status: 'In Progress', updated: '1 day ago' },
-                    { id: 'TICK-8081', subject: 'Fast-Dissipating Fog Fluid Formula Batch SDS', category: 'Fluid Finder Update', priority: 'Low', status: 'Completed', updated: '3 days ago' }
+                    { id: 'TICK-8088', subject: 'Poseidon 2000 Fluid Pump Pressure Loss', category: 'FX Machine Support', priority: 'High', status: 'Completed', updated: '12 mins ago' },
+                    { id: 'TICK-8086', subject: 'Custom Fluid Viscosity Formulation Batch 94', category: 'Custom Fluid Formulation', priority: 'Medium', status: 'In Progress', updated: '1 hr ago' },
+                    { id: 'TICK-8082', subject: 'Titan 1500 Heater Thermostat Tripped E-04', category: 'FX Machine Support', priority: 'Urgent', status: 'In Progress', updated: 'Yesterday' }
                 ]
             },
             'u2': {
@@ -752,25 +795,23 @@
                 email: 'alex@froggysfog.com',
                 role: 'Support Lead',
                 department: 'Customer Support',
-                phone: '(615) 555-0188',
+                phone: '(615) 555-0145',
                 initials: 'AM',
                 active: true,
                 joinDate: 'Mar 2024',
                 stats: {
-                    'today': { open: 2, inProgress: 1, completed: 4, low: 1, normal: 3, high: 2, urgent: 1, avgRes: '2.1 hrs', sla: '100%' },
-                    'week': { open: 5, inProgress: 7, completed: 22, low: 4, normal: 12, high: 11, urgent: 7, avgRes: '2.6 hrs', sla: '97.8%' },
-                    'month': { open: 7, inProgress: 9, completed: 64, low: 12, normal: 30, high: 28, urgent: 10, avgRes: '2.8 hrs', sla: '98.2%' },
-                    'quarter': { open: 9, inProgress: 14, completed: 180, low: 32, normal: 85, high: 62, urgent: 20, avgRes: '2.7 hrs', sla: '98.4%' },
-                    'all': { open: 9, inProgress: 14, completed: 410, low: 70, normal: 190, high: 130, urgent: 39, avgRes: '2.8 hrs', sla: '98.6%' }
+                    'today': { open: 2, inProgress: 3, completed: 4, low: 2, normal: 4, high: 2, urgent: 1, avgRes: '1.4 hrs', sla: '100%' },
+                    'week': { open: 5, inProgress: 8, completed: 26, low: 5, normal: 18, high: 11, urgent: 5, avgRes: '1.9 hrs', sla: '99.0%' },
+                    'month': { open: 10, inProgress: 15, completed: 78, low: 14, normal: 48, high: 31, urgent: 10, avgRes: '2.0 hrs', sla: '99.4%' },
+                    'quarter': { open: 14, inProgress: 22, completed: 210, low: 35, normal: 130, high: 68, urgent: 19, avgRes: '2.2 hrs', sla: '99.1%' },
+                    'all': { open: 18, inProgress: 25, completed: 480, low: 80, normal: 290, high: 145, urgent: 38, avgRes: '2.1 hrs', sla: '99.3%' }
                 },
                 activities: [
-                    { type: 'status', title: 'Triage Inbound Support Request', desc: 'Triaged and routed email from Live Nation to FX Machine Support queue.', time: '1 hour ago', icon: 'ti-mail', color: 'primary' },
-                    { type: 'note', title: 'Customer Reply Sent', desc: 'Sent SDS sheets and tracking number for order #FF-9021.', time: '3 hours ago', icon: 'ti-send', color: 'info' },
-                    { type: 'status', title: 'Resolved Customer Inquiry', desc: 'Closed ticket #TICK-8075 (Fluid consumption rate calculator for stadium gig).', time: 'Yesterday', icon: 'ti-check', color: 'success' }
+                    { type: 'status', title: 'Closed RMA #TICK-8072', desc: 'Approved return for optical sensor recalibration.', time: '45 mins ago', icon: 'ti-package', color: 'success' },
+                    { type: 'note', title: 'Replied to Customer', desc: 'Provided wiring schematic for DMX wireless receiver module.', time: '2 hours ago', icon: 'ti-mail-forward', color: 'info' }
                 ],
                 tickets: [
-                    { id: 'TICK-8089', subject: 'Customer Inquiry: DMX Fog Controller Latency on 5-Pin Cable', category: 'Customer Support Request', priority: 'High', status: 'In Progress', updated: '1 hr ago' },
-                    { id: 'TICK-8076', subject: 'Account Rep Assignment Update for Orlando Venue', category: 'Rep Assignment Change', priority: 'Normal', status: 'To-Do', updated: '5 hrs ago' }
+                    { id: 'TICK-8072', subject: 'Optical Fluid Level Sensor Signal Drift', category: 'Warranty & RMA Returns', priority: 'Medium', status: 'Completed', updated: '45 mins ago' }
                 ]
             },
             'u3': {
@@ -780,20 +821,19 @@
                 email: 'david@froggysfog.com',
                 role: 'Agent',
                 department: 'Engineering',
-                phone: '(615) 555-0129',
+                phone: '(615) 555-0162',
                 initials: 'DM',
                 active: true,
-                joinDate: 'Feb 2024',
+                joinDate: 'Jan 2024',
                 stats: {
-                    'today': { open: 1, inProgress: 3, completed: 1, low: 0, normal: 2, high: 2, urgent: 1, avgRes: '3.4 hrs', sla: '95%' },
-                    'week': { open: 3, inProgress: 6, completed: 11, low: 1, normal: 7, high: 8, urgent: 4, avgRes: '3.8 hrs', sla: '96.2%' },
-                    'month': { open: 5, inProgress: 8, completed: 36, low: 4, normal: 18, high: 20, urgent: 7, avgRes: '3.6 hrs', sla: '97.0%' },
-                    'quarter': { open: 6, inProgress: 10, completed: 98, low: 10, normal: 48, high: 40, urgent: 16, avgRes: '3.5 hrs', sla: '97.3%' },
-                    'all': { open: 6, inProgress: 10, completed: 215, low: 22, normal: 105, high: 84, urgent: 30, avgRes: '3.5 hrs', sla: '97.5%' }
+                    'today': { open: 1, inProgress: 1, completed: 1, low: 0, normal: 1, high: 1, urgent: 1, avgRes: '2.4 hrs', sla: '100%' },
+                    'week': { open: 3, inProgress: 5, completed: 14, low: 2, normal: 9, high: 8, urgent: 3, avgRes: '2.8 hrs', sla: '97.5%' },
+                    'month': { open: 6, inProgress: 9, completed: 39, low: 6, normal: 24, high: 18, urgent: 6, avgRes: '2.9 hrs', sla: '98.2%' },
+                    'quarter': { open: 8, inProgress: 12, completed: 105, low: 18, normal: 60, high: 42, urgent: 13, avgRes: '2.8 hrs', sla: '98.5%' },
+                    'all': { open: 9, inProgress: 14, completed: 210, low: 32, normal: 110, high: 82, urgent: 25, avgRes: '2.7 hrs', sla: '98.7%' }
                 },
                 activities: [
-                    { type: 'sop', title: 'Published SOP-031 Update', desc: 'Updated Cell Balancing Voltage Drift & Lockout Reset guidelines.', time: '5 hours ago', icon: 'ti-book', color: 'info' },
-                    { type: 'status', title: 'Assigned Firmware Debug Task', desc: 'Accepted #TICK-8084 (Solar Gateway Firmware v2.1 OTA failure).', time: 'Yesterday', icon: 'ti-check', color: 'success' }
+                    { type: 'sop', title: 'Created Diagnostic Rule', desc: 'Added automated troubleshooting check for 24V DC pump stall.', time: '1 hour ago', icon: 'ti-cpu', color: 'primary' }
                 ],
                 tickets: [
                     { id: 'TICK-8084', subject: 'Solar Gateway Firmware v2.1 OTA Update Failure', category: 'FX Machine Support', priority: 'Urgent', status: 'In Progress', updated: '3 hrs ago' }
@@ -851,11 +891,48 @@
             }
         };
 
+        function getStoredTeamUsers() {
+            try {
+                const stored = localStorage.getItem(STORAGE_TEAM_KEY);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    parsed.forEach(u => {
+                        if (!USER_DATABASE[u.id]) {
+                            USER_DATABASE[u.id] = {
+                                id: u.id,
+                                fullname: u.fullname,
+                                username: u.username || u.email.split('@')[0],
+                                email: u.email,
+                                role: u.role,
+                                department: u.department,
+                                phone: u.phone || '(615) 555-0188',
+                                initials: u.initials || 'FF',
+                                active: true,
+                                joinDate: u.joined || 'Mar 2026',
+                                stats: {
+                                    'today': { open: 0, inProgress: 1, completed: 1, low: 0, normal: 1, high: 1, urgent: 0, avgRes: '1.8 hrs', sla: '100%' },
+                                    'week': { open: 1, inProgress: 2, completed: 8, low: 2, normal: 5, high: 3, urgent: 1, avgRes: '2.1 hrs', sla: '99.0%' },
+                                    'month': { open: 2, inProgress: 3, completed: 25, low: 4, normal: 15, high: 9, urgent: 2, avgRes: '2.4 hrs', sla: '99.2%' },
+                                    'quarter': { open: 3, inProgress: 4, completed: 60, low: 10, normal: 35, high: 20, urgent: 5, avgRes: '2.3 hrs', sla: '99.1%' },
+                                    'all': { open: 3, inProgress: 4, completed: 120, low: 20, normal: 70, high: 40, urgent: 10, avgRes: '2.3 hrs', sla: '99.3%' }
+                                },
+                                activities: [
+                                    { type: 'status', title: 'Profile Activated', desc: 'Account provisioned and onboarded into Froggy's Fog ERP.', time: 'Recently', icon: 'ti-user-check', color: 'primary' }
+                                ],
+                                tickets: []
+                            };
+                        }
+                    });
+                }
+            } catch(e) {}
+        }
+
         let currentUserId = 'u1';
         let currentTimeframe = 'month';
         let currentActivityFilter = 'all';
 
         function loadUserProfileFromUrl() {
+            getStoredTeamUsers();
             const params = new URLSearchParams(window.location.search);
             const id = params.get('id');
             if (id && USER_DATABASE[id]) {
@@ -868,14 +945,12 @@
         function renderMemberDropdown() {
             const dropdown = document.getElementById('memberSwitchDropdown');
             if (!dropdown) return;
-            dropdown.innerHTML = Object.values(USER_DATABASE).map(u => `
-                <li>
-                    <a class="dropdown-item d-flex align-items-center justify-content-between ${u.id === currentUserId ? 'active' : ''}" href="admin-user-detail.html?id=${u.id}">
-                        <span>${u.fullname}</span>
-                        <span class="badge ${u.id === currentUserId ? 'bg-white text-dark' : 'bg-light text-dark'} fs-11 ms-2">${u.role}</span>
-                    </a>
-                </li>
-            `).join('');
+            dropdown.innerHTML = Object.values(USER_DATABASE).map(u => '<li>' +
+                '<a class="dropdown-item d-flex align-items-center justify-content-between ' + (u.id === currentUserId ? 'active' : '') + '" href="admin-user-detail.html?id=' + u.id + '">' +
+                    '<span>' + u.fullname + '</span>' +
+                    '<span class="badge ' + (u.id === currentUserId ? 'bg-white text-dark' : 'bg-light text-dark') + ' fs-11 ms-2">' + u.role + '</span>' +
+                '</a>' +
+            '</li>').join('');
         }
 
         function setTimeframe(tf, btn) {
@@ -900,18 +975,16 @@
             const user = USER_DATABASE[currentUserId];
             if (!user) return;
 
-            // Identity Header
             document.getElementById('uHeaderName').textContent = user.fullname;
             document.getElementById('uHeaderRole').textContent = user.role;
+            document.getElementById('uProfileAvatar').textContent = user.initials;
             document.getElementById('uProfileFullName').textContent = user.fullname;
             document.getElementById('uProfileEmail').textContent = user.email;
             document.getElementById('uProfileUsername').textContent = user.username;
             document.getElementById('uProfileDepartment').textContent = user.department;
             document.getElementById('uProfilePhone').textContent = user.phone || '(615) 555-0100';
-            document.getElementById('uProfileJoined').textContent = user.joinDate;
-            document.getElementById('uProfileAvatar').textContent = user.initials;
+            document.getElementById('uProfileJoined').textContent = user.joinDate || 'Jan 2024';
 
-            // Edit Form Inputs
             document.getElementById('editFullName').value = user.fullname;
             document.getElementById('editEmail').value = user.email;
             document.getElementById('editUsername').value = user.username;
@@ -921,77 +994,76 @@
 
             renderUserStats();
             renderUserActivity();
-            renderUserAssignedTickets();
+            renderUserTickets();
         }
 
         function renderUserStats() {
             const user = USER_DATABASE[currentUserId];
-            const stats = (user && user.stats && user.stats[currentTimeframe]) ? user.stats[currentTimeframe] : { open: 0, inProgress: 0, completed: 0, low: 0, normal: 0, high: 0, urgent: 0, avgRes: '0 hrs', sla: '100%' };
+            if (!user || !user.stats) return;
+            const stats = user.stats[currentTimeframe] || user.stats['month'];
 
             document.getElementById('statOpen').textContent = stats.open;
             document.getElementById('statInProgress').textContent = stats.inProgress;
             document.getElementById('statCompleted').textContent = stats.completed;
-            document.getElementById('statUrgentHigh').textContent = (stats.urgent + stats.high);
+            document.getElementById('statUrgentHigh').textContent = (stats.high || 0) + (stats.urgent || 0);
             document.getElementById('statAvgResolution').textContent = stats.avgRes;
             document.getElementById('statSla').textContent = stats.sla;
         }
 
         function renderUserActivity() {
             const user = USER_DATABASE[currentUserId];
-            const container = document.getElementById('userActivityTimeline');
-            if (!container || !user) return;
+            const timeline = document.getElementById('userActivityTimeline');
+            if (!user || !timeline) return;
 
-            const acts = user.activities.filter(a => currentActivityFilter === 'all' || a.type === currentActivityFilter);
+            let activities = user.activities || [];
+            if (currentActivityFilter !== 'all') {
+                activities = activities.filter(a => a.type === currentActivityFilter);
+            }
 
-            if (!acts.length) {
-                container.innerHTML = '<div class="text-center py-4 text-muted fs-13">No activity logs recorded for this filter.</div>';
+            if (activities.length === 0) {
+                timeline.innerHTML = '<div class="text-muted fs-13 py-3">No activity logs found for this filter.</div>';
                 return;
             }
 
-            container.innerHTML = acts.map(a => `
-                <div class="d-flex gap-3 mb-4 position-relative">
-                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center bg-${a.color} shadow-sm" style="width: 36px; height: 36px; min-width: 36px; font-size: 16px;">
-                        <i class="ti ${a.icon}"></i>
-                    </div>
-                    <div class="card border rounded-3 p-3 w-100 shadow-none bg-light">
-                        <div class="d-flex align-items-center justify-content-between mb-1">
-                            <strong class="text-dark fs-13">${a.title}</strong>
-                            <span class="text-muted fs-11"><i class="ti ti-clock me-1"></i>${a.time}</span>
-                        </div>
-                        <p class="mb-0 fs-12 text-muted">${a.desc}</p>
-                    </div>
-                </div>
-            `).join('');
+            timeline.innerHTML = activities.map(a => '<div class="mb-4 position-relative">' +
+                '<div class="position-absolute rounded-circle bg-' + a.color + ' text-white d-flex align-items-center justify-content-center shadow-sm" style="left: -32px; top: 0; width: 24px; height: 24px; font-size: 11px;">' +
+                    '<i class="ti ' + a.icon + '"></i>' +
+                '</div>' +
+                '<div class="bg-light p-3 rounded-3 border">' +
+                    '<div class="d-flex align-items-center justify-content-between mb-1">' +
+                        '<strong class="fs-13 text-dark">' + a.title + '</strong>' +
+                        '<span class="fs-11 text-muted"><i class="ti ti-clock me-1"></i>' + a.time + '</span>' +
+                    '</div>' +
+                    '<p class="fs-12 text-muted mb-0">' + a.desc + '</p>' +
+                '</div>' +
+            '</div>').join('');
         }
 
-        function renderUserAssignedTickets() {
+        function renderUserTickets() {
             const user = USER_DATABASE[currentUserId];
             const tbody = document.getElementById('userAssignedTicketsTableBody');
             const countBadge = document.getElementById('assignedTicketsCountBadge');
-            if (!tbody || !user) return;
+            if (!user || !tbody) return;
 
-            if (countBadge) countBadge.textContent = user.tickets.length;
+            const tickets = user.tickets || [];
+            if (countBadge) countBadge.textContent = tickets.length;
 
-            if (!user.tickets.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No tickets currently assigned.</td></tr>';
+            if (tickets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No tickets currently assigned to this team member.</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = user.tickets.map(t => `
-                <tr>
-                    <td><strong class="text-primary font-monospace">${t.id}</strong></td>
-                    <td><strong class="text-dark fs-12">${t.subject}</strong></td>
-                    <td><span class="badge bg-soft-primary text-primary fs-11">${t.category}</span></td>
-                    <td><span class="badge ${t.priority === 'Urgent' ? 'bg-danger' : (t.priority === 'High' ? 'bg-warning text-dark' : 'bg-secondary')} fs-11">${t.priority}</span></td>
-                    <td><span class="badge ${t.status === 'Completed' ? 'bg-success-subtle text-success' : (t.status === 'In Progress' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary')} fs-11">${t.status}</span></td>
-                    <td><span class="text-muted fs-11">${t.updated}</span></td>
-                    <td class="text-end">
-                        <a href="tickets.html?ticket=${t.id}" class="btn btn-sm btn-outline-success py-0 px-2 fs-11 shadow-sm">
-                            Open &rarr;
-                        </a>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = tickets.map(t => '<tr>' +
+                '<td><a href="tickets.html" class="fw-bold text-primary text-decoration-none">' + t.id + '</a></td>' +
+                '<td><strong class="text-dark">' + t.subject + '</strong></td>' +
+                '<td><span class="badge bg-light text-dark border">' + t.category + '</span></td>' +
+                '<td><span class="badge ' + (t.priority === 'Urgent' ? 'bg-danger' : (t.priority === 'High' ? 'bg-warning text-dark' : 'bg-info')) + ' fs-11">' + t.priority + '</span></td>' +
+                '<td><span class="badge ' + (t.status === 'Completed' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary') + ' fs-11">' + t.status + '</span></td>' +
+                '<td class="text-muted">' + t.updated + '</td>' +
+                '<td class="text-end">' +
+                    '<a href="tickets.html" class="btn btn-sm btn-outline-secondary py-1 px-2 fs-12"><i class="ti ti-eye me-1"></i>Open</a>' +
+                '</td>' +
+            '</tr>').join('');
         }
 
         function saveUserProfileEdits(e) {
@@ -1007,23 +1079,112 @@
             user.department = document.getElementById('editDepartment').value;
             user.initials = user.fullname.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'FF';
 
-            // Add activity log
-            user.activities.unshift({
-                type: 'sop',
-                title: 'User Profile Updated',
-                desc: 'Administrative profile and role permissions updated by Scott Karan.',
-                time: 'Just now',
-                icon: 'ti-user-check',
-                color: 'success'
-            });
+            // Also update localStorage team list
+            try {
+                const stored = localStorage.getItem(STORAGE_TEAM_KEY);
+                if (stored) {
+                    let teamList = JSON.parse(stored);
+                    let idx = teamList.findIndex(u => u.id === currentUserId);
+                    if (idx !== -1) {
+                        teamList[idx] = Object.assign({}, teamList[idx], {
+                            fullname: user.fullname,
+                            email: user.email,
+                            username: user.username,
+                            phone: user.phone,
+                            role: user.role,
+                            department: user.department,
+                            initials: user.initials
+                        });
+                        localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(teamList));
+                    }
+                }
+            } catch(err) {}
 
             renderUserView();
             renderMemberDropdown();
 
+            user.activities.unshift({
+                type: 'status',
+                title: 'Updated Profile Information',
+                desc: 'Modified profile credentials and department assignments.',
+                time: 'Just now',
+                icon: 'ti-edit',
+                color: 'info'
+            });
+            renderUserActivity();
+
             const tabBtn = document.querySelector('#userDetailTabs button[data-bs-target="#tabActivity"]');
             if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
 
-            alert('Profile details for ' + user.fullname + ' updated successfully!');
+            alert('Profile for ' + user.fullname + ' updated successfully!');
+        }
+
+        function sendUserDetailOnboardingEmail() {
+            const user = USER_DATABASE[currentUserId];
+            if (!user) return;
+
+            const origin = window.location.origin || (window.location.protocol + '//' + window.location.host);
+            const token = 'tok_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+            const setupUrl = origin + '/login.html?action=setup-password&email=' + encodeURIComponent(user.email) + '&user=' + encodeURIComponent(user.username || '') + '&token=' + token;
+            const hubUrl = origin + '/dashboard.html';
+            const subject = 'Welcome to Froggy's Fog Hub | Set Up Your Account (' + user.fullname + ')';
+
+            const emailHtml = '<div style="max-width: 620px; margin: 0 auto; color: #1e293b;">' +
+                '<div style="border-bottom: 2px solid var(--bs-primary, #0d6efd); padding-bottom: 14px; margin-bottom: 20px;">' +
+                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy's Fog Operations Hub</h4>' +
+                    '<span style="font-size: 13px; color: #64748b;">Enterprise ERP & Diagnostic Portal</span>' +
+                '</div>' +
+                '<p style="font-size: 15px; margin-bottom: 16px;">Hi <strong>' + user.fullname + '</strong>,</p>' +
+                '<p style="font-size: 14px; line-height: 1.6; margin-bottom: 20px;">' +
+                    'An account has been created for you on the <strong>Froggy's Fog Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
+                '</p>' +
+                '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; text-align: center; margin-bottom: 24px;">' +
+                    '<p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">Please activate your profile and establish your private password:</p>' +
+                    '<a href="' + setupUrl + '" target="_blank" style="background-color: var(--bs-primary, #0d6efd); color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block; box-shadow: 0 2px 8px rgba(13,110,253,0.35);">' +
+                        '🔑 Set Password & Activate Account &rarr;' +
+                    '</a>' +
+                '</div>' +
+                '<h5 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 10px;">🚀 Getting Started on the Hub:</h5>' +
+                '<ol style="font-size: 13px; color: #334155; line-height: 1.7; padding-left: 20px; margin-bottom: 24px;">' +
+                    '<li><strong>Establish Your Password:</strong> Click the button above to set up your password.</li>' +
+                    '<li><strong>Main Operations Dashboard:</strong> Monitor real-time factory feeds and ticket movements at <a href="' + hubUrl + '" target="_blank" style="color: var(--bs-primary, #0d6efd);">' + hubUrl + '</a>.</li>' +
+                    '<li><strong>Ticket Suite:</strong> Manage assigned machine maintenance, production requests, and dynamic field entries.</li>' +
+                    '<li><strong>Diagnostic SOPs & Knowledge Base:</strong> Search symptom checklists and pre-flight factory testing protocols.</li>' +
+                '</ol>' +
+                '<div style="border-top: 1px solid #e2e8f0; padding-top: 14px; font-size: 12px; color: #64748b;">' +
+                    '<p style="margin: 0;">Need assistance? Contact Operations Admin at <a href="mailto:scott@froggysfog.com" style="color: #64748b;">scott@froggysfog.com</a> or visit <a href="https://froggysfog.com" target="_blank" style="color: #64748b;">froggysfog.com</a>.</p>' +
+                '</div>' +
+            '</div>';
+
+            if (window.LilypadNotifications && LilypadNotifications.addNotification) {
+                LilypadNotifications.addNotification({
+                    title: 'Outbound Email Dispatched to ' + user.fullname,
+                    message: 'Onboarding setup email delivered to ' + user.email,
+                    type: 'email',
+                    link: 'admin-team.html'
+                });
+            }
+
+            document.getElementById('onboardingEmailRecipient').textContent = user.fullname + ' (' + user.email + ')';
+            document.getElementById('onboardingEmailSubject').textContent = subject;
+            document.getElementById('onboardingEmailBodyPreview').innerHTML = emailHtml;
+            document.getElementById('onboardingSetupUrl').textContent = setupUrl;
+            document.getElementById('btnSimulateSetup').href = setupUrl;
+
+            const modalEl = document.getElementById('onboardingEmailModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            }
+        }
+
+        function copyOnboardingUrl() {
+            const url = document.getElementById('onboardingSetupUrl').textContent;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Password setup URL copied to clipboard!');
+            }).catch(() => {
+                alert('Setup URL: ' + url);
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
