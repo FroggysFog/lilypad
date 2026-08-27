@@ -79,9 +79,9 @@
 
 [data-bs-theme="dark"] .category-chip:hover,
 [data-bs-theme="dark"] .category-chip.active {
-    background-color: rgba(4, 125, 36, 0.15) !important;
-    border-color: #047d24 !important;
-    color: #4ade80 !important;
+    background-color: rgba(var(--bs-primary-rgb), 0.2) !important;
+    border-color: var(--bs-primary) !important;
+    color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .metadata-pill {
@@ -174,9 +174,9 @@
 [data-bs-theme="dark"] .form-control:focus,
 [data-bs-theme="dark"] .form-select:focus {
     background-color: #0f172a !important;
-    border-color: #047d24 !important;
+    border-color: var(--bs-primary) !important;
     color: #ffffff !important;
-    box-shadow: 0 0 0 3px rgba(4, 125, 36, 0.25) !important;
+    box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.25) !important;
 }
 
 [data-bs-theme="dark"] .form-control::placeholder {
@@ -215,8 +215,8 @@
 
 [data-bs-theme="dark"] .nav-tabs .nav-link.active {
     background-color: transparent !important;
-    border-color: transparent transparent #047d24 transparent !important;
-    color: #4ade80 !important;
+    border-color: transparent transparent var(--bs-primary) transparent !important;
+    color: var(--bs-primary) !important;
 }
 
 [data-bs-theme="dark"] .nav-pills .nav-link:not(.active) {
@@ -407,7 +407,7 @@
 .sidebar .sidebar-menu ul li a.active,
 .sidebar .sidebar-menu ul li a.subdrop,
 .sidebar .sidebar-menu ul li.active > a {
-    background: #047d24 !important;
+    background: var(--bs-primary) !important;
     color: #ffffff !important;
 }
 
@@ -441,9 +441,9 @@
 
 /* Mini-Sidebar Mode Icon Tiles */
 .mini-sidebar .sidebar .sidebar-menu li > a:hover {
-    background: #047d24 !important;
+    background: var(--bs-primary) !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(4, 125, 36, 0.35) !important;
+    box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.35) !important;
 }
 
 .mini-sidebar .sidebar .sidebar-menu li > a:hover i,
@@ -454,9 +454,9 @@
 .mini-sidebar .sidebar .sidebar-menu li.submenu > a.active,
 .mini-sidebar .sidebar .sidebar-menu li > a.active,
 .mini-sidebar .sidebar .sidebar-menu li.active > a {
-    background: #047d24 !important;
+    background: var(--bs-primary) !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(4, 125, 36, 0.35) !important;
+    box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.35) !important;
 }
 
 .mini-sidebar .sidebar .sidebar-menu li.submenu > a.active i,
@@ -473,7 +473,7 @@
 [data-bs-theme="dark"] .sidebar .sidebar-menu ul li a.active,
 [data-bs-theme="dark"] .sidebar .sidebar-menu ul li a.subdrop,
 [data-bs-theme="dark"] .sidebar .sidebar-menu ul li.active > a {
-    background: #047d24 !important;
+    background: var(--bs-primary) !important;
     color: #ffffff !important;
 }
 
@@ -506,7 +506,7 @@
 }
 
 [data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li > a:hover {
-    background: #047d24 !important;
+    background: var(--bs-primary) !important;
     color: #ffffff !important;
 }
 
@@ -518,11 +518,68 @@
 [data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li.submenu > a.active,
 [data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li > a.active,
 [data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li.active > a {
-    background: #047d24 !important;
+    background: var(--bs-primary) !important;
     color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li.submenu > a.active i,
 [data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li > a.active i {
+    color: #ffffff !important;
+}
+
+/* Universal High Contrast Rules for Primary and Active Buttons */
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.btn-primary:disabled {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+    color: #ffffff !important;
+}
+
+.btn-primary i,
+.btn-primary svg,
+.btn-primary span {
+    color: #ffffff !important;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link,
+.btn-group .btn-primary.active,
+.btn-group .btn.active,
+.list-group-item.active {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+    color: #ffffff !important;
+}
+
+.nav-pills .nav-link.active i,
+.nav-pills .nav-link.active span,
+.btn-group .btn-primary.active i,
+.btn-group .btn.active i,
+.list-group-item.active i,
+.list-group-item.active span {
+    color: #ffffff !important;
+}
+
+.btn-outline-primary {
+    color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active,
+.btn-outline-primary.active {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+    color: #ffffff !important;
+}
+
+.btn-outline-primary:hover i,
+.btn-outline-primary.active i {
     color: #ffffff !important;
 }

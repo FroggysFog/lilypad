@@ -2,7 +2,6 @@
 
 ! function() {
 	var t = localStorage.getItem("__THEME_CONFIG__") || sessionStorage.getItem("__THEME_CONFIG__"),
-		e = document.getElementsByTagName("html")[0],
 		i = {
 			theme: "light",
 			nav: "vertical",
@@ -164,9 +163,6 @@ class ThemeCustomizer {
 	setSwitchFromConfig() {
 		try { localStorage.setItem("__THEME_CONFIG__", JSON.stringify(this.config)); } catch(e) {}
 		try { sessionStorage.setItem("__THEME_CONFIG__", JSON.stringify(this.config)); } catch(e) {}
-		document.querySelectorAll(".right-bar input[type=checkbox]").forEach(function(e) {
-			e.checked = !1
-		});
 		var e, t, a, n, i, o = this.config;
 		o && (e = document.querySelector("input[type=radio][name=data-layout][value=" + o.nav + "]"), t = document.querySelector("input[type=radio][name=data-bs-theme][value=" + o.theme + "]"), a = document.querySelector("input[type=radio][name=data-color][value=" + o.color.color + "]"), n = document.querySelector("input[type=radio][name=data-topbar][value=" + o.topbar.color + "]"), i = document.querySelector("input[type=radio][name=data-sidebar][value=" + o.menu.color + "]"), o = document.querySelector("input[type=radio][name=data-layout][value=" + o.sidenav.size + "]"), e && (e.checked = !0), t && (t.checked = !0), a && (a.checked = !0), n && (n.checked = !0), i && (i.checked = !0), o && (o.checked = !0))
 	}

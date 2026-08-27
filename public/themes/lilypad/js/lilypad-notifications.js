@@ -135,9 +135,9 @@
             const toast = document.createElement('div');
             toast.id = 'lilypad-notif-toast';
             toast.className = 'toast-notification position-fixed bottom-0 end-0 m-4 p-3 rounded-3 shadow-lg text-white d-flex align-items-center gap-3';
-            toast.style.cssText = 'background: #111827; border: 1px solid #047d24; z-index: 99999; max-width: 380px; animation: slideInUp 0.3s ease; cursor: pointer;';
+            toast.style.cssText = 'background: #111827; border: 1px solid var(--bs-primary); z-index: 99999; max-width: 380px; animation: slideInUp 0.3s ease; cursor: pointer;';
             toast.innerHTML = `
-                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="background:#047d24; width:38px; height:38px;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="background:var(--bs-primary); width:38px; height:38px;">
                     <i class="ti ti-bell fs-18 text-white"></i>
                 </div>
                 <div class="flex-grow-1">
@@ -179,7 +179,7 @@
                 if (unreadCount > 0) {
                     badge.textContent = unreadCount > 9 ? "9+" : unreadCount;
                     badge.classList.remove('d-none');
-                    badge.style.cssText = 'display:flex !important; position:absolute; top:-4px; right:-4px; background:#047d24; color:white; font-size:11px; font-weight:700; width:18px; height:18px; border-radius:50%; align-items:center; justify-content:center; border:2px solid #ffffff; box-shadow:0 2px 6px rgba(4,125,36,0.4);';
+                    badge.style.cssText = 'display:flex !important; position:absolute; top:-4px; right:-4px; background:var(--bs-primary); color:white; font-size:11px; font-weight:700; width:18px; height:18px; border-radius:50%; align-items:center; justify-content:center; border:2px solid #ffffff; box-shadow:0 2px 6px rgba(var(--bs-primary-rgb), 0.4);';
                 } else {
                     badge.style.display = 'none';
                 }
@@ -200,7 +200,7 @@
                 let html = '';
                 list.forEach(notif => {
                     const timeAgo = this.formatTimeAgo(notif.timestamp);
-                    const unreadStyle = notif.read ? '' : 'background-color: rgba(4, 125, 36, 0.06); border-left: 3px solid #047d24;';
+                    const unreadStyle = notif.read ? '' : 'background-color: rgba(var(--bs-primary-rgb), 0.08); border-left: 3px solid var(--bs-primary);';
                     
                     html += `
                         <div class="dropdown-item notification-item py-2 px-3 text-wrap border-bottom position-relative" 
@@ -208,7 +208,7 @@
                              onclick="LilypadNotifications.navigateToTicket('${notif.ticketId}', '${notif.id}')">
                             <div class="d-flex align-items-start gap-2">
                                 <div class="position-relative flex-shrink-0 mt-1">
-                                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:34px; height:34px; font-size:14px;">
+                                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center" style="background:var(--bs-primary); width:34px; height:34px; font-size:14px;">
                                         <i class="ti ti-ticket"></i>
                                     </div>
                                     ${!notif.read ? '<span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle"></span>' : ''}
@@ -270,7 +270,7 @@
             if (!filtered.length) {
                 container.innerHTML = `
                     <div class="col-12 text-center py-5">
-                        <div class="rounded-circle d-inline-flex p-3 mb-3" style="background:#f0fdf4; color:#047d24;">
+                        <div class="rounded-circle d-inline-flex p-3 mb-3" style="background:rgba(var(--bs-primary-rgb), 0.1); color:var(--bs-primary);">
                             <i class="ti ti-ticket-off fs-36"></i>
                         </div>
                         <h5 class="fw-bold text-dark mb-1">No Active Tickets in Queue</h5>
@@ -306,7 +306,7 @@
                         <div class="card flex-fill border rounded-3 p-3 position-relative shadow-none" 
                              style="cursor: pointer; transition: all 0.2s ease; border-color: var(--bs-border-color, #e2e8f0);"
                              onclick="LilypadNotifications.navigateToTicket('${t.id}')"
-                             onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#047d24';"
+                             onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--bs-primary)';"
                              onmouseout="this.style.transform='none'; this.style.borderColor='var(--bs-border-color, #e2e8f0)';">
                             
                             <div class="d-flex align-items-center justify-content-between mb-2">
