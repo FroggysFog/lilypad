@@ -596,16 +596,22 @@
                     },
                     error: function(e) {
                         $connectBtn.prop('disabled', false).text('Test Connection!');
+                        var errorMessage = 'Couldn\'t connect; make sure connection is correct.';
+                        if (e.responseJSON && e.responseJSON.error) {
+                            var error = e.responseJSON.error;
+                            errorMessage = typeof error === 'string' ? error : (error.message || errorMessage);
+                        }
                         window.Snackbar.show({
-                            text: 'Couldn\'t connect; make sure connection is correct.',
+                            text: errorMessage,
                             actionTextColor: 'red'
                         });
                         console.error(e);
                     },
                     success: function(data) {
                         if (!data.success) {
+                            var errorMessage = data.error && data.error.message ? data.error.message : 'Couldn\'t connect; make sure connection is correct.';
                             window.Snackbar.show({
-                                text: 'Couldn\'t connect; make sure connection is correct.',
+                                text: errorMessage,
                                 actionTextColor: 'red'
                             });
                             $connectBtn.prop('disabled', false).text('Test Connection!');
