@@ -540,6 +540,36 @@ const ticketingModalsHtml = `
 							</div>
 						</div>
 
+						
+						<!-- Tab 1.5: Tasks & Diagnostic Checklist -->
+						<div class="tab-pane fade" id="tabDrawerTasks">
+							<div class="card border-0 bg-light rounded-3 p-3 mb-3">
+								<div class="d-flex align-items-center justify-content-between mb-2">
+									<div class="d-flex align-items-center gap-2">
+										<i class="ti ti-list-check text-primary fs-18"></i>
+										<strong class="text-dark fs-13">Ticket Action Items & Diagnostic Tasks</strong>
+									</div>
+									<span class="fs-12 fw-semibold text-primary" id="drawerTaskPercentText">0% Complete</span>
+								</div>
+								<div class="progress" style="height: 7px;">
+									<div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" id="drawerTaskProgressBar" style="width: 0%;"></div>
+								</div>
+							</div>
+
+							<!-- Task Creation Input -->
+							<form onsubmit="addTicketTask(event)" class="d-flex gap-2 mb-3">
+								<input type="text" id="newTicketTaskInput" class="form-control form-control-sm" placeholder="Add a new task or checklist item (e.g. Inspect thermocouple voltage)..." required>
+								<button type="submit" class="btn btn-sm btn-primary flex-shrink-0 px-3 shadow-sm">
+									<i class="ti ti-plus me-1"></i> Add Task
+								</button>
+							</form>
+
+							<!-- Task List Container -->
+							<div id="drawerTasksListContainer" class="d-flex flex-column gap-2 mb-3" style="max-height: 280px; overflow-y: auto;">
+								<!-- Rendered dynamically -->
+							</div>
+						</div>
+
 						<!-- Tab 2: Comments & Canned Responses -->
 						<div class="tab-pane fade" id="tabDrawerComments">
 							<div id="drawerCommentsList" class="mb-3" style="max-height: 280px; overflow-y: auto;"></div>
@@ -2140,6 +2170,7 @@ const ticketingEngineScript = `
             \`).join('') : '<div class="col-12 text-muted">No custom form data recorded.</div>';
 
             renderDrawerCheckFirstBox(ticket);
+            renderDrawerTasks(ticket);
             renderDrawerWatchers(ticket);
             renderDrawerComments(ticket);
             renderDrawerFiles(ticket);
@@ -2208,6 +2239,101 @@ const ticketingEngineScript = `
                     </div>
                 </div>
             \`;
+        }
+
+        
+        function renderDrawerTasks(ticket) {
+            const container = document.getElementById('drawerTasksListContainer');
+            const countBadge = document.getElementById('drawerTasksCountBadge');
+            const percentText = document.getElementById('drawerTaskPercentText');
+            const progressBar = document.getElementById('drawerTaskProgressBar');
+            if (!container) return;
+
+            // Default initial tasks if not set
+            if (!ticket.tasks || !ticket.tasks.length) {
+                ticket.tasks = [
+                    { id: 'tsk_1', text: 'Verify machine specs and serial number match customer records', done: true },
+                    { id: 'tsk_2', text: 'Perform pre-flight visual and safety inspection', done: ticket.status === 'Complete' || ticket.status === 'In Progress' },
+                    { id: 'tsk_3', text: 'Execute diagnostic SOP testing and benchmark checkpoints', done: ticket.status === 'Complete' },
+                    { id: 'tsk_4', text: 'Document resolution notes and verify quality sign-off', done: ticket.status === 'Complete' }
+                ];
+            }
+
+            const total = ticket.tasks.length;
+            const completed = ticket.tasks.filter(t => t.done).length;
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            if (countBadge) countBadge.textContent = completed + '/' + total;
+            if (percentText) percentText.textContent = pct + '% Complete (' + completed + ' of ' + total + ')';
+            if (progressBar) progressBar.style.width = pct + '%';
+
+            container.innerHTML = ticket.tasks.map((task, idx) => {
+                const bgClass = task.done ? 'bg-success-subtle border-success' : 'bg-white';
+                const textClass = task.done ? 'text-decoration-line-through text-muted' : 'fw-medium text-dark';
+                const isChecked = task.done ? 'checked' : '';
+                return '<div class="p-2 rounded-3 border d-flex align-items-center justify-content-between gap-2 ' + bgClass + '">' +
+                    '<div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">' +
+                        '<input type="checkbox" class="form-check-input mt-0 flex-shrink-0" id="task_chk_' + task.id + '" ' + isChecked + ' onchange="toggleTicketTask(\'' + task.id + '\', this.checked)">' +
+                        '<label for="task_chk_' + task.id + '" class="fs-13 mb-0 ' + textClass + '" style="cursor: pointer;">' +
+                            task.text +
+                        '</label>' +
+                    '</div>' +
+                    '<button type="button" class="btn btn-sm btn-link text-danger p-0 ms-auto" onclick="deleteTicketTask(\'' + task.id + '\')" title="Delete Task">' +
+                        '<i class="ti ti-trash fs-14"></i>' +
+                    '</button>' +
+                '</div>';
+            }).join('');
+        }
+
+        function toggleTicketTask(taskId, isDone) {
+            if (!currentActiveTicket) return;
+            const task = (currentActiveTicket.tasks || []).find(t => t.id === taskId);
+            if (task) {
+                task.done = isDone;
+                currentActiveTicket.history.unshift({
+                    action: isDone ? 'Completed task: ' + task.text : 'Reopened task: ' + task.text,
+                    by: 'Scott Karan',
+                    time: 'Just now'
+                });
+                renderDrawerTasks(currentActiveTicket);
+                renderDrawerAudit(currentActiveTicket);
+
+                const notifTitle = isDone ? 'Ticket Task Completed' : 'Ticket Task Reopened';
+                const notifMsg = (isDone ? 'Completed: "' : 'Reopened: "') + task.text + '" on ' + currentActiveTicket.formattedUid;
+                triggerNotification(notifTitle, notifMsg, isDone ? 'ti-checkbox' : 'ti-list-check', currentActiveTicket.id);
+            }
+        }
+
+        function addTicketTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('newTicketTaskInput');
+            const text = input ? input.value.trim() : '';
+            if (!text || !currentActiveTicket) return;
+
+            currentActiveTicket.tasks = currentActiveTicket.tasks || [];
+            const newTask = {
+                id: 'tsk_' + Date.now(),
+                text: text,
+                done: false
+            };
+            currentActiveTicket.tasks.push(newTask);
+            currentActiveTicket.history.unshift({
+                action: 'Added new task: ' + text,
+                by: 'Scott Karan',
+                time: 'Just now'
+            });
+
+            input.value = '';
+            renderDrawerTasks(currentActiveTicket);
+            renderDrawerAudit(currentActiveTicket);
+
+            triggerNotification('New Task Added', 'Task "' + text + '" added to ' + currentActiveTicket.formattedUid, 'ti-plus', currentActiveTicket.id);
+        }
+
+        function deleteTicketTask(taskId) {
+            if (!currentActiveTicket) return;
+            currentActiveTicket.tasks = (currentActiveTicket.tasks || []).filter(t => t.id !== taskId);
+            renderDrawerTasks(currentActiveTicket);
         }
 
         function updateDrawerDueDate(val) {

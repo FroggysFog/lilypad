@@ -618,3 +618,15 @@
 .logo-erp {
     color: var(--bs-primary) !important;
 }
+
+
+/* Hide Floating Widget Adder / Theme Customizer Button for now */
+.sidebar-contact,
+.toggle-theme,
+#theme-settings-offcanvas-btn,
+.widget-adder-btn {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
