@@ -583,3 +583,34 @@
 .btn-outline-primary.active i {
     color: #ffffff !important;
 }
+
+/* =========================================================
+   LOGO ICON DYNAMIC THEME BINDING
+   ========================================================= */
+.sidebar-logo .logo .rounded-2,
+.sidebar-logo .logo-normal .rounded-2,
+.sidebar-logo .logo-small .rounded-2,
+.sidebar-logo a .rounded-2,
+.logo-icon-box,
+.login-logo-box {
+    background-color: var(--bs-primary) !important;
+    background: var(--bs-primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb), 0.35) !important;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sidebar-logo .logo .rounded-2 i,
+.sidebar-logo .logo-normal .rounded-2 i,
+.sidebar-logo .logo-small .rounded-2 i,
+.sidebar-logo a .rounded-2 i,
+.logo-icon-box i,
+.login-logo-box i {
+    color: #ffffff !important;
+}
+
+.sidebar-logo .logo-normal span .text-primary,
+.logo-normal .text-primary,
+.logo-erp {
+    color: var(--bs-primary) !important;
+}
