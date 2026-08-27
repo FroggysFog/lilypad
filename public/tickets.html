@@ -357,95 +357,27 @@
 						</button>
 					</div>
 
-					<!-- pages -->
-					<div class="header-item d-none d-sm-flex">
+					<!-- Fullscreen Toggle -->
+					<div class="header-item">
 						<div class="dropdown me-2">
-							<a href="javascript:void(0);" class="btn topbar-link topbar-teal-link"
-								data-bs-toggle="dropdown">
-								<i class="ti ti-layout-grid-add"></i>
+							<a href="javascript:void(0);" class="btn topbar-link btnFullscreen" title="Toggle Fullscreen">
+								<i class="ti ti-maximize"></i>
 							</a>
-							<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
-
-								<!-- Item-->
-								<a href="contacts.html" class="dropdown-item">
-									<div class="d-flex align-items-center justify-content-between">
-										<div>
-											<span class="d-flex mb-1 fw-semibold text-dark">Contacts</span>
-											<span class="fs-13">View All the Contacts</span>
-										</div>
-										<i class="ti ti-chevron-right-pipe text-dark"></i>
-									</div>
-								</a>
-
-								<!-- Item-->
-								<a href="pipeline.html" class="dropdown-item">
-									<div class="d-flex align-items-center justify-content-between">
-										<div>
-											<span class="d-flex mb-1 fw-semibold text-dark">Pipeline</span>
-											<span class="fs-13">View All the Pipeline</span>
-										</div>
-										<i class="ti ti-chevron-right-pipe text-dark"></i>
-									</div>
-								</a>
-
-								<!-- Item-->
-								<a href="activities.html" class="dropdown-item">
-									<div class="d-flex align-items-center justify-content-between">
-										<div>
-											<span class="d-flex mb-1 fw-semibold text-dark">Activities</span>
-											<span class="fs-13">Activities</span>
-										</div>
-										<i class="ti ti-chevron-right-pipe text-dark"></i>
-									</div>
-								</a>
-
-								<!-- Item-->
-								<a href="analytics.html" class="dropdown-item">
-									<div class="d-flex align-items-center justify-content-between">
-										<div>
-											<span class="d-flex mb-1 fw-semibold text-dark">Analytics</span>
-											<span class="fs-13">Analytics</span>
-										</div>
-										<i class="ti ti-chevron-right-pipe text-dark"></i>
-									</div>
-								</a>
-
-							</div>
 						</div>
 					</div>
 
-					<!-- faq -->
-					<div class="header-item d-none d-sm-flex">
-						<div class="dropdown me-2">
-							<a href="faq.html" class="btn topbar-link topbar-indigo-link"><i
-									class="ti ti-help-hexagon"></i></a>
-						</div>
-					</div>
-
-					<!-- report -->
-					<div class="header-item d-none d-sm-flex">
-						<div class="dropdown me-2">
-							<a href="lead-reports.html" class="btn topbar-link topbar-warning-link"><i
-									class="ti ti-chart-pie"></i></a>
-						</div>
+					<!-- Light/Dark Mode Button -->
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button" title="Toggle Theme">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
 					</div>
 
 					<div class="header-line"></div>
 
-					<!-- message -->
-					<div class="header-item">
-						<div class="dropdown me-2">
-							<a href="chat.html" class="btn topbar-link">
-								<i class="ti ti-message-circle-exclamation"></i>
-								<span class="badge rounded-pill">&nbsp;</span>
-							</a>
-						</div>
-					</div>
-
 					<!-- Notification Dropdown -->
 					<div class="header-item">
 						<div class="dropdown me-2 position-relative">
-
 							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative"
 								data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false"
 								aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
@@ -472,9 +404,9 @@
 
 								<!-- Direct Ticket Operations Button -->
 								<div class="p-2 rounded-bottom border-top text-center bg-light">
-									<a href="/tickets" class="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2" style="background-color: #047d24;">
+									<a href="tickets.html" class="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2" style="background-color: #047d24;">
 										<i class="ti ti-ticket fs-16"></i>
-										<span>Open Ticket Operations</span>
+										<span>Open Ticket Suite</span>
 									</a>
 								</div>
 
@@ -482,57 +414,47 @@
 						</div>
 					</div>
 
-					<!-- User Dropdown -->
+					<!-- User Profile Dropdown -->
 					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
 						<a href="javascript:void(0);"
-							class="topbar-link dropdown-toggle drop-arrow-none position-relative"
+							class="topbar-link dropdown-toggle drop-arrow-none position-relative d-flex align-items-center gap-2"
 							data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
-							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex"
-								alt="user-image">
+							<div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-12 shadow-sm" style="width: 36px; height: 36px; background: #047d24;">
+								SK
+							</div>
 							<span class="online text-success"><i
 									class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
 						</a>
 						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
 
 							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
-								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42"
-									alt="Img">
-								<div class="ms-2">
-									<p class="fw-medium text-dark mb-0">Katherine Brooks</p>
-									<span class="d-block fs-13">Installer</span>
+								<div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-14 me-2 shadow-sm" style="width: 40px; height: 40px; background: #047d24;">
+									SK
+								</div>
+								<div>
+									<p class="fw-bold text-dark mb-0">Scott Karan</p>
+									<span class="badge bg-soft-success text-success fs-11 fw-semibold">Operations Admin</span>
 								</div>
 							</div>
 
-							<!-- Item-->
-							<a href="profile-settings.html" class="dropdown-item">
-								<i class="ti ti-user-circle me-1 align-middle"></i>
-								<span class="align-middle">Profile Settings</span>
+							<a href="javascript:void(0);" onclick="openEmailGatewayModal()" class="dropdown-item">
+								<i class="ti ti-mail-shield me-2 text-primary align-middle"></i>
+								<span class="align-middle">Inbound Email Gateway</span>
 							</a>
 
-							<!-- item -->
-							<div
-								class="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
-								<label class="form-check-label" for="notify"><i
-										class="ti ti-bell"></i>Notifications</label>
-								<input class="form-check-input me-0" type="checkbox" role="switch" id="notify">
-							</div>
-
-							<!-- Item-->
-							<a href="javascript:void(0);" class="dropdown-item">
-								<i class="ti ti-help-circle me-1 align-middle"></i>
-								<span class="align-middle">Help & Support</span>
+							<a href="javascript:void(0);" onclick="openUserManagementModal()" class="dropdown-item">
+								<i class="ti ti-users me-2 text-primary align-middle"></i>
+								<span class="align-middle">Team & Permissions</span>
 							</a>
 
-							<!-- Item-->
-							<a href="profile-settings.html" class="dropdown-item">
-								<i class="ti ti-settings me-1 align-middle"></i>
-								<span class="align-middle">Settings</span>
+							<a href="javascript:void(0);" onclick="openKnowledgeBaseModal()" class="dropdown-item">
+								<i class="ti ti-book me-2 text-success align-middle"></i>
+								<span class="align-middle">Diagnostic SOPs</span>
 							</a>
 
-							<!-- Item-->
 							<div class="pt-2 mt-2 border-top">
-								<a href="login.html" class="dropdown-item text-danger">
-									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+								<a href="login.html" onclick="sessionStorage.removeItem('lilypad_auth_user'); localStorage.removeItem('lilypad_logged_in');" class="dropdown-item text-danger fw-semibold">
+									<i class="ti ti-logout me-2 fs-16 align-middle"></i>
 									<span class="align-middle">Sign Out</span>
 								</a>
 							</div>
@@ -610,7 +532,7 @@
 									</a>
 								</li>
 								<li>
-									<a href="javascript:void(0);" onclick="openKnowledgeBaseModal()">
+									<a href="tickets.html?view=kb">
 										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
 									</a>
 								</li>
@@ -621,13 +543,13 @@
 						<li>
 							<ul>
 								<li class="submenu">
-									<a href="javascript:void(0);" class="subdrop">
+									<a href="javascript:void(0);">
 										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
 									</a>
 									<ul>
-										<li><a href="javascript:void(0);" onclick="openEmailGatewayModal()"><i class="ti ti-mail-shield me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
-										<li><a href="javascript:void(0);" onclick="openUserManagementModal()"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
-										<li><a href="javascript:void(0);" onclick="openFormBuilderModal()"><i class="ti ti-tool me-2 text-primary"></i>Dynamic Form Builder</a></li>
+										<li><a href="tickets.html?admin=email"><i class="ti ti-mail-shield me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="tickets.html?admin=team"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="tickets.html?admin=forms"><i class="ti ti-tool me-2 text-primary"></i>Dynamic Form Builder</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -1846,14 +1768,6 @@
 	<script src="assets/plugins/datatables/js3/dataTables.min.js"></script>
     <script src="assets/plugins/datatables/js3/dataTables.bootstrap5.min.js"></script>
 
-	<!-- Daterangepicker JS -->
-	<!-- Apexchart JS -->
-	<script src="assets/plugins/apexchart/apexcharts.min.js"></script>
-	<script src="assets/plugins/apexchart/chart-data.js"></script>
-
-	<!-- Custom Json Js -->
-	<script src="assets/json/dashboard.js"></script>
-
 	<!-- Main JS -->
 	<!-- Flatpickr JS -->
     <script src="assets/plugins/flatpickr/flatpickr.min.js"></script>
@@ -2051,15 +1965,15 @@
         let tickets = [];
 
         let USERS = [
-            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@lilypad.local', role: 'Admin', department: 'Operations', initials: 'SK', active: true },
-            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@lilypad.local', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true },
-            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@lilypad.local', role: 'Agent', department: 'Engineering', initials: 'DM', active: true },
-            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@lilypad.local', role: 'Agent', department: 'Engineering', initials: 'SC', active: true },
-            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@lilypad.local', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true }
+            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@froggysfog.com', role: 'Admin', department: 'Operations', initials: 'SK', active: true },
+            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@froggysfog.com', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true },
+            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'DM', active: true },
+            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'SC', active: true },
+            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@froggysfog.com', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true }
         ];
 
         let selectedCategory = CATEGORIES[0];
-        let currentStatusFilter = 'In Progress';
+        let currentStatusFilter = 'All';
         let currentActiveTicket = null;
         // Global Modal Openers for Operations Admin & Hub
         window.openEmailGatewayModal = function() {
@@ -2113,29 +2027,20 @@
             const targetTicket = urlParams.get('ticket');
             const targetView = urlParams.get('view');
             const targetAdmin = urlParams.get('admin');
+            const targetAction = urlParams.get('action');
 
             if (targetView === 'kb') {
-                setTimeout(() => {
-                    const modal = new bootstrap.Modal(document.getElementById('knowledgebaseModal'));
-                    modal.show();
-                }, 300);
+                setTimeout(() => openKnowledgeBaseModal(), 200);
             } else if (targetAdmin === 'email') {
-                setTimeout(() => {
-                    const modal = new bootstrap.Modal(document.getElementById('emailGatewayModal'));
-                    modal.show();
-                }, 300);
+                setTimeout(() => openEmailGatewayModal(), 200);
             } else if (targetAdmin === 'team') {
-                setTimeout(() => {
-                    const modal = new bootstrap.Modal(document.getElementById('userManagementModal'));
-                    modal.show();
-                }, 300);
+                setTimeout(() => openUserManagementModal(), 200);
             } else if (targetAdmin === 'forms') {
-                setTimeout(() => {
-                    const modal = new bootstrap.Modal(document.getElementById('formBuilderModal'));
-                    modal.show();
-                }, 300);
+                setTimeout(() => openFormBuilderModal(), 200);
+            } else if (targetAction === 'new') {
+                setTimeout(() => openIntakeModal(), 200);
             } else if (targetTicket) {
-                setTimeout(() => openTicketModal(targetTicket), 300);
+                setTimeout(() => openTicketModal(targetTicket), 200);
             }
         });
 

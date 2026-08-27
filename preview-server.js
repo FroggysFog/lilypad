@@ -128,9 +128,15 @@ const server = http.createServer((req, res) => {
     }));
   }
 
-  if (pathname === '/') {
+  // URL Rewrites for clean paths
+  if (pathname === '/' || pathname === '') {
+    pathname = '/index.html';
+  } else if (pathname === '/dashboard') {
+    pathname = '/dashboard.html';
   } else if (pathname === '/tickets') {
     pathname = '/tickets.html';
+  } else if (pathname === '/login') {
+    pathname = '/login.html';
   } else if (pathname === '/client-portal' || pathname === '/portal') {
     pathname = '/client-portal.html';
   }
@@ -142,12 +148,12 @@ const server = http.createServer((req, res) => {
       return res.end('Password reset email sent!');
     }
     if (pathname === '/login') {
-      res.writeHead(302, { Location: '/tickets' });
+      res.writeHead(302, { Location: '/dashboard.html' });
       return res.end();
     }
   }
 
-  const filePath = path.normalize(path.join(PUBLIC_DIR, pathname));
+  let filePath = path.normalize(path.join(PUBLIC_DIR, pathname));
 
   if (!filePath.startsWith(PUBLIC_DIR)) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
@@ -155,9 +161,20 @@ const server = http.createServer((req, res) => {
   }
 
   fs.stat(filePath, (err, stats) => {
-    if (err || !stats.isFile()) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      return res.end('404 Not Found');
+    if (err) {
+      const htmlPath = filePath + '.html';
+      if (fs.existsSync(htmlPath) && fs.statSync(htmlPath).isFile()) {
+        filePath = htmlPath;
+      } else {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        return res.end('404 Not Found');
+      }
+    } else if (stats.isDirectory()) {
+      filePath = path.join(filePath, 'index.html');
+      if (!fs.existsSync(filePath)) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        return res.end('404 Not Found');
+      }
     }
 
     const ext = path.extname(filePath).toLowerCase();

@@ -5,8 +5,8 @@
 (function () {
     "use strict";
 
-    const STORAGE_NOTIF_KEY = "lilypad_notifications_data";
-    const STORAGE_TICKETS_KEY = "lilypad_tickets_data";
+    const STORAGE_NOTIF_KEY = "lilypad_notifications_v2";
+    const STORAGE_TICKETS_KEY = "lilypad_tickets_v2";
 
     // Clean initial production arrays (no test tickets or dummy notifications)
     const defaultTickets = [];
