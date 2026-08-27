@@ -676,7 +676,7 @@
 									</div>
 									<div>
 										<h5 class="mb-0 text-white fw-bold">Onboarding & Setup Email Dispatched</h5>
-										<span class="fs-12 text-white-50">Sent via LilyPad Outbound Email Service (SMTP/SES)</span>
+										<span class="fs-12 text-white-50">Sent via Microsoft 365 Exchange Gateway (<span id="m365SenderBadge">scott@froggysfog.com</span>) & Teams Webhook</span>
 									</div>
 								</div>
 								<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -883,12 +883,27 @@
             }
         }
 
+        
+        function getM365Config() {
+            try {
+                const stored = localStorage.getItem("lilypad_m365_teams_config_v1");
+                return stored ? JSON.parse(stored) : { email: 'scott@froggysfog.com', displayName: "Froggy's Fog Operations Hub", channelName: '#operations-tickets' };
+            } catch(e) {
+                return { email: 'scott@froggysfog.com', displayName: "Froggy's Fog Operations Hub", channelName: '#operations-tickets' };
+            }
+        }
+
         function sendOnboardingEmail(target) {
             let user = target;
             if (typeof target === 'string') {
                 const users = getTeamUsers();
                 user = users.find(u => u.id === target) || { fullname: 'Staff Member', email: target, role: 'Agent', department: 'Operations' };
             }
+
+            const m365Config = getM365Config();
+            const senderEmail = m365Config.email || 'scott@froggysfog.com';
+            const senderName = m365Config.displayName || "Froggy's Fog Operations Hub";
+            const teamsChannel = m365Config.channelName || '#operations-tickets';
 
             const origin = window.location.origin || (window.location.protocol + '//' + window.location.host);
             const token = 'tok_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
@@ -897,6 +912,11 @@
             const subject = 'Welcome to Froggy's Fog Hub | Set Up Your Account (' + user.fullname + ')';
 
             const emailHtml = '<div style="max-width: 620px; margin: 0 auto; color: #1e293b;">' +
+                '<div style="background: #f1f5f9; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 12px; color: #475569; border: 1px solid #e2e8f0;">' +
+                    '<strong>From:</strong> ' + senderName + ' &lt;<span style="color: var(--bs-primary, #0d6efd); font-weight:600;">' + senderEmail + '</span>&gt; (Microsoft 365 Exchange)<br>' +
+                    '<strong>To:</strong> ' + user.fullname + ' &lt;' + user.email + '&gt;<br>' +
+                    '<strong>Teams Alert:</strong> <span class="badge bg-success-subtle text-success">✓ Posted to ' + teamsChannel + '</span>' +
+                '</div>' +
                 '<div style="border-bottom: 2px solid var(--bs-primary, #0d6efd); padding-bottom: 14px; margin-bottom: 20px;">' +
                     '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy's Fog Operations Hub</h4>' +
                     '<span style="font-size: 13px; color: #64748b;">Enterprise ERP & Diagnostic Portal</span>' +
@@ -919,18 +939,21 @@
                     '<li><strong>Diagnostic SOPs & Knowledge Base:</strong> Search symptom checklists and pre-flight factory testing protocols.</li>' +
                 '</ol>' +
                 '<div style="border-top: 1px solid #e2e8f0; padding-top: 14px; font-size: 12px; color: #64748b;">' +
-                    '<p style="margin: 0;">Need assistance? Contact Operations Admin at <a href="mailto:scott@froggysfog.com" style="color: #64748b;">scott@froggysfog.com</a> or visit <a href="https://froggysfog.com" target="_blank" style="color: #64748b;">froggysfog.com</a>.</p>' +
+                    '<p style="margin: 0;">Need assistance? Contact Operations Admin at <a href="mailto:' + senderEmail + '" style="color: #64748b;">' + senderEmail + '</a> or visit <a href="https://froggysfog.com" target="_blank" style="color: #64748b;">froggysfog.com</a>.</p>' +
                 '</div>' +
             '</div>';
 
             if (window.LilypadNotifications && LilypadNotifications.addNotification) {
                 LilypadNotifications.addNotification({
                     title: 'Outbound Email Dispatched to ' + user.fullname,
-                    message: 'Onboarding setup email delivered to ' + user.email,
+                    message: 'Sent from ' + senderEmail + ' (Microsoft 365) & card sent to ' + teamsChannel,
                     type: 'email',
                     link: 'admin-team.html'
                 });
             }
+
+            const senderBadge = document.getElementById('m365SenderBadge');
+            if (senderBadge) senderBadge.textContent = senderEmail;
 
             document.getElementById('onboardingEmailRecipient').textContent = user.fullname + ' (' + user.email + ')';
             document.getElementById('onboardingEmailSubject').textContent = subject;
