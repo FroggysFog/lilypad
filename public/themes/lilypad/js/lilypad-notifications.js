@@ -8,114 +8,9 @@
     const STORAGE_NOTIF_KEY = "lilypad_notifications_data";
     const STORAGE_TICKETS_KEY = "lilypad_tickets_data";
 
-    // Initial default seed tickets matching Spiceworks + LilyPad capabilities
-    const defaultTickets = [
-        {
-            id: "10",
-            uid: 10,
-            formattedUid: "#10",
-            title: "Antari 2000 Elite Silkscreens, Cartons, User Manuals",
-            description: "Finalize silkscreen vector artwork, outer carton master dieline specifications, and multi-language user manual prints for Antari 2000 Elite production release.",
-            status: "In Progress",
-            priority: "High",
-            categoryName: "Packaging & Technical Docs",
-            linkedProduct: "Antari 2000 Elite",
-            dueDate: new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10),
-            reporterName: "Mark Henderson (Packaging Lead)",
-            assigneeName: "Scott Karan",
-            watchers: ["Scott Karan", "Sarah Connor", "Alex Morgan"],
-            formData: {
-                artworkRevision: "Rev C.2 (Approved for 2-color screen)",
-                cartonDimensions: "480 x 320 x 220 mm (5-ply corrugated)",
-                manualLanguages: "EN, ES, FR",
-                complianceApproval: "Yes"
-            },
-            attachments: [
-                { id: "f1", name: "Antari_2000_Elite_Silkscreen_Artwork_v2.ai", size: "6.2 MB", uploader: "Mark Henderson", uploadedAt: "Yesterday", icon: "ti-file-vector" },
-                { id: "f2", name: "Master_Carton_Dieline_Spec_RevB.pdf", size: "3.4 MB", uploader: "Mark Henderson", uploadedAt: "Yesterday", icon: "ti-file-type-pdf" },
-                { id: "f3", name: "Antari_2000_Elite_User_Manual_Draft.pdf", size: "12.8 MB", uploader: "Sarah Connor", uploadedAt: "3 hours ago", icon: "ti-file-text" }
-            ],
-            expenses: [
-                { id: "e1", item: "Silkscreen Film Printing Plates (2-color)", vendor: "Apex Print Works", po: "PO-88412", amount: 240.00 },
-                { id: "e2", item: "Carton Proof Sample Run (50 units)", vendor: "PackCraft Global", po: "PO-88419", amount: 175.00 }
-            ],
-            history: [
-                { action: "Ticket Created & Assigned to Scott Karan", by: "Mark Henderson", time: "Yesterday" },
-                { action: "Attached Master_Carton_Dieline_Spec_RevB.pdf", by: "Mark Henderson", time: "Yesterday" },
-                { action: "Attached Antari_2000_Elite_User_Manual_Draft.pdf", by: "Sarah Connor", time: "3 hours ago" },
-                { action: "Logged 1.5 hrs on proof review", by: "Scott Karan", time: "1 hour ago" }
-            ],
-            comments: [
-                { author: "Mark Henderson", text: "Silkscreen dielines match the chassis CAD dimensions. Need final sign-off before vendor plate exposure.", isInternal: false, time: "Yesterday" },
-                { author: "Scott Karan", text: "Chassis hole alignments verified against engineering drawings. Approved for sample run.", isInternal: true, time: "2 hours ago" }
-            ],
-            workLogs: [
-                { hours: 1.5, note: "Dimensional verification of silkscreen markings and carton dieline", loggedAt: "2 hours ago" },
-                { hours: 1.0, note: "User manual electrical diagram review", loggedAt: "3 hours ago" }
-            ],
-            createdAt: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-            id: "1",
-            uid: 1001,
-            formattedUid: "LP-1001",
-            title: "MacBook Pro M3 Workstation Provisioning",
-            description: "Setup Apple M3 Silicon workstation with developer tools, Docker Desktop, and SSH certificates.",
-            status: "To-Do",
-            priority: "Normal",
-            categoryName: "IT & Hardware Request",
-            linkedProduct: "Enterprise ERP Server Node X1",
-            dueDate: new Date(Date.now() + 86400000 * 5).toISOString().slice(0, 10),
-            reporterName: "Sarah Connor",
-            assigneeName: "Scott Karan",
-            watchers: ["Scott Karan", "David Miller"],
-            formData: { hardwareItem: "MacBook Pro 16\"", department: "Engineering", assetTag: "LP-MAC-1092" },
-            attachments: [{ id: "f4", name: "Software_Checklist.pdf", size: "420 KB", uploader: "Sarah Connor", uploadedAt: "1 day ago", icon: "ti-file-type-pdf" }],
-            history: [{ action: "Ticket Created", by: "Sarah Connor", time: "1 day ago" }],
-            createdAt: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-            id: "2",
-            uid: 1002,
-            formattedUid: "LP-1002",
-            title: "Acme Logistics ERP Onboarding & DB Provisioning",
-            description: "External client onboarding for 50 initial warehouse operator seats with database migration.",
-            status: "In Progress",
-            priority: "Urgent",
-            categoryName: "Client ERP Setup & Onboarding",
-            linkedProduct: "LilyPad Solar Telemetry Gateway",
-            dueDate: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10),
-            reporterName: "Robert Johnson",
-            assigneeName: "Alex Morgan",
-            watchers: ["Alex Morgan", "Scott Karan"],
-            formData: { clientCompany: "Acme Logistics Inc.", userSeats: 50, migrationNeeded: "Yes" },
-            attachments: [{ id: "f5", name: "Acme_Legacy_Data_Schema.csv", size: "2.8 MB", uploader: "Robert Johnson", uploadedAt: "2 days ago", icon: "ti-file-spreadsheet" }],
-            history: [{ action: "Status moved to In Progress", by: "Alex Morgan", time: "1 day ago" }],
-            createdAt: new Date(Date.now() - 172800000).toISOString()
-        }
-    ];
-
-    // Seed notifications
-    const defaultNotifications = [
-        {
-            id: "notif_10",
-            title: "Artwork Proof Attached: #10",
-            description: "Master Carton Dieline & Silkscreen v2 uploaded by Mark Henderson for Antari 2000 Elite.",
-            ticketId: "10",
-            timestamp: Date.now() - 1800000,
-            read: false,
-            type: "file_attached"
-        },
-        {
-            id: "notif_1",
-            title: "Ticket Assigned: LP-1001",
-            description: "MacBook Pro M3 Workstation assigned to Scott Karan.",
-            ticketId: "1",
-            timestamp: Date.now() - 7200000,
-            read: true,
-            type: "assigned"
-        }
-    ];
+    // Clean initial production arrays (no test tickets or dummy notifications)
+    const defaultTickets = [];
+    const defaultNotifications = [];
 
     const LilypadNotifications = {
         currentFilter: "mine",
@@ -352,22 +247,37 @@
         renderDashboardWidget: function (filter = this.currentFilter) {
             this.currentFilter = filter;
             const container = document.getElementById('dashboardTicketsListContainer');
+            const tickets = this.getTickets();
+
+            // Update Header KPI Counters
+            const kpiTodo = document.getElementById('dashKpiTodo');
+            const kpiInProgress = document.getElementById('dashKpiInProgress');
+            const kpiUrgent = document.getElementById('dashKpiUrgent');
+            const kpiComplete = document.getElementById('dashKpiComplete');
+
+            if (kpiTodo) kpiTodo.textContent = tickets.filter(t => t.status === 'To-Do').length;
+            if (kpiInProgress) kpiInProgress.textContent = tickets.filter(t => t.status === 'In Progress').length;
+            if (kpiUrgent) kpiUrgent.textContent = tickets.filter(t => t.priority === 'Urgent' || t.priority === 'High').length;
+            if (kpiComplete) kpiComplete.textContent = tickets.filter(t => t.status === 'Complete' || t.status === 'Resolved').length;
+
             if (!container) return;
 
-            const tickets = this.getTickets();
             let filtered = tickets;
-
-            if (filter === 'mine') {
-                filtered = tickets.filter(t => t.assigneeName === 'Scott Karan');
-            } else if (filter === 'urgent') {
+            if (filter === 'urgent') {
                 filtered = tickets.filter(t => t.priority === 'Urgent' || t.priority === 'High');
             }
 
             if (!filtered.length) {
                 container.innerHTML = `
-                    <div class="col-12 text-center py-4 text-muted">
-                        <i class="ti ti-clipboard-check fs-36 d-block mb-2" style="opacity:0.4;"></i>
-                        <p class="mb-0 fs-13">No tickets found for this filter.</p>
+                    <div class="col-12 text-center py-5">
+                        <div class="rounded-circle d-inline-flex p-3 mb-3" style="background:#f0fdf4; color:#047d24;">
+                            <i class="ti ti-ticket-off fs-36"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1">No Active Tickets in Queue</h5>
+                        <p class="text-muted fs-13 mb-3" style="max-width: 480px; margin: 0 auto;">All operational requests are clear. When tickets are submitted via web form, email gateway, or internal team, they will stream here in real time.</p>
+                        <a href="tickets.html" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm mt-2">
+                            <i class="ti ti-plus me-1"></i> Create First Ticket
+                        </a>
                     </div>
                 `;
                 return;
@@ -480,3 +390,4 @@
     });
 
 })();
+

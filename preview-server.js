@@ -24,85 +24,17 @@ const MIME_TYPES = {
 
 // In-Memory Seed Storage for Preview Server
 const intakeFormsSeed = [
-  {
-    name: 'IT & Hardware Request',
-    slug: 'it-hardware',
-    icon: 'ti-device-laptop',
-    target: 'internal',
-    defaultPriority: 'Normal',
-    fields: [
-      { name: 'hardwareType', label: 'Hardware Item', type: 'select', required: true, options: [{ label: 'MacBook Pro 16"', value: 'macbook' }, { label: 'Dell XPS 15', value: 'dell' }] },
-      { name: 'department', label: 'Department', type: 'select', required: true, options: [{ label: 'Engineering', value: 'eng' }, { label: 'Sales', value: 'sales' }] },
-      { name: 'assetTag', label: 'Asset Tag', type: 'text', required: false },
-      { name: 'businessJustification', label: 'Business Justification', type: 'textarea', required: true }
-    ]
-  },
-  {
-    name: 'Client ERP Setup & Onboarding',
-    slug: 'client-onboarding',
-    icon: 'ti-building-skyscraper',
-    target: 'both',
-    defaultPriority: 'High',
-    fields: [
-      { name: 'clientCompanyName', label: 'Client Company Name', type: 'text', required: true },
-      { name: 'userSeats', label: 'User Seats Required', type: 'number', required: true, defaultValue: 10 },
-      { name: 'targetGoLiveDate', label: 'Target Go-Live Date', type: 'date', required: true }
-    ]
-  },
-  {
-    name: 'Software Bug & Issue Report',
-    slug: 'bug-report',
-    icon: 'ti-bug',
-    target: 'both',
-    defaultPriority: 'High',
-    fields: [
-      { name: 'affectedModule', label: 'Affected Module', type: 'select', options: [{ label: 'Invoicing', value: 'invoicing' }, { label: 'Inventory', value: 'inventory' }] },
-      { name: 'stepsToReproduce', label: 'Steps to Reproduce', type: 'textarea', required: true }
-    ]
-  }
+  { name: 'Computer/Laptop Issue', slug: 'computer-laptop', icon: 'ti-device-laptop', target: 'internal', defaultPriority: 'Normal' },
+  { name: 'Customer Support Request', slug: 'customer-support', icon: 'ti-headset', target: 'both', defaultPriority: 'Normal' },
+  { name: 'Fluid Finder Update', slug: 'fluid-finder', icon: 'ti-flask', target: 'internal', defaultPriority: 'Normal' },
+  { name: 'FX Machine Support', slug: 'fx-machine', icon: 'ti-cpu', target: 'both', defaultPriority: 'High' },
+  { name: 'IT AI Process/UI Development', slug: 'it-ai-ui', icon: 'ti-sparkles', target: 'internal', defaultPriority: 'High' },
+  { name: 'Rep Assignment Change', slug: 'rep-assignment', icon: 'ti-user-check', target: 'internal', defaultPriority: 'Normal' },
+  { name: 'Vendor Purchase Order', slug: 'vendor-po', icon: 'ti-file-invoice', target: 'internal', defaultPriority: 'Normal' },
+  { name: 'Website Frontend Update', slug: 'website-frontend', icon: 'ti-world-www', target: 'both', defaultPriority: 'Normal' }
 ];
 
-let ticketsSeed = [
-  {
-    _id: '1',
-    uid: 1001,
-    formattedUid: 'LP-1001',
-    title: 'MacBook Pro 16" Developer Workstation Request',
-    description: 'New senior engineer onboarding next Monday.',
-    status: 'To-Do',
-    priority: 'High',
-    categoryName: 'IT & Hardware Request',
-    reporter: { fullname: 'Sarah Connor' },
-    externalReporter: { name: 'Sarah Connor (Engineering Lead)' },
-    assignee: { fullname: 'Scott Karan' },
-    formData: {
-      hardwareType: 'MacBook Pro 16"',
-      department: 'Engineering',
-      assetTag: 'New Hire',
-      businessJustification: 'Local Docker and Kubernetes cluster workloads.'
-    },
-    createdAt: new Date().toISOString()
-  },
-  {
-    _id: '2',
-    uid: 1002,
-    formattedUid: 'LP-1002',
-    title: 'Acme Logistics ERP Onboarding & DB Provisioning',
-    description: 'External client onboarding for 50 initial operator seats.',
-    status: 'To-Do',
-    priority: 'Urgent',
-    categoryName: 'Client ERP Setup & Onboarding',
-    reporter: null,
-    externalReporter: { name: 'Robert Johnson', company: 'Acme Logistics Inc.' },
-    assignee: { fullname: 'Alex Morgan' },
-    formData: {
-      clientCompanyName: 'Acme Logistics Inc.',
-      userSeats: 50,
-      targetGoLiveDate: '2026-09-15'
-    },
-    createdAt: new Date().toISOString()
-  }
-];
+let ticketsSeed = [];
 
 const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
