@@ -52,7 +52,9 @@ function mainRoutes (router, middleware, controllers) {
   })
 
   // Public
-  router.get('/newissue', controllers.tickets.pubNewIssue)
+  router.get('/newissue', function (req, res) {
+    return res.redirect('/tickets.html?action=new')
+  })
   router.get('/register', controllers.accounts.signup)
   router.get('/signup', controllers.accounts.signup)
 

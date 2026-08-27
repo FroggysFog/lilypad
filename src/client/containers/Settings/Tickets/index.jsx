@@ -265,7 +265,7 @@ class TicketsSettings extends React.Component {
           subtitle={
             <div>
               Allow the creation of tickets by users that are unregistered. (
-              <a href={viewdata.get('hosturl') + '/newissue'}>{viewdata.get('hosturl') + '/newissue'}</a>)
+              <a href={viewdata.get('hosturl') + '/tickets.html?action=new'}>{viewdata.get('hosturl') + '/tickets.html?action=new'}</a>)
             </div>
           }
           component={
