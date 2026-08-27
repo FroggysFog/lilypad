@@ -42,13 +42,13 @@ function getHeaderForPage(activeKey, pageTitle = 'LilyPad ERP') {
 						<li>
 							<ul>
 								<li class="submenu">
-									<a href="javascript:void(0);" class="subdrop ${['email', 'team', 'forms'].includes(activeKey) ? 'active' : ''}">
+									<a href="javascript:void(0);" class="subdrop active">
 										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
 									</a>
 									<ul style="display: block;">
-										<li><a href="admin-email.html" class="${activeKey === 'email' ? 'active' : ''}"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="admin-email.html" class="${activeKey === 'email' ? 'active' : ''}"><i class="ti ti-mail-cog me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
 										<li><a href="admin-team.html" class="${activeKey === 'team' ? 'active' : ''}"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
-										<li><a href="admin-forms.html" class="${activeKey === 'forms' ? 'active' : ''}"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
+										<li><a href="admin-forms.html" class="${activeKey === 'forms' ? 'active' : ''}"><i class="ti ti-forms me-2 text-primary"></i>Dynamic Form Builder</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -71,9 +71,9 @@ function getHeaderForPage(activeKey, pageTitle = 'LilyPad ERP') {
 
     // Replace sidebar-inner in header
     const sidebarStart = header.indexOf('<!-- Sidenav Menu -->');
-    const sidebarEnd = header.indexOf('</div>\n\t\t</div>\n\t\t<!-- Sidenav Menu End -->');
+    const sidebarEnd = header.indexOf('<!-- Sidenav Menu End -->');
     if (sidebarStart !== -1 && sidebarEnd !== -1) {
-        header = header.substring(0, sidebarStart) + sidebarTemplate + header.substring(sidebarEnd);
+        header = header.substring(0, sidebarStart) + sidebarTemplate + '\n\t\t</div>\n\t\t' + header.substring(sidebarEnd);
     }
     return header;
 }
@@ -1604,15 +1604,43 @@ const baseSidebar = `
 
 // Update index.html and dashboard.html with real URLs
 let updatedIndex = fs.readFileSync(indexPath, 'utf8');
-const sStart = updatedIndex.indexOf('<!-- Sidenav Menu -->');
-const sEnd = updatedIndex.indexOf('</div>\n\t\t</div>\n\t\t<!-- Sidenav Menu End -->');
-if (sStart !== -1 && sEnd !== -1) {
-    updatedIndex = updatedIndex.substring(0, sStart) + baseSidebar + updatedIndex.substring(sEnd);
+
+// Strip off any old duplicated tickets code if present
+const footerEndMarker = '<!-- End Footer -->';
+if (updatedIndex.includes(footerEndMarker)) {
+    const footerEndIdx = updatedIndex.indexOf(footerEndMarker) + footerEndMarker.length;
+    const cleanScriptsTail = `
+
+		</div>
+		<!-- End Page Content -->
+
+	</div>
+	<!-- End Wrapper -->
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<!-- Main JS -->
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/lilypad-notifications.js"></script>
+</body>
+</html>
+`;
+    updatedIndex = updatedIndex.substring(0, footerEndIdx) + cleanScriptsTail;
 }
 
-// Update header action buttons on dashboard
-updatedIndex = updatedIndex.replace(/href="tickets\.html\?admin=email"/g, 'href="admin-email.html"');
-updatedIndex = updatedIndex.replace(/href="tickets\.html\?view=kb"/g, 'href="knowledge-base.html"');
+// Ensure correct header buttons
+updatedIndex = updatedIndex.replace(/<button type="button" onclick="openEmailGatewayModal\(\)"[\s\S]*?<\/button>/g, '<a href="admin-email.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="ti ti-mail-cog me-1"></i> Email Gateway</a>');
+updatedIndex = updatedIndex.replace(/<button type="button" onclick="openKnowledgeBaseModal\(\)"[\s\S]*?<\/button>/g, '<a href="knowledge-base.html" class="btn btn-outline-success btn-sm rounded-pill px-3"><i class="ti ti-book me-1"></i> Diagnostic SOPs</a>');
+updatedIndex = updatedIndex.replace(/<button type="button" onclick="openIntakeModal\(\)"[\s\S]*?<\/button>/g, '<a href="tickets.html?action=new" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-1"><i class="ti ti-plus"></i><span>New Ticket</span></a>');
+
+// Ensure correct sidebar
+const sStart = updatedIndex.indexOf('<!-- Sidenav Menu -->');
+const sEnd = updatedIndex.indexOf('<!-- Sidenav Menu End -->');
+if (sStart !== -1 && sEnd !== -1) {
+    updatedIndex = updatedIndex.substring(0, sStart) + baseSidebar + '\n\t\t</div>\n\t\t' + updatedIndex.substring(sEnd);
+}
 
 fs.writeFileSync(indexPath, updatedIndex, 'utf8');
 fs.writeFileSync(path.join(__dirname, '../public/dashboard.html'), updatedIndex, 'utf8');
@@ -1622,5 +1650,6 @@ console.log(' - public/admin-email.html');
 console.log(' - public/admin-team.html');
 console.log(' - public/admin-forms.html');
 console.log(' - public/knowledge-base.html');
+console.log(' - public/index.html & public/dashboard.html (Cleaned)');
 
 

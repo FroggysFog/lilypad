@@ -137,14 +137,6 @@ const server = http.createServer((req, res) => {
     pathname = '/tickets.html';
   } else if (pathname === '/login') {
     pathname = '/login.html';
-  } else if (pathname === '/admin-email' || pathname === '/email-gateway') {
-    pathname = '/admin-email.html';
-  } else if (pathname === '/admin-team' || pathname === '/users') {
-    pathname = '/admin-team.html';
-  } else if (pathname === '/admin-forms' || pathname === '/forms') {
-    pathname = '/admin-forms.html';
-  } else if (pathname === '/knowledge-base' || pathname === '/sop' || pathname === '/kb') {
-    pathname = '/knowledge-base.html';
   } else if (pathname === '/client-portal' || pathname === '/portal') {
     pathname = '/client-portal.html';
   }

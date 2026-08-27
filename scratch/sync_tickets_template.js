@@ -3224,14 +3224,5 @@ const ticketingEngineScript = `
 const finalTicketsHtml = unifiedHeader + ticketingBodyContent + ticketingModalsHtml + footerScriptsPart.replace('</body>', ticketingEngineScript + '</body>');
 fs.writeFileSync(path.join(__dirname, '../public/tickets.html'), finalTicketsHtml, 'utf8');
 
-// Ensure index.html and dashboard.html also have Operations Admin modals and handlers
-let cleanIndex = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
-// Remove old modals if already appended
-if (cleanIndex.includes('id="emailGatewayModal"')) {
-    cleanIndex = cleanIndex.substring(0, cleanIndex.indexOf('<!-- SOP Detail Modal Popup -->')) + cleanIndex.substring(cleanIndex.lastIndexOf('</script>') + 9);
-}
-const finalIndexHtml = cleanIndex.replace('</body>', ticketingModalsHtml + ticketingEngineScript + '</body>');
-fs.writeFileSync(path.join(__dirname, '../public/index.html'), finalIndexHtml, 'utf8');
-fs.writeFileSync(path.join(__dirname, '../public/dashboard.html'), finalIndexHtml, 'utf8');
+console.log('Successfully synchronized public/tickets.html');
 
-console.log('Successfully synchronized public/tickets.html, public/index.html, and public/dashboard.html with Operations Admin Modals');
