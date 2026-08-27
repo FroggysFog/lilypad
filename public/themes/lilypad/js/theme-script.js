@@ -33,7 +33,18 @@
             document.documentElement.style.setProperty('--bs-primary-rgb', rgb);
         }
     }
+
+    function applyThemeButtonTextColor(colorVal) {
+        if (!colorVal) return;
+        let hex = colorVal;
+        if (!hex.startsWith('#') && /^[0-9A-Fa-f]{6}$/.test(hex)) hex = '#' + hex;
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex) || /^#[0-9A-Fa-f]{3}$/.test(hex)) {
+            document.documentElement.style.setProperty('--btn-text-color', hex);
+        }
+    }
+
     window.applyThemeColorAccent = applyThemeColorAccent;
+    window.applyThemeButtonTextColor = applyThemeButtonTextColor;
     window.THEME_PRESET_COLORS = THEME_PRESET_COLORS;
 
 	var t = localStorage.getItem("__THEME_CONFIG__") || sessionStorage.getItem("__THEME_CONFIG__"),
@@ -45,6 +56,7 @@
 				color: "primary"
 			},
             customColor: "#0d6efd",
+            customTextColor: "#ffffff",
 			layout: {
 				mode: "fluid"
 			},
@@ -106,6 +118,10 @@
     } else if (config.color && config.color.color) {
         applyThemeColorAccent(config.color.color);
     }
+
+    if (config.customTextColor) {
+        applyThemeButtonTextColor(config.customTextColor);
+    }
 }();
 
 class ThemeCustomizer {
@@ -151,6 +167,13 @@ class ThemeCustomizer {
         window.applyThemeColorAccent(hex);
         this.setSwitchFromConfig();
     }
+    setCustomTextColor(hex) {
+        if (!hex.startsWith('#')) hex = '#' + hex;
+        if (!/^#[0-9A-Fa-f]{6}$/.test(hex) && !/^#[0-9A-Fa-f]{3}$/.test(hex)) return;
+        this.config.customTextColor = hex;
+        window.applyThemeButtonTextColor(hex);
+        this.setSwitchFromConfig();
+    }
 	changeLayoutColor(e) {
 		this.config.theme = e;
         this.html.setAttribute("data-bs-theme", e);
@@ -164,11 +187,13 @@ class ThemeCustomizer {
 	resetTheme() {
 		this.config = JSON.parse(JSON.stringify(window.defaultConfig));
         this.config.customColor = "#0d6efd";
+        this.config.customTextColor = "#ffffff";
         this.changeMenuColor(this.config.menu.color);
         this.changeLeftbarSize(this.config.sidenav.size);
         this.changeLayoutColor(this.config.theme);
         this.changeTopbarColor(this.config.topbar.color);
         this.changeThemeColor(this.config.color.color);
+        this.setCustomTextColor("#ffffff");
         this._adjustLayout();
 	}
 	initSwitchListener() {
@@ -199,7 +224,7 @@ class ThemeCustomizer {
             });
         });
 
-        // Custom Color Picker & Hex Input
+        // Custom Button Background Color Picker & Hex Input
         const picker = document.getElementById("customThemeColorPicker");
         const hexInput = document.getElementById("customThemeColorHex");
         const btnApply = document.getElementById("btnApplyCustomColor");
@@ -228,6 +253,48 @@ class ThemeCustomizer {
                 }
             });
         }
+
+        // Custom Button Text Color Picker & Hex Input
+        const textPicker = document.getElementById("customBtnTextColorPicker");
+        const textHexInput = document.getElementById("customBtnTextColorHex");
+        const btnApplyText = document.getElementById("btnApplyCustomTextColor");
+
+        if (textPicker && textHexInput) {
+            textPicker.addEventListener("input", function() {
+                textHexInput.value = textPicker.value.toUpperCase();
+                a.setCustomTextColor(textPicker.value);
+            });
+            if (btnApplyText) {
+                btnApplyText.addEventListener("click", function() {
+                    const val = textHexInput.value.trim();
+                    if (val) {
+                        textPicker.value = val.startsWith('#') ? val : '#' + val;
+                        a.setCustomTextColor(val);
+                    }
+                });
+            }
+            textHexInput.addEventListener("keyup", function(e) {
+                if (e.key === "Enter") {
+                    const val = textHexInput.value.trim();
+                    if (val) {
+                        textPicker.value = val.startsWith('#') ? val : '#' + val;
+                        a.setCustomTextColor(val);
+                    }
+                }
+            });
+        }
+
+        // Button text quick preset chips
+        document.querySelectorAll(".btn-text-preset-chip").forEach(function(chip) {
+            chip.addEventListener("click", function() {
+                const color = chip.getAttribute("data-color");
+                if (color) {
+                    if (textPicker) textPicker.value = color;
+                    if (textHexInput) textHexInput.value = color.toUpperCase();
+                    a.setCustomTextColor(color);
+                }
+            });
+        });
 
         var e = document.getElementById("light-dark-mode");
         if (e) {
@@ -310,12 +377,20 @@ class ThemeCustomizer {
             i && (i.checked = !0);
             s && (s.checked = !0);
 
-            // Sync color picker values
+            // Sync button background color picker
             const picker = document.getElementById("customThemeColorPicker");
             const hexInput = document.getElementById("customThemeColorHex");
             if (picker && hexInput && o.customColor) {
                 picker.value = o.customColor;
                 hexInput.value = o.customColor.toUpperCase();
+            }
+
+            // Sync button text color picker
+            const textPicker = document.getElementById("customBtnTextColorPicker");
+            const textHexInput = document.getElementById("customBtnTextColorHex");
+            if (textPicker && textHexInput && o.customTextColor) {
+                textPicker.value = o.customTextColor;
+                textHexInput.value = o.customTextColor.toUpperCase();
             }
         }
 	}
@@ -429,6 +504,50 @@ document.addEventListener("DOMContentLoaded", function(e) {
                         </div>
                     </div>
                 </div> 
+
+                <!-- Custom Button Text / Active Element Text Color -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button fw-semibold fs-16" type="button" data-bs-toggle="collapse" data-bs-target="#buttontextcolor" aria-expanded="true">
+                            <i class="ti ti-typography me-2 text-primary"></i> Button & Active Text Color
+                        </button>
+                    </h2>
+                    <div id="buttontextcolor" class="accordion-collapse collapse show">
+                        <div class="accordion-body">
+                            <div class="theme-content">
+                                <p class="fs-12 text-muted mb-2">Change the text and icon color for selected buttons and active elements:</p>
+                                <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-text-preset-chip d-flex align-items-center gap-1 py-1 px-2 fs-12 rounded-2" data-color="#ffffff">
+                                        <span class="rounded-circle border" style="background:#ffffff; width:12px; height:12px; display:inline-block;"></span> White
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-text-preset-chip d-flex align-items-center gap-1 py-1 px-2 fs-12 rounded-2" data-color="#0f172a">
+                                        <span class="rounded-circle" style="background:#0f172a; width:12px; height:12px; display:inline-block;"></span> Dark
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-text-preset-chip d-flex align-items-center gap-1 py-1 px-2 fs-12 rounded-2" data-color="#fef08a">
+                                        <span class="rounded-circle" style="background:#fef08a; width:12px; height:12px; display:inline-block;"></span> Yellow
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-text-preset-chip d-flex align-items-center gap-1 py-1 px-2 fs-12 rounded-2" data-color="#86efac">
+                                        <span class="rounded-circle" style="background:#86efac; width:12px; height:12px; display:inline-block;"></span> Lime
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-text-preset-chip d-flex align-items-center gap-1 py-1 px-2 fs-12 rounded-2" data-color="#bae6fd">
+                                        <span class="rounded-circle" style="background:#bae6fd; width:12px; height:12px; display:inline-block;"></span> Ice Blue
+                                    </button>
+                                </div>
+
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <label class="form-label fs-12 fw-bold text-dark mb-2 d-flex align-items-center gap-1">
+                                        <i class="ti ti-brush text-primary"></i> Custom Text Color:
+                                    </label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="color" id="customBtnTextColorPicker" class="form-control form-control-color border-0 p-0 shadow-sm" value="#ffffff" style="width:40px; height:36px; cursor:pointer; border-radius:6px;" title="Pick custom text color">
+                                        <input type="text" id="customBtnTextColorHex" class="form-control form-control-sm font-monospace text-uppercase" placeholder="#FFFFFF" style="max-width:120px;" maxlength="7">
+                                        <button type="button" class="btn btn-sm btn-primary px-3 shadow-sm" id="btnApplyCustomTextColor">Apply</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="accordion-item">
                     <h2 class="accordion-header">

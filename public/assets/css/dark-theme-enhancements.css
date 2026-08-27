@@ -528,6 +528,10 @@
 }
 
 /* Universal High Contrast Rules for Primary and Active Buttons */
+:root {
+    --btn-text-color: #ffffff;
+}
+
 .btn-primary,
 .btn-primary:hover,
 .btn-primary:focus,
@@ -536,13 +540,13 @@
 .btn-primary:disabled {
     background-color: var(--bs-primary) !important;
     border-color: var(--bs-primary) !important;
-    color: #ffffff !important;
+    color: var(--btn-text-color, #ffffff) !important;
 }
 
 .btn-primary i,
 .btn-primary svg,
 .btn-primary span {
-    color: #ffffff !important;
+    color: var(--btn-text-color, #ffffff) !important;
 }
 
 .nav-pills .nav-link.active,
@@ -552,7 +556,7 @@
 .list-group-item.active {
     background-color: var(--bs-primary) !important;
     border-color: var(--bs-primary) !important;
-    color: #ffffff !important;
+    color: var(--btn-text-color, #ffffff) !important;
 }
 
 .nav-pills .nav-link.active i,
@@ -561,7 +565,7 @@
 .btn-group .btn.active i,
 .list-group-item.active i,
 .list-group-item.active span {
-    color: #ffffff !important;
+    color: var(--btn-text-color, #ffffff) !important;
 }
 
 .btn-outline-primary {
@@ -576,12 +580,12 @@
 .btn-outline-primary.active {
     background-color: var(--bs-primary) !important;
     border-color: var(--bs-primary) !important;
-    color: #ffffff !important;
+    color: var(--btn-text-color, #ffffff) !important;
 }
 
 .btn-outline-primary:hover i,
 .btn-outline-primary.active i {
-    color: #ffffff !important;
+    color: var(--btn-text-color, #ffffff) !important;
 }
 
 /* =========================================================
@@ -595,9 +599,9 @@
 .login-logo-box {
     background-color: var(--bs-primary) !important;
     background: var(--bs-primary) !important;
-    color: #ffffff !important;
+    color: var(--btn-text-color, #ffffff) !important;
     box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb), 0.35) !important;
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .sidebar-logo .logo .rounded-2 i,
@@ -606,7 +610,7 @@
 .sidebar-logo a .rounded-2 i,
 .logo-icon-box i,
 .login-logo-box i {
-    color: #ffffff !important;
+    color: var(--btn-text-color, #ffffff) !important;
 }
 
 .sidebar-logo .logo-normal span .text-primary,
