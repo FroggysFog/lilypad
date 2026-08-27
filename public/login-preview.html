@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Meta Tags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Login | LilyPad ERP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LilyPad ERP - Minimalist internal ERP and customer management.">
+    <meta name="author" content="LilyPad Systems">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="themes/lilypad/img/favicon.png">
+
+    <!-- Apple Icon -->
+    <link rel="apple-touch-icon" href="themes/lilypad/img/apple-icon.png">
+
+    <!-- Bootstrap CSS from uploaded theme -->
+    <link rel="stylesheet" href="themes/lilypad/css/bootstrap.min.css">
+
+    <!-- Tabler Icon CSS from uploaded theme -->
+    <link rel="stylesheet" href="themes/lilypad/plugins/tabler-icons/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+    <!-- Main CSS from uploaded theme -->
+    <link rel="stylesheet" href="themes/lilypad/css/style.css" id="app-style">
+    
+    <style>
+        :root {
+            --primary: #047d24;
+            --primary-hover: #035c1a;
+        }
+        .btn-primary {
+            background-color: #047d24 !important;
+            border-color: #047d24 !important;
+            box-shadow: 0 4px 12px rgba(4, 125, 36, 0.25) !important;
+        }
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: #035c1a !important;
+            border-color: #035c1a !important;
+            box-shadow: 0 6px 16px rgba(4, 125, 36, 0.35) !important;
+        }
+        .form-control:focus {
+            border-color: #047d24 !important;
+            box-shadow: 0 0 0 3px rgba(4, 125, 36, 0.2) !important;
+        }
+        .form-check-input:checked {
+            background-color: #047d24 !important;
+            border-color: #047d24 !important;
+        }
+        .link-hover:hover {
+            color: #047d24 !important;
+        }
+        .account-bg-01 {
+            background-image: url('themes/lilypad/img/authentication/login-bg.jpg') !important;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            height: calc(100vh - 40px);
+        }
+        .hide { display: none !important; }
+    </style>
+</head>
+
+<body class="account-page bg-white">
+
+    <!-- Begin Wrapper -->
+    <div class="main-wrapper">
+
+       <div class="overflow-hidden p-3 acc-vh">
+            
+            <!-- start row -->
+            <div class="row vh-100 w-100 g-0"> 
+
+                <div class="col-lg-6 vh-100 overflow-y-auto overflow-x-hidden">
+
+                     <!-- start row -->
+                    <div class="row">
+
+                        <div class="col-md-10 mx-auto">
+                            <!-- Sign In Form -->
+                            <form id="loginForm" onsubmit="handleLogin(event)" class="vh-100 d-flex justify-content-between flex-column p-4 pb-0">
+                                <div class="text-center mb-4 auth-logo">
+                                    <div class="d-inline-flex align-items-center gap-2">
+                                        <img src="themes/lilypad/img/logo.svg" class="img-fluid" alt="LilyPad ERP Logo" style="max-height: 42px;">
+                                    </div>
+                                </div>
+                                
+                                <div id="formContainer">
+                                    <!-- Dynamic Alert Box -->
+                                    <div id="demoAlert" class="alert alert-success d-none mb-3" role="alert"></div>
+
+                                    <div class="mb-3">
+                                        <h3 class="mb-2">Sign In</h3>
+                                        <p class="mb-0 text-muted">Access the LilyPad ERP panel using your email and passcode.</p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Email Address</label>
+                                        <div class="input-group input-group-flat">
+                                            <input type="email" id="login-email" class="form-control" placeholder="admin@lilypad.internal" value="admin@lilypad.internal" required>
+                                            <span class="input-group-text">
+                                                <i class="ti ti-mail"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Password</label>
+                                        <div class="input-group input-group-flat pass-group">
+                                            <input type="password" id="login-pass" class="form-control pass-input" placeholder="••••••••••••" value="password123" required>
+                                            <span class="input-group-text toggle-password cursor-pointer">
+                                                <i class="ti ti-eye-off"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div class="form-check form-check-md d-flex align-items-center">
+                                            <input class="form-check-input mt-0" type="checkbox" value="" id="checkebox-md" checked>
+                                            <label class="form-check-label text-dark ms-1" for="checkebox-md">
+                                                Remember Me
+                                            </label>
+                                        </div>
+                                        <div class="text-end">
+                                            <a href="javascript:void(0);" onclick="toggleForgot(true)" class="link-danger fw-medium link-hover">Forgot Password?</a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <button type="submit" class="btn btn-primary w-100 shadow-sm py-2">Sign In</button>
+                                    </div>
+                                    
+                                    <div class="mb-3 text-center">
+                                        <p class="mb-0 text-muted">New on our platform? <a href="javascript:void(0);" class="link-indigo fw-bold link-hover">Create an account</a></p>
+                                    </div>
+                                    
+                                    <div class="or-login text-center position-relative mb-3">
+                                        <h6 class="fs-14 mb-0 position-relative text-body">OR</h6>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center justify-content-center flex-wrap gap-2 mb-3">
+                                        <div class="text-center flex-fill">
+                                            <a href="javascript:void(0);" class="p-2 btn btn-info d-flex align-items-center justify-content-center">
+                                                <img class="img-fluid m-1" src="themes/lilypad/img/icons/facebook-logo.svg" alt="Facebook" width="20">
+                                            </a>
+                                        </div>
+                                        <div class="text-center flex-fill">
+                                            <a href="javascript:void(0);" class="p-2 btn btn-outline-light border d-flex align-items-center justify-content-center">
+                                                <img class="img-fluid m-1" src="themes/lilypad/img/icons/google-logo.svg" alt="Google" width="20">
+                                            </a>
+                                        </div>
+                                        <div class="text-center flex-fill">
+                                            <a href="javascript:void(0);" class="p-2 btn btn-dark d-flex align-items-center justify-content-center">
+                                                <img class="img-fluid m-1" src="themes/lilypad/img/icons/apple-logo.svg" alt="Apple" width="20">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Forgot Password Form Container (Toggled) -->
+                                <div id="forgotContainer" class="d-none">
+                                    <div class="mb-3">
+                                        <h3 class="mb-2">Reset Password</h3>
+                                        <p class="mb-0 text-muted">Enter your email and we'll send a password recovery link.</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Email Address</label>
+                                        <div class="input-group input-group-flat">
+                                            <input type="email" id="forgot-email" class="form-control" placeholder="Enter your email">
+                                            <span class="input-group-text">
+                                                <i class="ti ti-mail"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <button type="button" onclick="handleForgot()" class="btn btn-primary w-100 py-2">Send Reset Link</button>
+                                    </div>
+                                    <div class="text-center">
+                                        <a href="javascript:void(0);" onclick="toggleForgot(false)" class="text-secondary fw-semibold">
+                                            <i class="ti ti-arrow-left"></i> Back to Sign In
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="text-center pb-4">
+                                    <p class="text-dark mb-0 fs-13">Copyright &copy; 2026 - LilyPad ERP</p>
+                                </div>
+                            </form>
+                        </div> <!-- end col -->
+
+                    </div>
+                    <!-- end row -->
+
+                </div>
+
+                <!-- Hero Artwork on Right Side -->
+                <div class="col-lg-6 account-bg-01"></div> <!-- end col -->
+
+            </div>
+            <!-- end row -->
+
+        </div>
+
+    </div>
+    <!-- End Wrapper -->
+
+    <!-- Bootstrap Core JS from uploaded theme -->
+    <script src="themes/lilypad/js/bootstrap.bundle.min.js"></script>    
+
+    <!-- Main JS from uploaded theme -->
+    <script src="themes/lilypad/js/script.js"></script>
+
+    <script>
+        function toggleForgot(show) {
+            document.getElementById('formContainer').classList.toggle('d-none', show);
+            document.getElementById('forgotContainer').classList.toggle('d-none', !show);
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const alert = document.getElementById('demoAlert');
+            alert.className = 'alert alert-success mb-3';
+            alert.textContent = 'Welcome to LilyPad ERP! (Authenticated successfully)';
+            alert.classList.remove('d-none');
+        }
+
+        function handleForgot() {
+            const email = document.getElementById('forgot-email').value;
+            const alert = document.getElementById('demoAlert');
+            alert.className = 'alert alert-success mb-3';
+            alert.textContent = 'Reset link sent to ' + (email || 'your email') + '!';
+            alert.classList.remove('d-none');
+            toggleForgot(false);
+        }
+    </script>
+</body>
+
+</html>

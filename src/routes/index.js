@@ -434,6 +434,9 @@ function mainRoutes (router, middleware, controllers) {
 }
 
 module.exports = function (app, middleware) {
+  const lilypadTicketsRouter = require('./lilypadTickets')(middleware)
+  app.use('/api/v1/lilypad', lilypadTicketsRouter)
+
   mainRoutes(router, middleware, controllers)
   app.use('/', router)
 

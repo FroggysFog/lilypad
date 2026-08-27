@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Dashboard | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="keywords"
+		content="LilyPad ERP, operations, CRM, ticketing">
+	<meta name="author" content="LilyPad Systems">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Datatable CSS -->
+	<link rel="stylesheet" href="assets/plugins/datatables/css3/dataTables.bootstrap5.min.css">
+
+	<!-- Daterangepicker CSS -->
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="assets/plugins/flatpickr/flatpickr.min.css">
+
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+
+					<!-- Sidebar Mobile Button -->
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+
+				</div>
+
+				<!-- Centered & Larger Global Search Bar -->
+				<div class="header-search d-none d-md-flex align-items-center justify-content-center mx-auto" style="width: 100%; max-width: 520px;">
+					<div class="input-icon position-relative w-100">
+						<input type="text" class="form-control rounded-pill py-2 px-4 shadow-sm" placeholder="Search anything in LilyPad ERP... (Ctrl + K)" style="font-size: 14px; height: 42px;">
+						<span class="input-icon-addon d-inline-flex p-0 header-search-icon pe-3"><i class="ti ti-command fs-16 text-muted"></i></span>
+					</div>
+				</div>
+
+				<div class="d-flex align-items-center">
+
+					<!-- Direct Ticket Suite Button -->
+					<div class="header-item me-2">
+						<a href="/tickets" class="btn btn-sm d-flex align-items-center gap-2 px-3 py-2 text-white shadow-sm fw-semibold rounded-pill" style="background-color: #047d24; font-size: 13px;">
+							<i class="ti ti-ticket fs-16"></i>
+							<span>Ticket Suite</span>
+						</a>
+					</div>
+
+					<!-- Search for Mobile -->
+					<div class="header-item d-flex d-lg-none me-2">
+						<button class="topbar-link btn" data-bs-toggle="modal" data-bs-target="#searchModal"
+							type="button">
+							<i class="ti ti-search fs-16"></i>
+						</button>
+					</div>
+
+
+					<!-- Minimize -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link btnFullscreen"><i
+									class="ti ti-maximize"></i></a>
+						</div>
+					</div>
+					<!-- Minimize -->
+
+					<!-- Light/Dark Mode Button -->
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<!-- pages -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="javascript:void(0);" class="btn topbar-link topbar-teal-link"
+								data-bs-toggle="dropdown">
+								<i class="ti ti-layout-grid-add"></i>
+							</a>
+							<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+								<!-- Item-->
+								<a href="contacts.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Contacts</span>
+											<span class="fs-13">View All the Contacts</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="pipeline.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Pipeline</span>
+											<span class="fs-13">View All the Pipeline</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="activities.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Activities</span>
+											<span class="fs-13">Activities</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+								<!-- Item-->
+								<a href="analytics.html" class="dropdown-item">
+									<div class="d-flex align-items-center justify-content-between">
+										<div>
+											<span class="d-flex mb-1 fw-semibold text-dark">Analytics</span>
+											<span class="fs-13">Analytics</span>
+										</div>
+										<i class="ti ti-chevron-right-pipe text-dark"></i>
+									</div>
+								</a>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- faq -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="faq.html" class="btn topbar-link topbar-indigo-link"><i
+									class="ti ti-help-hexagon"></i></a>
+						</div>
+					</div>
+
+					<!-- report -->
+					<div class="header-item d-none d-sm-flex">
+						<div class="dropdown me-2">
+							<a href="lead-reports.html" class="btn topbar-link topbar-warning-link"><i
+									class="ti ti-chart-pie"></i></a>
+						</div>
+					</div>
+
+					<div class="header-line"></div>
+
+					<!-- message -->
+					<div class="header-item">
+						<div class="dropdown me-2">
+							<a href="chat.html" class="btn topbar-link">
+								<i class="ti ti-message-circle-exclamation"></i>
+								<span class="badge rounded-pill">&nbsp;</span>
+							</a>
+						</div>
+					</div>
+
+					<!-- Notification Dropdown -->
+					<div class="header-item">
+						<div class="dropdown me-2 position-relative">
+
+							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative"
+								data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false"
+								aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
+								<i class="ti ti-bell fs-19" id="notificationBellIcon"></i>
+								<span class="notification-badge" id="notificationBadge" data-notif-badge style="display:none;">0</span>
+							</button>
+
+							<div class="dropdown-menu p-0 dropdown-menu-end shadow-lg border-0"
+								style="min-width: 360px; max-width: 380px; z-index: 1060;">
+
+								<div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+									<div class="d-flex align-items-center gap-2">
+										<h6 class="m-0 fs-15 fw-bold text-dark">Notifications</h6>
+										<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold">Live Feed</span>
+									</div>
+									<a href="javascript:void(0);" onclick="LilypadNotifications.markAllAsRead(event)" class="fs-12 text-decoration-none fw-semibold" style="color: #047d24;">
+										Mark all read
+									</a>
+								</div>
+
+								<!-- Notification Dynamic Body -->
+								<div class="notification-body position-relative z-2" id="notificationListContainer" style="max-height: 360px; overflow-y: auto;">
+								</div>
+
+								<!-- Direct Ticket Operations Button -->
+								<div class="p-2 rounded-bottom border-top text-center bg-light">
+									<a href="/tickets" class="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2" style="background-color: #047d24;">
+										<i class="ti ti-ticket fs-16"></i>
+										<span>Open Ticket Operations</span>
+									</a>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- User Dropdown -->
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);"
+							class="topbar-link dropdown-toggle drop-arrow-none position-relative"
+							data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex"
+								alt="user-image">
+							<span class="online text-success"><i
+									class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42"
+									alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0">Katherine Brooks</p>
+									<span class="d-block fs-13">Installer</span>
+								</div>
+							</div>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+
+							<!-- item -->
+							<div
+								class="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
+								<label class="form-check-label" for="notify"><i
+										class="ti ti-bell"></i>Notifications</label>
+								<input class="form-check-input me-0" type="checkbox" role="switch" id="notify">
+							</div>
+
+							<!-- Item-->
+							<a href="javascript:void(0);" class="dropdown-item">
+								<i class="ti ti-help-circle me-1 align-middle"></i>
+								<span class="align-middle">Help & Support</span>
+							</a>
+
+							<!-- Item-->
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-settings me-1 align-middle"></i>
+								<span class="align-middle">Settings</span>
+							</a>
+
+							<!-- Item-->
+							<div class="pt-2 mt-2 border-top">
+								<a href="login.html" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Search Modal -->
+		<div class="modal fade" id="searchModal">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content bg-transparent">
+					<div class="card shadow-none mb-0">
+						<div class="px-3 py-2 d-flex flex-row align-items-center" id="search-top">
+							<i class="ti ti-search fs-22"></i>
+							<input type="search" class="form-control border-0" placeholder="Search">
+							<button type="button" class="btn p-0" data-bs-dismiss="modal" aria-label="Close"><i
+									class="ti ti-x fs-22"></i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+
+			<!-- Start Logo -->
+			<div class="sidebar-logo">
+				<div>
+					<!-- Logo Normal -->
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span style="color:#047d24;">ERP</span></span>
+					</a>
+
+					<!-- Logo Small (shown when sidebar is minimized) -->
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white d-flex align-items-center justify-content-center" style="background:#047d24; width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+
+				<!-- Sidebar Menu Close -->
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+			<!-- End Logo -->
+
+			<!-- Sidenav Menu -->
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu">
+					<ul>
+						<li class="menu-title"><span>Main Menu</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);" class="active subdrop">
+										<i class="ti ti-dashboard"></i><span>Dashboard</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="index.html" class="active">Dashboard</a></li>
+										<li><a href="sales-dashboard.html">Sales Overview</a></li>
+										<li><a href="executive-dashboard.html">Executive Dashboard</a></li>
+										<li><a href="deals-dashboard.html">Deals Dashboard</a></li>
+										<li><a href="leads-dashboard.html">Leads Dashboard</a></li>
+										<li><a href="project-dashboard.html">Project Dashboard</a></li>
+										<li><a href="revenue-summary-dashboard.html">Revenue Summary</a></li>
+										<li><a href="growth-dashboard.html">Growth Dashboard</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);"><i
+											class="ti ti-brand-airtable"></i><span>Applications</span><span
+											class="menu-arrow"></span></a>
+									<ul>
+										<li><a href="chat.html">Chat</a></li>
+										<li class="submenu submenu-two">
+											<a href="javascript:void(0);">Call<span
+													class="menu-arrow inside-submenu"></span></a>
+											<ul>
+												<li><a href="video-call.html">Video Call</a></li>
+												<li><a href="audio-call.html">Audio Call</a></li>
+												<li><a href="call-history.html">Call History</a></li>
+											</ul>
+										</li>
+										<li><a href="calendar.html">Calendar</a></li>
+										<li><a href="email.html">Email</a></li>
+										<li><a href="todo.html">To Do</a></li>
+										<li><a href="notes.html">Notes</a></li>
+										<li><a href="file-manager.html">File Manager</a></li>
+										<li><a href="social-feed.html">Social Feed</a></li>
+										<li><a href="kanban-view.html">Kanban</a></li>
+										<li><a href="invoice.html">Invoices</a></li>
+									</ul>
+								</li>
+								<li>
+									<a href="tickets.html"><i class="ti ti-ticket"></i><span>Ticket Operations</span></a>
+								</li>
+								<li>
+									<a href="tickets.html?view=kb"><i class="ti ti-book"></i><span>Knowledge Base & SOPs</span></a>
+								</li>
+								<li class="submenu">
+									<a href="#">
+									<a href="#">
+										<i class="ti ti-user-star"></i><span>Super Admin</span>
+										<span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="dashboard.html">Dashboard</a></li>
+										<li><a href="company.html">Companies</a></li>
+										<li><a href="subscription.html">Subscriptions</a></li>
+										<li><a href="packages.html">Packages</a></li>
+										<li><a href="domain.html">Domain</a></li>
+										<li><a href="purchase-transaction.html">Purchase Transaction</a></li>
+										<li><a href="tenant-support-tickets.html">Support Tickets</a></li>
+										<li><a href="tenant-usage-metrics.html">Usage Metrics</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="#">
+										<i class="ti ti-layout-grid"></i><span>Layouts</span>
+										<span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="layout-mini.html">Mini</a></li>
+										<li><a href="layout-hoverview.html">Hover View</a></li>
+										<li><a href="layout-hidden.html">Hidden</a></li>
+										<li><a href="layout-fullwidth.html">Full Width</a></li>
+										<li><a href="layout-rtl.html">RTL</a></li>
+										<li><a href="layout-dark.html">Dark</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>CRM</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="contacts.html"><i class="ti ti-user-up"></i><span>Contacts</span></a>
+								</li>
+								<li>
+									<a href="companies.html"><i
+											class="ti ti-building-community"></i><span>Companies</span></a>
+								</li>
+								<li>
+									<a href="deals.html"><i class="ti ti-medal"></i><span>Deals</span></a>
+								</li>
+								<li>
+									<a href="leads.html"><i class="ti ti-chart-arcs"></i><span>Leads</span></a>
+								</li>
+								<li>
+									<a href="pipeline.html"><i
+											class="ti ti-timeline-event-exclamation"></i><span>Pipeline</span></a>
+								</li>
+								<li>
+									<a href="proposals.html"><i class="ti ti-file-star"></i><span>Proposals</span></a>
+								</li>
+								<li>
+									<a href="contracts.html"><i class="ti ti-file-check"></i><span>Contracts</span></a>
+								</li>
+								<li>
+									<a href="estimations.html"><i
+											class="ti ti-file-report"></i><span>Estimations</span></a>
+								</li>
+								<li>
+									<a href="invoices.html"><i class="ti ti-file-invoice"></i><span>Invoices</span></a>
+								</li>
+								<li>
+									<a href="payments.html"><i class="ti ti-report-money"></i><span>Payments</span></a>
+								</li>
+								<li>
+									<a href="analytics.html"><i class="ti ti-chart-bar"></i><span>Analytics</span></a>
+								</li>
+								<li>
+									<a href="activities.html"><i
+											class="ti ti-bounce-right"></i><span>Activities</span></a>
+								</li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>PROJECTS</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="projects.html"><i class="ti ti-atom-2"></i><span>Projects</span></a>
+								</li>
+								<li>
+									<a href="tasks.html"><i class="ti ti-list-check"></i><span>Tasks</span></a>
+								</li>
+								<li>
+									<a href="milestones.html"><i class="ti ti-stack-2"></i><span>Milestones</span></a>
+								</li>
+								<li>
+									<a href="timesheets.html"><i
+											class="ti ti-clock-record"></i><span>Timesheets</span></a>
+								</li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>SALES CRM</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-box"></i><span>Product Catalog</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="products.html">Product List</a></li>
+										<li><a href="product-details.html">Product Details</a></li>
+									</ul>
+								</li>
+								<li><a href="opportunities-list.html"><i
+											class="ti ti-checkup-list"></i><span>Opportunities</span></a></li>
+								<li><a href="sales-target.html"><i class="ti ti-target"></i><span>Sales
+											Targets</span></a></li>
+								<li><a href="quotations-list.html"><i
+											class="ti ti-file-info"></i><span>Quotations</span></a></li>
+								<li><a href="sales-order-list.html"><i class="ti ti-file-digit"></i><span>Sales
+											Orders</span></a></li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>MARKETING</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-brand-campaignmonitor"></i><span>Campaigns</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="campaign.html">Campaigns</a></li>
+										<li><a href="email-campaign.html">Email Campaigns</a></li>
+										<li><a href="sms-campaign.html">SMS Campaigns</a></li>
+										<li><a href="social-campaign.html">Social Campaigns</a></li>
+										<li><a href="whatsapp-campaign.html">WhatsApp Campaigns</a></li>
+									</ul>
+								</li>
+								<li><a href="email-marketing.html"><i class="ti ti-mail-star"></i><span>Email
+											Marketing</span></a></li>
+								<li><a href="email-engagement.html"><i class="ti ti-mail-dollar"></i><span>Email
+											Engagement</span></a></li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>User Management</span></li>
+						<li>
+							<ul>
+								<li><a href="manage-users.html"><i class="ti ti-users"></i><span>Manage Users</span></a>
+								</li>
+								<li><a href="roles-permissions.html"><i class="ti ti-user-shield"></i><span>Roles &
+											Permissions</span></a></li>
+								<li><a href="delete-request.html"><i class="ti ti-flag-question"></i><span>Delete
+											Request</span></a></li>
+								<li><a href="departments.html"><i
+											class="ti ti-float-center"></i><span>Departments</span></a></li>
+								<li><a href="teams-list.html"><i class="ti ti-users-group"></i><span>Teams</span></a>
+								</li>
+								<li><a href="invitations-list.html"><i
+											class="ti ti-address-book"></i><span>Invitations</span></a></li>
+								<li><a href="staff-directory-grid.html"><i class="ti ti-user-star"></i><span>Staff
+											Directory</span></a></li>
+								<li><a href="user-activity-logs.html"><i class="ti ti-bookmark-edit"></i><span>User
+											Activity Logs</span></a></li>
+								<li><a href="login-history.html"><i class="ti ti-lock-star"></i><span>Login
+											History</span></a></li>
+								<li><a href="device-management.html"><i class="ti ti-album"></i><span>Device
+											Management</span></a></li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>HRM</span></li>
+						<li>
+							<ul>
+								<li><a href="attendance.html"><i class="ti ti-article"></i><span>Attendance</span></a>
+								</li>
+								<li><a href="leave-requests.html"><i class="ti ti-message-star"></i><span>Leave
+											Requests</span></a></li>
+								<li><a href="holidays.html"><i class="ti ti-stack"></i><span>Holidays</span></a></li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>Reports</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-graph"></i><span>Lead Reports</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="lead-reports.html">Lead Reports</a></li>
+										<li><a href="lead-funnel-report.html">Lead Funnel</a></li>
+										<li><a href="lead-aging-report.html">Lead Aging</a></li>
+										<li><a href="lead-conversion-time-report.html">Lead Conversion Time</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-chart-donut"></i><span>Deal Reports</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="deal-reports.html">Deal Reports</a></li>
+										<li><a href="deal-conversion-report.html">Deal Conversion</a></li>
+										<li><a href="deal-aging-report.html">Deal Aging</a></li>
+										<li><a href="lost-deal-analysis-report.html">Lost Deal Analysis</a></li>
+										<li><a href="pipeline-stage-report.html">Pipeline Stage Report</a></li>
+									</ul>
+								</li>
+								<li><a href="contact-reports.html"><i class="ti ti-user-bolt"></i><span>Contact
+											Report</span></a></li>
+								<li><a href="company-reports.html"><i class="ti ti-building-estate"></i><span>Company
+											Report</span></a></li>
+								<li><a href="revenue-report.html"><i class="ti ti-file-dollar"></i><span>Revenue
+											Report</span></a></li>
+								<li><a href="project-reports.html"><i class="ti ti-file-pencil"></i><span>Project
+											Report</span></a></li>
+								<li><a href="task-reports.html"><i class="ti ti-list-check"></i><span>Task
+											Report</span></a></li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-user-search"></i><span>User & Team</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="user-activity-report.html">User Activity Report</a></li>
+										<li><a href="user-login-report.html">User Login Report</a></li>
+										<li><a href="team-performance-report.html">Team Performance Report</a></li>
+										<li><a href="sales-rep-comparison-report.html">Sales Rep Comparison</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-file-database"></i><span>Document Reports</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="proposal-report.html">Proposal Report</a></li>
+										<li><a href="proposal-conversion-rate-report.html">Proposal Conversion Rate</a>
+										</li>
+										<li><a href="contract-report.html">Contract Report</a></li>
+										<li><a href="contract-renewal-expiry-report.html">Contract Renewal & Expiry</a>
+										</li>
+										<li><a href="estimation-report.html">Estimation Report</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-script"></i><span>HRM</span><span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="attendance-summary-report.html">Attendance Summary</a></li>
+										<li><a href="leave-balance-summary-report.html">Leave Balance Summary </a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>CRM Settings</span></li>
+						<li>
+							<ul>
+								<li><a href="sources.html"><i class="ti ti-artboard"></i><span>Sources</span></a></li>
+								<li><a href="lost-reason.html"><i class="ti ti-message-exclamation"></i><span>Lost
+											Reason</span></a></li>
+								<li><a href="contact-stage.html"><i class="ti ti-steam"></i><span>Contact
+											Stage</span></a></li>
+								<li><a href="industry.html"><i
+											class="ti ti-building-factory"></i><span>Industry</span></a></li>
+								<li><a href="calls.html"><i class="ti ti-phone-check"></i><span>Calls</span></a></li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-settings-2"></i><span>Ticket Operations Admin</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="tickets.html?admin=email">Inbound Email & Anti-Spam Shield</a></li>
+										<li><a href="tickets.html?admin=team">Team & User Management</a></li>
+										<li><a href="tickets.html?admin=forms">Dynamic Form Builder</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-placeholder"></i><span>Sales Settings</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="sales-targets-settings.html">Sales Targets</a></li>
+										<li><a href="sales-targets-breakdown-settings.html">Sales Targets Breakdown</a>
+										</li>
+										<li><a href="discount-rules-settings.html">Discount Rules</a></li>
+										<li><a href="applied-discount-log.html">Applied Discount Log</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>Membership</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-brand-apple-podcast"></i><span>Membership</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="membership-plans.html">Membership Plans</a></li>
+										<li><a href="membership-addons.html">Membership Addons</a></li>
+										<li><a href="membership-transactions.html">Transactions</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>Content</span></li>
+						<li>
+							<ul>
+								<li><a href="pages.html"><i class="ti ti-page-break"></i><span>Pages</span></a></li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-brand-blogger"></i><span>Blog</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="blogs.html">All Blogs</a></li>
+										<li><a href="blog-categories.html">Blog Categories</a></li>
+										<li><a href="blog-comments.html">Blog Comments</a></li>
+										<li><a href="blog-tags.html">Blog Tags</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-map-pin-pin"></i><span>Location</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="countries.html">Countries</a></li>
+										<li><a href="states.html">States</a></li>
+										<li><a href="cities.html">Cities</a></li>
+									</ul>
+								</li>
+								<li><a href="testimonials.html"><i class="ti ti-quote"></i><span>Testimonials</span></a>
+								</li>
+								<li><a href="faq.html"><i class="ti ti-question-mark"></i><span>FAQ</span></a></li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>Support</span></li>
+						<li>
+							<ul>
+								<li><a href="contact-messages.html"><i class="ti ti-message-check"></i><span>Contact
+											Messages</span></a></li>
+								<li><a href="tickets.html"><i class="ti ti-ticket"></i><span>Tickets</span></a></li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>Settings</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-settings-cog"></i><span>General Settings</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="profile-settings.html">Profile</a></li>
+										<li><a href="security-settings.html">Security</a></li>
+										<li><a href="notifications-settings.html">Notifications</a></li>
+										<li><a href="connected-apps.html">Connected Apps</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-world-cog"></i><span>Website Settings</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="company-settings.html">Company Settings</a></li>
+										<li><a href="localization-settings.html">Localization</a></li>
+										<li><a href="prefixes-settings.html">Prefixes</a></li>
+										<li><a href="preference-settings.html">Preference</a></li>
+										<li><a href="appearance-settings.html">Appearance</a></li>
+										<li><a href="language-settings.html">Language</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-apps"></i><span>App Settings</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="invoice-settings.html">Invoice Settings</a></li>
+										<li><a href="printers-settings.html">Printers</a></li>
+										<li><a href="custom-fields-setting.html">Custom Fields</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-device-laptop"></i><span>System Settings</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="email-settings.html">Email Settings</a></li>
+										<li><a href="sms-gateways.html">SMS Gateways</a></li>
+										<li><a href="gdpr-cookies.html">GDPR Cookies</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-moneybag"></i><span>Financial Settings</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="payment-gateways.html">Payment Gateways</a></li>
+										<li><a href="bank-accounts.html">Bank Accounts</a></li>
+										<li><a href="tax-rates.html">Tax Rates</a></li>
+										<li><a href="currencies.html">Currencies</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-settings-2"></i><span>Other Settings</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="sitemap.html">Sitemap</a></li>
+										<li><a href="clear-cache.html">Clear Cache</a></li>
+										<li><a href="storage.html">Storage</a></li>
+										<li><a href="cronjob.html">Cronjob</a></li>
+										<li><a href="ban-ip-address.html">Ban IP Address</a></li>
+										<li><a href="system-backup.html">System Backup</a></li>
+										<li><a href="database-backup.html">Database Backup</a></li>
+										<li><a href="system-update.html">System Update</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>Pages</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-lock-square-rounded"></i><span>Authentication</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="login.html">Login</a></li>
+										<li><a href="register.html">Register</a></li>
+										<li><a href="forgot-password.html">Forgot Password</a></li>
+										<li><a href="reset-password.html">Reset Password</a></li>
+										<li><a href="email-verification.html">Email Verification</a></li>
+										<li><a href="two-step-verification.html">2 Step Verification</a></li>
+										<li><a href="lock-screen.html">Lock Screen</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-error-404"></i><span>Error Pages</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="error-404.html">404 Error</a></li>
+										<li><a href="error-500.html">500 Error</a></li>
+									</ul>
+								</li>
+								<li><a href="blank-page.html"><i class="ti ti-file"></i><span>Blank Page</span></a></li>
+								<li><a href="coming-soon.html"><i class="ti ti-inner-shadow-top-right"></i><span>Coming
+											Soon</span></a></li>
+								<li><a href="under-maintenance.html"><i class="ti ti-info-triangle"></i><span>Under
+											Maintenance</span></a></li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>UI Interface</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-hierarchy"></i><span>Base UI</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="ui-accordion.html">Accordion</a></li>
+										<li><a href="ui-alerts.html">Alerts</a></li>
+										<li><a href="ui-avatar.html">Avatar</a></li>
+										<li><a href="ui-badges.html">Badges</a></li>
+										<li><a href="ui-breadcrumb.html">Breadcrumb</a></li>
+										<li><a href="ui-buttons.html">Buttons</a></li>
+										<li><a href="ui-buttons-group.html">Button Group</a></li>
+										<li><a href="ui-cards.html">Card</a></li>
+										<li><a href="ui-carousel.html">Carousel</a></li>
+										<li><a href="ui-collapse.html">Collapse</a></li>
+										<li><a href="ui-dropdowns.html">Dropdowns</a></li>
+										<li><a href="ui-ratio.html">Ratio</a></li>
+										<li><a href="ui-grid.html">Grid</a></li>
+										<li><a href="ui-images.html">Images</a></li>
+										<li><a href="ui-links.html">Links</a></li>
+										<li><a href="ui-list-group.html">List Group</a></li>
+										<li><a href="ui-modals.html">Modals</a></li>
+										<li><a href="ui-offcanvas.html">Offcanvas</a></li>
+										<li><a href="ui-pagination.html">Pagination</a></li>
+										<li><a href="ui-placeholders.html">Placeholders</a></li>
+										<li><a href="ui-popovers.html">Popovers</a></li>
+										<li><a href="ui-progress.html">Progress</a></li>
+										<li><a href="ui-spinner.html">Spinner</a></li>
+										<li><a href="ui-nav-tabs.html">Tabs</a></li>
+										<li><a href="ui-toasts.html">Toasts</a></li>
+										<li><a href="ui-tooltips.html">Tooltips</a></li>
+										<li><a href="ui-typography.html">Typography</a></li>
+										<li><a href="ui-utilities.html">Utilities</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-whirl"></i><span>Advanced UI</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="ui-dragula.html">Dragula</a></li>
+										<li><a href="ui-clipboard.html">Clipboard</a></li>
+										<li><a href="ui-sweetalerts.html">Sweet Alerts</a></li>
+										<li><a href="ui-lightbox.html">Lightbox</a></li>
+										<li><a href="ui-scrollbar.html">Scrollbar</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-forms"></i><span>Forms</span><span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li class="submenu submenu-two">
+											<a href="javascript:void(0);">Form Elements<span
+													class="menu-arrow inside-submenu"></span></a>
+											<ul>
+												<li><a href="form-basic-inputs.html">Basic Inputs</a></li>
+												<li><a href="form-checkbox-radios.html">Checkbox & Radios</a></li>
+												<li><a href="form-input-groups.html">Input Groups</a></li>
+												<li><a href="form-grid-gutters.html">Grid & Gutters</a></li>
+												<li><a href="form-mask.html">Input Masks</a></li>
+												<li><a href="form-fileupload.html">File Uploads</a></li>
+											</ul>
+										</li>
+										<li class="submenu submenu-two">
+											<a href="javascript:void(0);">Layouts<span
+													class="menu-arrow inside-submenu"></span></a>
+											<ul>
+												<li><a href="form-horizontal.html">Horizontal Form</a></li>
+												<li><a href="form-vertical.html">Vertical Form</a></li>
+												<li><a href="form-floating-labels.html">Floating Labels</a></li>
+											</ul>
+										</li>
+										<li><a href="form-validation.html">Form Validation</a></li>
+										<li><a href="form-select.html">Form Select</a></li>
+										<li><a href="form-wizard.html">Form Wizard</a></li>
+										<li><a href="form-pickers.html">Form Picker</a></li>
+										<li><a href="form-editors.html">Form Editors</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-table"></i><span>Tables</span><span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="tables-basic.html">Basic Tables </a></li>
+										<li><a href="data-tables.html">Data Table </a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-chart-pie-3"></i><span>Charts</span><span
+											class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="chart-apex.html">Apex Charts</a></li>
+										<li><a href="chart-c3.html">Chart C3</a></li>
+										<li><a href="chart-js.html">Chart Js</a></li>
+										<li><a href="chart-morris.html">Morris Charts</a></li>
+										<li><a href="chart-flot.html">Flot Charts</a></li>
+										<li><a href="chart-peity.html">Peity Charts</a></li>
+									</ul>
+								</li>
+								<li class="submenu">
+									<a href="javascript:void(0);">
+										<i class="ti ti-icons"></i><span>Icons</span><span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="icon-fontawesome.html">Fontawesome Icons</a></li>
+										<li><a href="icon-tabler.html">Tabler Icons</a></li>
+										<li><a href="icon-bootstrap.html">Bootstrap Icons</a></li>
+										<li><a href="icon-remix.html">Remix Icons</a></li>
+										<li><a href="icon-feather.html">Feather Icons</a></li>
+										<li><a href="icon-ionic.html">Ionic Icons</a></li>
+										<li><a href="icon-material.html">Material Icons</a></li>
+										<li><a href="icon-pe7.html">Pe7 Icons</a></li>
+										<li><a href="icon-simpleline.html">Simpleline Icons</a></li>
+										<li><a href="icon-themify.html">Themify Icons</a></li>
+										<li><a href="icon-weather.html">Weather Icons</a></li>
+										<li><a href="icon-typicon.html">Typicon Icons</a></li>
+										<li><a href="icon-flag.html">Flag Icons</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>Help</span></li>
+						<li>
+							<ul>
+								<li><a href="https://crms.dreamstechnologies.com/documentation/html.html"><i
+											class="ti ti-file-stack"></i><span>Documentation</span></a></li>
+								<li><a href="https://crms.dreamstechnologies.com/documentation/changelog.html"><i
+											class="ti ti-arrow-capsule"></i><span>Changelog v2.3.7</span></a></li>
+								<li class="submenu">
+									<a href="javascript:void(0);"><i class="ti ti-menu-deep"></i><span>Multi
+											Level</span><span class="menu-arrow"></span></a>
+									<ul>
+										<li><a href="javascript:void(0);">Level 1.1</a></li>
+										<li class="submenu submenu-two"><a href="javascript:void(0);">Level 1.2<span
+													class="menu-arrow inside-submenu"></span></a>
+											<ul>
+												<li><a href="javascript:void(0);">Level 2.1</a></li>
+												<li class="submenu submenu-two submenu-three"><a
+														href="javascript:void(0);">Level 2.2<span
+															class="menu-arrow inside-submenu inside-submenu-two"></span></a>
+													<ul>
+														<li><a href="javascript:void(0);">Level 3.1</a></li>
+														<li><a href="javascript:void(0);">Level 3.2</a></li>
+													</ul>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<!-- ========================
+			Start Page Content
+		========================= -->
+
+		<div class="page-wrapper">
+
+			<!-- Start Content -->
+			<div class="content pb-0">
+				<!-- Page Header -->
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<h4 class="mb-0">Page Title</h4>
+						<p class="text-muted fs-13 mb-0">Module subtitle or description goes here.</p>
+					</div>
+					<div class="gap-2 d-flex align-items-center flex-wrap">
+						<button class="btn btn-primary btn-sm"><i class="ti ti-plus me-1"></i> New Action</button>
+					</div>
+				</div>
+
+				<!-- Page Body Content Area -->
+				<div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
+					<h5 class="fw-bold text-dark mb-2">Module Content Goes Here</h5>
+					<p class="text-muted fs-13 mb-0">This master template shares 100% of the authentic theme header, search, modals, sidebar navigation, and scripts.</p>
+				</div>
+<!-- Start Footer -->
+			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+				<p class="mb-md-0 mb-1">Copyright &copy;
+					<script>document.write(new Date().getFullYear())</script> <a href="javascript:void(0);"
+						class="link-primary text-decoration-underline">CRMS</a>
+				</p>
+				<div class="d-flex align-items-center gap-2 footer-links justify-content-center justify-content-md-end">
+					<a href="javascript:void(0);">About</a>
+					<a href="javascript:void(0);">Terms</a>
+					<a href="javascript:void(0);">Contact Us</a>
+				</div>
+			</footer>
+			<!-- End Footer -->
+
+		</div>
+
+		<!-- ========================
+			End Page Content
+		========================= -->
+
+	</div>
+	<!-- End Wrapper -->
+
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+
+	<!-- Datatable JS -->
+	<script src="assets/plugins/datatables/js3/dataTables.min.js"></script>
+    <script src="assets/plugins/datatables/js3/dataTables.bootstrap5.min.js"></script>
+
+	<!-- Daterangepicker JS -->
+	<!-- Apexchart JS -->
+	<script src="assets/plugins/apexchart/apexcharts.min.js"></script>
+	<script src="assets/plugins/apexchart/chart-data.js"></script>
+
+	<!-- Custom Json Js -->
+	<script src="assets/json/dashboard.js"></script>
+
+	<!-- Main JS -->
+	<!-- Flatpickr JS -->
+    <script src="assets/plugins/flatpickr/flatpickr.min.js"></script>
+
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/lilypad-notifications.js"></script>
+
+</body>
+
+</html>

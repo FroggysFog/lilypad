@@ -1,292 +1,311 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+    <!-- Meta Tags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>{{{siteTitle}}} &middot; {{{title}}}</title>
-    <link rel="stylesheet" href="/css/plugins.min.css">
-    <link rel="stylesheet" href="/css/app.min.css">
-    <style type="text/css">
-        html {
-            overflow-x: hidden;
-        }
-        body {
-            background: {{colorSecondary}};
-            text-align: center;
-            font-family: "Roboto", Arial, sans-serif;
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LilyPad ERP">
+    <meta name="author" content="LilyPad Systems">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="/themes/lilypad/img/favicon.png">
 
-        .login-wrapper {
-            width: 400px;
-            height: 400px;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-        }
+    <!-- Apple Icon -->
+    <link rel="apple-touch-icon" href="/themes/lilypad/img/apple-icon.png">
 
-        img {
-            margin-bottom: 50px;
-        }
+    <!-- Bootstrap CSS from uploaded theme -->
+    <link rel="stylesheet" href="/themes/lilypad/css/bootstrap.min.css">
 
-        label {
-            text-align: left
-        }
+    <!-- Tabler Icon CSS from uploaded theme -->
+    <link rel="stylesheet" href="/themes/lilypad/plugins/tabler-icons/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
-        button {
-            font-family: "Roboto", Arial, sans-serif;
-            width: 340px;
-            height: 20px;
-            text-align: left;
-            padding: 15px 20px;
-            background: #384b5f;
-            border: 1px solid #1c2937;
-            font-size: 20px;
-            color: #fff;
-            margin-bottom: 15px;
-            border-radius: 3px;
-            -moz-border-radius: 3px;
-            -webkit-border-radius: 3px;
-            font-weight: 300;
+    <!-- Main CSS from uploaded theme -->
+    <link rel="stylesheet" href="/themes/lilypad/css/style.css" id="app-style">
+    
+    <style>
+        :root {
+            --primary: #047d24;
+            --primary-hover: #035c1a;
         }
-
-        button.button {
-            width: 380px;
-            height: auto;
-            text-align: center;
-            background: {{colorTertiary}};
-            border: none;
-            text-transform: uppercase;
-            border-radius: 3px;
-            -moz-border-radius: 3px;
-            -webkit-border-radius: 3px;
+        .btn-primary {
+            background-color: #047d24 !important;
+            border-color: #047d24 !important;
+            box-shadow: 0 4px 12px rgba(4, 125, 36, 0.25) !important;
         }
-
-        button.button:hover {
-            background: #f15849;
-            cursor: pointer;
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: #035c1a !important;
+            border-color: #035c1a !important;
+            box-shadow: 0 6px 16px rgba(4, 125, 36, 0.35) !important;
         }
-
-        *:focus {
-            outline: 0;
+        .form-control:focus {
+            border-color: #047d24 !important;
+            box-shadow: 0 0 0 3px rgba(4, 125, 36, 0.2) !important;
         }
-
-        a {
-            display: inline-block;
-            padding-right: 10px;
-            color: {{colorPrimary}};
-            font-size: 14px;
-            float: right;
-            text-decoration: none;
-            font-weight: 300;
+        .form-check-input:checked {
+            background-color: #047d24 !important;
+            border-color: #047d24 !important;
         }
-
-        a:hover {
-            color: {{colorPrimary}};
+        .link-hover:hover {
+            color: #047d24 !important;
         }
-
-        ::-webkit-input-placeholder { /* WebKit browsers */
-            color:    #222;
+        .account-bg-01 {
+            background-image: url('/themes/lilypad/img/authentication/login-bg.jpg') !important;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            height: calc(100vh - 40px);
         }
-        :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-            color:    #222;
-            opacity:  1;
-        }
-        ::-moz-placeholder { /* Mozilla Firefox 19+ */
-            color:    #222;
-            opacity:  1;
-        }
-        :-ms-input-placeholder { /* Internet Explorer 10+ */
-            color:    #222;
-        }
-
-        .alert-message {
-            padding: 0;
-            position: fixed;
-            top: 75px;
-            left: 50%;
-            width: 380px;
-            height: 50px;
-            /*margin-bottom: 50px;*/
-            background: {{colorTertiary}};
-            border-radius: 5px;
-            -webkit-border-radius: 5px;
-            -moz-border-radius: 5px;
-            transform: translate(-50%, 0);
-        }
-
-        .alert-message p {
-            margin-top: 8px;
-            margin-bottom: 0;
-            color: white;
-            font-weight: 300;
-            text-align: center;
-            font-size: 22px;
-        }
-
-        button.button.noCap {
-            text-transform: none;
-        }
-
-        .hide {
-            display: none;
-        }
-
-        .green {
-            background: #29b955;
-        }
-
-        input {
-            color: {{colorPrimary}};
-        }
-
-        .md-input-bar:before,
-        .md-input-bar:after {
-            background: {{colorTertiary}} !important;
-        }
-
-        .btn {
-            width: 100%;
-            height: 50px;
-            margin-bottom: 24px !important;
-            /*color: #E74C3C;*/
-        }
-
-        .btn:hover, .btn:active, .btn:focus {
-            /*color: #222;*/
-        }
-        .bottom {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            font-size: 12px;
-            font-family: "Roboto", Arial, sans-serif;
-            margin: 0 0 5px 15px;
-            color: rgba(0,0,0,0.5);
-        }
+        .hide { display: none !important; }
     </style>
+
+    <!-- Core Scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/vendor.js"></script>
     <script src="/js/truRequire.js"></script>
 </head>
-<body>
-<div class="alert-message {{#if flash}} {{else}} hide {{/if}} {{#if flash.success}} green {{/if}}">
-    <p>{{#if flash.message}} {{{flash.message}}} {{else}} {{{flash}}}{{/if}}</p>
-</div>
-<div class="login-wrapper">
-    <img src="{{pageLogo}}" alt="Logo" class="site-logo-login" />
 
-    <div class="loginForm">
-        <form id="loginForm" method="post" action="/login" class="uk-form-stacked uk-clearfix">
-            <div class="uk-margin-medium-bottom">
-                <label for="login-username">Username</label>
-                <input id="login-username" name="login-username" class="md-input" type="text" />
-            </div>
-            <div class="uk-margin-medium-bottom">
-                <label for="login-password">Password</label>
-                <input id="login-password" name="login-password" class="md-input md-waves-light" type="password" />
-            </div>
-            <button class="btn md-btn md-btn-flat md-btn-wave md-btn-flat-accent" type="submit">Login</button>
-        </form>
-        {{#if allowUserRegistration}}
-            <hr>
-            <a id="allowUserRegistration" href="/signup" class="no-ajaxy left">Create an Account.</a>
-        {{/if}}
-        {{#if mailerEnabled}}
-            <a id="forgotPass" href="#" class="no-ajaxy right" style="display: block; clear: right;">Forgot your password?</a>
-        {{/if}}
-    </div>
+<body class="account-page bg-white">
 
-    {{#if mailerEnabled}}
-        <div class="forgotPassForm" style="display: none;">
-            <form id="forgotPassForm" method="post" action="/">
-                <div class="uk-margin-medium-bottom">
-                    <label for="forgotPass-email">Email</label>
-                    <input id="forgotPass-email" name="forgotPass-email" type="text" class="md-input" />
+    <!-- Begin Wrapper -->
+    <div class="main-wrapper">
+
+       <div class="overflow-hidden p-3 acc-vh">
+            
+            <!-- start row -->
+            <div class="row vh-100 w-100 g-0"> 
+
+                <div class="col-lg-6 vh-100 overflow-y-auto overflow-x-hidden">
+
+                     <!-- start row -->
+                    <div class="row">
+
+                        <div class="col-md-10 mx-auto">
+                            <!-- Sign In Form -->
+                            <form id="loginForm" method="post" action="/login" class="vh-100 d-flex justify-content-between flex-column p-4 pb-0">
+                                <div class="text-center mb-4 auth-logo">
+                                    <div class="d-inline-flex align-items-center gap-2">
+                                        <img src="{{pageLogo}}" onerror="this.onerror=null; this.src='/themes/lilypad/img/logo.svg';" class="img-fluid" alt="{{siteTitle}}" style="max-height: 42px;">
+                                    </div>
+                                </div>
+                                
+                                <div id="loginFormFields">
+                                    <!-- Flash Message Alert -->
+                                    {{#if flash}}
+                                    <div class="alert {{#if flash.success}}alert-success{{else}}alert-danger{{/if}} mb-3" role="alert">
+                                        {{#if flash.message}}{{{flash.message}}}{{else}}{{{flash}}}{{/if}}
+                                    </div>
+                                    {{/if}}
+
+                                    <!-- AJAX Alert -->
+                                    <div id="ajaxAlert" class="alert alert-success hide mb-3" role="alert"></div>
+
+                                    <div class="mb-3">
+                                        <h3 class="mb-2">Sign In</h3>
+                                        <p class="mb-0 text-muted">Access the LilyPad ERP panel using your email and passcode.</p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold" for="login-username">Username or Email</label>
+                                        <div class="input-group input-group-flat">
+                                            <input type="text" id="login-username" name="login-username" class="form-control" placeholder="Enter username or email" required autocomplete="username">
+                                            <span class="input-group-text">
+                                                <i class="ti ti-mail"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold" for="login-password">Password</label>
+                                        <div class="input-group input-group-flat pass-group">
+                                            <input type="password" id="login-password" name="login-password" class="form-control pass-input" placeholder="Enter password" required autocomplete="current-password">
+                                            <span class="input-group-text toggle-password cursor-pointer">
+                                                <i class="ti ti-eye-off"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div class="form-check form-check-md d-flex align-items-center">
+                                            <input class="form-check-input mt-0" type="checkbox" value="" id="checkebox-md" checked>
+                                            <label class="form-check-label text-dark ms-1" for="checkebox-md">
+                                                Remember Me
+                                            </label>
+                                        </div>
+                                        {{#if mailerEnabled}}
+                                        <div class="text-end">
+                                            <a id="forgotPassLink" href="#" class="link-danger fw-medium link-hover">Forgot Password?</a>
+                                        </div>
+                                        {{/if}}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <button type="submit" class="btn btn-primary w-100 shadow-sm py-2">Sign In</button>
+                                    </div>
+                                    
+                                    {{#if allowUserRegistration}}
+                                    <div class="mb-3 text-center">
+                                        <p class="mb-0 text-muted">New on our platform? <a href="/signup" class="link-indigo fw-bold link-hover">Create an account</a></p>
+                                    </div>
+                                    {{/if}}
+                                    
+                                    <div class="or-login text-center position-relative mb-3">
+                                        <h6 class="fs-14 mb-0 position-relative text-body">OR</h6>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center justify-content-center flex-wrap gap-2 mb-3">
+                                        <div class="text-center flex-fill">
+                                            <a href="javascript:void(0);" class="p-2 btn btn-info d-flex align-items-center justify-content-center">
+                                                <img class="img-fluid m-1" src="/themes/lilypad/img/icons/facebook-logo.svg" alt="Facebook" width="20">
+                                            </a>
+                                        </div>
+                                        <div class="text-center flex-fill">
+                                            <a href="javascript:void(0);" class="p-2 btn btn-outline-light border d-flex align-items-center justify-content-center">
+                                                <img class="img-fluid m-1" src="/themes/lilypad/img/icons/google-logo.svg" alt="Google" width="20">
+                                            </a>
+                                        </div>
+                                        <div class="text-center flex-fill">
+                                            <a href="javascript:void(0);" class="p-2 btn btn-dark d-flex align-items-center justify-content-center">
+                                                <img class="img-fluid m-1" src="/themes/lilypad/img/icons/apple-logo.svg" alt="Apple" width="20">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{#if mailerEnabled}}
+                                <!-- Forgot Password Section (Toggled) -->
+                                <div id="forgotPassSection" class="hide">
+                                    <div class="mb-3">
+                                        <h3 class="mb-2">Reset Password</h3>
+                                        <p class="mb-0 text-muted">Enter your registered email and we'll send reset instructions.</p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold" for="forgotPass-email">Email Address</label>
+                                        <div class="input-group input-group-flat">
+                                            <input type="email" id="forgotPass-email" name="forgotPass-email" class="form-control" placeholder="Enter your email">
+                                            <span class="input-group-text">
+                                                <i class="ti ti-mail"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <button type="button" id="btnForgotSubmit" class="btn btn-primary w-100 py-2">Send Reset Link</button>
+                                    </div>
+                                    
+                                    <div class="text-center">
+                                        <a id="backToLoginLink" href="#" class="text-secondary fw-semibold">
+                                            <i class="ti ti-arrow-left"></i> Back to Sign In
+                                        </a>
+                                    </div>
+                                </div>
+                                {{/if}}
+
+                                <div class="text-center pb-4">
+                                    <p class="text-dark mb-0 fs-13">{{bottom}}</p>
+                                </div>
+                            </form>
+                        </div> <!-- end col -->
+
+                    </div>
+                    <!-- end row -->
+
                 </div>
-                <!--<input id="login-password" name="login-password" type="password" placeholder="Password" />-->
-                <button class="btn no-ajaxy md-btn md-btn-flat md-btn-wave md-btn-flat-danger" type="submit">Forgot Password</button>
-            </form>
 
-            <a id="backToLogin" href="#" class="no-ajaxy">Back to Login</a>
+                <!-- Hero Artwork on Right Side -->
+                <div class="col-lg-6 account-bg-01"></div> <!-- end col -->
+
+            </div>
+            <!-- end row -->
+
         </div>
-    {{/if}}
 
-</div>
+    </div>
+    <!-- End Wrapper -->
 
-<div class="bottom">
-    {{bottom}}
-</div>
+    <!-- Bootstrap Core JS from uploaded theme -->
+    <script src="/themes/lilypad/js/bootstrap.bundle.min.js"></script>    
 
-<script type="text/javascript">
-    window.truRequire(['jquery', 'helpers'], function(loadedModules) {
-        var $ = loadedModules[0];
-        var helpers = loadedModules[1];
-        helpers.UI.inputs();
-        helpers.UI.waves();
+    <!-- Main JS from uploaded theme -->
+    <script src="/themes/lilypad/js/script.js"></script>
 
-        $('#loginForm').submit(function(e) {
-            var u = $('#login-username').val();
-            var p = $('#login-password').val();
-            if (u.length < 4 || p.length < 4)
-                e.preventDefault();
-        });
+    <!-- Client-side Logic -->
+    <script type="text/javascript">
+        window.truRequire(['jquery'], function(loadedModules) {
+            var $ = loadedModules[0] || window.jQuery || window.$;
 
-        $('#forgotPass').click(function(e) {
-            e.preventDefault();
-            $('.loginForm').fadeOut(100, function() {
-                $('.forgotPassForm').fadeIn();
-            });
-
-        });
-
-        $('#backToLogin').click(function(e) {
-            e.preventDefault();
-            $('.forgotPassForm').fadeOut(100, function() {
-                $('.loginForm').fadeIn();
-            })
-        });
-
-        $('#forgotPassForm').submit(function(e) {
-            e.preventDefault();
-            var self = $(this);
-            var alertMessage = $('.alert-message');
-            $.ajax({
-                type: 'POST',
-                url: '/forgotpass',
-                data: self.serialize(),
-                async: true,
-                success: function(data) {
-                    alertMessage.removeClass('hide')
-                            .addClass('green')
-                            .find('p')
-                            .html('Password Reset Email Sent!');
-
-                    $('#forgotPass-email').val('');
-
-                    $('.forgotPassForm').fadeOut(100, function() {
-                        $('.loginForm').fadeIn();
-                    })
-                },
-
-                error: function(xhr, ajaxOptions, thrownError) {
-                    alertMessage.removeClass('hide')
-                            .find('p')
-                            .html(xhr.responseText);
+            // Password Toggle
+            $(document).on('click', '.toggle-password', function(e) {
+                var input = $(this).closest('.input-group').find('.pass-input');
+                var icon = $(this).find('i');
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text');
+                    icon.removeClass('ti-eye-off').addClass('ti-eye');
+                } else {
+                    input.attr('type', 'password');
+                    icon.removeClass('ti-eye').addClass('ti-eye-off');
                 }
             });
 
-            return false;
-        });
+            // Toggle forgot password
+            $('#forgotPassLink').click(function(e) {
+                e.preventDefault();
+                $('#loginFormFields').addClass('hide');
+                $('#forgotPassSection').removeClass('hide');
+                $('#forgotPass-email').focus();
+            });
 
-        $(document).ready(function() {
-            if (screen.width <= 800) {
-                document.location = '/mobile';
-            }
-
-            setTimeout(function() {
+            $('#backToLoginLink').click(function(e) {
+                e.preventDefault();
+                $('#forgotPassSection').addClass('hide');
+                $('#loginFormFields').removeClass('hide');
                 $('#login-username').focus();
-            }, 700);
+            });
+
+            // AJAX Forgot Password
+            $('#btnForgotSubmit').click(function(e) {
+                e.preventDefault();
+                var email = $('#forgotPass-email').val().trim();
+                if (!email) return;
+
+                var btn = $(this);
+                btn.prop('disabled', true).text('Sending...');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/forgotpass',
+                    data: { 'forgotPass-email': email },
+                    success: function() {
+                        btn.prop('disabled', false).text('Send Reset Link');
+                        $('#forgotPass-email').val('');
+                        $('#ajaxAlert').removeClass('hide alert-danger').addClass('alert-success').text('Password reset email sent!').fadeIn();
+                        $('#forgotPassSection').addClass('hide');
+                        $('#loginFormFields').removeClass('hide');
+                    },
+                    error: function(xhr) {
+                        btn.prop('disabled', false).text('Send Reset Link');
+                        $('#ajaxAlert').removeClass('hide alert-success').addClass('alert-danger').text(xhr.responseText || 'Error resetting password').fadeIn();
+                    }
+                });
+            });
+
+            $(document).ready(function() {
+                if (screen.width <= 800) {
+                    document.location = '/mobile';
+                }
+                setTimeout(function() {
+                    $('#login-username').focus();
+                }, 300);
+            });
         });
-    });
-</script>
+    </script>
 </body>
+
 </html>
+

@@ -70,3 +70,5 @@ public/uploads/assets/upload/
 stats\.json
 dist/
 *.heapsnapshot
+Temptheme/
+*.zip

@@ -1,0 +1,352 @@
+//
+// dashboard.scss
+//
+
+@use "../variables" as *;
+@use "../utils/mixins" as *;
+
+.line-title {
+  background: $linear-gradient;
+  width: 3px;
+  height: 16px;
+}
+
+.custom-card-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  outline: 10px solid $light;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+}
+
+.custom-card-icon::before,
+.custom-card-icon::after {
+  content: "";
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background-color: transparent;
+  pointer-events: none;
+}
+
+.custom-card-icon::before {
+  top: 0;
+  left: -29px;
+  border-top-right-radius: 10px;
+  box-shadow: 7px -11px 0 0 $light;
+}
+
+.custom-card-icon::after {
+  bottom: -33px;
+  right: 0;
+  border-top-right-radius: 10px;
+  box-shadow: 7px -9px 0 0 $light;
+}
+
+.deal-stage-chart {
+  height: 200px;
+  width: 173px;
+}
+
+.chart-stage-1 {
+  width: 145px;
+  height: 145px;
+}
+
+.chart-stage-2 {
+  width: 90px;
+  height: 90px;
+}
+
+.chart-stage-3 {
+  width: 75px;
+  height: 75px;
+  right: 20px;
+}
+
+.chart-stage-4 {
+  width: 53px;
+  height: 53px;
+  bottom: 40px;
+}
+
+.custom-avatar {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deals-stage {
+  width: 200px;
+  height: 200px;
+}
+
+.lost-stage {
+  width: 140px;
+  height: 140px;
+}
+
+.arrow-icon {
+  border-style: solid;
+  border-color: transparent transparent transparent $secondary;
+  border-width: 36px 0 36px 36px;
+  position: absolute;
+  right: -15px;
+  filter: drop-shadow(6px 0 6px rgba(0, 0, 0, 0.25));
+  z-index: -1;
+
+  &.arrow-primary {
+    border-color: transparent transparent transparent $primary;
+  }
+}
+
+#storage-request {
+  height: 200px !important;
+  width: 100% !important;
+}
+
+.progress-bg {
+  background-image: url('../img/bg/progress-bg.png');
+}
+
+.support-btn-group {
+
+  .btn-check:checked+.btn-outline-primary,
+  .btn-outline-primary:first-child:active,
+  :not(.btn-check)+.btn-outline-primary:active,
+  .btn-check+.btn-outline-primary:hover {
+    background: $primary;
+  }
+}
+
+.camp-card-row {
+  --bs-gutter-x: 0 !important;
+
+  @include respond-below (lg) {
+    --bs-gutter-x: 1.5rem !important;
+  }
+
+  .col-sm-6 {
+    &:last-child {
+      .camp-card {
+        border-right: 1px solid $border-color;
+      }
+    }
+
+    &:nth-child(2) {
+      .camp-card {
+        @include respond-below (xl) {
+          border-right: 1px solid $border-color;
+        }
+      }
+    }
+  }
+
+  .camp-card {
+    border-right: none;
+    border-radius: 0px;
+
+    @include respond-below (lg) {
+      border-right: 1px solid $border-color;
+    }
+  }
+}
+
+.social-card {
+  position: relative;
+  overflow: hidden;
+
+  .line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+  }
+}
+
+// Inset Shadow
+.inset-indigo {
+  box-shadow: $shadow-inset-indigo;
+}
+
+.inset-success {
+  box-shadow: $shadow-inset-success;
+}
+
+.inset-info {
+  box-shadow: $shadow-inset-info;
+}
+
+.inset-danger {
+  box-shadow: $shadow-inset-danger;
+}
+
+.holiday-card {
+  .border-line {
+    width: 100%;
+    height: 4px;
+    border-radius: 10px;
+    display: block;
+  }
+
+  .avatar {
+    border-radius: 10px;
+
+    &:hover {
+      background: unset !important;
+    }
+  }
+
+  .text-soft-indigo {
+    color: $indigo-400;
+  }
+
+  .text-soft-success {
+    color: $success-400;
+  }
+
+  .text-soft-info {
+    color: $info-400;
+  }
+
+  .text-soft-danger {
+    color: $danger-400;
+  }
+}
+
+.circular-progress {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: $light;
+}
+
+.mw-74 {
+  min-width: 74px;
+}
+
+.circular-progress {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Use --clr (from JS) for the progress and --pg for the percentage */
+  background:
+    radial-gradient(closest-side, white calc(100% - 3px), transparent 0),
+    conic-gradient(var(--clr, #000) var(--pg, 0%), $light 0);
+}
+
+.card-hover {
+  &:hover {
+    background: $light;
+  }
+}
+
+.leads-card {
+  .avatar {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .bg-success-200 {
+    background: $success-gradient-200;
+  }
+
+  .bg-purple-200 {
+    background: $purple-gradient-200;
+  }
+
+  .bg-pink-200 {
+    background: $pink-gradient-200;
+  }
+
+  .bg-indigo-200 {
+    background: $indigo-gradient-200;
+  }
+
+  .bg-danger-200 {
+    background: $danger-gradient-200;
+  }
+}
+
+.leads-value {
+  .line {
+    width: 4px;
+    height: 20px;
+    border-radius: 10px;
+    display: block;
+  }
+
+  p {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.growth-card {
+  .avatar {
+    &.bg-success {
+      box-shadow: 0 0 35px 0 rgb(39, 174, 96, .5);
+    }
+
+    &.bg-danger {
+      box-shadow: 0 0 35px 0 rgb(255, 102, 102, .5);
+    }
+
+    &.bg-warning {
+      box-shadow: 0 0 35px 0 rgb(255, 204, 102, .5);
+    }
+
+    &.bg-purple {
+      box-shadow: 0 0 35px 0 rgb(153, 51, 255, .5);
+    }
+  }
+}
+
+.deals-closed{
+  border-radius: 15px 15px 0 0;
+}
+.win-rate{
+  border-radius: 15px 15px 0 0;
+  margin-top: -10px;
+}
+.sales-cycle{
+  border-radius: 15px 15px 0 0;
+  margin-top: -10px;
+}
+
+.download-toggle {
+  &::after {
+    content: unset;
+  }
+}
+.proposal-card {
+  .avatar {
+    box-shadow: $box-shadow;
+    border: 1px solid $white-300;
+    backdrop-filter: blur(12px);
+    background: $white-200;
+  }
+}
+#recent-deals{
+  th{
+    padding: 8px 20px 8px 20px;
+  }
+  td {
+    padding: 10px 20px !important;
+  }
+}
+.progress-2xl{
+  height: 40px;
+}

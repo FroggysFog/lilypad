@@ -1,0 +1,528 @@
+/* LilyPad ERP - Dark Theme Complete Surface & Card Harmonization */
+
+[data-bs-theme="dark"] {
+    --bs-body-bg: #090d16;
+    --bs-body-color: #e2e8f0;
+    --bs-card-bg: #111827;
+    --bs-card-border-color: #1e293b;
+    --bs-border-color: #1e293b;
+    --bs-tertiary-bg: #161f30;
+    --bs-secondary-bg: #1e293b;
+}
+
+[data-bs-theme="dark"] body {
+    background-color: #090d16 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Page Content & Wrappers */
+[data-bs-theme="dark"] .page-wrapper,
+[data-bs-theme="dark"] .content,
+[data-bs-theme="dark"] .page-container {
+    background-color: #090d16 !important;
+    color: #e2e8f0 !important;
+}
+
+/* All Cards, Card Headers, and Footers */
+[data-bs-theme="dark"] .card {
+    background-color: #111827 !important;
+    border-color: #1e293b !important;
+    color: #e2e8f0 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-bs-theme="dark"] .card-header,
+[data-bs-theme="dark"] .card-footer {
+    background-color: #111827 !important;
+    border-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .bg-white {
+    background-color: #111827 !important;
+    color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .bg-light,
+[data-bs-theme="dark"] .table-light {
+    background-color: #161f30 !important;
+    color: #cbd5e1 !important;
+    border-color: #1e293b !important;
+}
+
+[data-bs-theme="dark"] .text-dark {
+    color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .text-muted {
+    color: #94a3b8 !important;
+}
+
+/* Ticket Rows & Management */
+[data-bs-theme="dark"] .ticket-row {
+    background-color: #111827 !important;
+    border-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .ticket-row:hover {
+    background-color: #161f30 !important;
+    border-color: #2e3d54 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-bs-theme="dark"] .category-chip {
+    background-color: #161f30 !important;
+    border-color: #1e293b !important;
+    color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] .category-chip:hover,
+[data-bs-theme="dark"] .category-chip.active {
+    background-color: rgba(4, 125, 36, 0.15) !important;
+    border-color: #047d24 !important;
+    color: #4ade80 !important;
+}
+
+[data-bs-theme="dark"] .metadata-pill {
+    background-color: #1e293b !important;
+    color: #94a3b8 !important;
+    border: 1px solid #334155 !important;
+}
+
+[data-bs-theme="dark"] .metadata-pill strong {
+    color: #e2e8f0 !important;
+}
+
+/* Kanban Board & Cards in Dark Mode */
+[data-bs-theme="dark"] .kanban-col {
+    background-color: #0d131f !important;
+    border: 1px solid #1e293b !important;
+}
+
+[data-bs-theme="dark"] .kanban-card {
+    background-color: #161f30 !important;
+    border-color: #243048 !important;
+    color: #e2e8f0 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-bs-theme="dark"] .kanban-card:hover {
+    background-color: #1c273c !important;
+    border-color: #334155 !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Slide-over Ticket Drawer */
+[data-bs-theme="dark"] .drawer-content {
+    background-color: #111827 !important;
+    color: #e2e8f0 !important;
+    border-left: 1px solid #1e293b !important;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-bs-theme="dark"] .drawer-content .border-bottom,
+[data-bs-theme="dark"] .drawer-content .border-top {
+    border-color: #1e293b !important;
+}
+
+/* Modals */
+[data-bs-theme="dark"] .modal-content {
+    background-color: #111827 !important;
+    border: 1px solid #1e293b !important;
+    color: #e2e8f0 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+}
+
+[data-bs-theme="dark"] .modal-header,
+[data-bs-theme="dark"] .modal-footer {
+    background-color: #0d131f !important;
+    border-color: #1e293b !important;
+}
+
+/* Tables in Dark Mode */
+[data-bs-theme="dark"] .table {
+    color: #e2e8f0 !important;
+    border-color: #1e293b !important;
+}
+
+[data-bs-theme="dark"] .table thead th {
+    background-color: #161f30 !important;
+    color: #f1f5f9 !important;
+    border-color: #1e293b !important;
+}
+
+[data-bs-theme="dark"] .table tbody td,
+[data-bs-theme="dark"] .table tbody tr {
+    background-color: transparent !important;
+    border-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .table-hover tbody tr:hover td {
+    background-color: #161f30 !important;
+}
+
+/* Form Controls & Selects */
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    background-color: #0d131f !important;
+    border-color: #243048 !important;
+    color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+    background-color: #0f172a !important;
+    border-color: #047d24 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(4, 125, 36, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .form-control::placeholder {
+    color: #64748b !important;
+}
+
+/* Dropdown Menus */
+[data-bs-theme="dark"] .dropdown-menu {
+    background-color: #111827 !important;
+    border: 1px solid #1e293b !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-bs-theme="dark"] .dropdown-menu .dropdown-item {
+    color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] .dropdown-menu .dropdown-item:hover,
+[data-bs-theme="dark"] .dropdown-menu .dropdown-item:focus {
+    background-color: #161f30 !important;
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .dropdown-divider {
+    border-color: #1e293b !important;
+}
+
+/* Nav Tabs & Pills */
+[data-bs-theme="dark"] .nav-tabs {
+    border-color: #1e293b !important;
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link {
+    color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link.active {
+    background-color: transparent !important;
+    border-color: transparent transparent #047d24 transparent !important;
+    color: #4ade80 !important;
+}
+
+[data-bs-theme="dark"] .nav-pills .nav-link:not(.active) {
+    color: #94a3b8 !important;
+}
+
+/* Borders, Buttons & Badges */
+[data-bs-theme="dark"] .border,
+[data-bs-theme="dark"] .border-top,
+[data-bs-theme="dark"] .border-bottom,
+[data-bs-theme="dark"] .border-start,
+[data-bs-theme="dark"] .border-end {
+    border-color: #1e293b !important;
+}
+
+[data-bs-theme="dark"] .btn-light {
+    background-color: #161f30 !important;
+    border-color: #243048 !important;
+    color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] .btn-light:hover {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .btn-white {
+    background-color: #111827 !important;
+    border-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .footer {
+    background-color: #111827 !important;
+    border-color: #1e293b !important;
+}
+
+/* Status Badges in Dark Mode */
+[data-bs-theme="dark"] .badge-todo { background-color: rgba(4, 125, 36, 0.2) !important; color: #4ade80 !important; }
+[data-bs-theme="dark"] .badge-inprogress { background-color: rgba(245, 158, 11, 0.2) !important; color: #fbbf24 !important; }
+[data-bs-theme="dark"] .badge-complete { background-color: rgba(16, 185, 129, 0.2) !important; color: #34d399 !important; }
+[data-bs-theme="dark"] .badge-blocked { background-color: rgba(100, 116, 139, 0.2) !important; color: #94a3b8 !important; }
+[data-bs-theme="dark"] .badge-won { background-color: rgba(4, 125, 36, 0.25) !important; color: #4ade80 !important; }
+[data-bs-theme="dark"] .badge-lost { background-color: rgba(239, 68, 68, 0.25) !important; color: #f87171 !important; }
+[data-bs-theme="dark"] .badge-open { background-color: rgba(99, 102, 241, 0.25) !important; color: #818cf8 !important; }
+
+/* =========================================================
+   SIDEBAR & MINI-SIDEBAR LOGO & MENU LAYOUT
+   ========================================================= */
+
+/* Default / Expanded Sidebar Logo */
+.sidebar .sidebar-logo .logo-normal {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.sidebar .sidebar-logo .logo-small {
+    display: none !important;
+}
+
+/* Mini-Sidebar Mode */
+.mini-sidebar .sidebar {
+    width: 72px !important;
+    min-width: 72px !important;
+    overflow: visible !important;
+    transition: width 0.2s ease !important;
+}
+
+.mini-sidebar .navbar-header,
+.mini-sidebar .page-wrapper {
+    margin-left: 72px !important;
+    transition: margin-left 0.2s ease !important;
+}
+
+.mini-sidebar .sidebar .sidebar-logo {
+    width: 72px !important;
+    height: var(--topbar-height, 60px) !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 10 !important;
+    background: inherit !important;
+}
+
+.mini-sidebar .sidebar .sidebar-logo .logo-normal {
+    display: none !important;
+}
+
+.mini-sidebar .sidebar .sidebar-logo .logo-small {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto !important;
+}
+
+.mini-sidebar .sidebar .sidenav-toggle-btn,
+.mini-sidebar .sidebar .sidebar-close {
+    display: none !important;
+}
+
+/* Sidebar Menu positioning cleanly below the Logo header */
+.mini-sidebar .sidebar .sidebar-menu {
+    display: block !important;
+    margin-top: var(--topbar-height, 60px) !important;
+    padding: 10px 0 !important;
+}
+
+.mini-sidebar .sidebar .sidebar-inner,
+.mini-sidebar .sidebar .simplebar-content,
+.mini-sidebar .sidebar .simplebar-mask,
+.mini-sidebar .sidebar .simplebar-content-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.mini-sidebar .sidebar .sidebar-menu ul {
+    padding: 0 !important;
+    margin: 0 !important;
+    list-style: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.mini-sidebar .sidebar .sidebar-menu li {
+    width: 100% !important;
+    margin: 0 auto 6px auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.mini-sidebar .sidebar .sidebar-menu li.menu-title {
+    display: none !important;
+}
+
+/* Hide nested submenus in mini mode */
+.mini-sidebar .sidebar .sidebar-menu li.submenu > ul {
+    display: none !important;
+}
+
+/* Centered Icon Button Tile */
+.mini-sidebar .sidebar .sidebar-menu li > a {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    background: #f8fafc !important;
+    color: #334155 !important;
+    box-sizing: border-box !important;
+    transition: all 0.15s ease !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+}
+
+.mini-sidebar .sidebar .sidebar-menu li > a i,
+.mini-sidebar .sidebar .sidebar-menu li > a svg {
+    font-size: 20px !important;
+    margin: 0 !important;
+    color: #334155 !important;
+    display: inline-block !important;
+    line-height: 1 !important;
+}
+
+.mini-sidebar .sidebar .sidebar-menu li > a span,
+.mini-sidebar .sidebar .sidebar-menu li > a .menu-arrow,
+.mini-sidebar .sidebar .sidebar-menu li > a .badge {
+    display: none !important;
+}
+
+/* =========================================================
+   SIDEBAR ICONS HOVER & ACTIVE COLOR - PURE WHITE CONTRAST
+   ========================================================= */
+
+/* Normal / Expanded Sidebar Menu Icons */
+.sidebar .sidebar-menu ul li a:hover,
+.sidebar .sidebar-menu ul li a.active,
+.sidebar .sidebar-menu ul li a.subdrop,
+.sidebar .sidebar-menu ul li.active > a {
+    background: #047d24 !important;
+    color: #ffffff !important;
+}
+
+.sidebar .sidebar-menu ul li a:hover i,
+.sidebar .sidebar-menu ul li a:hover svg,
+.sidebar .sidebar-menu ul li a.active i,
+.sidebar .sidebar-menu ul li a.active svg,
+.sidebar .sidebar-menu ul li a.subdrop i,
+.sidebar .sidebar-menu ul li a.subdrop svg,
+.sidebar .sidebar-menu ul li.active > a i,
+.sidebar .sidebar-menu ul li.active > a svg,
+.sidebar .sidebar-menu ul li.submenu.active > a i,
+.sidebar .sidebar-menu ul li.submenu > a:hover i,
+.sidebar .sidebar-menu > ul > li > ul > li > a:hover i {
+    color: #ffffff !important;
+    background-color: transparent !important;
+}
+
+.sidebar .sidebar-menu ul li a:hover span,
+.sidebar .sidebar-menu ul li a.active span,
+.sidebar .sidebar-menu ul li a.subdrop span,
+.sidebar .sidebar-menu ul li.active > a span {
+    color: #ffffff !important;
+}
+
+.sidebar .sidebar-menu ul li a:hover .menu-arrow::before,
+.sidebar .sidebar-menu ul li a.active .menu-arrow::before,
+.sidebar .sidebar-menu ul li a.subdrop .menu-arrow::before {
+    border-color: #ffffff !important;
+}
+
+/* Mini-Sidebar Mode Icon Tiles */
+.mini-sidebar .sidebar .sidebar-menu li > a:hover {
+    background: #047d24 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(4, 125, 36, 0.35) !important;
+}
+
+.mini-sidebar .sidebar .sidebar-menu li > a:hover i,
+.mini-sidebar .sidebar .sidebar-menu li > a:hover svg {
+    color: #ffffff !important;
+}
+
+.mini-sidebar .sidebar .sidebar-menu li.submenu > a.active,
+.mini-sidebar .sidebar .sidebar-menu li > a.active,
+.mini-sidebar .sidebar .sidebar-menu li.active > a {
+    background: #047d24 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(4, 125, 36, 0.35) !important;
+}
+
+.mini-sidebar .sidebar .sidebar-menu li.submenu > a.active i,
+.mini-sidebar .sidebar .sidebar-menu li.submenu > a.active svg,
+.mini-sidebar .sidebar .sidebar-menu li > a.active i,
+.mini-sidebar .sidebar .sidebar-menu li > a.active svg,
+.mini-sidebar .sidebar .sidebar-menu li.active > a i,
+.mini-sidebar .sidebar .sidebar-menu li.active > a svg {
+    color: #ffffff !important;
+}
+
+/* Dark Mode Mini & Expanded Hover/Active */
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a:hover,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a.active,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a.subdrop,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li.active > a {
+    background: #047d24 !important;
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a:hover i,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a:hover svg,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a.active i,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a.active svg,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a.subdrop i,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a.subdrop svg,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li.active > a i,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li.active > a svg {
+    color: #ffffff !important;
+    background-color: transparent !important;
+}
+
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a:hover span,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a.active span,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li a.subdrop span,
+[data-bs-theme="dark"] .sidebar .sidebar-menu ul li.active > a span {
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li > a {
+    background: #161f30 !important;
+    color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li > a i {
+    color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li > a:hover {
+    background: #047d24 !important;
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li > a:hover i,
+[data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li > a:hover svg {
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li.submenu > a.active,
+[data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li > a.active,
+[data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li.active > a {
+    background: #047d24 !important;
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li.submenu > a.active i,
+[data-bs-theme="dark"] .mini-sidebar .sidebar .sidebar-menu li > a.active i {
+    color: #ffffff !important;
+}

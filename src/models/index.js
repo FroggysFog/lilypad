@@ -1,5 +1,7 @@
 const User = require('./user')
 const Ticket = require('./ticket')
+const LilyPadTicket = require('./lilypadTicket')
+const IntakeForm = require('./intakeForm')
 const TicketType = require('./tickettype')
 const Priority = require('./ticketpriority')
 const Status = require('./ticketStatus')
@@ -16,6 +18,8 @@ const Conversation = require('./chat/conversation')
 module.exports = {
   User,
   Ticket,
+  LilyPadTicket,
+  IntakeForm,
   TicketType,
   Priority,
   TicketTags,

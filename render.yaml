@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: lilypad-erp-dev
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    buildCommand: "node scratch/sync_tickets_template.js && node scratch/build_unified_templates.js"
+    startCommand: "node preview-server.js"
+    healthCheckPath: "/api/v1/lilypad/tickets/todo"
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8118
+      - key: PRIMARY_INBOUND_EMAIL
+        value: support@lilypad.local
+      - key: ENABLE_ANTI_SPAM_SHIELD
+        value: "true"
+
