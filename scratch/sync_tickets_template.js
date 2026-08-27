@@ -257,10 +257,25 @@ const ticketingBodyContent = `
 							</button>
 						</div>
 
-						<button class="btn btn-primary btn-sm d-flex align-items-center gap-1 px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#intakeModal">
+						<button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1 px-3 py-2 shadow-sm" onclick="openNewTicketModal()" data-bs-toggle="modal" data-bs-target="#intakeModal">
 							<i class="ti ti-plus"></i>
 							<span>New Ticket</span>
 						</button>
+					</div>
+				</div>
+
+				
+				<!-- Category Specific Form Filter Pills Bar -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-body py-2 px-3">
+						<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+							<div class="d-flex align-items-center gap-1 flex-wrap" id="topCategoryFilterPills">
+								<!-- Dynamically populated category pills -->
+							</div>
+							<button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm d-flex align-items-center gap-1" onclick="openNewTicketModal()">
+								<i class="ti ti-plus"></i> <span>New Ticket</span>
+							</button>
+						</div>
 					</div>
 				</div>
 
@@ -1318,26 +1333,49 @@ const ticketingModalsHtml = `
 		</div>
 	</div>
 
-	<!-- Dynamic Intake Modal -->
+	<!-- Dynamic Separate Forms Intake Modal -->
 	<div class="modal fade" id="intakeModal" tabindex="-1" aria-hidden="true">
-		<div class="modal-dialog modal-dialog-centered modal-lg">
-			<div class="modal-content border-0 shadow">
-				<div class="modal-header border-bottom py-3 px-4">
-					<h5 class="modal-title fw-bold d-flex align-items-center gap-2">
-						<i class="ti ti-forms text-primary"></i> Create Ticket / Dynamic Intake
-					</h5>
+		<div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+			<div class="modal-content border-0 shadow-lg">
+				<div class="modal-header border-bottom py-3 px-4 bg-light d-flex align-items-center justify-content-between">
+					<div class="d-flex align-items-center gap-2">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">
+							<i class="ti ti-forms fs-18"></i>
+						</div>
+						<div>
+							<h5 class="modal-title fw-bold mb-0 text-dark" id="intakeModalTitle">Ticket Intake & Dedicated Forms</h5>
+							<span class="fs-12 text-muted">Select an intake form tailored to your operational department and request type</span>
+						</div>
+					</div>
 					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 				</div>
-				<form id="intakeFormSubmit" onsubmit="submitNewTicket(event)">
-					<div class="modal-body p-4">
-						
-						<!-- Step 1: Select Category -->
-						<label class="form-label fw-bold text-dark fs-13 text-uppercase mb-2">1. Select Request Category</label>
-						<div class="row g-2 mb-4" id="categorySelectionChips"></div>
 
-						<!-- Step 2: Standard Core Info & Model Selector -->
-						<label class="form-label fw-bold text-dark fs-13 text-uppercase mb-2">2. Ticket Overview & Linked Assets</label>
-						
+				<div class="modal-body p-4">
+					<!-- Step 1: Category Form Selector Cards -->
+					<div id="intakeCategorySelectView">
+						<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+							<h6 class="fw-bold text-uppercase fs-12 text-muted mb-0">Step 1: Select Request Category & Form Type</h6>
+							<span class="badge bg-soft-primary text-primary fs-11 fw-semibold">9 Dedicated Form Templates</span>
+						</div>
+						<div class="row g-3 mb-2" id="categoryFormGridCards">
+							<!-- Dynamically generated separate form tiles -->
+						</div>
+					</div>
+
+					<!-- Step 2: Dedicated Tailored Intake Form View (Shown when category is chosen) -->
+					<div id="intakeCategoryFormView" style="display: none;">
+						<div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
+							<div class="d-flex align-items-center gap-2">
+								<span class="badge bg-primary text-white fs-13 px-2 py-1" id="activeFormBadge">
+									<i class="ti ti-engine me-1"></i> FX Machine Support
+								</span>
+								<strong class="fs-14 text-dark" id="activeFormHeading">Dedicated Support & Diagnostics Form</strong>
+							</div>
+							<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="switchToIntakeFormGrid()">
+								<i class="ti ti-arrow-left me-1"></i> Switch Form Category
+							</button>
+						</div>
+
 						<!-- Dynamic Pre-flight Model Hint -->
 						<div id="intakeModelHintContainer" class="alert alert-success border-success d-flex align-items-start gap-2 py-2 px-3 mb-3 fs-12" style="background:#eefaf1; display:none;">
 							<i class="ti ti-bulb fs-18 text-success flex-shrink-0 mt-1"></i>
@@ -1347,62 +1385,74 @@ const ticketingModalsHtml = `
 							</div>
 						</div>
 
-						<div class="row g-3 mb-4">
-							<div class="col-md-8">
-								<label class="form-label fs-13 fw-semibold">Title / Summary</label>
-								<input type="text" id="formTitle" class="form-control" placeholder="e.g. Antari 2000 Elite Silkscreens, Cartons, User Manuals" required>
+						<form id="intakeFormSubmit" onsubmit="submitNewTicket(event)">
+							<!-- Core Ticket Fields -->
+							<div class="row g-3 mb-3">
+								<div class="col-md-8">
+									<label class="form-label fs-13 fw-semibold">Ticket Subject / Summary <span class="text-danger">*</span></label>
+									<input type="text" id="formTitle" class="form-control" placeholder="e.g. Antari 2000 Elite - Silkscreen Alignment & Emulsion Inspection" required>
+								</div>
+								<div class="col-md-4">
+									<label class="form-label fs-13 fw-semibold">Priority Level <span class="text-danger">*</span></label>
+									<select id="formPriority" class="form-select">
+										<option value="Low">Low</option>
+										<option value="Normal" selected>Normal</option>
+										<option value="High">High</option>
+										<option value="Urgent">Urgent</option>
+									</select>
+								</div>
+								<div class="col-md-6">
+									<label class="form-label fs-13 fw-semibold">Linked Product / Asset Model</label>
+									<select id="formLinkedProduct" class="form-select" onchange="updateIntakeModelHint(this.value)">
+										<option value="Antari 2000 Elite">Antari 2000 Elite</option>
+										<option value="Antari DarkFX Spot 510">Antari DarkFX Spot 510</option>
+										<option value="Antari Z-350 Fazer">Antari Z-350 Fazer</option>
+										<option value="LilyPad Solar Telemetry Gateway">LilyPad Solar Telemetry Gateway</option>
+										<option value="Industrial LFP Battery Array 480V">Industrial LFP Battery Array 480V</option>
+										<option value="Enterprise ERP Server Node X1">Enterprise ERP Server Node X1</option>
+										<option value="General Asset / None">General Asset / None</option>
+									</select>
+								</div>
+								<div class="col-md-6">
+									<label class="form-label fs-13 fw-semibold">Target Due Date</label>
+									<input type="date" id="formDueDate" class="form-control">
+								</div>
+								<div class="col-12">
+									<label class="form-label fs-13 fw-semibold">Detailed Description & Symptoms <span class="text-danger">*</span></label>
+									<textarea id="formDesc" class="form-control" rows="3" placeholder="Provide background context, error codes, and symptoms observed..." required></textarea>
+								</div>
+								<div class="col-md-6">
+									<label class="form-label fs-13 fw-semibold">Reporter Name</label>
+									<input type="text" id="formReporterName" class="form-control" value="Scott Karan">
+								</div>
+								<div class="col-md-6">
+									<label class="form-label fs-13 fw-semibold">Reporter Email</label>
+									<input type="email" id="formReporterEmail" class="form-control" value="scott@froggysfog.com">
+								</div>
 							</div>
-							<div class="col-md-4">
-								<label class="form-label fs-13 fw-semibold">Priority</label>
-								<select id="formPriority" class="form-select">
-									<option value="Low">Low</option>
-									<option value="Normal" selected>Normal</option>
-									<option value="High">High</option>
-									<option value="Urgent">Urgent</option>
-								</select>
-							</div>
-							<div class="col-md-6">
-								<label class="form-label fs-13 fw-semibold">Linked Product / Asset Model</label>
-								<select id="formLinkedProduct" class="form-select" onchange="updateIntakeModelHint(this.value)">
-									<option value="Antari 2000 Elite">Antari 2000 Elite</option>
-									<option value="LilyPad Solar Telemetry Gateway">LilyPad Solar Telemetry Gateway</option>
-									<option value="Industrial LFP Battery Array 480V">Industrial LFP Battery Array 480V</option>
-									<option value="Enterprise ERP Server Node X1">Enterprise ERP Server Node X1</option>
-									<option value="General Asset / None">General Asset / None</option>
-								</select>
-							</div>
-							<div class="col-md-6">
-								<label class="form-label fs-13 fw-semibold">Target Due Date</label>
-								<input type="date" id="formDueDate" class="form-control">
-							</div>
-							<div class="col-12">
-								<label class="form-label fs-13 fw-semibold">Description</label>
-								<textarea id="formDesc" class="form-control" rows="3" placeholder="Provide detailed explanation and requirements..." required></textarea>
-							</div>
-							<div class="col-md-6">
-								<label class="form-label fs-13 fw-semibold">Reporter Name / Client</label>
-								<input type="text" id="formReporterName" class="form-control" placeholder="e.g. Mark Henderson (Packaging Lead)" value="Mark Henderson (Packaging Lead)">
-							</div>
-							<div class="col-md-6">
-								<label class="form-label fs-13 fw-semibold">Reporter Email</label>
-								<input type="email" id="formReporterEmail" class="form-control" placeholder="mark@lilypad.local" value="mark@lilypad.local">
-							</div>
-						</div>
 
-						<!-- Step 3: Dynamic Category-Specific Fields -->
-						<div class="border-top pt-3">
-							<label class="form-label fw-bold text-primary fs-13 text-uppercase mb-2 d-flex align-items-center gap-2">
-								<i class="ti ti-adjustments-alt"></i> 3. Dynamic Category Attributes (<span id="dynamicCategoryLabel">IT & Hardware</span>)
-							</label>
-							<div id="dynamicFieldsContainer" class="row g-3"></div>
-						</div>
+							<!-- Dynamic Category-Specific Fields Section -->
+							<div class="card border rounded-3 p-3 bg-light mb-3">
+								<label class="form-label fw-bold text-primary fs-13 text-uppercase mb-2 d-flex align-items-center gap-2">
+									<i class="ti ti-adjustments-alt"></i> Form Specifications (<span id="dynamicCategoryLabel">FX Machine Support</span>)
+								</label>
+								<div id="dynamicFieldsContainer" class="row g-3">
+									<!-- Rendered category inputs -->
+								</div>
+							</div>
 
+							<div class="d-flex align-items-center justify-content-between pt-3 border-top flex-wrap gap-2">
+								<button type="button" class="btn btn-light" onclick="switchToIntakeFormGrid()">
+									<i class="ti ti-arrow-left me-1"></i> Back to Form Selection
+								</button>
+								<button type="submit" class="btn btn-primary px-4 shadow-sm">
+									<i class="ti ti-check me-1"></i> Submit Ticket
+								</button>
+							</div>
+						</form>
 					</div>
-					<div class="modal-footer border-top py-2 px-4 bg-light">
-						<button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-						<button type="submit" class="btn btn-primary px-4 shadow-sm">Submit Ticket</button>
-					</div>
-				</form>
+
+				</div>
 			</div>
 		</div>
 	</div>
@@ -2047,7 +2097,7 @@ const ticketingEngineScript = `
                         <h5 class="fw-bold text-dark mb-1">No Tickets Found</h5>
                         <p class="text-muted fs-13 mb-3">There are currently no tickets matching the selected filters.</p>
                         <div>
-                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#intakeModal">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="openNewTicketModal()" data-bs-toggle="modal" data-bs-target="#intakeModal">
                                 <i class="ti ti-plus me-1"></i> Create New Ticket
                             </button>
                         </div>
