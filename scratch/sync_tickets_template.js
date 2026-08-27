@@ -257,7 +257,7 @@ const ticketingBodyContent = `
 							</button>
 						</div>
 
-						<button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1 px-3 py-2 shadow-sm" onclick="openNewTicketModal()" data-bs-toggle="modal" data-bs-target="#intakeModal">
+						<button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1 px-3 py-2 shadow-sm" onclick="openNewTicketModal()">
 							<i class="ti ti-plus"></i>
 							<span>New Ticket</span>
 						</button>
@@ -1756,15 +1756,31 @@ const ticketingEngineScript = `
 
         function openNewTicketModal(categoryName = null) {
             const modalEl = document.getElementById('intakeModal');
-            if (!modalEl) return;
-            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            if (!modalEl) {
+                console.error('intakeModal element not found');
+                return;
+            }
 
             if (categoryName) {
                 openDedicatedCategoryForm(categoryName);
             } else {
                 switchToIntakeFormGrid();
             }
-            modal.show();
+
+            try {
+                if (window.bootstrap && bootstrap.Modal) {
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                } else {
+                    modalEl.classList.add('show');
+                    modalEl.style.display = 'block';
+                    modalEl.removeAttribute('aria-hidden');
+                    modalEl.setAttribute('aria-modal', 'true');
+                }
+            } catch(err) {
+                modalEl.classList.add('show');
+                modalEl.style.display = 'block';
+            }
         }
 
         function switchToIntakeFormGrid() {
@@ -2097,7 +2113,7 @@ const ticketingEngineScript = `
                         <h5 class="fw-bold text-dark mb-1">No Tickets Found</h5>
                         <p class="text-muted fs-13 mb-3">There are currently no tickets matching the selected filters.</p>
                         <div>
-                            <button type="button" class="btn btn-sm btn-primary" onclick="openNewTicketModal()" data-bs-toggle="modal" data-bs-target="#intakeModal">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="openNewTicketModal()">
                                 <i class="ti ti-plus me-1"></i> Create New Ticket
                             </button>
                         </div>
