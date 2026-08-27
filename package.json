@@ -6,6 +6,9 @@
     "node": "16.20.2"
   },
   "bin": "./app.js",
+  "overrides": {
+    "undici": "5.28.4"
+  },
   "scripts": {
     "start": "node ./app",
     "build": "grunt build",
