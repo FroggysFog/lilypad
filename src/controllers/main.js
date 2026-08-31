@@ -151,7 +151,7 @@ mainController.loginPost = async function (req, res, next) {
           req.session.redirectUrl = null
         }
 
-        if (req.user.role === 'user') {
+        if (user.role === 'user') {
           redirectUrl = '/tickets'
         }
 
