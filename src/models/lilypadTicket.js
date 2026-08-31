@@ -176,8 +176,11 @@ ticketSchema.pre('save', async function (next) {
  */
 ticketSchema.statics.getTodoList = function (options = {}) {
   const query = {
-    deleted: false,
-    status: options.status || 'To-Do'
+    deleted: false
+  }
+
+  if (options.status) {
+    query.status = options.status
   }
 
   if (options.assignee) {

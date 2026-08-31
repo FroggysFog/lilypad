@@ -34,33 +34,7 @@ const mainController = {}
 mainController.content = {}
 
 mainController.index = function (req, res) {
-  const content = {}
-  content.title = 'Login'
-  content.layout = false
-  content.flash = req.flash('loginMessage')
-
-  const settingsUtil = require('../settings/settingsUtil')
-  settingsUtil.getSettings(function (err, s) {
-    if (err) throw new Error(err)
-    const settings = s.data.settings
-    content.siteTitle = settings.siteTitle.value
-
-    content.allowUserRegistration = settings.allowUserRegistration.value
-    content.mailerEnabled = settings.mailerEnabled.value
-
-    content.colorPrimary = settings.colorPrimary.value
-    content.colorSecondary = settings.colorSecondary.value
-    content.colorTertiary = settings.colorTertiary.value
-
-    content.pageLogo = '/img/defaultLogoDark.png'
-    if (settings.hasCustomPageLogo.value && settings.customPageLogoFilename.value.length > 0) {
-      content.pageLogo = '/assets/' + settings.customPageLogoFilename.value
-    }
-
-    content.bottom = 'LilyPad ERP v' + pkg.version
-
-    res.render('login', content)
-  })
+  return res.redirect('/login.html')
 }
 
 mainController.about = function (req, res) {
@@ -132,7 +106,7 @@ mainController.loginPost = async function (req, res, next) {
       if (!user) {
         try {
           await limiterSlowBruteByIP.consume(ipAddress)
-          return res.redirect('/')
+          return res.redirect('/login.html?error=1')
         } catch (rlRejected) {
           if (rlRejected instanceof Error) throw rlRejected
           else {

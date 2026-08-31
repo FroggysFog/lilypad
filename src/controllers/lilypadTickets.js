@@ -336,7 +336,7 @@ lilypadTicketsController.getTodoList = async function (req, res) {
     const { status, category, priority, assignee, search, limit } = req.query
 
     const tickets = await LilyPadTicket.getTodoList({
-      status: status || 'To-Do',
+      status,
       category,
       priority,
       assignee,
@@ -350,6 +350,7 @@ lilypadTicketsController.getTodoList = async function (req, res) {
       inProgress: await LilyPadTicket.countDocuments({ status: 'In Progress', deleted: false }),
       complete: await LilyPadTicket.countDocuments({ status: 'Complete', deleted: false }),
       blocked: await LilyPadTicket.countDocuments({ status: 'Blocked', deleted: false }),
+      urgent: await LilyPadTicket.countDocuments({ priority: 'Urgent', status: { $ne: 'Complete' }, deleted: false }),
       total: await LilyPadTicket.countDocuments({ deleted: false })
     }
 

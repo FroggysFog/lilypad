@@ -2133,16 +2133,76 @@
             }
         ];
 
-        // Clean production tickets store
+        // Live production tickets store, populated from the real API (see loadTickets())
         let tickets = [];
 
-        let USERS = [
-            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@lilypad.local', role: 'Admin', department: 'Operations', initials: 'SK', active: true },
-            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@lilypad.local', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true },
-            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@lilypad.local', role: 'Agent', department: 'Engineering', initials: 'DM', active: true },
-            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@lilypad.local', role: 'Agent', department: 'Engineering', initials: 'SC', active: true },
-            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@lilypad.local', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true }
-        ];
+        // Live team member store, populated from the real API (see loadUsers())
+        let USERS = [];
+
+        function initialsFor(fullname) {
+            if (!fullname) return 'FF';
+            const parts = fullname.trim().split(/\s+/);
+            return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || 'FF';
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/v1/lilypad/users');
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error || 'Unable to load users');
+                USERS = result.data.map(u => ({
+                    id: u._id,
+                    fullname: u.fullname,
+                    username: u.username,
+                    email: u.email,
+                    role: (u.role && u.role.name) || u.role || '',
+                    department: u.department || '',
+                    initials: initialsFor(u.fullname),
+                    active: true
+                }));
+            } catch (err) {
+                console.error('loadUsers failed:', err);
+            }
+        }
+
+        function mapTicket(t) {
+            return {
+                id: t._id,
+                uid: t.uid,
+                formattedUid: t.formattedUid,
+                title: t.title,
+                description: t.description,
+                status: t.status,
+                priority: t.priority,
+                categoryName: t.categoryName,
+                reporterName: (t.reporter && t.reporter.fullname) || (t.externalReporter && t.externalReporter.name) || 'Guest',
+                assigneeName: (t.assignee && t.assignee.fullname) || 'Unassigned',
+                assigneeId: t.assignee ? (t.assignee._id || t.assignee) : null,
+                linkedProduct: t.formData && t.formData.linkedProduct,
+                dueDate: t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '',
+                formData: t.formData || {},
+                attachments: t.attachments || [],
+                history: (t.history || []).map(h => ({ action: h.description || h.action, by: h.byName, time: h.timestamp })),
+                comments: (t.comments || []).map(c => ({ author: c.authorName, isInternal: c.isInternal, body: c.body, time: c.createdAt })),
+                workLogs: t.workLogs || [],
+                createdAt: t.createdAt
+            };
+        }
+
+        async function loadTickets() {
+            try {
+                const res = await fetch('/api/v1/lilypad/tickets/todo');
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error || 'Unable to load tickets');
+                tickets = result.data.map(mapTicket);
+            } catch (err) {
+                console.error('loadTickets failed:', err);
+                tickets = [];
+            }
+            renderTickets();
+            updateKpis();
+            if (currentView === 'kanban') renderKanban();
+        }
 
         let selectedCategory = CATEGORIES[0];
         let currentStatusFilter = 'In Progress';
@@ -2404,11 +2464,12 @@
             renderDynamicFormFields();
             updateCategoryFilterDropdown();
             updateProductFilterDropdown();
-            renderTickets();
-            updateKpis();
+            loadUsers().then(() => {
+                renderUsersTable();
+                updateAllAssigneeDropdowns();
+                loadTickets();
+            });
             initFormBuilder();
-            renderUsersTable();
-            updateAllAssigneeDropdowns();
             renderMachineTrends();
             renderKbArticlesList();
             updateKbModelFilter();
@@ -2575,7 +2636,7 @@
             }
         }
 
-        function submitNewTicket(e) {
+        async function submitNewTicket(e) {
             e.preventDefault();
             const title = document.getElementById('formTitle').value;
             const description = document.getElementById('formDesc').value;
@@ -2584,7 +2645,7 @@
             const dueDate = document.getElementById('formDueDate').value;
             const reporterName = document.getElementById('formReporterName').value;
 
-            const formData = {};
+            const formData = { linkedProduct: linkedProduct || 'General Asset / None' };
             document.querySelectorAll('.form-control-dynamic').forEach(input => {
                 if (input.type === 'checkbox') {
                     formData[input.name] = input.checked ? 'Yes' : 'No';
@@ -2593,43 +2654,42 @@
                 }
             });
 
-            const nextUid = tickets.length ? Math.max(...tickets.map(t => t.uid || 1000)) + 1 : 1001;
+            const submitBtn = document.querySelector('#intakeFormSubmit button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
 
-            const newTicket = {
-                id: String(Date.now()),
-                uid: nextUid,
-                formattedUid: `LP-${nextUid}`,
-                title,
-                description,
-                status: 'To-Do',
-                priority,
-                categoryName: selectedCategory.name,
-                linkedProduct: linkedProduct || 'General Asset / None',
-                dueDate: dueDate || new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10),
-                reporterName,
-                assigneeName: 'Scott Karan',
-                watchers: ['Scott Karan'],
-                formData,
-                attachments: [],
-                expenses: [],
-                history: [
-                    { action: 'Ticket Created', by: reporterName, time: 'Just now' }
-                ],
-                comments: [],
-                workLogs: [],
-                createdAt: new Date().toISOString()
-            };
+            try {
+                const res = await fetch('/api/v1/lilypad/tickets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        priority,
+                        categorySlug: selectedCategory.slug,
+                        reporterName,
+                        dueDate: dueDate || null,
+                        formData
+                    })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error || 'Unable to create ticket');
 
-            tickets.unshift(newTicket);
-            renderTickets();
-            updateKpis();
-            if (currentView === 'kanban') renderKanban();
+                const newTicket = mapTicket(result.data);
+                tickets.unshift(newTicket);
+                renderTickets();
+                updateKpis();
+                if (currentView === 'kanban') renderKanban();
 
-            triggerNotification('New Ticket Created', `${newTicket.formattedUid}: "${title}" submitted`, 'ti-plus', newTicket.id);
+                triggerNotification('New Ticket Created', `${newTicket.formattedUid}: "${title}" submitted`, 'ti-plus', newTicket.id);
 
-            const modal = bootstrap.Modal.getInstance(document.getElementById('intakeModal'));
-            modal.hide();
-            document.getElementById('intakeFormSubmit').reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('intakeModal'));
+                modal.hide();
+                document.getElementById('intakeFormSubmit').reset();
+            } catch (err) {
+                alert(err.message || 'Unable to create ticket.');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
         }
 
         function setStatusFilter(status) {
@@ -2708,8 +2768,8 @@
 
                 const dueText = t.dueDate ? `<span class="badge bg-light text-muted border fs-11"><i class="ti ti-calendar me-1"></i>Due ${t.dueDate}</span>` : '';
 
-                const assigneeOptions = '<option value="Unassigned">Unassigned</option>' + USERS.map(u => `
-                    <option value="${u.fullname}" ${t.assigneeName === u.fullname ? 'selected' : ''}>${u.fullname}</option>
+                const assigneeOptions = '<option value="">Unassigned</option>' + USERS.map(u => `
+                    <option value="${u.id}" ${t.assigneeId === u.id ? 'selected' : ''}>${u.fullname}</option>
                 `).join('');
 
                 return `
@@ -2876,25 +2936,49 @@
             if (document.getElementById('kpiComplete')) document.getElementById('kpiComplete').textContent = tickets.filter(t => t.status === 'Complete').length;
         }
 
-        function quickStatus(id, newStatus) {
+        async function quickStatus(id, newStatus) {
             const ticket = tickets.find(t => t.id === id || t.formattedUid === id);
-            if (ticket) {
-                const prev = ticket.status;
+            if (!ticket) return;
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${ticket.id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error || 'Unable to update status');
+
                 ticket.status = newStatus;
-                ticket.history.unshift({ action: `Status changed from ${prev} to ${newStatus}`, by: 'Scott Karan', time: 'Just now' });
                 renderTickets();
                 updateKpis();
+                if (currentView === 'kanban') renderKanban();
 
                 triggerNotification('Status Updated', `Status for ${ticket.formattedUid} changed to "${newStatus}"`, 'ti-loader-2', ticket.id);
+            } catch (err) {
+                alert(err.message || 'Unable to update ticket status.');
             }
         }
 
-        function updateAssignee(id, assignee) {
+        async function updateAssignee(id, assigneeId) {
             const ticket = tickets.find(t => t.id === id || t.formattedUid === id);
-            if (ticket) {
-                ticket.assigneeName = assignee;
-                ticket.history.unshift({ action: `Assigned to ${assignee}`, by: 'Scott Karan', time: 'Just now' });
-                triggerNotification('Ticket Assigned', `Ticket ${ticket.formattedUid} assigned to ${assignee}`, 'ti-user-check', ticket.id);
+            if (!ticket) return;
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${ticket.id}/assign`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ assigneeId: assigneeId || null })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error || 'Unable to update assignee');
+
+                const user = USERS.find(u => u.id === assigneeId);
+                ticket.assigneeId = assigneeId || null;
+                ticket.assigneeName = user ? user.fullname : 'Unassigned';
+                renderTickets();
+
+                triggerNotification('Ticket Assigned', `Ticket ${ticket.formattedUid} assigned to ${ticket.assigneeName}`, 'ti-user-check', ticket.id);
+            } catch (err) {
+                alert(err.message || 'Unable to update ticket assignee.');
             }
         }
 

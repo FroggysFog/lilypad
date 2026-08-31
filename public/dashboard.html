@@ -593,6 +593,22 @@
                 document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
             }
         } catch(e) {}
+
+        fetch('/api/v1/lilypad/tickets/todo')
+            .then(function(res) { return res.json(); })
+            .then(function(result) {
+                if (!result.success) return;
+                var c = result.counts;
+                var todoEl = document.getElementById('dashKpiTodo');
+                var progEl = document.getElementById('dashKpiInProgress');
+                var urgentEl = document.getElementById('dashKpiUrgent');
+                var completeEl = document.getElementById('dashKpiComplete');
+                if (todoEl) todoEl.textContent = c.todo;
+                if (progEl) progEl.textContent = c.inProgress;
+                if (urgentEl) urgentEl.textContent = c.urgent;
+                if (completeEl) completeEl.textContent = c.complete;
+            })
+            .catch(function(err) { console.error('Unable to load dashboard KPIs:', err); });
     });
 </script>
 </body>

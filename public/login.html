@@ -78,38 +78,25 @@
                         <!-- Feedback Alert -->
                         <div id="loginAlert" class="alert alert-danger d-none py-2 px-3 fs-13 mb-3" role="alert"></div>
 
-                        <!-- Sign In / Password Setup Form -->
-                        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+                        <!-- Sign In Form -->
+                        <form id="loginForm" method="POST" action="/login">
                             <div class="mb-3">
                                 <label class="form-label fs-13 fw-semibold text-dark" id="loginUserLabel">Email or Username</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0 text-muted"><i class="ti ti-mail"></i></span>
-                                    <input type="text" id="loginUsername" class="form-control border-start-0" placeholder="scott@froggysfog.com or skaran" value="skaran" required>
+                                    <input type="text" name="login-username" id="loginUsername" class="form-control border-start-0" placeholder="scott@froggysfog.com or skaran" required>
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <label class="form-label fs-13 fw-semibold text-dark mb-0" id="loginPassLabel">Password</label>
-                                    <a href="javascript:void(0);" id="forgotPassLink" onclick="alert('Password reset instructions sent to your registered email.')" class="fs-12 text-decoration-none fw-semibold text-primary">Forgot Password?</a>
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0 text-muted"><i class="ti ti-lock"></i></span>
-                                    <input type="password" id="loginPassword" class="form-control border-start-0 border-end-0" placeholder="••••••••" value="Password123!" required>
+                                    <input type="password" name="login-password" id="loginPassword" class="form-control border-start-0 border-end-0" placeholder="••••••••" required>
                                     <button type="button" class="input-group-text bg-light border-start-0 text-muted" onclick="togglePassVisibility('loginPassword', 'passToggleIcon')">
                                         <i class="ti ti-eye" id="passToggleIcon"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Confirm Password (Shown during account activation / password setup) -->
-                            <div class="mb-3 d-none" id="confirmPasswordContainer">
-                                <label class="form-label fs-13 fw-semibold text-dark mb-1">Confirm Password <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="ti ti-lock-check"></i></span>
-                                    <input type="password" id="confirmPassword" class="form-control border-start-0 border-end-0" placeholder="••••••••">
-                                    <button type="button" class="input-group-text bg-light border-start-0 text-muted" onclick="togglePassVisibility('confirmPassword', 'passConfirmToggleIcon')">
-                                        <i class="ti ti-eye" id="passConfirmToggleIcon"></i>
                                     </button>
                                 </div>
                             </div>
@@ -126,14 +113,6 @@
                                 <i class="ti ti-arrow-right"></i>
                             </button>
                         </form>
-
-                        <!-- Quick Role Switcher for Fast Testing -->
-                        <div class="pt-4 mt-4 border-top" id="quickRoleSwitcherContainer">
-                            <span class="fs-11 text-uppercase text-muted fw-bold d-block mb-2">⚡ Quick Select User / Role:</span>
-                            <div class="d-flex flex-column gap-2" id="quickUserList">
-                                <!-- Populated from storage/defaults -->
-                            </div>
-                        </div>
 
                         <div class="text-center pt-4">
                             <p class="text-muted fs-12 mb-0">Copyright &copy; 2026 <a href="https://froggysfog.com" target="_blank" class="fw-semibold text-decoration-none text-primary">Froggy's Fog</a> &middot; <a href="https://froggysfog.com" target="_blank" class="text-muted text-decoration-underline">froggysfog.com</a></p>
@@ -186,70 +165,21 @@
     <script src="themes/lilypad/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        const STORAGE_TEAM_KEY = "lilypad_team_users_v2";
-        const DEFAULT_TEAM_USERS = [
-            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@froggysfog.com', role: 'Admin', department: 'Operations', initials: 'SK', active: true, password: 'Password123!' },
-            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@froggysfog.com', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true, password: 'Password123!' },
-            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'DM', active: true, password: 'Password123!' },
-            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'SC', active: true, password: 'Password123!' },
-            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@froggysfog.com', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true, password: 'Password123!' }
-        ];
-
-        function getTeamUsers() {
-            try {
-                const stored = localStorage.getItem(STORAGE_TEAM_KEY);
-                if (!stored) {
-                    localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(DEFAULT_TEAM_USERS));
-                    return DEFAULT_TEAM_USERS;
-                }
-                return JSON.parse(stored);
-            } catch(e) {
-                return DEFAULT_TEAM_USERS;
-            }
-        }
-
-        let isSetupMode = false;
-
         document.addEventListener("DOMContentLoaded", function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const action = urlParams.get('action');
-            const emailParam = urlParams.get('email');
-            const userParam = urlParams.get('user');
-
-            if (action === 'setup-password' || action === 'activate') {
-                isSetupMode = true;
-                document.getElementById('loginHeaderTitle').textContent = 'Set Your Password';
-                document.getElementById('loginHeaderSubText').innerHTML = `Welcome to Froggy's Fog Hub! Please establish your secure password for <strong>${emailParam || userParam || 'your account'}</strong>.`;
-                document.getElementById('loginUsername').value = emailParam || userParam || '';
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('loginPassword').placeholder = 'Enter new password';
-                document.getElementById('loginPassLabel').textContent = 'New Password';
-                document.getElementById('forgotPassLink').classList.add('d-none');
-                document.getElementById('confirmPasswordContainer').classList.remove('d-none');
-                document.getElementById('btnSignInText').textContent = 'Activate Account & Launch Hub';
-                document.getElementById('quickRoleSwitcherContainer').classList.add('d-none');
-            } else {
-                renderQuickUsers();
+            if (urlParams.get('error') === '1') {
+                const alertBox = document.getElementById('loginAlert');
+                alertBox.className = 'alert alert-danger py-2 px-3 fs-13 mb-3';
+                alertBox.textContent = 'Invalid username or password. Please try again.';
+                alertBox.classList.remove('d-none');
             }
         });
 
-        function renderQuickUsers() {
-            const users = getTeamUsers();
-            const container = document.getElementById('quickUserList');
-            if (!container) return;
-            container.innerHTML = users.slice(0, 4).map(u => `
-                <div class="user-quick-chip p-2 rounded-3 d-flex align-items-center justify-content-between" onclick="fillUser('${u.username || u.email}', '${u.password || 'Password123!'}', '${u.fullname}', '${u.role}')">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="avatar avatar-sm rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-sm ${u.role === 'Admin' ? 'bg-dark' : 'bg-primary'}" style="width:30px; height:30px; font-size:12px;">${u.initials || 'FF'}</span>
-                        <div>
-                            <strong class="d-block fs-12 text-dark">${u.fullname}</strong>
-                            <span class="fs-11 text-muted">${u.email}</span>
-                        </div>
-                    </div>
-                    <span class="badge ${u.role === 'Admin' ? 'bg-dark' : 'bg-primary'} fs-10">${u.role}</span>
-                </div>
-            `).join('');
-        }
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const btn = document.getElementById('btnSignIn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Authenticating...';
+        });
 
         function togglePassVisibility(inputId, iconId) {
             const passInput = document.getElementById(inputId);
@@ -261,91 +191,6 @@
                 passInput.type = 'password';
                 icon.className = 'ti ti-eye';
             }
-        }
-
-        function fillUser(user, pass, name, role) {
-            document.getElementById('loginUsername').value = user;
-            document.getElementById('loginPassword').value = pass;
-            const alertBox = document.getElementById('loginAlert');
-            alertBox.className = 'alert alert-info py-2 px-3 fs-13 mb-3 border-0';
-            alertBox.innerHTML = `Loaded profile for <strong>${name}</strong> (${role}). Click "Sign In" below.`;
-            alertBox.classList.remove('d-none');
-        }
-
-        function handleLoginSubmit(e) {
-            e.preventDefault();
-            const username = document.getElementById('loginUsername').value.trim();
-            const pass = document.getElementById('loginPassword').value.trim();
-            const btn = document.getElementById('btnSignIn');
-            const alertBox = document.getElementById('loginAlert');
-
-            if (!username || !pass) {
-                alertBox.className = 'alert alert-danger py-2 px-3 fs-13 mb-3';
-                alertBox.textContent = 'Please enter username/email and password.';
-                alertBox.classList.remove('d-none');
-                return;
-            }
-
-            if (isSetupMode) {
-                const confirmPass = document.getElementById('confirmPassword').value.trim();
-                if (pass.length < 6) {
-                    alertBox.className = 'alert alert-warning py-2 px-3 fs-13 mb-3';
-                    alertBox.textContent = 'Password must be at least 6 characters long.';
-                    alertBox.classList.remove('d-none');
-                    return;
-                }
-                if (pass !== confirmPass) {
-                    alertBox.className = 'alert alert-danger py-2 px-3 fs-13 mb-3';
-                    alertBox.textContent = 'Passwords do not match. Please re-enter.';
-                    alertBox.classList.remove('d-none');
-                    return;
-                }
-
-                // Update user in storage
-                const users = getTeamUsers();
-                let matched = users.find(u => u.email.toLowerCase() === username.toLowerCase() || (u.username && u.username.toLowerCase() === username.toLowerCase()));
-                if (matched) {
-                    matched.password = pass;
-                    localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(users));
-                }
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ' + (isSetupMode ? 'Activating Profile...' : 'Authenticating...');
-
-            setTimeout(() => {
-                const users = getTeamUsers();
-                let matched = users.find(u => u.email.toLowerCase() === username.toLowerCase() || (u.username && u.username.toLowerCase() === username.toLowerCase()));
-
-                let userObj = matched ? {
-                    fullname: matched.fullname,
-                    username: matched.username,
-                    role: matched.role,
-                    department: matched.department,
-                    email: matched.email,
-                    loggedInAt: new Date().toISOString()
-                } : {
-                    fullname: username.includes('@') ? username.split('@')[0] : username,
-                    username: username,
-                    role: 'Admin',
-                    department: 'Operations',
-                    email: username.includes('@') ? username : `${username}@froggysfog.com`,
-                    loggedInAt: new Date().toISOString()
-                };
-
-                sessionStorage.setItem('lilypad_auth_user', JSON.stringify(userObj));
-                localStorage.setItem('lilypad_logged_in', 'true');
-
-                alertBox.className = 'alert alert-success py-2 px-3 fs-13 mb-3 border-0';
-                alertBox.innerHTML = isSetupMode
-                    ? `<i class="ti ti-check me-1"></i> Account activated! Welcome to Froggy's Fog Hub, <strong>${userObj.fullname}</strong>! Launching...`
-                    : `<i class="ti ti-check me-1"></i> Welcome back, <strong>${userObj.fullname}</strong>! Redirecting to dashboard...`;
-                alertBox.classList.remove('d-none');
-
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 500);
-            }, 600);
         }
     </script>
 </body>
