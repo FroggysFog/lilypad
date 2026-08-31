@@ -45,10 +45,10 @@ middleware.redirectToDashboardIfLoggedIn = function (req, res, next) {
     }
 
     if (!req.user.role.isAdmin || !req.user.role.isAgent) {
-      return res.redirect('/tickets')
+      return res.redirect('/tickets.html')
     }
 
-    return res.redirect('/dashboard')
+    return res.redirect('/dashboard.html')
   }
 
   return next()

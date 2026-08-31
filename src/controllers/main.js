@@ -144,7 +144,7 @@ mainController.loginPost = async function (req, res, next) {
       }
 
       if (user) {
-        let redirectUrl = '/dashboard'
+        let redirectUrl = '/dashboard.html'
 
         if (req.session.redirectUrl) {
           redirectUrl = req.session.redirectUrl
@@ -152,7 +152,7 @@ mainController.loginPost = async function (req, res, next) {
         }
 
         if (user.role === 'user') {
-          redirectUrl = '/tickets'
+          redirectUrl = '/tickets.html'
         }
 
         req.logIn(user, function (err) {
