@@ -24,7 +24,7 @@ global.env = process.env.NODE_ENV || 'production'
   database.init(
     function (e, db) {
       if (e) {
-        return process.send({ error: e })
+        return process.send({ error: { message: e.message, name: e.name } })
         // return process.kill(0)
       }
 

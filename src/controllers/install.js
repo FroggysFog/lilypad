@@ -165,7 +165,7 @@ installController.install = function (req, res) {
     [
       function (next) {
         db.init(function (err) {
-          return next(err)
+          return next(err ? 'Database Error: ' + err.message : null)
         }, conuri)
       },
       function (next) {
