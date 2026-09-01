@@ -443,7 +443,7 @@
 				<!-- Live KPI Counters Row -->
 				<div class="row g-3 mb-4">
 					<div class="col-xl-3 col-sm-6">
-						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="cursor:pointer;" onclick="goToFilteredTickets('status', 'To-Do')">
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
 									<span class="fs-12 text-muted fw-semibold text-uppercase">To-Do Queue</span>
@@ -457,7 +457,7 @@
 					</div>
 
 					<div class="col-xl-3 col-sm-6">
-						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="cursor:pointer;" onclick="goToFilteredTickets('status', 'In Progress')">
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
 									<span class="fs-12 text-muted fw-semibold text-uppercase">In Progress</span>
@@ -471,7 +471,7 @@
 					</div>
 
 					<div class="col-xl-3 col-sm-6">
-						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="cursor:pointer;" onclick="goToFilteredTickets('priority', 'urgent-high')">
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
 									<span class="fs-12 text-muted fw-semibold text-uppercase">Urgent / High</span>
@@ -485,7 +485,7 @@
 					</div>
 
 					<div class="col-xl-3 col-sm-6">
-						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="cursor:pointer;" onclick="goToFilteredTickets('status', 'Complete')">
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
 									<span class="fs-12 text-muted fw-semibold text-uppercase">Completed</span>
@@ -518,6 +518,7 @@
 								</div>
 
 								<div class="d-flex align-items-center gap-2 flex-wrap">
+									<select id="dashAssigneeFilter" class="form-select form-select-sm w-auto rounded-pill fs-12 fw-semibold" onchange="loadDashboard()"></select>
 									<ul class="nav nav-pills gap-1" id="dashboardTicketFilterPills">
 										<li class="nav-item">
 											<button class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets('all', this)">All Active</button>
@@ -584,31 +585,164 @@
 
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            const auth = sessionStorage.getItem('lilypad_auth_user');
-            if (auth) {
-                const u = JSON.parse(auth);
-                document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
-                document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
-            }
-        } catch(e) {}
+    let dashCurrentUserId = null;
+    let dashLastTickets = [];
+    let dashStatusPill = 'all'; // 'all' | 'urgent'
 
-        fetch('/api/v1/lilypad/tickets/todo')
-            .then(function(res) { return res.json(); })
-            .then(function(result) {
-                if (!result.success) return;
-                var c = result.counts;
-                var todoEl = document.getElementById('dashKpiTodo');
-                var progEl = document.getElementById('dashKpiInProgress');
-                var urgentEl = document.getElementById('dashKpiUrgent');
-                var completeEl = document.getElementById('dashKpiComplete');
-                if (todoEl) todoEl.textContent = c.todo;
-                if (progEl) progEl.textContent = c.inProgress;
-                if (urgentEl) urgentEl.textContent = c.urgent;
-                if (completeEl) completeEl.textContent = c.complete;
-            })
-            .catch(function(err) { console.error('Unable to load dashboard KPIs:', err); });
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function goToFilteredTickets(kind, value) {
+        const select = document.getElementById('dashAssigneeFilter');
+        const selVal = select ? select.value : '';
+        const assignee = selVal === 'all' ? 'all' : (selVal || 'me');
+        const params = new URLSearchParams();
+        params.set('assignee', assignee);
+        params.set(kind, value);
+        window.location.href = 'tickets.html?' + params.toString();
+    }
+
+    async function loadMe() {
+        try {
+            const res = await fetch('/api/v1/lilypad/account/me');
+            const result = await res.json();
+            if (!result.success) return;
+            dashCurrentUserId = result.data.id;
+            document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
+            document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
+        } catch (err) {
+            console.error('Unable to load current user:', err);
+        }
+    }
+
+    async function loadAssigneeOptions() {
+        const select = document.getElementById('dashAssigneeFilter');
+        if (!select) return;
+        select.innerHTML = '<option value="">Me</option><option value="all">Everyone</option>';
+        try {
+            const res = await fetch('/api/v1/lilypad/users');
+            const result = await res.json();
+            if (!result.success) return;
+            result.data
+                .filter(u => u._id !== dashCurrentUserId)
+                .forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u._id;
+                    opt.textContent = u.fullname;
+                    select.appendChild(opt);
+                });
+        } catch (err) {
+            console.error('Unable to load team members:', err);
+        }
+    }
+
+    function renderDashboardFeed() {
+        const container = document.getElementById('dashboardTicketsListContainer');
+        if (!container) return;
+
+        const filtered = dashStatusPill === 'urgent'
+            ? dashLastTickets.filter(t => t.priority === 'Urgent' || t.priority === 'High')
+            : dashLastTickets;
+
+        if (!filtered.length) {
+            container.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <div class="rounded-circle d-inline-flex p-3 mb-3" style="background:rgba(var(--bs-primary-rgb), 0.1); color:var(--bs-primary);">
+                        <i class="ti ti-ticket-off fs-36"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">No Active Tickets in Queue</h5>
+                    <p class="text-muted fs-13 mb-3" style="max-width: 480px; margin: 0 auto;">Nothing matches the current filters.</p>
+                    <a href="tickets.html" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm mt-2">
+                        <i class="ti ti-plus me-1"></i> Create First Ticket
+                    </a>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.slice(0, 6).map(t => {
+            const priorityClass = t.priority === 'Urgent' ? 'danger' : (t.priority === 'High' ? 'warning' : 'info');
+            const statusClass = t.status === 'To-Do' ? 'success' : (t.status === 'In Progress' ? 'warning' : (t.status === 'Blocked' ? 'danger' : 'success'));
+            const assigneeName = (t.assignee && t.assignee.fullname) || 'Unassigned';
+
+            return `
+                <div class="col-xl-4 col-md-6 d-flex">
+                    <div class="card flex-fill border rounded-3 p-3 position-relative shadow-none"
+                         style="cursor: pointer; transition: all 0.2s ease; border-color: var(--bs-border-color, #e2e8f0);"
+                         onclick="window.location.href='tickets.html?ticket=${t._id}'"
+                         onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--bs-primary)';"
+                         onmouseout="this.style.transform='none'; this.style.borderColor='var(--bs-border-color, #e2e8f0)';">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge bg-dark text-white fw-bold fs-11 px-2 py-1 rounded-pill">${escapeHtml(t.formattedUid)}</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge bg-soft-${priorityClass} text-${priorityClass} fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(t.priority)}</span>
+                                <span class="badge bg-soft-${statusClass} text-${statusClass} fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(t.status)}</span>
+                            </div>
+                        </div>
+                        <h6 class="fw-bold fs-13 mb-1 text-dark text-truncate" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</h6>
+                        <p class="text-muted fs-12 mb-2 text-truncate" style="line-height:1.4;">${escapeHtml(t.description)}</p>
+                        <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto fs-12">
+                            <span class="text-muted d-flex align-items-center">
+                                <i class="ti ti-user me-1 fs-13 text-primary"></i>
+                                <strong class="text-dark">${escapeHtml(assigneeName)}</strong>
+                            </span>
+                            <span class="text-success fw-semibold fs-11 d-flex align-items-center">Open &rarr;</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function filterDashboardTickets(pill, btn) {
+        dashStatusPill = pill;
+        if (btn) {
+            document.querySelectorAll('#dashboardTicketFilterPills .nav-link').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        renderDashboardFeed();
+    }
+
+    async function loadDashboard() {
+        const select = document.getElementById('dashAssigneeFilter');
+        const selVal = select ? select.value : '';
+        const assignee = selVal === 'all' ? '' : (selVal || dashCurrentUserId);
+
+        try {
+            const params = new URLSearchParams();
+            if (assignee) params.set('assignee', assignee);
+            const res = await fetch('/api/v1/lilypad/tickets/todo?' + params.toString());
+            const result = await res.json();
+            if (!result.success) return;
+
+            const c = result.counts;
+            const todoEl = document.getElementById('dashKpiTodo');
+            const progEl = document.getElementById('dashKpiInProgress');
+            const urgentEl = document.getElementById('dashKpiUrgent');
+            const completeEl = document.getElementById('dashKpiComplete');
+            if (todoEl) todoEl.textContent = c.todo;
+            if (progEl) progEl.textContent = c.inProgress;
+            if (urgentEl) urgentEl.textContent = c.urgent;
+            if (completeEl) completeEl.textContent = c.complete;
+
+            dashLastTickets = result.data || [];
+            renderDashboardFeed();
+        } catch (err) {
+            console.error('Unable to load dashboard:', err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+        await loadMe();
+        await loadAssigneeOptions();
+        await loadDashboard();
     });
 </script>
 </body>

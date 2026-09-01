@@ -125,6 +125,25 @@ lilypadUsersController.updateUser = async function (req, res) {
 }
 
 /**
+ * GET /api/v1/lilypad/account/me
+ * Returns the logged-in user's own identity
+ */
+lilypadUsersController.getMe = async function (req, res) {
+  return res.status(200).json({
+    success: true,
+    data: {
+      id: req.user._id,
+      username: req.user.username,
+      fullname: req.user.fullname,
+      email: req.user.email,
+      role: req.user.role,
+      title: req.user.title,
+      department: req.user.department
+    }
+  })
+}
+
+/**
  * PUT /api/v1/lilypad/account/password
  * Lets the logged-in user change their own password
  */

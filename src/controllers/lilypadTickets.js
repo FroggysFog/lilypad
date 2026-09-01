@@ -346,14 +346,17 @@ lilypadTicketsController.getTodoList = async function (req, res) {
       limit: parseInt(limit, 10) || 100
     })
 
-    // Compute status counts for quick KPI cards
+    // Compute status counts for quick KPI cards, scoped to the same assignee filter as the list
+    const countsBase = { deleted: false }
+    if (assignee) countsBase.assignee = assignee
+
     const counts = {
-      todo: await LilyPadTicket.countDocuments({ status: 'To-Do', deleted: false }),
-      inProgress: await LilyPadTicket.countDocuments({ status: 'In Progress', deleted: false }),
-      complete: await LilyPadTicket.countDocuments({ status: 'Complete', deleted: false }),
-      blocked: await LilyPadTicket.countDocuments({ status: 'Blocked', deleted: false }),
-      urgent: await LilyPadTicket.countDocuments({ priority: 'Urgent', status: { $ne: 'Complete' }, deleted: false }),
-      total: await LilyPadTicket.countDocuments({ deleted: false })
+      todo: await LilyPadTicket.countDocuments({ ...countsBase, status: 'To-Do' }),
+      inProgress: await LilyPadTicket.countDocuments({ ...countsBase, status: 'In Progress' }),
+      complete: await LilyPadTicket.countDocuments({ ...countsBase, status: 'Complete' }),
+      blocked: await LilyPadTicket.countDocuments({ ...countsBase, status: 'Blocked' }),
+      urgent: await LilyPadTicket.countDocuments({ ...countsBase, priority: { $in: ['Urgent', 'High'] }, status: { $ne: 'Complete' } }),
+      total: await LilyPadTicket.countDocuments(countsBase)
     }
 
     return res.status(200).json({

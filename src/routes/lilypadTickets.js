@@ -6,7 +6,7 @@
 const express = require('express')
 const router = express.Router()
 const controllers = require('../controllers')
-const { requireLogin } = require('../middleware/lilypadAuth')
+const { requireLogin, requireLoginApi } = require('../middleware/lilypadAuth')
 
 module.exports = function () {
   // Public / Shared: Dynamic Intake Form Definitions
@@ -24,6 +24,7 @@ module.exports = function () {
   router.post('/tickets/:id/comments', requireLogin, controllers.lilypadTickets.addComment)
 
   // Self-service account
+  router.get('/account/me', requireLoginApi, controllers.lilypadUsers.getMe)
   router.put('/account/password', requireLogin, controllers.lilypadUsers.changeMyPassword)
 
   // Admin & Team Management: User Accounts

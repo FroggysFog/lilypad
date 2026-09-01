@@ -5,37 +5,12 @@
 (function () {
     "use strict";
 
-    const STORAGE_TICKETS_KEY = "lilypad_tickets_v2";
-    const defaultTickets = [];
     const NOTIF_POLL_MS = 25000;
 
     const LilypadNotifications = {
-        currentFilter: "mine",
         cachedNotifications: [],
         seenIds: new Set(),
         seenIdsInitialized: false,
-
-        getTickets: function () {
-            try {
-                const data = localStorage.getItem(STORAGE_TICKETS_KEY);
-                if (!data) {
-                    localStorage.setItem(STORAGE_TICKETS_KEY, JSON.stringify(defaultTickets));
-                    return defaultTickets;
-                }
-                return JSON.parse(data);
-            } catch (e) {
-                return defaultTickets;
-            }
-        },
-
-        saveTickets: function (list) {
-            try {
-                localStorage.setItem(STORAGE_TICKETS_KEY, JSON.stringify(list));
-                this.renderDashboardWidget();
-            } catch (e) {
-                console.error("Error saving tickets:", e);
-            }
-        },
 
         // Local-only "you just did X" confirmation toast (e.g. "Ticket Created").
         // Not persisted, not tied to the real cross-user notification feed below.
@@ -252,122 +227,8 @@
             });
         },
 
-        renderDashboardWidget: function (filter = this.currentFilter) {
-            this.currentFilter = filter;
-            const container = document.getElementById('dashboardTicketsListContainer');
-            const tickets = this.getTickets();
-
-            // Update Header KPI Counters
-            const kpiTodo = document.getElementById('dashKpiTodo');
-            const kpiInProgress = document.getElementById('dashKpiInProgress');
-            const kpiUrgent = document.getElementById('dashKpiUrgent');
-            const kpiComplete = document.getElementById('dashKpiComplete');
-
-            if (kpiTodo) kpiTodo.textContent = tickets.filter(t => t.status === 'To-Do').length;
-            if (kpiInProgress) kpiInProgress.textContent = tickets.filter(t => t.status === 'In Progress').length;
-            if (kpiUrgent) kpiUrgent.textContent = tickets.filter(t => t.priority === 'Urgent' || t.priority === 'High').length;
-            if (kpiComplete) kpiComplete.textContent = tickets.filter(t => t.status === 'Complete' || t.status === 'Resolved').length;
-
-            if (!container) return;
-
-            let filtered = tickets;
-            if (filter === 'urgent') {
-                filtered = tickets.filter(t => t.priority === 'Urgent' || t.priority === 'High');
-            }
-
-            if (!filtered.length) {
-                container.innerHTML = `
-                    <div class="col-12 text-center py-5">
-                        <div class="rounded-circle d-inline-flex p-3 mb-3" style="background:rgba(var(--bs-primary-rgb), 0.1); color:var(--bs-primary);">
-                            <i class="ti ti-ticket-off fs-36"></i>
-                        </div>
-                        <h5 class="fw-bold text-dark mb-1">No Active Tickets in Queue</h5>
-                        <p class="text-muted fs-13 mb-3" style="max-width: 480px; margin: 0 auto;">All operational requests are clear. When tickets are submitted via web form, email gateway, or internal team, they will stream here in real time.</p>
-                        <a href="tickets.html" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm mt-2">
-                            <i class="ti ti-plus me-1"></i> Create First Ticket
-                        </a>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = '';
-            filtered.slice(0, 6).forEach(t => {
-                const priorityClass = t.priority === 'Urgent' ? 'danger' : (t.priority === 'High' ? 'warning' : 'info');
-                const statusClass = t.status === 'To-Do' ? 'success' : (t.status === 'In Progress' ? 'warning' : (t.status === 'Blocked' ? 'danger' : 'success'));
-                
-                const metaTags = Object.entries(t.formData || {})
-                    .slice(0, 2)
-                    .map(([k, v]) => `<span class="badge bg-light text-muted border fs-10 me-1"><strong>${k}:</strong> ${v}</span>`)
-                    .join('');
-
-                const productTag = t.linkedProduct && t.linkedProduct !== 'General Asset / None'
-                    ? `<span class="badge bg-soft-primary text-primary fs-10"><i class="ti ti-box me-1"></i>${t.linkedProduct}</span>`
-                    : '';
-
-                const filesTag = (t.attachments && t.attachments.length)
-                    ? `<span class="badge bg-light text-dark border fs-10"><i class="ti ti-paperclip me-1"></i>${t.attachments.length} files</span>`
-                    : '';
-
-                html += `
-                    <div class="col-xl-4 col-md-6 d-flex">
-                        <div class="card flex-fill border rounded-3 p-3 position-relative shadow-none" 
-                             style="cursor: pointer; transition: all 0.2s ease; border-color: var(--bs-border-color, #e2e8f0);"
-                             onclick="LilypadNotifications.navigateToTicket('${t.id}')"
-                             onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--bs-primary)';"
-                             onmouseout="this.style.transform='none'; this.style.borderColor='var(--bs-border-color, #e2e8f0)';">
-                            
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="badge bg-dark text-white fw-bold fs-11 px-2 py-1 rounded-pill">
-                                    ${t.formattedUid || '#' + t.uid}
-                                </span>
-                                <div class="d-flex align-items-center gap-1">
-                                    <span class="badge bg-soft-${priorityClass} text-${priorityClass} fs-10 px-2 py-1 rounded-pill fw-semibold">
-                                        ${t.priority}
-                                    </span>
-                                    <span class="badge bg-soft-${statusClass} text-${statusClass} fs-10 px-2 py-1 rounded-pill fw-semibold">
-                                        ${t.status}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <h6 class="fw-bold fs-13 mb-1 text-dark text-truncate" title="${t.title}">${t.title}</h6>
-                            <div class="d-flex align-items-center gap-1 mb-2">
-                                ${productTag}
-                                ${filesTag}
-                            </div>
-                            <p class="text-muted fs-12 mb-2 text-truncate" style="line-height:1.4;">${t.description}</p>
-                            
-                            <div class="mb-2">
-                                ${metaTags}
-                            </div>
-
-                            <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto fs-12">
-                                <span class="text-muted d-flex align-items-center">
-                                    <i class="ti ti-user me-1 fs-13 text-primary"></i>
-                                    <strong class="text-dark">${t.assigneeName}</strong>
-                                </span>
-                                <span class="text-success fw-semibold fs-11 d-flex align-items-center">
-                                    Open &rarr;
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-        },
-
         init: function () {
             this.fetchNotifications();
-            this.renderDashboardWidget();
-
-            window.addEventListener('storage', (e) => {
-                if (e.key === STORAGE_TICKETS_KEY) {
-                    this.renderDashboardWidget();
-                }
-            });
 
             setInterval(() => this.fetchNotifications(), NOTIF_POLL_MS);
 
@@ -384,13 +245,6 @@
     };
 
     window.LilypadNotifications = LilypadNotifications;
-    window.filterDashboardTickets = function (filter, btn) {
-        if (btn) {
-            document.querySelectorAll('#dashboardTicketFilterPills .nav-link').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
-        LilypadNotifications.renderDashboardWidget(filter);
-    };
 
     document.addEventListener('DOMContentLoaded', function () {
         LilypadNotifications.init();

@@ -768,6 +768,7 @@
 
 								<select id="priorityFilter" class="form-select form-select-sm w-auto" onchange="filterTickets()">
 									<option value="">All Priorities</option>
+									<option value="urgent-high">Urgent & High</option>
 									<option value="Urgent">Urgent</option>
 									<option value="High">High</option>
 									<option value="Normal">Normal</option>
@@ -2124,6 +2125,9 @@
         // Live production tickets store, populated from the real API (see loadTickets())
         let tickets = [];
         let currentView = 'list';
+        let currentUserId = null;
+        let currentUserFullname = null;
+        let currentAssigneeFilter = null; // null = everyone, 'me' = logged-in user, or a specific account id
 
         // Live team member store, populated from the real API (see loadUsers())
         let USERS = [];
@@ -2151,6 +2155,18 @@
                 }));
             } catch (err) {
                 console.error('loadUsers failed:', err);
+            }
+        }
+
+        async function loadMe() {
+            try {
+                const res = await fetch('/api/v1/lilypad/account/me');
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error || 'Unable to load current user');
+                currentUserId = result.data.id;
+                currentUserFullname = result.data.fullname;
+            } catch (err) {
+                console.error('loadMe failed:', err);
             }
         }
 
@@ -2472,7 +2488,7 @@
             renderDynamicFormFields();
             updateCategoryFilterDropdown();
             updateProductFilterDropdown();
-            loadUsers().then(() => {
+            Promise.all([loadUsers(), loadMe()]).then(() => {
                 renderUsersTable();
                 updateAllAssigneeDropdowns();
                 loadTickets();
@@ -2489,6 +2505,16 @@
             const targetTicket = urlParams.get('ticket');
             const targetView = urlParams.get('view');
             const targetAdmin = urlParams.get('admin');
+            const targetStatus = urlParams.get('status');
+            const targetAssignee = urlParams.get('assignee');
+            const targetPriority = urlParams.get('priority');
+
+            if (targetStatus) setStatusFilter(targetStatus);
+            if (targetAssignee) currentAssigneeFilter = targetAssignee === 'all' ? null : targetAssignee;
+            if (targetPriority) {
+                const prioSelect = document.getElementById('priorityFilter');
+                if (prioSelect) prioSelect.value = targetPriority;
+            }
 
             if (targetView === 'kb') {
                 setTimeout(() => {
@@ -2725,6 +2751,9 @@
         function renderTickets(preset) {
             const container = document.getElementById('ticketsContainer');
             if (!container) return;
+            if (preset === 'mine') currentAssigneeFilter = 'me';
+            else if (preset === 'all') currentAssigneeFilter = null;
+
             const search = document.getElementById('globalSearch')?.value.toLowerCase() || '';
             const catFilter = document.getElementById('categoryFilter')?.value || '';
             const prodFilter = document.getElementById('productFilter')?.value || '';
@@ -2732,12 +2761,13 @@
 
             let filtered = tickets.filter(t => {
                 const matchesStatus = (currentStatusFilter === 'All') || (t.status === currentStatusFilter);
-                const matchesMine = (preset !== 'mine') || (t.assigneeName === 'Scott Karan');
+                const matchesAssignee = !currentAssigneeFilter
+                    || (currentAssigneeFilter === 'me' ? t.assigneeId === currentUserId : t.assigneeId === currentAssigneeFilter);
                 const matchesSearch = !search || t.title.toLowerCase().includes(search) || t.formattedUid.toLowerCase().includes(search) || t.reporterName.toLowerCase().includes(search);
                 const matchesCat = !catFilter || t.categoryName === catFilter;
                 const matchesProd = !prodFilter || t.linkedProduct === prodFilter;
-                const matchesPrio = !prioFilter || t.priority === prioFilter;
-                return matchesStatus && matchesMine && matchesSearch && matchesCat && matchesProd && matchesPrio;
+                const matchesPrio = !prioFilter || (prioFilter === 'urgent-high' ? (t.priority === 'Urgent' || t.priority === 'High') : t.priority === prioFilter);
+                return matchesStatus && matchesAssignee && matchesSearch && matchesCat && matchesProd && matchesPrio;
             });
 
             if (!filtered.length) {
