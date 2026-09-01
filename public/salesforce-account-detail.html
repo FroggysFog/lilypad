@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Orders | LilyPad ERP</title>
+	<title>Account Detail | LilyPad ERP</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="robots" content="index, follow">
 	<link rel="shortcut icon" href="assets/img/favicon.png">
@@ -127,14 +127,14 @@
 						<li class="menu-title"><span>Orders</span></li>
 						<li>
 							<ul>
-								<li><a href="orders.html" class="active"><i class="ti ti-package"></i><span>Order History</span></a></li>
+								<li><a href="orders.html"><i class="ti ti-package"></i><span>Order History</span></a></li>
 							</ul>
 						</li>
 
 						<li class="menu-title"><span>Salesforce Data</span></li>
 						<li>
 							<ul>
-								<li><a href="salesforce-accounts.html"><i class="ti ti-building"></i><span>Accounts</span></a></li>
+								<li><a href="salesforce-accounts.html" class="active"><i class="ti ti-building"></i><span>Accounts</span></a></li>
 								<li><a href="opportunities.html"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
 							</ul>
 						</li>
@@ -173,39 +173,19 @@
 
 				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 					<div>
-						<h4 class="mb-1 fw-bold text-dark">Orders</h4>
-						<p class="text-muted fs-13 mb-0">Orders synced from Salesforce. Click an order number to view line items.</p>
+						<h4 class="mb-1 fw-bold text-dark" id="acctDetailName">Loading...</h4>
+						<p class="text-muted fs-13 mb-0" id="acctDetailIndustry"></p>
 					</div>
-					<div class="d-flex align-items-center gap-2 flex-wrap">
-						<span class="fs-12 text-muted" id="orderLastSynced"></span>
-						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="syncOrders()" id="orderSyncBtn">
-							<i class="ti ti-refresh me-1"></i> Sync from Salesforce
-						</button>
-					</div>
+					<a href="salesforce-accounts.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="ti ti-arrow-left me-1"></i> Back to Accounts</a>
 				</div>
 
-				<div class="card border-0 shadow-sm rounded-3 mb-3">
-					<div class="card-body py-2 px-3">
-						<input type="text" id="orderSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search order # or account..." oninput="renderOrderTable()">
-					</div>
-				</div>
-
-				<div class="card border-0 shadow-sm rounded-3 mb-4">
-					<div class="table-responsive">
-						<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
-							<thead class="table-light">
-								<tr id="orderTableHead"></tr>
-							</thead>
-							<tbody id="orderTableBody"></tbody>
-						</table>
-					</div>
-				</div>
+				<div id="acctDetailBody"></div>
 
 				<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
 					<p class="mb-md-0 mb-1">Copyright &copy; <script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.</p>
 					<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
 						<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
-						<a href="customers.html" class="text-muted fs-13">Customers</a>
+						<a href="salesforce-accounts.html" class="text-muted fs-13">Accounts</a>
 					</div>
 				</footer>
 			</div>
@@ -218,19 +198,6 @@
 	<script src="assets/js/lilypad-notifications.js"></script>
 
 	<script>
-		const ORDER_COLUMNS = [
-			{ key: 'orderNumber', label: 'Order #', type: 'link' },
-			{ key: 'status', label: 'Status', type: 'text' },
-			{ key: 'accountName', label: 'Account', type: 'text' },
-			{ key: 'effectiveDate', label: 'Effective Date', type: 'date' },
-			{ key: 'totalAmount', label: 'Total Amount', type: 'currency' },
-			{ key: 'itemCount', label: 'Line Items', type: 'number' }
-		];
-
-		let ORDERS = [];
-		let orderSortKey = 'effectiveDate';
-		let orderSortDir = 'desc';
-
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
 				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
@@ -238,7 +205,7 @@
 		}
 
 		function formatCurrency(amount) {
-			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount || 0));
+			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(amount || 0));
 		}
 
 		async function doLogout() {
@@ -246,101 +213,54 @@
 			window.location.href = 'login.html';
 		}
 
-		async function loadOrders() {
-			try {
-				const res = await fetch('/api/v1/lilypad/orders');
-				const result = await res.json();
-				if (!result.success) throw new Error(result.error || 'Unable to load orders');
-
-				ORDERS = result.data.map(o => ({ ...o, itemCount: (o.items || []).length }));
-
-				const mostRecent = ORDERS.reduce((latest, o) => {
-					const t = new Date(o.lastSyncAt).getTime();
-					return t > latest ? t : latest;
-				}, 0);
-				document.getElementById('orderLastSynced').textContent = mostRecent
-					? 'Last synced ' + new Date(mostRecent).toLocaleString()
-					: 'Not synced yet';
-
-				renderOrderHead();
-				renderOrderTable();
-			} catch (err) {
-				console.error('loadOrders failed:', err);
-			}
+		function field(label, value) {
+			return `
+				<div class="col-md-4 mb-3">
+					<span class="fs-12 text-muted d-block text-uppercase fw-semibold">${escapeHtml(label)}</span>
+					<strong class="text-dark">${value === null || value === undefined || value === '' ? '—' : escapeHtml(value)}</strong>
+				</div>
+			`;
 		}
 
-		function renderOrderHead() {
-			const head = document.getElementById('orderTableHead');
-			head.innerHTML = ORDER_COLUMNS.map(col => {
-				const arrow = orderSortKey === col.key ? (orderSortDir === 'asc' ? ' <i class="ti ti-arrow-up fs-12"></i>' : ' <i class="ti ti-arrow-down fs-12"></i>') : '';
-				return `<th style="cursor:pointer;" onclick="setOrderSortKey('${col.key}')">${escapeHtml(col.label)}${arrow}</th>`;
-			}).join('');
+		function formatAddress(addr) {
+			if (!addr) return '';
+			return [addr.street, addr.city, addr.state, addr.postalCode, addr.country].filter(Boolean).join(', ');
 		}
 
-		function setOrderSortKey(key) {
-			if (orderSortKey === key) {
-				orderSortDir = orderSortDir === 'asc' ? 'desc' : 'asc';
-			} else {
-				orderSortKey = key;
-				orderSortDir = 'asc';
-			}
-			renderOrderHead();
-			renderOrderTable();
-		}
-
-		function renderOrderTable() {
-			const search = document.getElementById('orderSearchInput').value.trim().toLowerCase();
-			let rows = ORDERS.filter(o => {
-				if (!search) return true;
-				return (o.orderNumber + ' ' + o.accountName).toLowerCase().includes(search);
-			});
-
-			rows = rows.slice().sort((a, b) => {
-				let av = a[orderSortKey], bv = b[orderSortKey];
-				if (orderSortKey.toLowerCase().includes('date')) { av = av ? new Date(av).getTime() : 0; bv = bv ? new Date(bv).getTime() : 0; }
-				else if (typeof av === 'number' || typeof bv === 'number') { av = Number(av) || 0; bv = Number(bv) || 0; }
-				else { av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase(); }
-				if (av < bv) return orderSortDir === 'asc' ? -1 : 1;
-				if (av > bv) return orderSortDir === 'asc' ? 1 : -1;
-				return 0;
-			});
-
-			const tbody = document.getElementById('orderTableBody');
-			if (!rows.length) {
-				tbody.innerHTML = `<tr><td colspan="${ORDER_COLUMNS.length}" class="text-center text-muted py-4">No orders yet. Click "Sync from Salesforce" to pull orders in.</td></tr>`;
+		async function loadAccountDetail() {
+			const id = new URLSearchParams(window.location.search).get('id');
+			if (!id) {
+				document.getElementById('acctDetailName').textContent = 'No account specified';
 				return;
 			}
 
-			tbody.innerHTML = rows.map(o => {
-				const cells = ORDER_COLUMNS.map(col => {
-					if (col.key === 'orderNumber') {
-						return `<td><a href="order-detail.html?id=${o._id}" class="fw-semibold text-decoration-none">${escapeHtml(o.orderNumber || '(no number)')}</a></td>`;
-					}
-					if (col.type === 'date') {
-						return `<td>${o[col.key] ? new Date(o[col.key]).toLocaleDateString() : ''}</td>`;
-					}
-					if (col.type === 'currency') {
-						return `<td>${formatCurrency(o[col.key])}</td>`;
-					}
-					return `<td>${escapeHtml(o[col.key])}</td>`;
-				}).join('');
-				return `<tr>${cells}</tr>`;
-			}).join('');
-		}
-
-		async function syncOrders() {
-			const btn = document.getElementById('orderSyncBtn');
-			btn.disabled = true;
 			try {
-				const res = await fetch('/api/v1/lilypad/orders/sync', { method: 'POST' });
+				const res = await fetch('/api/v1/lilypad/salesforce-accounts/' + id);
 				const result = await res.json();
-				if (!result.success) throw new Error(result.error || 'Sync failed');
-				await loadOrders();
-				alert(result.message);
+				if (!result.success) throw new Error(result.error);
+
+				const a = result.data;
+				document.getElementById('acctDetailName').textContent = a.name || '(no name)';
+				document.getElementById('acctDetailIndustry').textContent = a.industry || '';
+
+				document.getElementById('acctDetailBody').innerHTML = `
+					<div class="card border-0 shadow-sm rounded-3 p-4 mb-3">
+						<div class="row">
+							${field('Type', a.type)}
+							${field('Owner', a.ownerName)}
+							${field('Phone', a.phone)}
+							${field('Website', a.website)}
+							${field('Annual Revenue', a.annualRevenue ? formatCurrency(a.annualRevenue) : '')}
+							${field('Employees', a.numberOfEmployees || '')}
+							${field('Billing Address', formatAddress(a.billingAddress))}
+							${field('Shipping Address', formatAddress(a.shippingAddress))}
+						</div>
+						${a.description ? `<div class="mt-2"><span class="fs-12 text-muted d-block text-uppercase fw-semibold mb-1">Description</span><p class="text-dark mb-0">${escapeHtml(a.description)}</p></div>` : ''}
+					</div>
+				`;
 			} catch (err) {
-				alert(err.message || 'Unable to sync from Salesforce.');
-			} finally {
-				btn.disabled = false;
+				document.getElementById('acctDetailName').textContent = 'Unable to load account';
+				document.getElementById('acctDetailBody').innerHTML = '<p class="text-danger">' + escapeHtml(err.message) + '</p>';
 			}
 		}
 
@@ -358,7 +278,7 @@
 				}
 			} catch (e) {}
 
-			loadOrders();
+			loadAccountDetail();
 		});
 	</script>
 </body>

@@ -8,6 +8,8 @@ const Controllers = {
   lilypadCredentials: require('./lilypadCredentials'),
   lilypadCustomers: require('./lilypadCustomers'),
   lilypadOrders: require('./lilypadOrders'),
+  lilypadSalesforceAccounts: require('./lilypadSalesforceAccounts'),
+  lilypadOpportunities: require('./lilypadOpportunities'),
   microsoftTeams: require('./microsoftTeams'),
   salesforceAuth: require('./salesforceAuth')
 }

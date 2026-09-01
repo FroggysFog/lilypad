@@ -43,8 +43,18 @@ services:
       # (Import_Notes__c, Trade_Show__c) don't match this org's Salesforce schema
       - key: SF_LEADS_SOQL
         sync: false
+      # Overrides for the Account/Opportunity sync default queries, only needed
+      # if this org's schema differs from the standard fields they query
+      - key: SF_ACCOUNTS_SOQL
+        sync: false
+      - key: SF_OPPORTUNITIES_SOQL
+        sync: false
       - key: REMINDER_CHECK_MINUTES
         value: "5"
+      # How often the background job pulls Customers/Orders/Accounts/Opportunities/
+      # Past Due data from Salesforce into local storage (minutes)
+      - key: SF_SYNC_CHECK_MINUTES
+        value: "60"
       # SMTP (past-due payment reminder emails) - fill in via the Render dashboard
       - key: SMTP_HOST
         sync: false

@@ -47,6 +47,9 @@ function launchServer (db) {
 
       const { startReminderScheduler } = require('./src/services/reminderEmailService')
       startReminderScheduler(winston)
+
+      const { startSalesforceSyncScheduler } = require('./src/services/salesforceSyncScheduler')
+      startSalesforceSyncScheduler(winston)
     })
   })
 }

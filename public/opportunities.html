@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Orders | LilyPad ERP</title>
+	<title>Opportunities | LilyPad ERP</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="robots" content="index, follow">
 	<link rel="shortcut icon" href="assets/img/favicon.png">
@@ -127,7 +127,7 @@
 						<li class="menu-title"><span>Orders</span></li>
 						<li>
 							<ul>
-								<li><a href="orders.html" class="active"><i class="ti ti-package"></i><span>Order History</span></a></li>
+								<li><a href="orders.html"><i class="ti ti-package"></i><span>Order History</span></a></li>
 							</ul>
 						</li>
 
@@ -135,7 +135,7 @@
 						<li>
 							<ul>
 								<li><a href="salesforce-accounts.html"><i class="ti ti-building"></i><span>Accounts</span></a></li>
-								<li><a href="opportunities.html"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
+								<li><a href="opportunities.html" class="active"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
 							</ul>
 						</li>
 
@@ -173,12 +173,12 @@
 
 				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 					<div>
-						<h4 class="mb-1 fw-bold text-dark">Orders</h4>
-						<p class="text-muted fs-13 mb-0">Orders synced from Salesforce. Click an order number to view line items.</p>
+						<h4 class="mb-1 fw-bold text-dark">Opportunities</h4>
+						<p class="text-muted fs-13 mb-0">Sales opportunities synced from Salesforce. Click a name to view details.</p>
 					</div>
 					<div class="d-flex align-items-center gap-2 flex-wrap">
-						<span class="fs-12 text-muted" id="orderLastSynced"></span>
-						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="syncOrders()" id="orderSyncBtn">
+						<span class="fs-12 text-muted" id="oppLastSynced"></span>
+						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="syncOpportunities()" id="oppSyncBtn">
 							<i class="ti ti-refresh me-1"></i> Sync from Salesforce
 						</button>
 					</div>
@@ -186,7 +186,7 @@
 
 				<div class="card border-0 shadow-sm rounded-3 mb-3">
 					<div class="card-body py-2 px-3">
-						<input type="text" id="orderSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search order # or account..." oninput="renderOrderTable()">
+						<input type="text" id="oppSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search name or account..." oninput="renderOpportunityTable()">
 					</div>
 				</div>
 
@@ -194,9 +194,9 @@
 					<div class="table-responsive">
 						<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
 							<thead class="table-light">
-								<tr id="orderTableHead"></tr>
+								<tr id="oppTableHead"></tr>
 							</thead>
-							<tbody id="orderTableBody"></tbody>
+							<tbody id="oppTableBody"></tbody>
 						</table>
 					</div>
 				</div>
@@ -205,7 +205,7 @@
 					<p class="mb-md-0 mb-1">Copyright &copy; <script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.</p>
 					<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
 						<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
-						<a href="customers.html" class="text-muted fs-13">Customers</a>
+						<a href="salesforce-accounts.html" class="text-muted fs-13">Accounts</a>
 					</div>
 				</footer>
 			</div>
@@ -218,18 +218,18 @@
 	<script src="assets/js/lilypad-notifications.js"></script>
 
 	<script>
-		const ORDER_COLUMNS = [
-			{ key: 'orderNumber', label: 'Order #', type: 'link' },
-			{ key: 'status', label: 'Status', type: 'text' },
+		const OPP_COLUMNS = [
+			{ key: 'name', label: 'Opportunity', type: 'link' },
 			{ key: 'accountName', label: 'Account', type: 'text' },
-			{ key: 'effectiveDate', label: 'Effective Date', type: 'date' },
-			{ key: 'totalAmount', label: 'Total Amount', type: 'currency' },
-			{ key: 'itemCount', label: 'Line Items', type: 'number' }
+			{ key: 'stageName', label: 'Stage', type: 'text' },
+			{ key: 'amount', label: 'Amount', type: 'currency' },
+			{ key: 'closeDate', label: 'Close Date', type: 'date' },
+			{ key: 'ownerName', label: 'Owner', type: 'text' }
 		];
 
-		let ORDERS = [];
-		let orderSortKey = 'effectiveDate';
-		let orderSortDir = 'desc';
+		let OPPORTUNITIES = [];
+		let oppSortKey = 'closeDate';
+		let oppSortDir = 'desc';
 
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -238,7 +238,7 @@
 		}
 
 		function formatCurrency(amount) {
-			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount || 0));
+			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(amount || 0));
 		}
 
 		async function doLogout() {
@@ -246,75 +246,75 @@
 			window.location.href = 'login.html';
 		}
 
-		async function loadOrders() {
+		async function loadOpportunities() {
 			try {
-				const res = await fetch('/api/v1/lilypad/orders');
+				const res = await fetch('/api/v1/lilypad/opportunities');
 				const result = await res.json();
-				if (!result.success) throw new Error(result.error || 'Unable to load orders');
+				if (!result.success) throw new Error(result.error || 'Unable to load opportunities');
 
-				ORDERS = result.data.map(o => ({ ...o, itemCount: (o.items || []).length }));
+				OPPORTUNITIES = result.data;
 
-				const mostRecent = ORDERS.reduce((latest, o) => {
+				const mostRecent = OPPORTUNITIES.reduce((latest, o) => {
 					const t = new Date(o.lastSyncAt).getTime();
 					return t > latest ? t : latest;
 				}, 0);
-				document.getElementById('orderLastSynced').textContent = mostRecent
+				document.getElementById('oppLastSynced').textContent = mostRecent
 					? 'Last synced ' + new Date(mostRecent).toLocaleString()
 					: 'Not synced yet';
 
-				renderOrderHead();
-				renderOrderTable();
+				renderOpportunityHead();
+				renderOpportunityTable();
 			} catch (err) {
-				console.error('loadOrders failed:', err);
+				console.error('loadOpportunities failed:', err);
 			}
 		}
 
-		function renderOrderHead() {
-			const head = document.getElementById('orderTableHead');
-			head.innerHTML = ORDER_COLUMNS.map(col => {
-				const arrow = orderSortKey === col.key ? (orderSortDir === 'asc' ? ' <i class="ti ti-arrow-up fs-12"></i>' : ' <i class="ti ti-arrow-down fs-12"></i>') : '';
-				return `<th style="cursor:pointer;" onclick="setOrderSortKey('${col.key}')">${escapeHtml(col.label)}${arrow}</th>`;
+		function renderOpportunityHead() {
+			const head = document.getElementById('oppTableHead');
+			head.innerHTML = OPP_COLUMNS.map(col => {
+				const arrow = oppSortKey === col.key ? (oppSortDir === 'asc' ? ' <i class="ti ti-arrow-up fs-12"></i>' : ' <i class="ti ti-arrow-down fs-12"></i>') : '';
+				return `<th style="cursor:pointer;" onclick="setOpportunitySortKey('${col.key}')">${escapeHtml(col.label)}${arrow}</th>`;
 			}).join('');
 		}
 
-		function setOrderSortKey(key) {
-			if (orderSortKey === key) {
-				orderSortDir = orderSortDir === 'asc' ? 'desc' : 'asc';
+		function setOpportunitySortKey(key) {
+			if (oppSortKey === key) {
+				oppSortDir = oppSortDir === 'asc' ? 'desc' : 'asc';
 			} else {
-				orderSortKey = key;
-				orderSortDir = 'asc';
+				oppSortKey = key;
+				oppSortDir = 'asc';
 			}
-			renderOrderHead();
-			renderOrderTable();
+			renderOpportunityHead();
+			renderOpportunityTable();
 		}
 
-		function renderOrderTable() {
-			const search = document.getElementById('orderSearchInput').value.trim().toLowerCase();
-			let rows = ORDERS.filter(o => {
+		function renderOpportunityTable() {
+			const search = document.getElementById('oppSearchInput').value.trim().toLowerCase();
+			let rows = OPPORTUNITIES.filter(o => {
 				if (!search) return true;
-				return (o.orderNumber + ' ' + o.accountName).toLowerCase().includes(search);
+				return (o.name + ' ' + o.accountName).toLowerCase().includes(search);
 			});
 
 			rows = rows.slice().sort((a, b) => {
-				let av = a[orderSortKey], bv = b[orderSortKey];
-				if (orderSortKey.toLowerCase().includes('date')) { av = av ? new Date(av).getTime() : 0; bv = bv ? new Date(bv).getTime() : 0; }
+				let av = a[oppSortKey], bv = b[oppSortKey];
+				if (oppSortKey.toLowerCase().includes('date')) { av = av ? new Date(av).getTime() : 0; bv = bv ? new Date(bv).getTime() : 0; }
 				else if (typeof av === 'number' || typeof bv === 'number') { av = Number(av) || 0; bv = Number(bv) || 0; }
 				else { av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase(); }
-				if (av < bv) return orderSortDir === 'asc' ? -1 : 1;
-				if (av > bv) return orderSortDir === 'asc' ? 1 : -1;
+				if (av < bv) return oppSortDir === 'asc' ? -1 : 1;
+				if (av > bv) return oppSortDir === 'asc' ? 1 : -1;
 				return 0;
 			});
 
-			const tbody = document.getElementById('orderTableBody');
+			const tbody = document.getElementById('oppTableBody');
 			if (!rows.length) {
-				tbody.innerHTML = `<tr><td colspan="${ORDER_COLUMNS.length}" class="text-center text-muted py-4">No orders yet. Click "Sync from Salesforce" to pull orders in.</td></tr>`;
+				tbody.innerHTML = `<tr><td colspan="${OPP_COLUMNS.length}" class="text-center text-muted py-4">No opportunities yet. Click "Sync from Salesforce" to pull opportunities in.</td></tr>`;
 				return;
 			}
 
 			tbody.innerHTML = rows.map(o => {
-				const cells = ORDER_COLUMNS.map(col => {
-					if (col.key === 'orderNumber') {
-						return `<td><a href="order-detail.html?id=${o._id}" class="fw-semibold text-decoration-none">${escapeHtml(o.orderNumber || '(no number)')}</a></td>`;
+				const cells = OPP_COLUMNS.map(col => {
+					if (col.key === 'name') {
+						return `<td><a href="opportunity-detail.html?id=${o._id}" class="fw-semibold text-decoration-none">${escapeHtml(o.name || '(no name)')}</a></td>`;
 					}
 					if (col.type === 'date') {
 						return `<td>${o[col.key] ? new Date(o[col.key]).toLocaleDateString() : ''}</td>`;
@@ -322,20 +322,26 @@
 					if (col.type === 'currency') {
 						return `<td>${formatCurrency(o[col.key])}</td>`;
 					}
+					if (col.key === 'stageName') {
+						const isWon = o.isWon;
+						const isLost = o.isClosed && !o.isWon;
+						const badgeClass = isWon ? 'bg-soft-success text-success' : (isLost ? 'bg-soft-danger text-danger' : 'bg-soft-primary text-primary');
+						return `<td><span class="badge ${badgeClass} fs-12 rounded-pill fw-semibold">${escapeHtml(o.stageName)}</span></td>`;
+					}
 					return `<td>${escapeHtml(o[col.key])}</td>`;
 				}).join('');
 				return `<tr>${cells}</tr>`;
 			}).join('');
 		}
 
-		async function syncOrders() {
-			const btn = document.getElementById('orderSyncBtn');
+		async function syncOpportunities() {
+			const btn = document.getElementById('oppSyncBtn');
 			btn.disabled = true;
 			try {
-				const res = await fetch('/api/v1/lilypad/orders/sync', { method: 'POST' });
+				const res = await fetch('/api/v1/lilypad/opportunities/sync', { method: 'POST' });
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Sync failed');
-				await loadOrders();
+				await loadOpportunities();
 				alert(result.message);
 			} catch (err) {
 				alert(err.message || 'Unable to sync from Salesforce.');
@@ -358,7 +364,7 @@
 				}
 			} catch (e) {}
 
-			loadOrders();
+			loadOpportunities();
 		});
 	</script>
 </body>
