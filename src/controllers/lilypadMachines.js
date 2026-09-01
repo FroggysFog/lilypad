@@ -27,6 +27,13 @@ const MEDIA_MIME_TYPES = {
   video: ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
 }
 
+const YOUTUBE_ID_PATTERN = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+
+function extractYouTubeId(url) {
+  const match = String(url || '').match(YOUTUBE_ID_PATTERN)
+  return match ? match[1] : null
+}
+
 function mediaTypeFor(mimeType) {
   for (const [type, mimes] of Object.entries(MEDIA_MIME_TYPES)) {
     if (mimes.includes(mimeType)) return type
@@ -189,6 +196,50 @@ lilypadMachinesController.uploadMedia = async function (req, res) {
       size: req.file.size,
       mimeType: req.file.mimetype,
       title: req.body.title ? xss(req.body.title.trim()) : req.file.originalname,
+      uploadedBy: req.user._id
+    })
+
+    await machine.save()
+
+    return res.status(201).json({ success: true, data: machine })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/machines/:slug/media/link
+ * Adds a linked media entry: a YouTube video, or a OneDrive (or any external) document link.
+ */
+lilypadMachinesController.addMediaLink = async function (req, res) {
+  try {
+    const { type, url, title } = req.body
+
+    if (!type || !['document', 'video'].includes(type)) {
+      return res.status(400).json({ success: false, error: 'Type must be "document" or "video".' })
+    }
+    if (!url || !/^https?:\/\//i.test(url.trim())) {
+      return res.status(400).json({ success: false, error: 'A valid http(s) URL is required.' })
+    }
+
+    const machine = await LilyPadMachine.findOne({ slug: req.params.slug, deleted: false })
+    if (!machine) {
+      return res.status(404).json({ success: false, error: 'Machine not found' })
+    }
+
+    let linkUrl = url.trim()
+    if (type === 'video') {
+      const videoId = extractYouTubeId(linkUrl)
+      if (!videoId) {
+        return res.status(400).json({ success: false, error: 'That doesn\'t look like a YouTube link.' })
+      }
+      linkUrl = 'https://www.youtube.com/embed/' + videoId
+    }
+
+    machine.media.push({
+      type,
+      linkUrl,
+      title: title ? xss(title.trim()) : linkUrl,
       uploadedBy: req.user._id
     })
 

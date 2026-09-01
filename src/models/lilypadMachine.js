@@ -39,11 +39,14 @@ const machineSchema = new Schema(
     media: [
       {
         type: { type: String, enum: ['document', 'image', 'video'], required: true },
-        filename: { type: String, required: true },
-        originalName: { type: String, required: true },
-        path: { type: String, required: true },
+        // Uploaded-file entries populate filename/originalName/path/mimeType/size.
+        // Linked entries (OneDrive documents, YouTube videos) populate linkUrl instead.
+        filename: { type: String, default: '' },
+        originalName: { type: String, default: '' },
+        path: { type: String, default: '' },
         size: { type: Number, default: 0 },
         mimeType: { type: String, default: '' },
+        linkUrl: { type: String, default: '' },
         title: { type: String, trim: true, default: '' },
         uploadedBy: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', default: null },
         uploadedAt: { type: Date, default: Date.now }

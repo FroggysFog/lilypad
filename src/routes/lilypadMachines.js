@@ -18,6 +18,7 @@ module.exports = function () {
   router.get('/machines/:slug', machines.getMachineBySlug)
   router.post('/machines', requireLogin, machines.createMachine)
   router.post('/machines/:slug/media', requireLogin, machines.uploadMiddleware, machines.uploadMedia)
+  router.post('/machines/:slug/media/link', requireLogin, machines.addMediaLink)
   router.delete('/machines/:slug/media/:mediaId', requireLogin, machines.deleteMedia)
   router.post('/machines/:slug/issues', requireLogin, machines.addIssue)
   router.delete('/machines/:slug/issues/:issueId', requireLogin, machines.deleteIssue)

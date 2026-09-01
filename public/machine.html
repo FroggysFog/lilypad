@@ -219,9 +219,14 @@
 								</div>
 								<div class="card-body">
 									<div id="documentsList" class="d-flex flex-column gap-2 mb-3"></div>
-									<form onsubmit="uploadMedia(event, 'document')" class="border-top pt-3">
+									<form onsubmit="uploadMedia(event, 'document')" class="border-top pt-3 mb-2">
 										<input type="file" class="form-control form-control-sm mb-2" name="file" accept=".pdf,.doc,.docx,.txt" required>
 										<button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="ti ti-upload me-1"></i>Upload Document</button>
+									</form>
+									<form onsubmit="addMediaLink(event, 'document')" class="border-top pt-3">
+										<input type="url" class="form-control form-control-sm mb-2" name="url" placeholder="Paste a OneDrive share link" required>
+										<input type="text" class="form-control form-control-sm mb-2" name="title" placeholder="Document title (optional)">
+										<button type="submit" class="btn btn-sm btn-outline-secondary w-100"><i class="ti ti-link me-1"></i>Link OneDrive Document</button>
 									</form>
 								</div>
 							</div>
@@ -251,9 +256,10 @@
 								</div>
 								<div class="card-body">
 									<div id="videosList" class="d-flex flex-column gap-3 mb-3"></div>
-									<form onsubmit="uploadMedia(event, 'video')" class="border-top pt-3">
-										<input type="file" class="form-control form-control-sm mb-2" name="file" accept="video/*" required>
-										<button type="submit" class="btn btn-sm btn-outline-info w-100"><i class="ti ti-upload me-1"></i>Upload Video</button>
+									<form onsubmit="addMediaLink(event, 'video')" class="border-top pt-3">
+										<input type="url" class="form-control form-control-sm mb-2" name="url" placeholder="Paste a YouTube link" required>
+										<input type="text" class="form-control form-control-sm mb-2" name="title" placeholder="Video title (optional)">
+										<button type="submit" class="btn btn-sm btn-outline-info w-100"><i class="ti ti-brand-youtube me-1"></i>Embed YouTube Video</button>
 									</form>
 								</div>
 							</div>
@@ -319,6 +325,10 @@
 			return '/api/v1/lilypad/uploads/machines/' + encodeURIComponent(getSlug()) + '/' + encodeURIComponent(m.filename);
 		}
 
+		function mediaHref(m) {
+			return m.linkUrl ? m.linkUrl : fileUrl(m);
+		}
+
 		function formatBytes(bytes) {
 			if (!bytes) return '0 KB';
 			const kb = bytes / 1024;
@@ -380,14 +390,16 @@
 			document.getElementById('videosList').innerHTML = videos.length
 				? videos.map(v => (
 					'<div>' +
-						'<video src="' + fileUrl(v) + '" controls class="w-100 rounded-2 border mb-1" style="max-height:160px;"></video>' +
+						(v.linkUrl
+							? '<div class="ratio ratio-16x9 rounded-2 border mb-1"><iframe src="' + v.linkUrl + '" allowfullscreen></iframe></div>'
+							: '<video src="' + fileUrl(v) + '" controls class="w-100 rounded-2 border mb-1" style="max-height:160px;"></video>') +
 						'<div class="d-flex align-items-center justify-content-between">' +
 							'<span class="fs-11 text-muted">' + escapeHtml(v.title) + '</span>' +
 							'<button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="deleteMedia(\'' + v._id + '\')"><i class="ti ti-trash"></i></button>' +
 						'</div>' +
 					'</div>'
 				)).join('')
-				: '<p class="fs-12 text-muted mb-0">No videos uploaded yet.</p>';
+				: '<p class="fs-12 text-muted mb-0">No videos linked yet.</p>';
 
 			const issues = m.issues || [];
 			document.getElementById('issuesList').innerHTML = issues.length
@@ -410,10 +422,12 @@
 		}
 
 		function mediaRowHtml(doc) {
+			const icon = doc.linkUrl ? 'ti-link' : 'ti-file-text';
+			const sizeOrSource = doc.linkUrl ? 'OneDrive link' : formatBytes(doc.size);
 			return '<div class="d-flex align-items-center justify-content-between p-2 bg-light rounded-2 border">' +
-				'<a href="' + fileUrl(doc) + '" target="_blank" class="text-decoration-none fs-13 text-truncate" style="max-width:70%;"><i class="ti ti-file-text me-1"></i>' + escapeHtml(doc.title || doc.originalName) + '</a>' +
+				'<a href="' + mediaHref(doc) + '" target="_blank" class="text-decoration-none fs-13 text-truncate" style="max-width:70%;"><i class="ti ' + icon + ' me-1"></i>' + escapeHtml(doc.title || doc.originalName) + '</a>' +
 				'<div class="d-flex align-items-center gap-2">' +
-					'<span class="fs-11 text-muted">' + formatBytes(doc.size) + '</span>' +
+					'<span class="fs-11 text-muted">' + sizeOrSource + '</span>' +
 					'<button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="deleteMedia(\'' + doc._id + '\')"><i class="ti ti-trash"></i></button>' +
 				'</div>' +
 			'</div>';
@@ -444,6 +458,35 @@
 				form.reset();
 			} catch (err) {
 				alert(err.message || 'Upload failed.');
+			} finally {
+				btn.disabled = false;
+			}
+		}
+
+		async function addMediaLink(e, type) {
+			e.preventDefault();
+			const form = e.target;
+			const url = form.querySelector('input[name="url"]').value.trim();
+			const title = form.querySelector('input[name="title"]').value.trim();
+			if (!url) return;
+
+			const btn = form.querySelector('button[type="submit"]');
+			btn.disabled = true;
+
+			try {
+				const res = await fetch('/api/v1/lilypad/machines/' + encodeURIComponent(getSlug()) + '/media/link', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ type, url, title })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to add link');
+
+				currentMachine = result.data;
+				renderMachine();
+				form.reset();
+			} catch (err) {
+				alert(err.message || 'Unable to add link.');
 			} finally {
 				btn.disabled = false;
 			}
