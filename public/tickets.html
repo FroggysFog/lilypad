@@ -2748,20 +2748,16 @@
             if (currentView === 'kanban') renderKanban();
         }
 
-        function renderTickets(preset) {
-            const container = document.getElementById('ticketsContainer');
-            if (!container) return;
-            if (preset === 'mine') currentAssigneeFilter = 'me';
-            else if (preset === 'all') currentAssigneeFilter = null;
-
+        function getFilteredTickets(options) {
+            options = options || {};
             const search = document.getElementById('globalSearch')?.value.toLowerCase() || '';
             const catFilter = document.getElementById('categoryFilter')?.value || '';
             const prodFilter = document.getElementById('productFilter')?.value || '';
             const prioFilter = document.getElementById('priorityFilter')?.value || '';
 
-            let filtered = tickets.filter(t => {
-                const matchesStatus = (currentStatusFilter === 'All') || (t.status === currentStatusFilter);
-                const matchesAssignee = !currentAssigneeFilter
+            return tickets.filter(t => {
+                const matchesStatus = options.ignoreStatus || (currentStatusFilter === 'All') || (t.status === currentStatusFilter);
+                const matchesAssignee = options.ignoreAssignee || !currentAssigneeFilter
                     || (currentAssigneeFilter === 'me' ? t.assigneeId === currentUserId : t.assigneeId === currentAssigneeFilter);
                 const matchesSearch = !search || t.title.toLowerCase().includes(search) || t.formattedUid.toLowerCase().includes(search) || t.reporterName.toLowerCase().includes(search);
                 const matchesCat = !catFilter || t.categoryName === catFilter;
@@ -2769,6 +2765,15 @@
                 const matchesPrio = !prioFilter || (prioFilter === 'urgent-high' ? (t.priority === 'Urgent' || t.priority === 'High') : t.priority === prioFilter);
                 return matchesStatus && matchesAssignee && matchesSearch && matchesCat && matchesProd && matchesPrio;
             });
+        }
+
+        function renderTickets(preset) {
+            const container = document.getElementById('ticketsContainer');
+            if (!container) return;
+            if (preset === 'mine') currentAssigneeFilter = 'me';
+            else if (preset === 'all') currentAssigneeFilter = null;
+
+            let filtered = getFilteredTickets();
 
             if (!filtered.length) {
                 container.innerHTML = `
@@ -2872,7 +2877,12 @@
                 if (el) el.innerHTML = '';
             });
 
-            tickets.forEach(t => {
+            // Kanban is always scoped to the logged-in user's own tickets, regardless of
+            // whatever assignee filter is active in List view, plus any other active filters
+            // (search/category/product/priority) except status (status is the column axis here).
+            const filtered = getFilteredTickets({ ignoreStatus: true, ignoreAssignee: true }).filter(t => t.assigneeId === currentUserId);
+
+            filtered.forEach(t => {
                 const targetCol = cols[t.status] || 'kanbanColTodo';
                 counts[t.status] = (counts[t.status] || 0) + 1;
 
@@ -2910,7 +2920,6 @@
             e.preventDefault();
             const id = e.dataTransfer.getData('text/plain');
             quickStatus(id, newStatus);
-            renderKanban();
         }
 
         // Bulk Selection Actions
