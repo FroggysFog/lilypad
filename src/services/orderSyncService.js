@@ -6,7 +6,7 @@
  * this starts Salesforce-only, same as Past Due Payments did.
  */
 
-const { querySalesforce } = require('./salesforceService')
+const { querySalesforce, queryAllSalesforce } = require('./salesforceService')
 const LilyPadOrder = require('../models/lilypadOrder')
 
 function normalizeOrderRecord (raw, items) {
@@ -53,16 +53,16 @@ function normalizeOrderRecord (raw, items) {
 }
 
 async function syncOrdersFromSalesforce (options = {}) {
-  const limit = Math.max(1, Math.min(250, Number(options.limit || 100)))
-
-  const records = await querySalesforce(`
+  // No SOQL LIMIT here - queryAllSalesforce paginates through every record,
+  // same as customerSyncService.js. An explicit options.limit still caps
+  // the final result if ever needed (e.g. a quick manual test sync).
+  const records = await queryAllSalesforce(`
         SELECT Id, OrderNumber, Status, EffectiveDate, EndDate, TotalAmount, AccountId,
                Account.Name, Account.Phone, BillingStreet, BillingCity, BillingState,
                BillingPostalCode, BillingCountry, ShippingStreet, ShippingCity, ShippingState,
                ShippingPostalCode, ShippingCountry, Description, CreatedDate, LastModifiedDate
         FROM Order
         ORDER BY EffectiveDate DESC NULLS LAST, CreatedDate DESC
-        LIMIT ${limit}
     `)
 
   const itemsByOrderId = {}
