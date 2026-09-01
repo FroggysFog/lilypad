@@ -2977,10 +2977,12 @@
         }
 
         function updateKpis() {
-            if (document.getElementById('kpiTodo')) document.getElementById('kpiTodo').textContent = tickets.filter(t => t.status === 'To-Do').length;
-            if (document.getElementById('kpiProgress')) document.getElementById('kpiProgress').textContent = tickets.filter(t => t.status === 'In Progress').length;
-            if (document.getElementById('kpiUrgent')) document.getElementById('kpiUrgent').textContent = tickets.filter(t => t.priority === 'Urgent' || t.priority === 'High').length;
-            if (document.getElementById('kpiComplete')) document.getElementById('kpiComplete').textContent = tickets.filter(t => t.status === 'Complete').length;
+            // Always the logged-in user's own tickets, regardless of the active List view filters
+            const mine = tickets.filter(t => t.assigneeId === currentUserId);
+            if (document.getElementById('kpiTodo')) document.getElementById('kpiTodo').textContent = mine.filter(t => t.status === 'To-Do').length;
+            if (document.getElementById('kpiProgress')) document.getElementById('kpiProgress').textContent = mine.filter(t => t.status === 'In Progress').length;
+            if (document.getElementById('kpiUrgent')) document.getElementById('kpiUrgent').textContent = mine.filter(t => t.priority === 'Urgent' || t.priority === 'High').length;
+            if (document.getElementById('kpiComplete')) document.getElementById('kpiComplete').textContent = mine.filter(t => t.status === 'Complete').length;
         }
 
         async function quickStatus(id, newStatus) {
