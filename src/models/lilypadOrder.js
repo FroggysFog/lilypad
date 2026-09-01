@@ -63,6 +63,66 @@ const orderSchema = new Schema(
       trim: true,
       default: ''
     },
+    ownerName: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    poNumber: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    poDate: {
+      type: String,
+      default: null
+    },
+    billToContactName: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    billToContactEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: ''
+    },
+    netTerms: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    daysPastDue: {
+      type: Number,
+      default: 0
+    },
+    totalDue: {
+      type: Number,
+      default: 0
+    },
+    initialDueDate: {
+      type: String,
+      default: null
+    },
+    finalDueDate: {
+      type: String,
+      default: null
+    },
+    shippedDate: {
+      type: String,
+      default: null
+    },
+    paymentMethod: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    cartOrderId: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     billingAddress: addressSchema,
     shippingAddress: addressSchema,
     description: {

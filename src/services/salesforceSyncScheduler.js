@@ -16,8 +16,10 @@ const { syncOpportunitiesFromSalesforce } = require('./opportunitySyncService')
 
 const SYNC_JOBS = [
   { name: 'Customers', run: syncCustomersFromSalesforce },
-  { name: 'Past Due Accounts', run: syncPastDueAccountsFromSalesforce },
+  // Orders must run before Past Due Accounts - past due records are now
+  // derived from synced Order data instead of a separate Salesforce query.
   { name: 'Orders', run: syncOrdersFromSalesforce },
+  { name: 'Past Due Accounts', run: syncPastDueAccountsFromSalesforce },
   { name: 'Salesforce Accounts', run: syncSalesforceAccounts },
   { name: 'Opportunities', run: syncOpportunitiesFromSalesforce }
 ]

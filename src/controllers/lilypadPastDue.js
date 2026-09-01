@@ -8,6 +8,7 @@ const LilyPadPastDueAccount = require('../models/lilypadPastDueAccount')
 const LilyPadEmailTemplate = require('../models/lilypadEmailTemplate')
 const LilyPadReminderDelivery = require('../models/lilypadReminderDelivery')
 const { syncPastDueAccountsFromSalesforce } = require('../services/pastDueSyncService')
+const { syncOrdersFromSalesforce } = require('../services/orderSyncService')
 const {
   getDaysLate,
   getPastDueStage,
@@ -104,6 +105,9 @@ lilypadPastDueController.getPastDueAccountDetail = async function (req, res) {
  */
 lilypadPastDueController.triggerSalesforceSync = async function (req, res) {
   try {
+    // Past due accounts are derived from Orders, so refresh Orders first
+    // to make sure this button always reflects current Salesforce data.
+    await syncOrdersFromSalesforce()
     const result = await syncPastDueAccountsFromSalesforce()
     return res.status(200).json({ success: true, message: `Synced ${result.synced} of ${result.total} accounts from Salesforce.`, ...result })
   } catch (err) {

@@ -4,6 +4,13 @@
  * line items). The Cart.com order-merge from that route was not ported -
  * those API credentials were never actually configured there either, so
  * this starts Salesforce-only, same as Past Due Payments did.
+ *
+ * PoDate, PoNumber, and BillToContactId are standard Order fields (no
+ * "__c" suffix, confirmed via Setup > Object Manager). Everything else
+ * added here (Days_Past_Due__c, Total_Due__c, etc.) is a real custom
+ * field name found the same way - past due accounts are derived straight
+ * from these synced Order records (see pastDueSyncService.js) instead of
+ * a separate Salesforce report or Invoice__c query.
  */
 
 const { querySalesforce, queryAllSalesforce } = require('./salesforceService')
@@ -12,6 +19,8 @@ const LilyPadOrder = require('../models/lilypadOrder')
 function normalizeOrderRecord (raw, items) {
   const source = raw && typeof raw === 'object' ? raw : {}
   const account = source.Account && typeof source.Account === 'object' ? source.Account : {}
+  const owner = source.Owner && typeof source.Owner === 'object' ? source.Owner : {}
+  const billToContact = source.BillToContact && typeof source.BillToContact === 'object' ? source.BillToContact : {}
 
   return {
     orderNumber: String(source.OrderNumber || '').trim(),
@@ -22,6 +31,19 @@ function normalizeOrderRecord (raw, items) {
     accountId: String(source.AccountId || '').trim(),
     accountName: String(account.Name || '').trim(),
     accountPhone: String(account.Phone || '').trim(),
+    ownerName: String(owner.Name || '').trim(),
+    poNumber: String(source.PoNumber || '').trim(),
+    poDate: source.PoDate || null,
+    billToContactName: String(billToContact.Name || '').trim(),
+    billToContactEmail: String(billToContact.Email || '').trim(),
+    netTerms: String(source.Net_Terms__c || '').trim(),
+    daysPastDue: Number(source.Days_Past_Due__c || 0),
+    totalDue: Number(source.Total_Due__c || 0),
+    initialDueDate: source.Initial_Due_Date__c || null,
+    finalDueDate: source.Final_Due_Date__c || null,
+    shippedDate: source.Shipped_Date__c || null,
+    paymentMethod: String(source.Payment_Method__c || '').trim(),
+    cartOrderId: String(source.Cart_OrderID__c || '').trim(),
     billingAddress: {
       street: String(source.BillingStreet || '').trim(),
       city: String(source.BillingCity || '').trim(),
@@ -58,7 +80,11 @@ async function syncOrdersFromSalesforce (options = {}) {
   // the final result if ever needed (e.g. a quick manual test sync).
   const records = await queryAllSalesforce(`
         SELECT Id, OrderNumber, Status, EffectiveDate, EndDate, TotalAmount, AccountId,
-               Account.Name, Account.Phone, BillingStreet, BillingCity, BillingState,
+               Account.Name, Account.Phone, Owner.Name, PoDate, PoNumber,
+               BillToContactId, BillToContact.Name, BillToContact.Email,
+               Net_Terms__c, Days_Past_Due__c, Total_Due__c, Initial_Due_Date__c,
+               Final_Due_Date__c, Shipped_Date__c, Payment_Method__c, Cart_OrderID__c,
+               BillingStreet, BillingCity, BillingState,
                BillingPostalCode, BillingCountry, ShippingStreet, ShippingCity, ShippingState,
                ShippingPostalCode, ShippingCountry, Description, CreatedDate, LastModifiedDate
         FROM Order
