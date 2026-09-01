@@ -36,6 +36,11 @@ const machineSchema = new Schema(
       trim: true,
       default: 'General'
     },
+    imageUrl: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     media: [
       {
         type: { type: String, enum: ['document', 'image', 'video'], required: true },

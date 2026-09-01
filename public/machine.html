@@ -200,13 +200,16 @@
 
 					<!-- Page Header -->
 					<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
-						<div>
-							<a href="knowledge-base.html" class="fs-12 text-muted text-decoration-none d-block mb-1"><i class="ti ti-arrow-left me-1"></i>Back to Knowledge Base</a>
-							<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
-								<span id="machineName">Machine</span>
-								<span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold" id="machineCategory">Category</span>
-							</h4>
-							<p class="text-muted fs-13 mb-0">Source of truth for this machine: manuals, media, and troubleshooting.</p>
+						<div class="d-flex align-items-center gap-3">
+							<img id="machineImage" src="" alt="" class="rounded-3 border bg-white d-none" style="width:72px; height:72px; object-fit:contain;">
+							<div>
+								<a href="knowledge-base.html" class="fs-12 text-muted text-decoration-none d-block mb-1"><i class="ti ti-arrow-left me-1"></i>Back to Knowledge Base</a>
+								<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+									<span id="machineName">Machine</span>
+									<span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold" id="machineCategory">Category</span>
+								</h4>
+								<p class="text-muted fs-13 mb-0">Source of truth for this machine: manuals, media, and troubleshooting.</p>
+							</div>
 						</div>
 					</div>
 
@@ -367,6 +370,14 @@
 			document.getElementById('machineName').textContent = m.name;
 			document.getElementById('machineCategory').textContent = m.category || 'General';
 			document.title = m.name + ' | Knowledge Base | LilyPad ERP';
+
+			const imgEl = document.getElementById('machineImage');
+			if (m.imageUrl) {
+				imgEl.src = m.imageUrl;
+				imgEl.classList.remove('d-none');
+			} else {
+				imgEl.classList.add('d-none');
+			}
 
 			const documents = (m.media || []).filter(x => x.type === 'document');
 			const images = (m.media || []).filter(x => x.type === 'image');

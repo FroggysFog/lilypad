@@ -85,8 +85,8 @@ lilypadMachinesController.getMachines = async function (req, res) {
     await lilypadMachinesController.seedDefaultMachines()
 
     const machines = await LilyPadMachine.find({ deleted: false })
-      .select('name slug category media issues')
-      .sort('name')
+      .select('name slug category imageUrl media issues createdAt updatedAt')
+      .sort('-updatedAt')
 
     return res.status(200).json({ success: true, data: machines })
   } catch (err) {
@@ -111,8 +111,8 @@ lilypadMachinesController.searchMachines = async function (req, res) {
         { 'issues.resolution': { $regex: q, $options: 'i' } }
       ]
     })
-      .select('name slug category media issues')
-      .sort('name')
+      .select('name slug category imageUrl media issues createdAt updatedAt')
+      .sort('-updatedAt')
 
     return res.status(200).json({ success: true, data: machines })
   } catch (err) {
