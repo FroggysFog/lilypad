@@ -3,6 +3,7 @@ const Controllers = {
   lilypadTickets: require('./lilypadTickets'),
   lilypadUsers: require('./lilypadUsers'),
   lilypadMachines: require('./lilypadMachines'),
+  lilypadNotifications: require('./lilypadNotifications'),
   microsoftTeams: require('./microsoftTeams')
 }
 

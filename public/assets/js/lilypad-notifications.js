@@ -5,13 +5,15 @@
 (function () {
     "use strict";
 
-    const STORAGE_NOTIF_KEY = "lilypad_notifications_v2";
     const STORAGE_TICKETS_KEY = "lilypad_tickets_v2";
     const defaultTickets = [];
-    const defaultNotifications = [];
+    const NOTIF_POLL_MS = 25000;
 
     const LilypadNotifications = {
         currentFilter: "mine",
+        cachedNotifications: [],
+        seenIds: new Set(),
+        seenIdsInitialized: false,
 
         getTickets: function () {
             try {
@@ -35,68 +37,76 @@
             }
         },
 
-        getNotifications: function () {
-            try {
-                const data = localStorage.getItem(STORAGE_NOTIF_KEY);
-                if (!data) {
-                    localStorage.setItem(STORAGE_NOTIF_KEY, JSON.stringify(defaultNotifications));
-                    return defaultNotifications;
-                }
-                return JSON.parse(data);
-            } catch (e) {
-                return defaultNotifications;
-            }
+        // Local-only "you just did X" confirmation toast (e.g. "Ticket Created").
+        // Not persisted, not tied to the real cross-user notification feed below.
+        addNotification: function (notif) {
+            const localNotif = {
+                title: notif.title || "Ticket Notification",
+                message: notif.description || "",
+                ticketId: notif.ticketId || null
+            };
+            this.showToast(localNotif);
+            this.animateBell();
+            return localNotif;
         },
 
-        saveNotifications: function (list) {
+        fetchNotifications: async function () {
             try {
-                localStorage.setItem(STORAGE_NOTIF_KEY, JSON.stringify(list));
+                const res = await fetch('/api/v1/lilypad/notifications');
+                if (!res.ok) return;
+                const result = await res.json();
+                if (!result.success) return;
+
+                this.cachedNotifications = result.data || [];
+
+                if (!this.seenIdsInitialized) {
+                    // First load: remember what's already there, don't toast for it.
+                    this.cachedNotifications.forEach(n => this.seenIds.add(n._id));
+                    this.seenIdsInitialized = true;
+                } else {
+                    this.cachedNotifications
+                        .filter(n => !this.seenIds.has(n._id))
+                        .forEach(n => {
+                            this.seenIds.add(n._id);
+                            this.showToast(n);
+                            this.animateBell();
+                        });
+                }
+
                 this.renderBell();
             } catch (e) {
-                console.error("Error saving notifications:", e);
+                console.error("Error fetching notifications:", e);
             }
         },
 
-        addNotification: function (notif) {
-            const list = this.getNotifications();
-            const newNotif = {
-                id: "notif_" + Date.now(),
-                title: notif.title || "Ticket Notification",
-                description: notif.description || "",
-                ticketId: notif.ticketId || "10",
-                timestamp: Date.now(),
-                read: false,
-                type: notif.type || "created"
-            };
-            list.unshift(newNotif);
-            this.saveNotifications(list);
-            this.showToast(newNotif);
-            this.animateBell();
-            return newNotif;
-        },
-
-        markAsRead: function (id, e) {
+        markAsRead: async function (id, e) {
             if (e) e.stopPropagation();
-            const list = this.getNotifications();
-            const item = list.find(n => n.id === id);
-            if (item) {
-                item.read = true;
-                this.saveNotifications(list);
+            try {
+                await fetch(`/api/v1/lilypad/notifications/${id}/read`, { method: 'PUT' });
+                await this.fetchNotifications();
+            } catch (e) {
+                console.error("Error marking notification as read:", e);
             }
         },
 
-        markAllAsRead: function (e) {
+        markAllAsRead: async function (e) {
             if (e) e.preventDefault();
-            const list = this.getNotifications();
-            list.forEach(n => n.read = true);
-            this.saveNotifications(list);
+            try {
+                await fetch('/api/v1/lilypad/notifications/read-all', { method: 'PUT' });
+                await this.fetchNotifications();
+            } catch (e) {
+                console.error("Error marking all notifications as read:", e);
+            }
         },
 
-        clearNotification: function (id, e) {
+        clearNotification: async function (id, e) {
             if (e) e.stopPropagation();
-            let list = this.getNotifications();
-            list = list.filter(n => n.id !== id);
-            this.saveNotifications(list);
+            try {
+                await fetch(`/api/v1/lilypad/notifications/${id}`, { method: 'DELETE' });
+                await this.fetchNotifications();
+            } catch (e) {
+                console.error("Error clearing notification:", e);
+            }
         },
 
         navigateToTicket: function (ticketId, notifId) {
@@ -140,14 +150,14 @@
                 </div>
                 <div class="flex-grow-1">
                     <h6 class="mb-1 text-white fs-14 fw-bold">${notif.title}</h6>
-                    <p class="mb-0 fs-12 text-light" style="opacity:0.85;">${notif.description}</p>
+                    <p class="mb-0 fs-12 text-light" style="opacity:0.85;">${notif.message || ''}</p>
                 </div>
                 <button type="button" class="btn-close btn-close-white ms-auto p-1" onclick="document.getElementById('lilypad-notif-toast').remove()"></button>
             `;
 
             toast.addEventListener('click', (e) => {
                 if (!e.target.closest('.btn-close')) {
-                    LilypadNotifications.navigateToTicket(notif.ticketId, notif.id);
+                    LilypadNotifications.navigateToTicket(notif.ticketId, notif._id);
                 }
             });
 
@@ -169,7 +179,7 @@
         },
 
         renderBell: function () {
-            const list = this.getNotifications();
+            const list = this.cachedNotifications;
             const unreadCount = list.filter(n => !n.read).length;
 
             const badges = document.querySelectorAll('.notification-badge, #notificationBadge, [data-notif-badge]');
@@ -197,17 +207,17 @@
 
                 let html = '';
                 list.forEach(notif => {
-                    const timeAgo = this.formatTimeAgo(notif.timestamp);
+                    const timeAgo = this.formatTimeAgo(new Date(notif.createdAt).getTime());
                     const unreadStyle = notif.read ? '' : 'background-color: rgba(var(--bs-primary-rgb), 0.08); border-left: 3px solid var(--bs-primary);';
-                    
+
                     html += `
-                        <div class="dropdown-item notification-item py-2 px-3 text-wrap border-bottom position-relative" 
-                             style="cursor: pointer; transition: background 0.15s ease; ${unreadStyle}" 
-                             onclick="LilypadNotifications.navigateToTicket('${notif.ticketId}', '${notif.id}')">
+                        <div class="dropdown-item notification-item py-2 px-3 text-wrap border-bottom position-relative"
+                             style="cursor: pointer; transition: background 0.15s ease; ${unreadStyle}"
+                             onclick="LilypadNotifications.navigateToTicket('${notif.ticketId}', '${notif._id}')">
                             <div class="d-flex align-items-start gap-2">
                                 <div class="position-relative flex-shrink-0 mt-1">
                                     <div class="rounded-circle text-white d-flex align-items-center justify-content-center" style="background:var(--bs-primary); width:34px; height:34px; font-size:14px;">
-                                        <i class="ti ti-ticket"></i>
+                                        <i class="ti ti-at"></i>
                                     </div>
                                     ${!notif.read ? '<span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle"></span>' : ''}
                                 </div>
@@ -216,18 +226,18 @@
                                         <p class="mb-0 fw-bold fs-13 text-dark text-truncate">${notif.title}</p>
                                         <span class="fs-11 text-muted ms-2">${timeAgo}</span>
                                     </div>
-                                    <p class="mb-1 text-muted fs-12 text-wrap" style="line-height:1.35;">${notif.description}</p>
+                                    <p class="mb-1 text-muted fs-12 text-wrap" style="line-height:1.35;">${notif.message || ''}</p>
                                     <div class="d-flex align-items-center justify-content-between mt-1">
                                         <span class="badge bg-soft-success text-success fs-10 px-2 py-1 rounded-pill fw-semibold">
                                             <i class="ti ti-arrow-right me-1"></i>Open in Operations
                                         </span>
                                         <div class="notification-action d-flex align-items-center gap-1" onclick="event.stopPropagation()">
                                             ${!notif.read ? `
-                                                <button class="btn btn-sm p-0 text-muted" title="Mark as Read" onclick="LilypadNotifications.markAsRead('${notif.id}', event)">
+                                                <button class="btn btn-sm p-0 text-muted" title="Mark as Read" onclick="LilypadNotifications.markAsRead('${notif._id}', event)">
                                                     <i class="ti ti-check fs-14 text-success"></i>
                                                 </button>
                                             ` : ''}
-                                            <button class="btn btn-sm p-0 text-muted" title="Dismiss" onclick="LilypadNotifications.clearNotification('${notif.id}', event)">
+                                            <button class="btn btn-sm p-0 text-muted" title="Dismiss" onclick="LilypadNotifications.clearNotification('${notif._id}', event)">
                                                 <i class="ti ti-x fs-14"></i>
                                             </button>
                                         </div>
@@ -350,17 +360,16 @@
         },
 
         init: function () {
-            this.renderBell();
+            this.fetchNotifications();
             this.renderDashboardWidget();
 
             window.addEventListener('storage', (e) => {
-                if (e.key === STORAGE_NOTIF_KEY) {
-                    this.renderBell();
-                }
                 if (e.key === STORAGE_TICKETS_KEY) {
                     this.renderDashboardWidget();
                 }
             });
+
+            setInterval(() => this.fetchNotifications(), NOTIF_POLL_MS);
 
             const urlParams = new URLSearchParams(window.location.search);
             const targetTicket = urlParams.get('ticket');

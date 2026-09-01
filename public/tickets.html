@@ -1009,8 +1009,9 @@
 										</ul>
 									</div>
 								</div>
-								<div class="mb-2">
-									<textarea id="drawerCommentInput" class="form-control form-control-sm" rows="2" placeholder="Write reply or internal note..." required></textarea>
+								<div class="mb-2 position-relative">
+									<textarea id="drawerCommentInput" class="form-control form-control-sm" rows="2" placeholder="Write reply or internal note... (type @ to tag a teammate)" required></textarea>
+									<div id="mentionAutocomplete" class="list-group shadow-sm position-absolute d-none" style="z-index: 1060; max-height: 180px; overflow-y: auto; left: 0; right: 0;"></div>
 								</div>
 								<button type="submit" class="btn btn-sm btn-primary w-100"><i class="ti ti-send me-1"></i> Add Note / Reply</button>
 							</form>
@@ -2153,6 +2154,24 @@
             }
         }
 
+        function mapHistory(history) {
+            return (history || []).map(h => ({ action: h.description || h.action, by: h.byName, time: h.timestamp }));
+        }
+
+        function mapComments(comments) {
+            return (comments || []).map(c => ({ author: c.authorName, isInternal: c.isInternal, body: c.body, time: c.createdAt }));
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function mapTicket(t) {
             return {
                 id: t._id,
@@ -2170,8 +2189,8 @@
                 dueDate: t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '',
                 formData: t.formData || {},
                 attachments: t.attachments || [],
-                history: (t.history || []).map(h => ({ action: h.description || h.action, by: h.byName, time: h.timestamp })),
-                comments: (t.comments || []).map(c => ({ author: c.authorName, isInternal: c.isInternal, body: c.body, time: c.createdAt })),
+                history: mapHistory(t.history),
+                comments: mapComments(t.comments),
                 workLogs: t.workLogs || [],
                 createdAt: t.createdAt
             };
@@ -3290,6 +3309,10 @@
             }
         }
 
+        function highlightMentions(escapedText) {
+            return escapedText.replace(/@([a-zA-Z0-9_.]+)/g, '<span class="badge bg-primary-subtle text-primary fw-semibold">@$1</span>');
+        }
+
         function renderDrawerComments(ticket) {
             const list = document.getElementById('drawerCommentsList');
             const comments = ticket.comments || [];
@@ -3297,35 +3320,118 @@
                 <div class="p-2 rounded-3 mb-2 fs-13 ${c.isInternal ? 'bg-warning-subtle border border-warning' : 'bg-light border'}">
                     <div class="d-flex justify-content-between mb-1">
                         <strong class="${c.isInternal ? 'text-warning-emphasis' : 'text-primary'} fs-12">
-                            ${c.isInternal ? '<i class="ti ti-lock me-1"></i> [Internal Note]' : '<i class="ti ti-message me-1"></i>'} ${c.author}
+                            ${c.isInternal ? '<i class="ti ti-lock me-1"></i> [Internal Note]' : '<i class="ti ti-message me-1"></i>'} ${escapeHtml(c.author)}
                         </strong>
-                        <span class="text-muted fs-11">${c.time}</span>
+                        <span class="text-muted fs-11">${c.time ? new Date(c.time).toLocaleString() : ''}</span>
                     </div>
-                    <p class="mb-0 text-dark">${c.text}</p>
+                    <p class="mb-0 text-dark">${highlightMentions(escapeHtml(c.body))}</p>
                 </div>
             `).join('') : '<p class="text-muted fs-13">No comments yet.</p>';
         }
 
-        function postDrawerComment(e) {
+        async function postDrawerComment(e) {
             e.preventDefault();
-            const text = document.getElementById('drawerCommentInput').value.trim();
+            const input = document.getElementById('drawerCommentInput');
+            const body = input.value.trim();
             const isInternal = document.getElementById('typeInternal').checked;
-            if (!text || !currentActiveTicket) return;
+            if (!body || !currentActiveTicket) return;
 
-            currentActiveTicket.comments = currentActiveTicket.comments || [];
-            currentActiveTicket.comments.push({
-                author: 'Scott Karan',
-                text,
-                isInternal,
-                time: 'Just now'
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/comments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ body, isInternal })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error || 'Unable to post comment');
+
+                currentActiveTicket.comments = mapComments(result.data.comments);
+                currentActiveTicket.history = mapHistory(result.data.history);
+
+                const idx = tickets.findIndex(t => t.id === currentActiveTicket.id);
+                if (idx !== -1) {
+                    tickets[idx].comments = currentActiveTicket.comments;
+                    tickets[idx].history = currentActiveTicket.history;
+                }
+
+                renderDrawerComments(currentActiveTicket);
+                renderDrawerAudit(currentActiveTicket);
+                input.value = '';
+
+                triggerNotification(isInternal ? 'Internal Note Added' : 'Public Reply Posted', `Note on ${currentActiveTicket.formattedUid}: "${body.slice(0, 35)}..."`, isInternal ? 'ti-lock' : 'ti-message', currentActiveTicket.id);
+            } catch (err) {
+                alert(err.message || 'Unable to post comment.');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        }
+
+        // @mention autocomplete for the comment box
+        (function initMentionAutocomplete() {
+            document.addEventListener('input', function (e) {
+                if (e.target && e.target.id === 'drawerCommentInput') {
+                    handleMentionInput(e.target);
+                }
             });
+            document.addEventListener('click', function (e) {
+                if (e.target && e.target.id !== 'drawerCommentInput' && !e.target.closest('#mentionAutocomplete')) {
+                    hideMentionDropdown();
+                }
+            });
+        })();
 
-            currentActiveTicket.history.unshift({ action: isInternal ? 'Added internal staff note' : 'Replied to ticket', by: 'Scott Karan', time: 'Just now' });
-            renderDrawerComments(currentActiveTicket);
-            renderDrawerAudit(currentActiveTicket);
-            document.getElementById('drawerCommentInput').value = '';
+        function handleMentionInput(textarea) {
+            const cursor = textarea.selectionStart;
+            const beforeCursor = textarea.value.slice(0, cursor);
+            const match = beforeCursor.match(/@(\w*)$/);
+            if (!match) {
+                hideMentionDropdown();
+                return;
+            }
 
-            triggerNotification(isInternal ? 'Internal Note Added' : 'Public Reply Posted', `Note on ${currentActiveTicket.formattedUid}: "${text.slice(0, 35)}..."`, isInternal ? 'ti-lock' : 'ti-message', currentActiveTicket.id);
+            const query = match[1].toLowerCase();
+            const matches = USERS.filter(u =>
+                u.fullname.toLowerCase().includes(query) || (u.username || '').toLowerCase().includes(query)
+            ).slice(0, 6);
+
+            const dropdown = document.getElementById('mentionAutocomplete');
+            if (!matches.length) {
+                hideMentionDropdown();
+                return;
+            }
+
+            dropdown.innerHTML = matches.map(u => `
+                <button type="button" class="list-group-item list-group-item-action py-1 px-2 fs-13" onclick="selectMention('${u.username}')">
+                    <strong>${escapeHtml(u.fullname)}</strong> <span class="text-muted">@${escapeHtml(u.username)}</span>
+                </button>
+            `).join('');
+            dropdown.classList.remove('d-none');
+        }
+
+        function selectMention(username) {
+            const textarea = document.getElementById('drawerCommentInput');
+            const cursor = textarea.selectionStart;
+            const value = textarea.value;
+            const beforeCursor = value.slice(0, cursor);
+            const afterCursor = value.slice(cursor);
+            const newBefore = beforeCursor.replace(/@(\w*)$/, '@' + username + ' ');
+
+            textarea.value = newBefore + afterCursor;
+            const newCursor = newBefore.length;
+            textarea.focus();
+            textarea.setSelectionRange(newCursor, newCursor);
+            hideMentionDropdown();
+        }
+
+        function hideMentionDropdown() {
+            const dropdown = document.getElementById('mentionAutocomplete');
+            if (dropdown) {
+                dropdown.classList.add('d-none');
+                dropdown.innerHTML = '';
+            }
         }
 
         function renderDrawerWorkLogs(ticket) {

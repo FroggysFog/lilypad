@@ -3,8 +3,10 @@
  * Handles dynamic intake forms, flexible ticket submissions, and uniform To-Do management.
  */
 
-const { LilyPadTicket, IntakeForm } = require('../models')
+const { LilyPadTicket, IntakeForm, LilyPadAccount, LilyPadNotification } = require('../models')
 const xss = require('xss')
+
+const MENTION_REGEX = /@([a-zA-Z0-9_.]+)/g
 
 const lilypadTicketsController = {}
 
@@ -463,6 +465,9 @@ lilypadTicketsController.addComment = async function (req, res) {
     })
 
     const saved = await ticket.save()
+
+    await notifyMentionedUsers(body, saved, req.user)
+
     return res.status(200).json({
       success: true,
       message: 'Comment added successfully',
@@ -470,6 +475,44 @@ lilypadTicketsController.addComment = async function (req, res) {
     })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * Scans a comment body for @username mentions and creates a notification
+ * for each real, active account mentioned (excluding the comment's author).
+ */
+async function notifyMentionedUsers (body, ticket, author) {
+  const usernames = [...body.matchAll(MENTION_REGEX)].map(m => m[1].toLowerCase())
+  if (!usernames.length) return
+
+  const accounts = await LilyPadAccount.find({ deleted: { $ne: true } })
+  const byUsername = new Map(accounts.map(a => [a.username.toLowerCase(), a]))
+
+  const notified = new Set()
+  const notifications = []
+
+  for (const username of usernames) {
+    const account = byUsername.get(username)
+    if (!account) continue
+    if (author && account._id.equals(author._id)) continue
+    if (notified.has(String(account._id))) continue
+    notified.add(String(account._id))
+
+    notifications.push({
+      recipient: account._id,
+      type: 'mention',
+      title: `${author ? author.fullname : 'Someone'} mentioned you`,
+      message: `${ticket.formattedUid}: "${body.trim().slice(0, 100)}"`,
+      ticketId: ticket._id,
+      ticketUid: ticket.formattedUid,
+      triggeredBy: author ? author._id : null,
+      triggeredByName: author ? author.fullname : ''
+    })
+  }
+
+  if (notifications.length) {
+    await LilyPadNotification.insertMany(notifications)
   }
 }
 

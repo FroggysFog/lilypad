@@ -44,6 +44,9 @@ module.exports = function (app) {
   const lilypadMachinesRouter = require('./lilypadMachines')()
   app.use('/api/v1/lilypad', lilypadMachinesRouter)
 
+  const lilypadNotificationsRouter = require('./lilypadNotifications')()
+  app.use('/api/v1/lilypad', lilypadNotificationsRouter)
+
   mainRoutes(router, controllers)
   app.use('/', router)
 
