@@ -17,7 +17,10 @@ const winston = require('../logger')
 const packagejson = require('../../package.json')
 
 function mainRoutes (router, middleware, controllers) {
-  router.get('/', middleware.redirectToDashboardIfLoggedIn, controllers.main.index)
+  const lilypadAuth = require('../controllers/lilypadAuth')
+  const { redirectIfLoggedIn } = require('../middleware/lilypadAuth')
+
+  router.get('/', redirectIfLoggedIn, controllers.main.index)
   router.get('/healthz', function (req, res) {
     return res.status(200).send('OK')
   })
@@ -32,10 +35,10 @@ function mainRoutes (router, middleware, controllers) {
     return res.redirect('/')
   })
 
-  router.post('/login', controllers.main.loginPost)
+  router.post('/login', lilypadAuth.login)
   router.get('/l2auth', controllers.main.l2authget)
   router.post('/l2auth', controllers.main.l2AuthPost)
-  router.get('/logout', controllers.main.logout)
+  router.get('/logout', lilypadAuth.logout)
   router.post('/forgotpass', controllers.main.forgotPass)
   router.get('/resetpassword/:hash', controllers.main.resetPass)
   router.post('/forgotl2auth', controllers.main.forgotL2Auth)
@@ -446,7 +449,7 @@ function mainRoutes (router, middleware, controllers) {
 }
 
 module.exports = function (app, middleware) {
-  const lilypadTicketsRouter = require('./lilypadTickets')(middleware)
+  const lilypadTicketsRouter = require('./lilypadTickets')()
   app.use('/api/v1/lilypad', lilypadTicketsRouter)
 
   mainRoutes(router, middleware, controllers)

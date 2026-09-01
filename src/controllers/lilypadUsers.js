@@ -3,7 +3,7 @@
  * Handles user creation, role & department assignments, and notification events.
  */
 
-const { User } = require('../models')
+const LilyPadAccount = require('../models/lilypadAccount')
 const xss = require('xss')
 
 const lilypadUsersController = {}
@@ -14,8 +14,8 @@ const lilypadUsersController = {}
  */
 lilypadUsersController.getUsers = async function (req, res) {
   try {
-    const users = await User.find({ deleted: { $ne: true } })
-      .select('username fullname email role title department image hasL2Auth isAgent isSupport lead')
+    const users = await LilyPadAccount.find({ deleted: { $ne: true } })
+      .select('username fullname email role title department')
       .sort('fullname')
 
     return res.status(200).json({
@@ -38,8 +38,8 @@ lilypadUsersController.createUser = async function (req, res) {
       username,
       email,
       password,
-      role = 'Agent',
-      department = 'Engineering',
+      role = 'agent',
+      department = '',
       title = ''
     } = req.body
 
@@ -54,7 +54,7 @@ lilypadUsersController.createUser = async function (req, res) {
     const cleanEmail = xss(email.trim().toLowerCase())
 
     // Check existing
-    const existing = await User.findOne({
+    const existing = await LilyPadAccount.findOne({
       $or: [{ username: cleanUsername }, { email: cleanEmail }]
     })
 
@@ -65,17 +65,17 @@ lilypadUsersController.createUser = async function (req, res) {
       })
     }
 
-    const newUser = new User({
+    const newAccount = new LilyPadAccount({
       username: cleanUsername,
       fullname: xss(fullname.trim()),
       email: cleanEmail,
       password: password,
-      title: xss(title.trim()) || role,
+      title: xss(title.trim()),
       role: role,
       department: xss(department.trim())
     })
 
-    const saved = await newUser.save()
+    const saved = await newAccount.save()
 
     return res.status(201).json({
       success: true,
@@ -101,19 +101,19 @@ lilypadUsersController.createUser = async function (req, res) {
 lilypadUsersController.updateUser = async function (req, res) {
   try {
     const { fullname, email, role, department, title } = req.body
-    const user = await User.findById(req.params.id)
+    const account = await LilyPadAccount.findById(req.params.id)
 
-    if (!user) {
+    if (!account) {
       return res.status(404).json({ success: false, error: 'User not found' })
     }
 
-    if (fullname) user.fullname = xss(fullname.trim())
-    if (email) user.email = xss(email.trim().toLowerCase())
-    if (role) user.role = role
-    if (department) user.department = xss(department.trim())
-    if (title) user.title = xss(title.trim())
+    if (fullname) account.fullname = xss(fullname.trim())
+    if (email) account.email = xss(email.trim().toLowerCase())
+    if (role) account.role = role
+    if (department) account.department = xss(department.trim())
+    if (title) account.title = xss(title.trim())
 
-    const saved = await user.save()
+    const saved = await account.save()
     return res.status(200).json({
       success: true,
       message: 'User updated successfully',
@@ -130,13 +130,13 @@ lilypadUsersController.updateUser = async function (req, res) {
  */
 lilypadUsersController.deleteUser = async function (req, res) {
   try {
-    const user = await User.findById(req.params.id)
-    if (!user) {
+    const account = await LilyPadAccount.findById(req.params.id)
+    if (!account) {
       return res.status(404).json({ success: false, error: 'User not found' })
     }
 
-    user.deleted = true
-    await user.save()
+    account.deleted = true
+    await account.save()
 
     return res.status(200).json({
       success: true,
@@ -148,4 +148,3 @@ lilypadUsersController.deleteUser = async function (req, res) {
 }
 
 module.exports = lilypadUsersController
-

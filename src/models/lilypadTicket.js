@@ -61,13 +61,13 @@ const ticketSchema = new Schema({
   },
   assignee: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'lilypad_accounts',
     default: null,
     index: true
   },
   reporter: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'lilypad_accounts',
     default: null,
     index: true
   },
@@ -99,13 +99,13 @@ const ticketSchema = new Schema({
   },
   history: [{
     action: { type: String, required: true },
-    by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    by: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', default: null },
     byName: { type: String, default: 'System' },
     description: { type: String, default: '' },
     timestamp: { type: Date, default: Date.now }
   }],
   comments: [{
-    author: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    author: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', default: null },
     authorName: { type: String, default: '' },
     isInternal: { type: Boolean, default: false },
     body: { type: String, required: true },
@@ -120,7 +120,7 @@ const ticketSchema = new Schema({
     uploadedAt: { type: Date, default: Date.now }
   }],
   workLogs: [{
-    user: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    user: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', default: null },
     userName: { type: String, default: 'Agent' },
     hours: { type: Number, required: true },
     note: { type: String, default: '' },

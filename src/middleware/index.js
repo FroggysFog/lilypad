@@ -29,7 +29,6 @@ const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')
-const passportConfig = require('../passport')()
 
 let middleware = {}
 
@@ -102,8 +101,6 @@ module.exports = function (app, db, callback) {
         next(null, sessionStore)
       },
       function (store, next) {
-        app.use(passportConfig.initialize())
-        app.use(passportConfig.session())
         app.use(flash())
 
         // CORS
