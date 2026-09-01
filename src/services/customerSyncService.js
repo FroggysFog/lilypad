@@ -2,13 +2,13 @@
  * LilyPad ERP - Customer (Lead) Sync
  * Queries Salesforce Leads and upserts them into LilyPadCustomer.
  *
- * The default query below guesses at two custom field API names
- * (Import_Notes__c, Trade_Show__c) based on the user's real Lead list
- * view columns - if those aren't the org's actual field names, the sync
- * will fail with a clear Salesforce "invalid field" error. Set
- * SF_LEADS_SOQL to override with the exact query for this org instead of
- * needing a code change (same escape hatch already used for Past Due
- * Payments' SF_OVERDUE_SOQL).
+ * Trade_Show__c was a guessed custom field API name that this org doesn't
+ * actually have ("No such column 'Trade_Show__c' on entity 'Lead'"), so
+ * it's dropped from the query - tradeShow just stays blank on synced
+ * records until the real field name (if any) is found via the Salesforce
+ * Explorer page and added back. Set SF_LEADS_SOQL to override with the
+ * exact query for this org instead of needing a code change (same escape
+ * hatch already used for Past Due Payments' SF_OVERDUE_SOQL).
  */
 
 const { queryAllSalesforce } = require('./salesforceService')
@@ -16,7 +16,7 @@ const LilyPadCustomer = require('../models/lilypadCustomer')
 
 const DEFAULT_LEADS_SOQL = `
     SELECT Id, Name, Company, Industry, State, Status, Owner.Alias, LastActivityDate,
-           CreatedDate, Import_Notes__c, Trade_Show__c, CreatedBy.Name, LeadSource, Phone, Email
+           CreatedDate, Import_Notes__c, CreatedBy.Name, LeadSource, Phone, Email
     FROM Lead
     ORDER BY LastActivityDate DESC NULLS LAST, CreatedDate DESC
 `
