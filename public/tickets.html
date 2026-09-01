@@ -2195,6 +2195,7 @@
         let selectedCategory = CATEGORIES[0];
         let currentStatusFilter = 'To-Do';
         let currentActiveTicket = null;
+        let selectedTicketIds = new Set();
         // Global Modal Openers for Operations Admin & Hub
         window.openEmailGatewayModal = function() {
             const modalEl = document.getElementById('emailGatewayModal');
