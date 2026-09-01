@@ -21,6 +21,22 @@ function requireLogin(req, res, next) {
   })
 }
 
+function requireLoginApi(req, res, next) {
+  const accountId = req.session && req.session.lilypadAccountId
+  if (!accountId) {
+    return res.status(401).json({ success: false, error: 'Not logged in' })
+  }
+
+  LilyPadAccount.findById(accountId, function (err, account) {
+    if (err || !account || account.deleted) {
+      return res.status(401).json({ success: false, error: 'Not logged in' })
+    }
+
+    req.user = account
+    return next()
+  })
+}
+
 function redirectIfLoggedIn(req, res, next) {
   const accountId = req.session && req.session.lilypadAccountId
   if (!accountId) {
@@ -42,5 +58,6 @@ function redirectIfLoggedIn(req, res, next) {
 
 module.exports = {
   requireLogin,
+  requireLoginApi,
   redirectIfLoggedIn
 }

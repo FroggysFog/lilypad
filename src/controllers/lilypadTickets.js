@@ -3,7 +3,7 @@
  * Handles dynamic intake forms, flexible ticket submissions, and uniform To-Do management.
  */
 
-const { LilyPadTicket, IntakeForm, User } = require('../models')
+const { LilyPadTicket, IntakeForm } = require('../models')
 const xss = require('xss')
 
 const lilypadTicketsController = {}

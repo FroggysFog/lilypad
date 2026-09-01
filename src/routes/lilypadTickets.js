@@ -23,6 +23,9 @@ module.exports = function () {
   router.put('/tickets/:id/assign', requireLogin, controllers.lilypadTickets.assignTicket)
   router.post('/tickets/:id/comments', requireLogin, controllers.lilypadTickets.addComment)
 
+  // Self-service account
+  router.put('/account/password', requireLogin, controllers.lilypadUsers.changeMyPassword)
+
   // Admin & Team Management: User Accounts
   router.get('/users', requireLogin, controllers.lilypadUsers.getUsers)
   router.post('/users', requireLogin, controllers.lilypadUsers.createUser)

@@ -125,6 +125,46 @@ lilypadUsersController.updateUser = async function (req, res) {
 }
 
 /**
+ * PUT /api/v1/lilypad/account/password
+ * Lets the logged-in user change their own password
+ */
+lilypadUsersController.changeMyPassword = async function (req, res) {
+  try {
+    const { currentPassword, newPassword } = req.body
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password and new password are required.'
+      })
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'New password must be at least 6 characters.'
+      })
+    }
+
+    const account = await LilyPadAccount.findById(req.user._id).select('+password')
+    if (!account) {
+      return res.status(404).json({ success: false, error: 'Account not found' })
+    }
+
+    if (!LilyPadAccount.comparePassword(currentPassword, account.password)) {
+      return res.status(401).json({ success: false, error: 'Current password is incorrect.' })
+    }
+
+    account.password = newPassword
+    await account.save()
+
+    return res.status(200).json({ success: true, message: 'Password updated successfully' })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
  * DELETE /api/v1/lilypad/users/:id
  * Soft deletes / deactivates a user
  */
