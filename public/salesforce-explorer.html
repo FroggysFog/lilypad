@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Accounts | LilyPad ERP</title>
+	<title>Salesforce Explorer | LilyPad ERP</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="robots" content="index, follow">
 	<link rel="shortcut icon" href="assets/img/favicon.png">
@@ -134,7 +134,7 @@
 						<li class="menu-title"><span>Salesforce Data</span></li>
 						<li>
 							<ul>
-								<li><a href="salesforce-accounts.html" class="active"><i class="ti ti-building"></i><span>Accounts</span></a></li>
+								<li><a href="salesforce-accounts.html"><i class="ti ti-building"></i><span>Accounts</span></a></li>
 								<li><a href="opportunities.html"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
 							</ul>
 						</li>
@@ -151,7 +151,7 @@
 										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
 										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
 										<li><a href="api-credentials.html"><i class="ti ti-key me-2 text-primary"></i>API Credentials Vault</a></li>
-										<li><a href="salesforce-explorer.html"><i class="ti ti-database-search me-2 text-primary"></i>Salesforce Explorer</a></li>
+										<li><a href="salesforce-explorer.html" class="active"><i class="ti ti-database-search me-2 text-primary"></i>Salesforce Explorer</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -174,31 +174,66 @@
 
 				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 					<div>
-						<h4 class="mb-1 fw-bold text-dark">Accounts</h4>
-						<p class="text-muted fs-13 mb-0">Company accounts synced from Salesforce. Click a name to view details.</p>
-					</div>
-					<div class="d-flex align-items-center gap-2 flex-wrap">
-						<span class="fs-12 text-muted" id="acctLastSynced"></span>
-						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="syncAccounts()" id="acctSyncBtn">
-							<i class="ti ti-refresh me-1"></i> Sync from Salesforce
-						</button>
+						<h4 class="mb-1 fw-bold text-dark">Salesforce Explorer</h4>
+						<p class="text-muted fs-13 mb-0">Browse the connected org's real objects and fields to find what a sync query should target &mdash; no guessing at API names.</p>
 					</div>
 				</div>
 
-				<div class="card border-0 shadow-sm rounded-3 mb-3">
-					<div class="card-body py-2 px-3">
-						<input type="text" id="acctSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search account name..." oninput="renderAccountTable()">
-					</div>
+				<div id="explorerNotConnected" class="alert alert-warning d-flex align-items-center gap-2" style="display:none;">
+					<i class="ti ti-alert-triangle fs-18"></i>
+					<span>Salesforce isn't connected yet. <a href="/auth/salesforce/connect?returnTo=%2Fsalesforce-explorer.html">Connect to Salesforce</a> first.</span>
 				</div>
 
-				<div class="card border-0 shadow-sm rounded-3 mb-4">
-					<div class="table-responsive">
-						<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
-							<thead class="table-light">
-								<tr id="acctTableHead"></tr>
-							</thead>
-							<tbody id="acctTableBody"></tbody>
-						</table>
+				<div id="explorerBody" class="row" style="display:none;">
+					<div class="col-md-4 mb-3">
+						<div class="card border-0 shadow-sm rounded-3 h-100">
+							<div class="card-header bg-transparent d-flex align-items-center justify-content-between">
+								<strong class="fs-14">Objects</strong>
+								<span class="fs-12 text-muted" id="objectCount"></span>
+							</div>
+							<div class="card-body py-2 px-3">
+								<input type="text" id="objectSearchInput" class="form-control form-control-sm mb-2" placeholder="Search objects (e.g. invoice, order)..." oninput="renderObjectList()">
+								<div class="form-check form-switch">
+									<input class="form-check-input" type="checkbox" id="customOnlyToggle" onchange="renderObjectList()">
+									<label class="form-check-label fs-13" for="customOnlyToggle">Custom objects only</label>
+								</div>
+							</div>
+							<div class="list-group list-group-flush" id="objectList" style="max-height: 520px; overflow-y: auto;"></div>
+						</div>
+					</div>
+
+					<div class="col-md-8 mb-3">
+						<div class="card border-0 shadow-sm rounded-3" id="objectDetailCard" style="display:none;">
+							<div class="card-header bg-transparent d-flex align-items-center justify-content-between flex-wrap gap-2">
+								<strong class="fs-14" id="objectDetailTitle">&nbsp;</strong>
+								<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="previewSelectedObject()" id="previewBtn">
+									<i class="ti ti-eye me-1"></i> Preview 5 Rows
+								</button>
+							</div>
+							<div class="table-responsive" style="max-height: 320px;">
+								<table class="table table-hover table-sm mb-0">
+									<thead class="table-light"><tr><th>Field API Name</th><th>Label</th><th>Type</th></tr></thead>
+									<tbody id="fieldTableBody"></tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="card border-0 shadow-sm rounded-3 mt-3" id="previewCard" style="display:none;">
+							<div class="card-header bg-transparent"><strong class="fs-14">Sample Rows</strong></div>
+							<div class="table-responsive" style="max-height: 320px;">
+								<table class="table table-sm mb-0" style="white-space: nowrap;">
+									<thead class="table-light"><tr id="previewTableHead"></tr></thead>
+									<tbody id="previewTableBody"></tbody>
+								</table>
+							</div>
+							<div class="card-body py-2 px-3 border-top">
+								<code class="fs-12" id="previewSoql"></code>
+							</div>
+						</div>
+
+						<div class="card border-0 shadow-sm rounded-3 p-4 text-center text-muted" id="objectEmptyState">
+							Select an object on the left to see its fields.
+						</div>
 					</div>
 				</div>
 
@@ -206,7 +241,7 @@
 					<p class="mb-md-0 mb-1">Copyright &copy; <script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.</p>
 					<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
 						<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
-						<a href="opportunities.html" class="text-muted fs-13">Opportunities</a>
+						<a href="past-due-payments.html" class="text-muted fs-13">Past Due Payments</a>
 					</div>
 				</footer>
 			</div>
@@ -219,27 +254,10 @@
 	<script src="assets/js/lilypad-notifications.js"></script>
 
 	<script>
-		const ACCOUNT_COLUMNS = [
-			{ key: 'name', label: 'Account Name', type: 'link' },
-			{ key: 'industry', label: 'Industry', type: 'text' },
-			{ key: 'type', label: 'Type', type: 'text' },
-			{ key: 'ownerName', label: 'Owner', type: 'text' },
-			{ key: 'phone', label: 'Phone', type: 'text' },
-			{ key: 'annualRevenue', label: 'Annual Revenue', type: 'currency' }
-		];
-
-		let ACCOUNTS = [];
-		let acctSortKey = 'name';
-		let acctSortDir = 'asc';
-
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
 				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
 			});
-		}
-
-		function formatCurrency(amount) {
-			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(amount || 0));
 		}
 
 		async function doLogout() {
@@ -247,97 +265,120 @@
 			window.location.href = 'login.html';
 		}
 
-		async function loadAccounts() {
-			try {
-				const res = await fetch('/api/v1/lilypad/salesforce-accounts');
-				const result = await res.json();
-				if (!result.success) throw new Error(result.error || 'Unable to load accounts');
+		let OBJECTS = [];
+		let selectedObjectName = null;
 
-				ACCOUNTS = result.data;
+		function renderObjectList() {
+			const search = document.getElementById('objectSearchInput').value.trim().toLowerCase();
+			const customOnly = document.getElementById('customOnlyToggle').checked;
 
-				const mostRecent = ACCOUNTS.reduce((latest, a) => {
-					const t = new Date(a.lastSyncAt).getTime();
-					return t > latest ? t : latest;
-				}, 0);
-				document.getElementById('acctLastSynced').textContent = mostRecent
-					? 'Last synced ' + new Date(mostRecent).toLocaleString()
-					: 'Not synced yet';
-
-				renderAccountHead();
-				renderAccountTable();
-			} catch (err) {
-				console.error('loadAccounts failed:', err);
-			}
-		}
-
-		function renderAccountHead() {
-			const head = document.getElementById('acctTableHead');
-			head.innerHTML = ACCOUNT_COLUMNS.map(col => {
-				const arrow = acctSortKey === col.key ? (acctSortDir === 'asc' ? ' <i class="ti ti-arrow-up fs-12"></i>' : ' <i class="ti ti-arrow-down fs-12"></i>') : '';
-				return `<th style="cursor:pointer;" onclick="setAccountSortKey('${col.key}')">${escapeHtml(col.label)}${arrow}</th>`;
-			}).join('');
-		}
-
-		function setAccountSortKey(key) {
-			if (acctSortKey === key) {
-				acctSortDir = acctSortDir === 'asc' ? 'desc' : 'asc';
-			} else {
-				acctSortKey = key;
-				acctSortDir = 'asc';
-			}
-			renderAccountHead();
-			renderAccountTable();
-		}
-
-		function renderAccountTable() {
-			const search = document.getElementById('acctSearchInput').value.trim().toLowerCase();
-			let rows = ACCOUNTS.filter(a => {
+			const rows = OBJECTS.filter(o => {
+				if (customOnly && !o.custom) return false;
 				if (!search) return true;
-				return String(a.name || '').toLowerCase().includes(search);
+				return (o.name + ' ' + o.label).toLowerCase().includes(search);
 			});
 
-			rows = rows.slice().sort((a, b) => {
-				let av = a[acctSortKey], bv = b[acctSortKey];
-				if (typeof av === 'number' || typeof bv === 'number') { av = Number(av) || 0; bv = Number(bv) || 0; }
-				else { av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase(); }
-				if (av < bv) return acctSortDir === 'asc' ? -1 : 1;
-				if (av > bv) return acctSortDir === 'asc' ? 1 : -1;
-				return 0;
-			});
+			document.getElementById('objectCount').textContent = rows.length + ' of ' + OBJECTS.length;
 
-			const tbody = document.getElementById('acctTableBody');
+			const list = document.getElementById('objectList');
 			if (!rows.length) {
-				tbody.innerHTML = `<tr><td colspan="${ACCOUNT_COLUMNS.length}" class="text-center text-muted py-4">No accounts yet. Click "Sync from Salesforce" to pull accounts in.</td></tr>`;
+				list.innerHTML = '<div class="list-group-item text-muted fs-13">No matching objects.</div>';
 				return;
 			}
 
-			tbody.innerHTML = rows.map(a => {
-				const cells = ACCOUNT_COLUMNS.map(col => {
-					if (col.key === 'name') {
-						return `<td><a href="salesforce-account-detail.html?id=${a._id}" class="fw-semibold text-decoration-none">${escapeHtml(a.name || '(no name)')}</a></td>`;
-					}
-					if (col.type === 'currency') {
-						return `<td>${a[col.key] ? formatCurrency(a[col.key]) : ''}</td>`;
-					}
-					return `<td>${escapeHtml(a[col.key])}</td>`;
-				}).join('');
-				return `<tr>${cells}</tr>`;
-			}).join('');
+			list.innerHTML = rows.map(o => `
+				<a href="javascript:void(0);" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between ${o.name === selectedObjectName ? 'active' : ''}" onclick="selectObject('${o.name}')">
+					<span>
+						<span class="fw-semibold">${escapeHtml(o.label)}</span>
+						<span class="d-block fs-11 ${o.name === selectedObjectName ? '' : 'text-muted'}">${escapeHtml(o.name)}</span>
+					</span>
+					${o.custom ? '<span class="badge bg-soft-info text-info fs-11 rounded-pill">custom</span>' : ''}
+				</a>
+			`).join('');
 		}
 
-		async function syncAccounts() {
-			const btn = document.getElementById('acctSyncBtn');
-			btn.disabled = true;
+		async function selectObject(name) {
+			selectedObjectName = name;
+			renderObjectList();
+
+			document.getElementById('objectEmptyState').style.display = 'none';
+			document.getElementById('previewCard').style.display = 'none';
+			document.getElementById('objectDetailCard').style.display = '';
+			document.getElementById('objectDetailTitle').textContent = 'Loading ' + name + '...';
+			document.getElementById('fieldTableBody').innerHTML = '';
+
 			try {
-				const res = await fetch('/api/v1/lilypad/salesforce-accounts/sync', { method: 'POST' });
+				const res = await fetch('/api/v1/lilypad/salesforce/objects/' + encodeURIComponent(name));
 				const result = await res.json();
-				if (!result.success) throw new Error(result.error || 'Sync failed');
-				await loadAccounts();
-				alert(result.message);
+				if (!result.success) throw new Error(result.error);
+
+				const d = result.data;
+				document.getElementById('objectDetailTitle').textContent = d.label + ' (' + d.name + ') — ' + d.fields.length + ' fields';
+				document.getElementById('fieldTableBody').innerHTML = d.fields.map(f => `
+					<tr>
+						<td><code class="fs-12">${escapeHtml(f.name)}</code></td>
+						<td>${escapeHtml(f.label)}</td>
+						<td><span class="fs-12 text-muted">${escapeHtml(f.type)}${f.referenceTo && f.referenceTo.length ? ' &rarr; ' + escapeHtml(f.referenceTo.join(', ')) : ''}</span></td>
+					</tr>
+				`).join('');
 			} catch (err) {
-				alert(err.message || 'Unable to sync from Salesforce.');
+				document.getElementById('objectDetailTitle').textContent = 'Unable to load fields';
+				document.getElementById('fieldTableBody').innerHTML = `<tr><td colspan="3" class="text-danger">${escapeHtml(err.message)}</td></tr>`;
+			}
+		}
+
+		async function previewSelectedObject() {
+			if (!selectedObjectName) return;
+			const btn = document.getElementById('previewBtn');
+			btn.disabled = true;
+
+			try {
+				const res = await fetch('/api/v1/lilypad/salesforce/objects/' + encodeURIComponent(selectedObjectName) + '/preview?limit=5');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				const { fields, rows, soql } = result.data;
+				document.getElementById('previewCard').style.display = '';
+				document.getElementById('previewSoql').textContent = soql || '';
+				document.getElementById('previewTableHead').innerHTML = fields.map(f => `<th>${escapeHtml(f)}</th>`).join('');
+
+				if (!rows.length) {
+					document.getElementById('previewTableBody').innerHTML = `<tr><td colspan="${fields.length}" class="text-center text-muted py-3">No records found.</td></tr>`;
+				} else {
+					document.getElementById('previewTableBody').innerHTML = rows.map(row => {
+						return '<tr>' + fields.map(f => {
+							const value = row[f];
+							const display = value === null || value === undefined ? '' : (typeof value === 'object' ? JSON.stringify(value) : String(value));
+							return `<td>${escapeHtml(display)}</td>`;
+						}).join('') + '</tr>';
+					}).join('');
+				}
+			} catch (err) {
+				alert(err.message || 'Unable to preview this object.');
 			} finally {
 				btn.disabled = false;
+			}
+		}
+
+		async function loadObjects() {
+			try {
+				const statusRes = await fetch('/api/salesforce/status');
+				const statusResult = await statusRes.json();
+				if (!statusResult.success || !statusResult.data.connected) {
+					document.getElementById('explorerNotConnected').style.display = '';
+					return;
+				}
+
+				const res = await fetch('/api/v1/lilypad/salesforce/objects');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				OBJECTS = result.data;
+				document.getElementById('explorerBody').style.display = '';
+				renderObjectList();
+			} catch (err) {
+				document.getElementById('explorerNotConnected').style.display = '';
+				document.getElementById('explorerNotConnected').innerHTML = `<i class="ti ti-alert-triangle fs-18"></i> <span>${escapeHtml(err.message)}</span>`;
 			}
 		}
 
@@ -351,11 +392,13 @@
 					if (result.data.role === 'admin') {
 						document.getElementById('adminSetupNavItem').style.display = '';
 						document.getElementById('adminSetupTitle').style.display = '';
+						loadObjects();
+					} else {
+						document.getElementById('explorerNotConnected').style.display = '';
+						document.getElementById('explorerNotConnected').innerHTML = '<i class="ti ti-lock fs-18"></i> <span>Admin access required to use the Salesforce Explorer.</span>';
 					}
 				}
 			} catch (e) {}
-
-			loadAccounts();
 		});
 	</script>
 </body>

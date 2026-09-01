@@ -238,11 +238,77 @@ async function fetchSalesforceReport (reportId) {
   return conn.request(path)
 }
 
+/**
+ * Lists every sObject in the org (name, label, custom/standard, queryable),
+ * so admins can find the real object holding data (invoices, AR, etc.)
+ * instead of guessing field/object API names.
+ */
+async function describeGlobalSalesforce () {
+  const conn = await getSalesforceConnection()
+  const result = await conn.describeGlobal()
+  return (result.sobjects || [])
+    .filter((obj) => obj.queryable)
+    .map((obj) => ({
+      name: obj.name,
+      label: obj.label,
+      custom: Boolean(obj.custom),
+      keyPrefix: obj.keyPrefix || ''
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+}
+
+/**
+ * Describes one sObject's fields (API name, label, type) so an admin can
+ * see exactly what's queryable before writing a SOQL sync.
+ */
+async function describeSalesforceObject (objectName) {
+  const conn = await getSalesforceConnection()
+  const result = await conn.sobject(objectName).describe()
+  return {
+    name: result.name,
+    label: result.label,
+    fields: (result.fields || []).map((f) => ({
+      name: f.name,
+      label: f.label,
+      type: f.type,
+      custom: Boolean(f.custom),
+      referenceTo: f.referenceTo || []
+    }))
+  }
+}
+
+/**
+ * Pulls a handful of sample rows for an object using its simple
+ * (non-compound) fields, so an admin can see real data before deciding
+ * this is the right object/fields for a sync query.
+ */
+async function previewSalesforceObject (objectName, options = {}) {
+  const limit = Math.max(1, Math.min(10, Number(options.limit || 5)))
+  const described = await describeSalesforceObject(objectName)
+
+  const SKIP_TYPES = new Set(['address', 'location', 'base64'])
+  const fieldNames = described.fields
+    .filter((f) => !SKIP_TYPES.has(f.type))
+    .slice(0, 30)
+    .map((f) => f.name)
+
+  if (!fieldNames.length) {
+    return { object: described.name, fields: [], rows: [] }
+  }
+
+  const soql = `SELECT ${fieldNames.join(', ')} FROM ${described.name} LIMIT ${limit}`
+  const rows = await querySalesforce(soql)
+  return { object: described.name, fields: fieldNames, rows, soql }
+}
+
 module.exports = {
   getSalesforceConnection,
   querySalesforce,
   queryAllSalesforce,
   fetchSalesforceReport,
+  describeGlobalSalesforce,
+  describeSalesforceObject,
+  previewSalesforceObject,
   getSalesforceAuthUrl,
   generateSalesforcePkcePair,
   exchangeSalesforceCode,
