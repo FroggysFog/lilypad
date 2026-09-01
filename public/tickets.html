@@ -751,13 +751,15 @@
 									<li class="nav-item">
 										<button class="nav-link py-1 px-3 fs-13 fw-semibold" onclick="setStatusFilter('All')">All</button>
 									</li>
-									<li class="nav-item">
-										<button class="nav-link py-1 px-3 fs-13 fw-semibold text-primary" onclick="setPresetFilter('mine')">My Queue</button>
-									</li>
 								</ul>
 							</div>
 
 							<div class="col-md-7 d-flex justify-content-md-end gap-2 flex-wrap">
+								<select id="assigneeFilter" class="form-select form-select-sm w-auto" onchange="handleAssigneeFilterChange()">
+									<option value="">Everyone</option>
+									<option value="me">My Queue</option>
+								</select>
+
 								<select id="categoryFilter" class="form-select form-select-sm w-auto" onchange="filterTickets()">
 									<option value="">All Categories</option>
 								</select>
@@ -2491,6 +2493,7 @@
             Promise.all([loadUsers(), loadMe()]).then(() => {
                 renderUsersTable();
                 updateAllAssigneeDropdowns();
+                updateAssigneeFilterDropdown();
                 loadTickets();
             });
             initFormBuilder();
@@ -2596,6 +2599,23 @@
                 const formPrio = document.getElementById('formPriority');
                 if (formPrio) formPrio.value = found.defaultPriority || 'Normal';
             }
+        }
+
+        function updateAssigneeFilterDropdown() {
+            const select = document.getElementById('assigneeFilter');
+            if (!select) return;
+            const teammates = USERS.filter(u => u.id !== currentUserId)
+                .map(u => `<option value="${u.id}">${u.fullname}</option>`)
+                .join('');
+            select.innerHTML = '<option value="">Everyone</option><option value="me">My Queue</option>' + teammates;
+            select.value = currentAssigneeFilter === null ? '' : currentAssigneeFilter;
+        }
+
+        function handleAssigneeFilterChange() {
+            const select = document.getElementById('assigneeFilter');
+            const val = select ? select.value : '';
+            currentAssigneeFilter = val === '' ? null : val;
+            filterTickets();
         }
 
         function updateCategoryFilterDropdown() {
@@ -2732,15 +2752,6 @@
                 btn.classList.toggle('active', btn.textContent === (status === 'All' ? 'All' : status));
             });
             renderTickets();
-        }
-
-        function setPresetFilter(preset) {
-            if (preset === 'mine') {
-                currentStatusFilter = 'All';
-                document.querySelectorAll('#statusFilterPills .nav-link').forEach(btn => btn.classList.remove('active'));
-                if (event && event.currentTarget) event.currentTarget.classList.add('active');
-                renderTickets('mine');
-            }
         }
 
         function filterTickets(preset) {
