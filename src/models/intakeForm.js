@@ -92,7 +92,7 @@ const intakeFormSchema = new Schema({
   },
   defaultAssignee: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'lilypad_accounts',
     default: null
   },
   fields: [fieldDefinitionSchema],
