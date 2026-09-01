@@ -26,4 +26,32 @@ services:
         value: "true"
       - key: SESSION_SECRET
         sync: false
+      # Salesforce Connected App (past-due payments sync) - fill in via the Render dashboard
+      - key: SF_LOGIN_URL
+        sync: false
+      - key: SF_CLIENT_ID
+        sync: false
+      - key: SF_CLIENT_SECRET
+        sync: false
+      - key: SF_CALLBACK_URL
+        sync: false
+      - key: SF_OVERDUE_REPORT_ID
+        sync: false
+      - key: SF_OVERDUE_SOQL
+        sync: false
+      - key: REMINDER_CHECK_MINUTES
+        value: "5"
+      # SMTP (past-due payment reminder emails) - fill in via the Render dashboard
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
 

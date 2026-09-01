@@ -44,6 +44,9 @@ function launchServer (db) {
 
     ws.listen(function () {
       winston.info('LilyPad ERP Ready')
+
+      const { startReminderScheduler } = require('./src/services/reminderEmailService')
+      startReminderScheduler(winston)
     })
   })
 }

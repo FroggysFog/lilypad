@@ -35,6 +35,11 @@ function mainRoutes(router, controllers) {
   router.get('/api/microsoft-teams/chats', requireLoginApi, controllers.microsoftTeams.chats)
   router.get('/api/microsoft-teams/chats/:chatId/messages', requireLoginApi, controllers.microsoftTeams.messages)
   router.post('/api/microsoft-teams/chats/:chatId/messages', requireLoginApi, controllers.microsoftTeams.send)
+
+  // Salesforce integration (used by past-due-payments.html)
+  router.get('/auth/salesforce/connect', requireLogin, controllers.salesforceAuth.connect)
+  router.get('/auth/salesforce/callback', requireLogin, controllers.salesforceAuth.callback)
+  router.get('/api/salesforce/status', requireLoginApi, controllers.salesforceAuth.status)
 }
 
 module.exports = function (app) {
@@ -46,6 +51,9 @@ module.exports = function (app) {
 
   const lilypadNotificationsRouter = require('./lilypadNotifications')()
   app.use('/api/v1/lilypad', lilypadNotificationsRouter)
+
+  const lilypadPastDueRouter = require('./lilypadPastDue')()
+  app.use('/api/v1/lilypad', lilypadPastDueRouter)
 
   mainRoutes(router, controllers)
   app.use('/', router)

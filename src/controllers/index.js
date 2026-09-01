@@ -4,7 +4,9 @@ const Controllers = {
   lilypadUsers: require('./lilypadUsers'),
   lilypadMachines: require('./lilypadMachines'),
   lilypadNotifications: require('./lilypadNotifications'),
-  microsoftTeams: require('./microsoftTeams')
+  lilypadPastDue: require('./lilypadPastDue'),
+  microsoftTeams: require('./microsoftTeams'),
+  salesforceAuth: require('./salesforceAuth')
 }
 
 module.exports = Controllers
