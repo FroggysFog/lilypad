@@ -450,11 +450,35 @@
 							<p class="text-white-50 fs-13 mb-3">Search by machine name, category, or a known symptom to jump straight to that machine's manuals, media, and troubleshooting steps.</p>
 							<div class="input-group input-group-lg shadow-sm">
 								<span class="input-group-text bg-white border-0 text-muted"><i class="ti ti-search fs-18"></i></span>
-								<input type="text" id="kbSearchInput" class="form-control border-0 fs-14" placeholder="Search by machine name, category, or symptom..." oninput="filterKbArticles()">
+								<input type="text" id="kbSearchInput" class="form-control border-0 fs-14" placeholder="Search by machine name, category, or symptom..." oninput="applyKbFilters()">
 							</div>
 						</div>
 						<div class="col-lg-5 text-center d-none d-lg-block">
 							<i class="ti ti-books display-4 text-white-50"></i>
+						</div>
+					</div>
+				</div>
+
+				<!-- Filters -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-body py-2 px-3">
+						<div class="row g-2 align-items-center">
+							<div class="col-auto">
+								<span class="fs-12 text-muted fw-semibold"><i class="ti ti-filter me-1"></i>Filter:</span>
+							</div>
+							<div class="col-md-4 col-sm-6">
+								<select id="kbCategoryFilter" class="form-select form-select-sm" onchange="applyKbFilters()">
+									<option value="">All Categories</option>
+								</select>
+							</div>
+							<div class="col-md-4 col-sm-6">
+								<select id="kbManufacturerFilter" class="form-select form-select-sm" onchange="applyKbFilters()">
+									<option value="">All Manufacturers</option>
+								</select>
+							</div>
+							<div class="col-auto ms-auto">
+								<span class="fs-12 text-muted" id="kbResultCount"></span>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -509,7 +533,46 @@
 
 	<script>
         let MACHINES = [];
-        let searchDebounceTimer = null;
+
+        // One distinct color per category. 'badge' must be a real bg-<color>
+        // utility class (verified against this theme's CSS); 'hex' drives the
+        // light card-tint background, applied inline so it doesn't depend on
+        // bg-soft-<color>/btn-outline-<color> classes that don't all exist here.
+        const CATEGORY_COLORS = {
+            'Fog Machines': { badge: 'primary', hex: '#0d6efd' },
+            'Ground Fog Machines': { badge: 'cyan', hex: '#0dcaf0' },
+            'Haze Machines': { badge: 'purple', hex: '#6f42c1' },
+            'Snow Machines': { badge: 'info', hex: '#3b82f6' },
+            'Bubble Machines': { badge: 'pink', hex: '#d63384' },
+            'Foam Machines': { badge: 'orange', hex: '#fd7e14' },
+            'Fog Chillers': { badge: 'teal', hex: '#20c997' },
+            'Fog Juice': { badge: 'indigo', hex: '#6610f2' },
+            'Low-Lying Fog Juice': { badge: 'secondary', hex: '#6c757d' },
+            'Haze Juice': { badge: 'warning', hex: '#f59e0b' },
+            'Snow Juice': { badge: 'success', hex: '#198754' },
+            'Bubble Juice': { badge: 'danger', hex: '#dc3545' },
+            'Foam Fluid': { badge: 'dark', hex: '#343a40' }
+        };
+        const DEFAULT_COLOR = { badge: 'secondary', hex: '#6c757d' };
+
+        // Known third-party brand prefixes; anything else is the house brand.
+        const BRAND_PREFIXES = ['Antari', 'ADJ', 'Chauvet'];
+        const HOUSE_BRAND = "Froggy's Fog";
+
+        function categoryColor(category) {
+            return CATEGORY_COLORS[category] || DEFAULT_COLOR;
+        }
+
+        function hexToRgba(hex, alpha) {
+            const n = parseInt(hex.replace('#', ''), 16);
+            const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+            return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+        }
+
+        function getManufacturer(name) {
+            const match = BRAND_PREFIXES.find(b => (name || '').indexOf(b) === 0);
+            return match || HOUSE_BRAND;
+        }
 
         async function loadMachines() {
             try {
@@ -517,19 +580,66 @@
                 const result = await res.json();
                 if (!result.success) throw new Error(result.error || 'Unable to load machines');
                 MACHINES = result.data;
-                renderMachines(MACHINES);
+                populateFilterDropdowns();
+                applyKbFilters();
             } catch (err) {
                 console.error('loadMachines failed:', err);
                 renderMachines([]);
             }
         }
 
+        function populateFilterDropdowns() {
+            const categories = Array.from(new Set(MACHINES.map(m => m.category || 'General'))).sort();
+            const manufacturers = Array.from(new Set(MACHINES.map(m => getManufacturer(m.name)))).sort();
+
+            const catSelect = document.getElementById('kbCategoryFilter');
+            categories.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                catSelect.appendChild(opt);
+            });
+
+            const mfrSelect = document.getElementById('kbManufacturerFilter');
+            manufacturers.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                mfrSelect.appendChild(opt);
+            });
+        }
+
+        function applyKbFilters() {
+            const query = document.getElementById('kbSearchInput').value.trim().toLowerCase();
+            const category = document.getElementById('kbCategoryFilter').value;
+            const manufacturer = document.getElementById('kbManufacturerFilter').value;
+
+            const filtered = MACHINES.filter(m => {
+                if (category && m.category !== category) return false;
+                if (manufacturer && getManufacturer(m.name) !== manufacturer) return false;
+                if (query) {
+                    const haystack = [
+                        m.name,
+                        m.category,
+                        ...(m.issues || []).map(i => i.symptom),
+                        ...(m.issues || []).map(i => i.resolution)
+                    ].join(' ').toLowerCase();
+                    if (!haystack.includes(query)) return false;
+                }
+                return true;
+            });
+
+            renderMachines(filtered);
+        }
+
         function renderMachines(machines) {
             const container = document.getElementById('kbArticlesContainer');
+            const countEl = document.getElementById('kbResultCount');
+            if (countEl) countEl.textContent = machines.length + ' of ' + MACHINES.length + ' shown';
             if (!container) return;
 
             if (!machines.length) {
-                container.innerHTML = '<div class="col-12 text-center py-5 text-muted"><i class="ti ti-search-off fs-32 d-block mb-2"></i>No matching machines found. Try a different search term.</div>';
+                container.innerHTML = '<div class="col-12 text-center py-5 text-muted"><i class="ti ti-search-off fs-32 d-block mb-2"></i>No matching machines found. Try a different search term or filter.</div>';
                 return;
             }
 
@@ -537,6 +647,10 @@
                 const issueCount = (m.issues || []).length;
                 const mediaCount = (m.media || []).length;
                 const topIssues = (m.issues || []).slice(0, 3);
+                const color = categoryColor(m.category);
+                const manufacturer = getManufacturer(m.name);
+                const cardStyle = 'background-color:' + hexToRgba(color.hex, 0.07) + ';';
+                const btnStyle = 'color:' + color.hex + '; border-color:' + hexToRgba(color.hex, 0.4) + ';';
 
                 const issuesHtml = topIssues.length
                     ? '<div class="p-3 bg-light rounded-2 border mb-3">' +
@@ -548,16 +662,19 @@
                     : '<p class="fs-12 text-muted mb-3">No troubleshooting entries logged yet.</p>';
 
                 return '<div class="col-lg-6">' +
-                    '<div class="card border-0 shadow-sm rounded-3 h-100 p-4">' +
+                    '<div class="card border-0 shadow-sm rounded-3 h-100 p-4" style="' + cardStyle + '">' +
                         '<div class="d-flex align-items-center justify-content-between mb-3">' +
-                            '<span class="badge bg-primary fs-11">' + escapeHtml(m.category || 'General') + '</span>' +
-                            '<span class="badge bg-light text-dark border fs-11"><i class="ti ti-paperclip me-1"></i>' + mediaCount + ' files</span>' +
+                            '<div class="d-flex align-items-center gap-2">' +
+                                '<span class="badge bg-' + color.badge + ' fs-11">' + escapeHtml(m.category || 'General') + '</span>' +
+                                '<span class="fs-11 text-muted fw-semibold">' + escapeHtml(manufacturer) + '</span>' +
+                            '</div>' +
+                            '<span class="badge bg-white text-dark border fs-11"><i class="ti ti-paperclip me-1"></i>' + mediaCount + ' files</span>' +
                         '</div>' +
                         '<h5 class="fw-bold text-dark mb-2">' + escapeHtml(m.name) + '</h5>' +
                         issuesHtml +
                         '<div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">' +
                             '<div class="fs-11 text-muted"><span>' + issueCount + ' logged issue' + (issueCount === 1 ? '' : 's') + '</span></div>' +
-                            '<a href="machine.html?slug=' + encodeURIComponent(m.slug) + '" class="btn btn-sm btn-outline-primary"><i class="ti ti-file-text me-1"></i>Master Page</a>' +
+                            '<a href="machine.html?slug=' + encodeURIComponent(m.slug) + '" class="btn btn-sm bg-white fw-semibold" style="' + btnStyle + '"><i class="ti ti-file-text me-1"></i>Master Page</a>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
@@ -568,25 +685,6 @@
             return String(value == null ? '' : value).replace(/[&<>'"]/g, function(c) {
                 return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
             });
-        }
-
-        async function filterKbArticles() {
-            const query = document.getElementById('kbSearchInput').value.trim();
-            clearTimeout(searchDebounceTimer);
-            searchDebounceTimer = setTimeout(async () => {
-                if (!query) {
-                    renderMachines(MACHINES);
-                    return;
-                }
-                try {
-                    const res = await fetch('/api/v1/lilypad/machines/search?q=' + encodeURIComponent(query));
-                    const result = await res.json();
-                    if (!result.success) throw new Error(result.error || 'Search failed');
-                    renderMachines(result.data);
-                } catch (err) {
-                    console.error('search failed:', err);
-                }
-            }, 250);
         }
 
         async function addNewMachine() {
