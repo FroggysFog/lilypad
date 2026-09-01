@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Customers | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="index, follow">
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+	<script src="assets/js/theme-script.js"></script>
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+</head>
+
+<body>
+
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar"><i class="ti ti-menu-deep fs-24"></i></a>
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2"><i class="ti ti-arrow-bar-to-right"></i></button>
+				</div>
+				<div class="header-search d-none d-md-flex align-items-center justify-content-center mx-auto" style="width: 100%; max-width: 520px;">
+					<div class="input-icon position-relative w-100">
+						<input type="text" class="form-control rounded-pill py-2 px-4 shadow-sm" placeholder="Search anything in LilyPad ERP... (Ctrl + K)" style="font-size: 14px; height: 42px;">
+						<span class="input-icon-addon d-inline-flex p-0 header-search-icon pe-3"><i class="ti ti-command fs-16 text-muted"></i></span>
+					</div>
+				</div>
+				<div class="d-flex align-items-center">
+					<div class="header-item me-2">
+						<a href="tickets.html?action=new" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 py-2 text-white shadow-sm fw-semibold rounded-pill" style="font-size: 13px;"><i class="ti ti-plus fs-16"></i><span>New Ticket</span></a>
+					</div>
+					<div class="header-item"><div class="dropdown me-2"><a href="javascript:void(0);" class="btn topbar-link btnFullscreen"><i class="ti ti-maximize"></i></a></div></div>
+					<div class="header-item d-none d-sm-flex me-2"><button class="topbar-link btn topbar-link" id="light-dark-mode" type="button"><i class="ti ti-moon fs-16"></i></button></div>
+					<div class="header-item">
+						<div class="dropdown me-2 position-relative">
+							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false" aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
+								<i class="ti ti-bell fs-19" id="notificationBellIcon"></i>
+								<span class="notification-badge" id="notificationBadge" data-notif-badge style="display:none;">0</span>
+							</button>
+							<div class="dropdown-menu p-0 dropdown-menu-end shadow-lg border-0" style="min-width: 360px; max-width: 380px; z-index: 1060;">
+								<div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+									<div class="d-flex align-items-center gap-2"><h6 class="m-0 fs-15 fw-bold text-dark">Notifications</h6><span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold">Live Feed</span></div>
+									<a href="javascript:void(0);" onclick="LilypadNotifications.markAllAsRead(event)" class="fs-12 text-decoration-none fw-semibold text-primary">Mark all read</a>
+								</div>
+								<div class="notification-body position-relative z-2" id="notificationListContainer" style="max-height: 360px; overflow-y: auto;"></div>
+								<div class="p-2 rounded-bottom border-top text-center bg-light"><a href="tickets.html" class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2"><i class="ti ti-ticket fs-16"></i><span>Open Ticket Operations</span></a></div>
+							</div>
+						</div>
+					</div>
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);" class="topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex" alt="user-image">
+							<span class="online text-success"><i class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42" alt="Img">
+								<div class="ms-2"><p class="fw-medium text-dark mb-0 topbar-user-name">Scott Karan</p><span class="d-block fs-13 topbar-user-role">Operations Admin</span></div>
+							</div>
+							<a href="profile-settings.html" class="dropdown-item"><i class="ti ti-user-circle me-1 align-middle"></i><span class="align-middle">Profile Settings</span></a>
+							<div class="pt-2 mt-2 border-top"><a href="javascript:void(0);" onclick="doLogout()" class="dropdown-item text-danger"><i class="ti ti-logout me-1 fs-17 align-middle"></i><span class="align-middle">Sign Out</span></a></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+			<div class="sidebar-logo">
+				<div>
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:30px; height:30px; font-size:15px;"><i class="ti ti-leaf"></i></div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span class="text-primary">ERP</span></span>
+					</a>
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:16px;"><i class="ti ti-leaf"></i></div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn"><i class="ti ti-arrow-bar-to-left"></i></button>
+				<button class="sidebar-close"><i class="ti ti-x align-middle"></i></button>
+			</div>
+
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu">
+					<ul>
+						<li class="menu-title"><span>Main Operations</span></li>
+						<li>
+							<ul>
+								<li><a href="dashboard.html"><i class="ti ti-dashboard"></i><span>Main Dashboard</span></a></li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Operations</span></li>
+						<li>
+							<ul>
+								<li><a href="tickets.html"><i class="ti ti-ticket"></i><span>Ticket Operations</span></a></li>
+								<li><a href="knowledge-base.html"><i class="ti ti-book"></i><span>Knowledge Base & SOPs</span></a></li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Accounting</span></li>
+						<li>
+							<ul>
+								<li><a href="past-due-payments.html"><i class="ti ti-cash-banknote"></i><span>Past Due Payments</span></a></li>
+								<li><a href="reminder-templates.html"><i class="ti ti-mail-cog"></i><span>Reminder Templates</span></a></li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Customers</span></li>
+						<li>
+							<ul>
+								<li><a href="customers.html" class="active"><i class="ti ti-users-group"></i><span>Customer Directory</span></a></li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Orders</span></li>
+						<li>
+							<ul>
+								<li><a href="orders.html"><i class="ti ti-package"></i><span>Order History</span></a></li>
+							</ul>
+						</li>
+
+						<li class="menu-title" id="adminSetupTitle" style="display:none;"><span>Administration & Setup</span></li>
+						<li id="adminSetupNavItem" style="display:none;">
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);" class="subdrop">
+										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
+									</a>
+									<ul>
+										<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
+										<li><a href="api-credentials.html"><i class="ti ti-key me-2 text-primary"></i>API Credentials Vault</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Account</span></li>
+						<li>
+							<ul>
+								<li><a href="javascript:void(0);" onclick="doLogout()"><i class="ti ti-logout text-danger"></i><span class="text-danger fw-semibold">Sign Out</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<div class="page-wrapper">
+			<div class="content pb-0">
+
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark">Customers</h4>
+						<p class="text-muted fs-13 mb-0">Leads synced from Salesforce. Click a name to open its detail page.</p>
+					</div>
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<span class="fs-12 text-muted" id="custLastSynced"></span>
+						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="syncCustomers()" id="custSyncBtn">
+							<i class="ti ti-refresh me-1"></i> Sync from Salesforce
+						</button>
+					</div>
+				</div>
+
+				<div class="card border-0 shadow-sm rounded-3 mb-3">
+					<div class="card-body py-2 px-3">
+						<input type="text" id="custSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search name or company..." oninput="renderCustomerTable()">
+					</div>
+				</div>
+
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="table-responsive">
+						<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
+							<thead class="table-light">
+								<tr id="custTableHead"></tr>
+							</thead>
+							<tbody id="custTableBody"></tbody>
+						</table>
+					</div>
+				</div>
+
+				<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+					<p class="mb-md-0 mb-1">Copyright &copy; <script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.</p>
+					<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
+						<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
+						<a href="orders.html" class="text-muted fs-13">Orders</a>
+					</div>
+				</footer>
+			</div>
+		</div>
+	</div>
+
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<script src="assets/js/script.js"></script>
+	<script src="assets/js/lilypad-notifications.js"></script>
+
+	<script>
+		const CUST_COLUMNS = [
+			{ key: 'lastActivityDate', label: 'Last Activity', type: 'date' },
+			{ key: 'name', label: 'Name', type: 'link' },
+			{ key: 'company', label: 'Company', type: 'text' },
+			{ key: 'industry', label: 'Industry', type: 'text' },
+			{ key: 'state', label: 'State', type: 'text' },
+			{ key: 'leadStatus', label: 'Lead Status', type: 'text' },
+			{ key: 'ownerAlias', label: 'Owner', type: 'text' },
+			{ key: 'age', label: 'Age', type: 'number' },
+			{ key: 'createdDate', label: 'Created Date', type: 'datetime' },
+			{ key: 'importNotes', label: 'Import Notes', type: 'text' },
+			{ key: 'tradeShow', label: 'Trade Show', type: 'text' },
+			{ key: 'createdByName', label: 'Created By', type: 'text' },
+			{ key: 'leadSource', label: 'Lead Source', type: 'text' }
+		];
+
+		let CUSTOMERS = [];
+		let custSortKey = 'lastActivityDate';
+		let custSortDir = 'desc';
+
+		function escapeHtml(value) {
+			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+			});
+		}
+
+		async function doLogout() {
+			try { await fetch('/logout'); } catch (e) {}
+			window.location.href = 'login.html';
+		}
+
+		function daysAgo(dateStr) {
+			if (!dateStr) return '';
+			const diff = Date.now() - new Date(dateStr).getTime();
+			return Math.max(0, Math.floor(diff / 86400000));
+		}
+
+		async function loadCustomers() {
+			try {
+				const res = await fetch('/api/v1/lilypad/customers');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to load customers');
+
+				CUSTOMERS = result.data.map(c => ({ ...c, age: daysAgo(c.createdDate) }));
+
+				const mostRecent = CUSTOMERS.reduce((latest, c) => {
+					const t = new Date(c.lastSyncAt).getTime();
+					return t > latest ? t : latest;
+				}, 0);
+				document.getElementById('custLastSynced').textContent = mostRecent
+					? 'Last synced ' + new Date(mostRecent).toLocaleString()
+					: 'Not synced yet';
+
+				renderCustomerHead();
+				renderCustomerTable();
+			} catch (err) {
+				console.error('loadCustomers failed:', err);
+			}
+		}
+
+		function renderCustomerHead() {
+			const head = document.getElementById('custTableHead');
+			head.innerHTML = '<th style="width:30px;"><input type="checkbox" class="form-check-input"></th>' +
+				CUST_COLUMNS.map(col => {
+					const arrow = custSortKey === col.key ? (custSortDir === 'asc' ? ' <i class="ti ti-arrow-up fs-12"></i>' : ' <i class="ti ti-arrow-down fs-12"></i>') : '';
+					return `<th style="cursor:pointer;" onclick="setSortKey('${col.key}')">${escapeHtml(col.label)}${arrow}</th>`;
+				}).join('');
+		}
+
+		function setSortKey(key) {
+			if (custSortKey === key) {
+				custSortDir = custSortDir === 'asc' ? 'desc' : 'asc';
+			} else {
+				custSortKey = key;
+				custSortDir = 'asc';
+			}
+			renderCustomerHead();
+			renderCustomerTable();
+		}
+
+		function renderCustomerTable() {
+			const search = document.getElementById('custSearchInput').value.trim().toLowerCase();
+			let rows = CUSTOMERS.filter(c => {
+				if (!search) return true;
+				return (c.name + ' ' + c.company).toLowerCase().includes(search);
+			});
+
+			rows = rows.slice().sort((a, b) => {
+				let av = a[custSortKey], bv = b[custSortKey];
+				if (custSortKey.toLowerCase().includes('date')) { av = av ? new Date(av).getTime() : 0; bv = bv ? new Date(bv).getTime() : 0; }
+				else if (typeof av === 'number' || typeof bv === 'number') { av = Number(av) || 0; bv = Number(bv) || 0; }
+				else { av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase(); }
+				if (av < bv) return custSortDir === 'asc' ? -1 : 1;
+				if (av > bv) return custSortDir === 'asc' ? 1 : -1;
+				return 0;
+			});
+
+			const tbody = document.getElementById('custTableBody');
+			if (!rows.length) {
+				tbody.innerHTML = `<tr><td colspan="${CUST_COLUMNS.length + 1}" class="text-center text-muted py-4">No customers yet. Click "Sync from Salesforce" to pull leads in.</td></tr>`;
+				return;
+			}
+
+			tbody.innerHTML = rows.map(c => {
+				const cells = CUST_COLUMNS.map(col => {
+					if (col.key === 'name') {
+						return `<td><a href="customer-detail.html?id=${c._id}" class="fw-semibold text-decoration-none">${escapeHtml(c.name)}</a></td>`;
+					}
+					if (col.type === 'date') {
+						return `<td>${c[col.key] ? new Date(c[col.key]).toLocaleDateString() : ''}</td>`;
+					}
+					if (col.type === 'datetime') {
+						return `<td>${c[col.key] ? new Date(c[col.key]).toLocaleString() : ''}</td>`;
+					}
+					return `<td>${escapeHtml(c[col.key])}</td>`;
+				}).join('');
+				return `<tr><td><input type="checkbox" class="form-check-input"></td>${cells}</tr>`;
+			}).join('');
+		}
+
+		async function syncCustomers() {
+			const btn = document.getElementById('custSyncBtn');
+			btn.disabled = true;
+			try {
+				const res = await fetch('/api/v1/lilypad/customers/sync', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Sync failed');
+				await loadCustomers();
+				alert(result.message);
+			} catch (err) {
+				alert(err.message || 'Unable to sync from Salesforce.');
+			} finally {
+				btn.disabled = false;
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			try {
+				const res = await fetch('/api/v1/lilypad/account/me');
+				const result = await res.json();
+				if (result.success) {
+					document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
+					document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
+					if (result.data.role === 'admin') {
+						document.getElementById('adminSetupNavItem').style.display = '';
+						document.getElementById('adminSetupTitle').style.display = '';
+					}
+				}
+			} catch (e) {}
+
+			loadCustomers();
+		});
+	</script>
+</body>
+</html>

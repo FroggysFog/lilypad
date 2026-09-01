@@ -369,6 +369,12 @@
 										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
 									</a>
 								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Operations</span></li>
+						<li>
+							<ul>
 								<li>
 									<a href="tickets.html">
 										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
@@ -379,25 +385,59 @@
 										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
 									</a>
 								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Accounting</span></li>
+						<li>
+							<ul>
 								<li>
 									<a href="past-due-payments.html">
 										<i class="ti ti-cash-banknote"></i><span>Past Due Payments</span>
 									</a>
 								</li>
+								<li>
+									<a href="reminder-templates.html">
+										<i class="ti ti-mail-cog"></i><span>Reminder Templates</span>
+									</a>
+								</li>
 							</ul>
 						</li>
 
-						<li class="menu-title"><span>Administration & Setup</span></li>
+						<li class="menu-title"><span>Customers</span></li>
 						<li>
+							<ul>
+								<li>
+									<a href="customers.html">
+										<i class="ti ti-users-group"></i><span>Customer Directory</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Orders</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="orders.html">
+										<i class="ti ti-package"></i><span>Order History</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+
+						<li class="menu-title" id="adminSetupTitle" style="display:none;"><span>Administration & Setup</span></li>
+						<li id="adminSetupNavItem" style="display:none;">
 							<ul>
 								<li class="submenu">
 									<a href="javascript:void(0);" class="subdrop">
 										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
 									</a>
-									<ul style="display: block;">
+									<ul>
 										<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
 										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
 										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
+										<li><a href="api-credentials.html"><i class="ti ti-key me-2 text-primary"></i>API Credentials Vault</a></li>
 									</ul>
 								</li>
 							</ul>
@@ -614,6 +654,14 @@
         window.location.href = 'tickets.html?' + params.toString();
     }
 
+    function revealAdminNav(role) {
+        if (role !== 'admin') return;
+        const navItem = document.getElementById('adminSetupNavItem');
+        const navTitle = document.getElementById('adminSetupTitle');
+        if (navItem) navItem.style.display = '';
+        if (navTitle) navTitle.style.display = '';
+    }
+
     async function loadMe() {
         try {
             const res = await fetch('/api/v1/lilypad/account/me');
@@ -622,6 +670,7 @@
             dashCurrentUserId = result.data.id;
             document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
             document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
+            revealAdminNav(result.data.role);
         } catch (err) {
             console.error('Unable to load current user:', err);
         }

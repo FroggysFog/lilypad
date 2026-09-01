@@ -39,6 +39,10 @@ services:
         sync: false
       - key: SF_OVERDUE_SOQL
         sync: false
+      # Override if the default Lead query's guessed custom field names
+      # (Import_Notes__c, Trade_Show__c) don't match this org's Salesforce schema
+      - key: SF_LEADS_SOQL
+        sync: false
       - key: REMINDER_CHECK_MINUTES
         value: "5"
       # SMTP (past-due payment reminder emails) - fill in via the Render dashboard

@@ -6,6 +6,9 @@ const LilyPadPastDueAccount = require('./lilypadPastDueAccount')
 const LilyPadEmailTemplate = require('./lilypadEmailTemplate')
 const LilyPadReminderDelivery = require('./lilypadReminderDelivery')
 const LilyPadSetting = require('./lilypadSetting')
+const LilyPadCredential = require('./lilypadCredential')
+const LilyPadCustomer = require('./lilypadCustomer')
+const LilyPadOrder = require('./lilypadOrder')
 
 module.exports = {
   LilyPadTicket,
@@ -15,5 +18,8 @@ module.exports = {
   LilyPadPastDueAccount,
   LilyPadEmailTemplate,
   LilyPadReminderDelivery,
-  LilyPadSetting
+  LilyPadSetting,
+  LilyPadCredential,
+  LilyPadCustomer,
+  LilyPadOrder
 }

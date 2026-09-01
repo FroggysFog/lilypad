@@ -37,6 +37,26 @@ function requireLoginApi(req, res, next) {
   })
 }
 
+function requireAdminApi(req, res, next) {
+  const accountId = req.session && req.session.lilypadAccountId
+  if (!accountId) {
+    return res.status(401).json({ success: false, error: 'Not logged in' })
+  }
+
+  LilyPadAccount.findById(accountId, function (err, account) {
+    if (err || !account || account.deleted) {
+      return res.status(401).json({ success: false, error: 'Not logged in' })
+    }
+
+    if (account.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Admin access required' })
+    }
+
+    req.user = account
+    return next()
+  })
+}
+
 function redirectIfLoggedIn(req, res, next) {
   const accountId = req.session && req.session.lilypadAccountId
   if (!accountId) {
@@ -59,5 +79,6 @@ function redirectIfLoggedIn(req, res, next) {
 module.exports = {
   requireLogin,
   requireLoginApi,
+  requireAdminApi,
   redirectIfLoggedIn
 }

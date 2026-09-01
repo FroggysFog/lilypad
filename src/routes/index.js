@@ -55,6 +55,15 @@ module.exports = function (app) {
   const lilypadPastDueRouter = require('./lilypadPastDue')()
   app.use('/api/v1/lilypad', lilypadPastDueRouter)
 
+  const lilypadCredentialsRouter = require('./lilypadCredentials')()
+  app.use('/api/v1/lilypad', lilypadCredentialsRouter)
+
+  const lilypadCustomersRouter = require('./lilypadCustomers')()
+  app.use('/api/v1/lilypad', lilypadCustomersRouter)
+
+  const lilypadOrdersRouter = require('./lilypadOrders')()
+  app.use('/api/v1/lilypad', lilypadOrdersRouter)
+
   mainRoutes(router, controllers)
   app.use('/', router)
 

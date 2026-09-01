@@ -5,6 +5,9 @@ const Controllers = {
   lilypadMachines: require('./lilypadMachines'),
   lilypadNotifications: require('./lilypadNotifications'),
   lilypadPastDue: require('./lilypadPastDue'),
+  lilypadCredentials: require('./lilypadCredentials'),
+  lilypadCustomers: require('./lilypadCustomers'),
+  lilypadOrders: require('./lilypadOrders'),
   microsoftTeams: require('./microsoftTeams'),
   salesforceAuth: require('./salesforceAuth')
 }
