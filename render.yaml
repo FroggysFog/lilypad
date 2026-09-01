@@ -9,6 +9,10 @@ services:
     startCommand: "node app.js"
     healthCheckPath: "/api/v1/lilypad/tickets/todo"
     autoDeploy: true
+    disk:
+      name: lilypad-uploads
+      mountPath: /var/data/uploads
+      sizeGB: 5
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,4 +24,6 @@ services:
         value: support@lilypad.local
       - key: ENABLE_ANTI_SPAM_SHIELD
         value: "true"
+      - key: SESSION_SECRET
+        sync: false
 

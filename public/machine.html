@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Machine Master Page | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+				</div>
+
+				<div class="header-search d-none d-md-flex align-items-center justify-content-center mx-auto" style="width: 100%; max-width: 520px;">
+					<div class="input-icon position-relative w-100">
+						<input type="text" class="form-control rounded-pill py-2 px-4 shadow-sm" placeholder="Search anything in LilyPad ERP... (Ctrl + K)" style="font-size: 14px; height: 42px;">
+						<span class="input-icon-addon d-inline-flex p-0 header-search-icon pe-3"><i class="ti ti-command fs-16 text-muted"></i></span>
+					</div>
+				</div>
+
+				<div class="d-flex align-items-center">
+					<div class="header-item me-2">
+						<a href="tickets.html?action=new" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 py-2 text-white shadow-sm fw-semibold rounded-pill" style="font-size: 13px;">
+							<i class="ti ti-plus fs-16"></i>
+							<span>New Ticket</span>
+						</a>
+					</div>
+
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);"
+							class="topbar-link dropdown-toggle drop-arrow-none position-relative"
+							data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex" alt="user-image">
+							<span class="online text-success"><i class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42" alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0 topbar-user-name">Scott Karan</p>
+									<span class="d-block fs-13 topbar-user-role">Operations Admin</span>
+								</div>
+							</div>
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+							<div class="pt-2 mt-2 border-top">
+								<a href="login.html" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+			<div class="sidebar-logo">
+				<div>
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span class="text-primary">ERP</span></span>
+					</a>
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu">
+					<ul>
+						<li class="menu-title"><span>Main Operations</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="dashboard.html">
+										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
+									</a>
+								</li>
+								<li>
+									<a href="tickets.html">
+										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
+									</a>
+								</li>
+								<li>
+									<a href="knowledge-base.html" class="active">
+										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>Administration & Setup</span></li>
+						<li>
+							<ul>
+								<li class="submenu">
+									<a href="javascript:void(0);" class="subdrop">
+										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
+									</a>
+									<ul style="display: block;">
+										<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+						<li class="menu-title"><span>Account</span></li>
+						<li>
+							<ul>
+								<li>
+									<a href="login.html">
+										<i class="ti ti-logout text-danger"></i><span class="text-danger fw-semibold">Sign Out</span>
+									</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<div class="page-wrapper">
+			<div class="content pb-0">
+
+				<div id="loadingState" class="text-center py-5 text-muted">
+					<i class="ti ti-loader-2 fs-32 d-block mb-2"></i> Loading machine master page...
+				</div>
+
+				<div id="notFoundState" class="text-center py-5 text-muted d-none">
+					<i class="ti ti-search-off fs-32 d-block mb-2"></i> Machine not found.
+					<div class="mt-2"><a href="knowledge-base.html" class="btn btn-sm btn-outline-primary">Back to Knowledge Base</a></div>
+				</div>
+
+				<div id="machineContent" class="d-none">
+
+					<!-- Page Header -->
+					<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+						<div>
+							<a href="knowledge-base.html" class="fs-12 text-muted text-decoration-none d-block mb-1"><i class="ti ti-arrow-left me-1"></i>Back to Knowledge Base</a>
+							<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+								<span id="machineName">Machine</span>
+								<span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold" id="machineCategory">Category</span>
+							</h4>
+							<p class="text-muted fs-13 mb-0">Source of truth for this machine: manuals, media, and troubleshooting.</p>
+						</div>
+					</div>
+
+					<div class="row g-3 mb-4">
+						<!-- Documents -->
+						<div class="col-lg-4">
+							<div class="card border-0 shadow-sm rounded-3 h-100">
+								<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
+									<h6 class="fw-bold mb-0"><i class="ti ti-file-text text-primary me-1"></i>Documents & Manuals</h6>
+								</div>
+								<div class="card-body">
+									<div id="documentsList" class="d-flex flex-column gap-2 mb-3"></div>
+									<form onsubmit="uploadMedia(event, 'document')" class="border-top pt-3">
+										<input type="file" class="form-control form-control-sm mb-2" name="file" accept=".pdf,.doc,.docx,.txt" required>
+										<button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="ti ti-upload me-1"></i>Upload Document</button>
+									</form>
+								</div>
+							</div>
+						</div>
+
+						<!-- Images -->
+						<div class="col-lg-4">
+							<div class="card border-0 shadow-sm rounded-3 h-100">
+								<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
+									<h6 class="fw-bold mb-0"><i class="ti ti-photo text-success me-1"></i>Images</h6>
+								</div>
+								<div class="card-body">
+									<div id="imagesList" class="row g-2 mb-3"></div>
+									<form onsubmit="uploadMedia(event, 'image')" class="border-top pt-3">
+										<input type="file" class="form-control form-control-sm mb-2" name="file" accept="image/*" required>
+										<button type="submit" class="btn btn-sm btn-outline-success w-100"><i class="ti ti-upload me-1"></i>Upload Image</button>
+									</form>
+								</div>
+							</div>
+						</div>
+
+						<!-- Videos -->
+						<div class="col-lg-4">
+							<div class="card border-0 shadow-sm rounded-3 h-100">
+								<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
+									<h6 class="fw-bold mb-0"><i class="ti ti-video text-info me-1"></i>Videos</h6>
+								</div>
+								<div class="card-body">
+									<div id="videosList" class="d-flex flex-column gap-3 mb-3"></div>
+									<form onsubmit="uploadMedia(event, 'video')" class="border-top pt-3">
+										<input type="file" class="form-control form-control-sm mb-2" name="file" accept="video/*" required>
+										<button type="submit" class="btn btn-sm btn-outline-info w-100"><i class="ti ti-upload me-1"></i>Upload Video</button>
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Common Issues / Troubleshooting -->
+					<div class="card border-0 shadow-sm rounded-3 mb-4">
+						<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
+							<h6 class="fw-bold mb-0"><i class="ti ti-bug text-danger me-1"></i>Common Issues & Quick Troubleshooting</h6>
+							<button type="button" class="btn btn-sm btn-primary" data-bs-toggle="collapse" data-bs-target="#addIssueForm">
+								<i class="ti ti-plus me-1"></i>Add Issue
+							</button>
+						</div>
+						<div class="card-body">
+							<div class="collapse mb-3" id="addIssueForm">
+								<form onsubmit="addIssue(event)" class="p-3 bg-light rounded-3 border">
+									<div class="mb-2">
+										<label class="form-label fs-13 fw-semibold">Symptom / Issue <span class="text-danger">*</span></label>
+										<input type="text" id="issueSymptom" class="form-control form-control-sm" placeholder="e.g. Unit throws E-04 overheat error" required>
+									</div>
+									<div class="mb-2">
+										<label class="form-label fs-13 fw-semibold">Quick Troubleshooting Steps (1 per line)</label>
+										<textarea id="issueSteps" class="form-control form-control-sm" rows="3" placeholder="1. Disconnect power&#10;2. Inspect thermal cutoff fuse"></textarea>
+									</div>
+									<div class="mb-3">
+										<label class="form-label fs-13 fw-semibold">Resolution</label>
+										<textarea id="issueResolution" class="form-control form-control-sm" rows="2" placeholder="Root cause & permanent fix"></textarea>
+									</div>
+									<button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-check me-1"></i>Save Issue</button>
+								</form>
+							</div>
+							<div id="issuesList" class="d-flex flex-column gap-2"></div>
+						</div>
+					</div>
+
+				</div>
+
+			</div>
+		</div>
+
+	</div>
+	<!-- End Wrapper -->
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<script src="assets/js/script.js"></script>
+	<script src="assets/js/lilypad-notifications.js"></script>
+
+	<script>
+		function escapeHtml(value) {
+			return String(value == null ? '' : value).replace(/[&<>'"]/g, function(c) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+			});
+		}
+
+		function getSlug() {
+			return new URLSearchParams(window.location.search).get('slug');
+		}
+
+		function fileUrl(m) {
+			return '/api/v1/lilypad/uploads/machines/' + encodeURIComponent(getSlug()) + '/' + encodeURIComponent(m.filename);
+		}
+
+		function formatBytes(bytes) {
+			if (!bytes) return '0 KB';
+			const kb = bytes / 1024;
+			if (kb < 1024) return kb.toFixed(0) + ' KB';
+			return (kb / 1024).toFixed(1) + ' MB';
+		}
+
+		let currentMachine = null;
+
+		async function loadMachine() {
+			const slug = getSlug();
+			if (!slug) {
+				document.getElementById('loadingState').classList.add('d-none');
+				document.getElementById('notFoundState').classList.remove('d-none');
+				return;
+			}
+
+			try {
+				const res = await fetch('/api/v1/lilypad/machines/' + encodeURIComponent(slug));
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Machine not found');
+
+				currentMachine = result.data;
+				renderMachine();
+
+				document.getElementById('loadingState').classList.add('d-none');
+				document.getElementById('machineContent').classList.remove('d-none');
+			} catch (err) {
+				document.getElementById('loadingState').classList.add('d-none');
+				document.getElementById('notFoundState').classList.remove('d-none');
+			}
+		}
+
+		function renderMachine() {
+			const m = currentMachine;
+			document.getElementById('machineName').textContent = m.name;
+			document.getElementById('machineCategory').textContent = m.category || 'General';
+			document.title = m.name + ' | Knowledge Base | LilyPad ERP';
+
+			const documents = (m.media || []).filter(x => x.type === 'document');
+			const images = (m.media || []).filter(x => x.type === 'image');
+			const videos = (m.media || []).filter(x => x.type === 'video');
+
+			document.getElementById('documentsList').innerHTML = documents.length
+				? documents.map(mediaRowHtml).join('')
+				: '<p class="fs-12 text-muted mb-0">No documents uploaded yet.</p>';
+
+			document.getElementById('imagesList').innerHTML = images.length
+				? images.map(img => (
+					'<div class="col-6">' +
+						'<div class="position-relative">' +
+							'<a href="' + fileUrl(img) + '" target="_blank"><img src="' + fileUrl(img) + '" class="img-fluid rounded-2 border" style="height:90px; width:100%; object-fit:cover;"></a>' +
+							'<button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 py-0 px-1" onclick="deleteMedia(\'' + img._id + '\')"><i class="ti ti-x fs-11"></i></button>' +
+						'</div>' +
+					'</div>'
+				)).join('')
+				: '<p class="fs-12 text-muted mb-0">No images uploaded yet.</p>';
+
+			document.getElementById('videosList').innerHTML = videos.length
+				? videos.map(v => (
+					'<div>' +
+						'<video src="' + fileUrl(v) + '" controls class="w-100 rounded-2 border mb-1" style="max-height:160px;"></video>' +
+						'<div class="d-flex align-items-center justify-content-between">' +
+							'<span class="fs-11 text-muted">' + escapeHtml(v.title) + '</span>' +
+							'<button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="deleteMedia(\'' + v._id + '\')"><i class="ti ti-trash"></i></button>' +
+						'</div>' +
+					'</div>'
+				)).join('')
+				: '<p class="fs-12 text-muted mb-0">No videos uploaded yet.</p>';
+
+			const issues = m.issues || [];
+			document.getElementById('issuesList').innerHTML = issues.length
+				? issues.map(issue => (
+					'<div class="p-3 bg-light rounded-3 border">' +
+						'<div class="d-flex align-items-center justify-content-between mb-1">' +
+							'<strong class="fs-13 text-dark">' + escapeHtml(issue.symptom) + '</strong>' +
+							'<div class="d-flex align-items-center gap-2">' +
+								'<span class="fs-11 text-muted">' + new Date(issue.createdAt).toLocaleDateString() + '</span>' +
+								'<button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="deleteIssue(\'' + issue._id + '\')"><i class="ti ti-trash"></i></button>' +
+							'</div>' +
+						'</div>' +
+						((issue.steps || []).length
+							? '<ol class="fs-12 text-muted ps-3 mb-2">' + issue.steps.map(s => '<li>' + escapeHtml(s) + '</li>').join('') + '</ol>'
+							: '') +
+						(issue.resolution ? '<div class="fs-12 text-dark"><strong>Resolution:</strong> ' + escapeHtml(issue.resolution) + '</div>' : '')
+					+ '</div>'
+				)).join('')
+				: '<p class="fs-13 text-muted mb-0">No issues logged yet for this machine.</p>';
+		}
+
+		function mediaRowHtml(doc) {
+			return '<div class="d-flex align-items-center justify-content-between p-2 bg-light rounded-2 border">' +
+				'<a href="' + fileUrl(doc) + '" target="_blank" class="text-decoration-none fs-13 text-truncate" style="max-width:70%;"><i class="ti ti-file-text me-1"></i>' + escapeHtml(doc.title || doc.originalName) + '</a>' +
+				'<div class="d-flex align-items-center gap-2">' +
+					'<span class="fs-11 text-muted">' + formatBytes(doc.size) + '</span>' +
+					'<button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="deleteMedia(\'' + doc._id + '\')"><i class="ti ti-trash"></i></button>' +
+				'</div>' +
+			'</div>';
+		}
+
+		async function uploadMedia(e, expectedType) {
+			e.preventDefault();
+			const form = e.target;
+			const fileInput = form.querySelector('input[type="file"]');
+			if (!fileInput.files.length) return;
+
+			const formData = new FormData();
+			formData.append('file', fileInput.files[0]);
+
+			const btn = form.querySelector('button[type="submit"]');
+			btn.disabled = true;
+
+			try {
+				const res = await fetch('/api/v1/lilypad/machines/' + encodeURIComponent(getSlug()) + '/media', {
+					method: 'POST',
+					body: formData
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Upload failed');
+
+				currentMachine = result.data;
+				renderMachine();
+				form.reset();
+			} catch (err) {
+				alert(err.message || 'Upload failed.');
+			} finally {
+				btn.disabled = false;
+			}
+		}
+
+		async function deleteMedia(mediaId) {
+			if (!confirm('Remove this file?')) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/machines/' + encodeURIComponent(getSlug()) + '/media/' + encodeURIComponent(mediaId), {
+					method: 'DELETE'
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to remove file');
+				await loadMachine();
+			} catch (err) {
+				alert(err.message || 'Unable to remove file.');
+			}
+		}
+
+		async function deleteIssue(issueId) {
+			if (!confirm('Remove this issue?')) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/machines/' + encodeURIComponent(getSlug()) + '/issues/' + encodeURIComponent(issueId), {
+					method: 'DELETE'
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to remove issue');
+				await loadMachine();
+			} catch (err) {
+				alert(err.message || 'Unable to remove issue.');
+			}
+		}
+
+		async function addIssue(e) {
+			e.preventDefault();
+			const symptom = document.getElementById('issueSymptom').value.trim();
+			const stepsRaw = document.getElementById('issueSteps').value;
+			const resolution = document.getElementById('issueResolution').value.trim();
+			const steps = stepsRaw.split('\n').map(s => s.trim()).filter(Boolean);
+
+			try {
+				const res = await fetch('/api/v1/lilypad/machines/' + encodeURIComponent(getSlug()) + '/issues', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ symptom, steps, resolution })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to add issue');
+
+				currentMachine = result.data;
+				renderMachine();
+				e.target.reset();
+				bootstrap.Collapse.getOrCreateInstance(document.getElementById('addIssueForm')).hide();
+			} catch (err) {
+				alert(err.message || 'Unable to add issue.');
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', function() {
+			try {
+				const auth = sessionStorage.getItem('lilypad_auth_user');
+				if (auth) {
+					const u = JSON.parse(auth);
+					document.querySelectorAll('.topbar-user-name').forEach(function(el) { el.textContent = u.fullname || 'Scott Karan'; });
+					document.querySelectorAll('.topbar-user-role').forEach(function(el) { el.textContent = u.role || 'Operations Admin'; });
+				}
+			} catch(e) {}
+
+			loadMachine();
+		});
+	</script>
+</body>
+
+</html>

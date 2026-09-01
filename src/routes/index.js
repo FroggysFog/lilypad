@@ -41,6 +41,9 @@ module.exports = function (app) {
   const lilypadTicketsRouter = require('./lilypadTickets')()
   app.use('/api/v1/lilypad', lilypadTicketsRouter)
 
+  const lilypadMachinesRouter = require('./lilypadMachines')()
+  app.use('/api/v1/lilypad', lilypadMachinesRouter)
+
   mainRoutes(router, controllers)
   app.use('/', router)
 
