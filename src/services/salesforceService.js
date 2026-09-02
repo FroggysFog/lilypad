@@ -224,6 +224,24 @@ async function queryAllSalesforce (soqlQuery) {
 }
 
 /**
+ * Same pagination as queryAllSalesforce, but invokes onPage per batch
+ * (Salesforce's own page size, ~2000 records) instead of accumulating
+ * every record in memory before returning. Use this for objects that can
+ * grow large (e.g. Orders) so a sync processes and upserts one page at a
+ * time rather than holding the whole result set at once.
+ */
+async function queryAllSalesforcePages (soqlQuery, onPage) {
+  const conn = await getSalesforceConnection()
+  let result = await conn.query(soqlQuery)
+  await onPage(result.records || [])
+
+  while (!result.done && result.nextRecordsUrl) {
+    result = await conn.queryMore(result.nextRecordsUrl)
+    await onPage(result.records || [])
+  }
+}
+
+/**
  * Fetches a Salesforce report payload including detailed rows.
  */
 async function fetchSalesforceReport (reportId) {
@@ -305,6 +323,7 @@ module.exports = {
   getSalesforceConnection,
   querySalesforce,
   queryAllSalesforce,
+  queryAllSalesforcePages,
   fetchSalesforceReport,
   describeGlobalSalesforce,
   describeSalesforceObject,

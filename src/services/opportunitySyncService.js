@@ -5,7 +5,7 @@
  * for org-specific customization, same escape hatch as the other syncs.
  */
 
-const { queryAllSalesforce } = require('./salesforceService')
+const { queryAllSalesforcePages } = require('./salesforceService')
 const LilyPadOpportunity = require('../models/lilypadOpportunity')
 
 const DEFAULT_OPPORTUNITIES_SOQL = `
@@ -41,23 +41,26 @@ function normalizeOpportunityRecord (raw) {
 
 async function syncOpportunitiesFromSalesforce () {
   const soql = (process.env.SF_OPPORTUNITIES_SOQL || '').trim() || DEFAULT_OPPORTUNITIES_SOQL
-  const records = await queryAllSalesforce(soql)
-
-  const normalized = records
-    .map(normalizeOpportunityRecord)
-    .filter((r) => r.sourceRecordId)
-
   let synced = 0
-  for (const record of normalized) {
-    await LilyPadOpportunity.findOneAndUpdate(
-      { sourceRecordId: record.sourceRecordId },
-      { $set: { ...record, lastSyncAt: new Date() } },
-      { upsert: true }
-    )
-    synced += 1
-  }
+  let total = 0
 
-  return { synced, total: normalized.length }
+  await queryAllSalesforcePages(soql, async (page) => {
+    const normalized = page
+      .map(normalizeOpportunityRecord)
+      .filter((r) => r.sourceRecordId)
+
+    total += normalized.length
+    for (const record of normalized) {
+      await LilyPadOpportunity.findOneAndUpdate(
+        { sourceRecordId: record.sourceRecordId },
+        { $set: { ...record, lastSyncAt: new Date() } },
+        { upsert: true }
+      )
+      synced += 1
+    }
+  })
+
+  return { synced, total }
 }
 
 module.exports = {

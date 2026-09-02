@@ -11,7 +11,7 @@
  * hatch already used for Past Due Payments' SF_OVERDUE_SOQL).
  */
 
-const { queryAllSalesforce } = require('./salesforceService')
+const { queryAllSalesforcePages } = require('./salesforceService')
 const LilyPadCustomer = require('../models/lilypadCustomer')
 
 const DEFAULT_LEADS_SOQL = `
@@ -47,23 +47,26 @@ function normalizeLeadRecord (raw) {
 
 async function syncCustomersFromSalesforce () {
   const soql = (process.env.SF_LEADS_SOQL || '').trim() || DEFAULT_LEADS_SOQL
-  const records = await queryAllSalesforce(soql)
-
-  const normalized = records
-    .map(normalizeLeadRecord)
-    .filter((r) => r.sourceRecordId)
-
   let synced = 0
-  for (const record of normalized) {
-    await LilyPadCustomer.findOneAndUpdate(
-      { sourceRecordId: record.sourceRecordId },
-      { $set: { ...record, lastSyncAt: new Date() } },
-      { upsert: true }
-    )
-    synced += 1
-  }
+  let total = 0
 
-  return { synced, total: normalized.length }
+  await queryAllSalesforcePages(soql, async (page) => {
+    const normalized = page
+      .map(normalizeLeadRecord)
+      .filter((r) => r.sourceRecordId)
+
+    total += normalized.length
+    for (const record of normalized) {
+      await LilyPadCustomer.findOneAndUpdate(
+        { sourceRecordId: record.sourceRecordId },
+        { $set: { ...record, lastSyncAt: new Date() } },
+        { upsert: true }
+      )
+      synced += 1
+    }
+  })
+
+  return { synced, total }
 }
 
 module.exports = {

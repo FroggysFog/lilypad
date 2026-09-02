@@ -13,7 +13,7 @@
  * a separate Salesforce report or Invoice__c query.
  */
 
-const { querySalesforce, queryAllSalesforce } = require('./salesforceService')
+const { querySalesforce, queryAllSalesforcePages } = require('./salesforceService')
 const LilyPadOrder = require('../models/lilypadOrder')
 
 function normalizeOrderRecord (raw, items) {
@@ -74,34 +74,18 @@ function normalizeOrderRecord (raw, items) {
   }
 }
 
-async function syncOrdersFromSalesforce (options = {}) {
-  // No SOQL LIMIT here - queryAllSalesforce paginates through every record,
-  // same as customerSyncService.js. An explicit options.limit still caps
-  // the final result if ever needed (e.g. a quick manual test sync).
-  const records = await queryAllSalesforce(`
-        SELECT Id, OrderNumber, Status, EffectiveDate, EndDate, TotalAmount, AccountId,
-               Account.Name, Account.Phone, Owner.Name, PoDate, PoNumber,
-               BillToContactId, BillToContact.Name, BillToContact.Email,
-               Net_Terms__c, Days_Past_Due__c, Total_Due__c, Initial_Due_Date__c,
-               Final_Due_Date__c, Shipped_Date__c, Payment_Method__c, Cart_OrderID__c,
-               BillingStreet, BillingCity, BillingState,
-               BillingPostalCode, BillingCountry, ShippingStreet, ShippingCity, ShippingState,
-               ShippingPostalCode, ShippingCountry, Description, CreatedDate, LastModifiedDate
-        FROM Order
-        ORDER BY EffectiveDate DESC NULLS LAST, CreatedDate DESC
-    `)
-
+async function fetchOrderItemsByOrderId (orderIds) {
   const itemsByOrderId = {}
-  for (let index = 0; index < records.length; index += 50) {
-    const orderIds = records.slice(index, index + 50).map((order) => order.Id).filter(Boolean)
-    if (!orderIds.length) continue
+  for (let index = 0; index < orderIds.length; index += 50) {
+    const batch = orderIds.slice(index, index + 50)
+    if (!batch.length) continue
 
     try {
       const orderItems = await querySalesforce(`
                 SELECT Id, OrderId, Quantity, UnitPrice, TotalPrice,
                        PricebookEntry.Product2.Name, PricebookEntry.Product2.StockKeepingUnit
                 FROM OrderItem
-                WHERE OrderId IN ('${orderIds.join("','")}')
+                WHERE OrderId IN ('${batch.join("','")}')
                 ORDER BY OrderId, CreatedDate
             `)
       orderItems.forEach((item) => {
@@ -112,22 +96,51 @@ async function syncOrdersFromSalesforce (options = {}) {
       // Line items are a nice-to-have; keep the order sync itself alive if this fails
     }
   }
+  return itemsByOrderId
+}
 
-  const normalized = records
-    .map((order) => normalizeOrderRecord(order, itemsByOrderId[order.Id]))
-    .filter((r) => r.sourceRecordId)
-
+/**
+ * Processes and upserts one Salesforce query page (~2000 records) at a
+ * time via queryAllSalesforcePages, instead of loading the entire order
+ * history into memory before writing anything - this org's order count
+ * is large enough that accumulating it all first was likely OOM-killing
+ * the process (crashes lined up with the sync scheduler's hourly tick).
+ */
+async function syncOrdersFromSalesforce () {
   let synced = 0
-  for (const record of normalized) {
-    await LilyPadOrder.findOneAndUpdate(
-      { sourceRecordId: record.sourceRecordId },
-      { $set: { ...record, lastSyncAt: new Date() } },
-      { upsert: true }
-    )
-    synced += 1
-  }
+  let total = 0
 
-  return { synced, total: normalized.length }
+  await queryAllSalesforcePages(`
+        SELECT Id, OrderNumber, Status, EffectiveDate, EndDate, TotalAmount, AccountId,
+               Account.Name, Account.Phone, Owner.Name, PoDate, PoNumber,
+               BillToContactId, BillToContact.Name, BillToContact.Email,
+               Net_Terms__c, Days_Past_Due__c, Total_Due__c, Initial_Due_Date__c,
+               Final_Due_Date__c, Shipped_Date__c, Payment_Method__c, Cart_OrderID__c,
+               BillingStreet, BillingCity, BillingState,
+               BillingPostalCode, BillingCountry, ShippingStreet, ShippingCity, ShippingState,
+               ShippingPostalCode, ShippingCountry, Description, CreatedDate, LastModifiedDate
+        FROM Order
+        ORDER BY EffectiveDate DESC NULLS LAST, CreatedDate DESC
+    `, async (page) => {
+    const orderIds = page.map((order) => order.Id).filter(Boolean)
+    const itemsByOrderId = await fetchOrderItemsByOrderId(orderIds)
+
+    const normalized = page
+      .map((order) => normalizeOrderRecord(order, itemsByOrderId[order.Id]))
+      .filter((r) => r.sourceRecordId)
+
+    total += normalized.length
+    for (const record of normalized) {
+      await LilyPadOrder.findOneAndUpdate(
+        { sourceRecordId: record.sourceRecordId },
+        { $set: { ...record, lastSyncAt: new Date() } },
+        { upsert: true }
+      )
+      synced += 1
+    }
+  })
+
+  return { synced, total }
 }
 
 module.exports = {

@@ -7,7 +7,7 @@
  * for consistency with the other sync services.
  */
 
-const { queryAllSalesforce } = require('./salesforceService')
+const { queryAllSalesforcePages } = require('./salesforceService')
 const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
 
 const DEFAULT_ACCOUNTS_SOQL = `
@@ -54,23 +54,26 @@ function normalizeAccountRecord (raw) {
 
 async function syncSalesforceAccounts () {
   const soql = (process.env.SF_ACCOUNTS_SOQL || '').trim() || DEFAULT_ACCOUNTS_SOQL
-  const records = await queryAllSalesforce(soql)
-
-  const normalized = records
-    .map(normalizeAccountRecord)
-    .filter((r) => r.sourceRecordId)
-
   let synced = 0
-  for (const record of normalized) {
-    await LilyPadSalesforceAccount.findOneAndUpdate(
-      { sourceRecordId: record.sourceRecordId },
-      { $set: { ...record, lastSyncAt: new Date() } },
-      { upsert: true }
-    )
-    synced += 1
-  }
+  let total = 0
 
-  return { synced, total: normalized.length }
+  await queryAllSalesforcePages(soql, async (page) => {
+    const normalized = page
+      .map(normalizeAccountRecord)
+      .filter((r) => r.sourceRecordId)
+
+    total += normalized.length
+    for (const record of normalized) {
+      await LilyPadSalesforceAccount.findOneAndUpdate(
+        { sourceRecordId: record.sourceRecordId },
+        { $set: { ...record, lastSyncAt: new Date() } },
+        { upsert: true }
+      )
+      synced += 1
+    }
+  })
+
+  return { synced, total }
 }
 
 module.exports = {
