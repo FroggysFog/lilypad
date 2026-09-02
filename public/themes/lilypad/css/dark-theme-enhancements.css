@@ -445,10 +445,13 @@
    every category header look like an identical solid button whether or
    not it was open. Keep those to a subtler highlight instead - higher
    specificity than the block above so this wins despite both using
-   !important. */
+   !important. var(--menu-item-active-bg) was tried first but resolves
+   to --danger-transparent in this theme (a reddish/pink tint meant for
+   a different use), which read as an unwanted pink outline - use an
+   actual primary-tinted background instead. */
 .sidebar .sidebar-menu > ul > li.submenu > a.subdrop,
 .sidebar .sidebar-menu > ul > li.submenu > a.active {
-    background: var(--menu-item-active-bg) !important;
+    background: rgba(var(--bs-primary-rgb), 0.12) !important;
     color: var(--primary) !important;
 }
 .sidebar .sidebar-menu > ul > li.submenu > a.subdrop i,
@@ -460,17 +463,45 @@
 .sidebar .sidebar-menu > ul > li.submenu > a.active span:not(.menu-arrow) {
     color: var(--primary) !important;
 }
-.sidebar .sidebar-menu > ul > li.submenu > a.subdrop .menu-arrow::before,
-.sidebar .sidebar-menu > ul > li.submenu > a.active .menu-arrow::before {
-    border-color: var(--primary) !important;
-}
 
 /* Keep category labels ("Administration & Setup") on one line instead of
-   wrapping under the chevron arrow */
+   wrapping under the chevron arrow, with room reserved on the right so
+   the label never overlaps the dropdown arrow. Font size trimmed down
+   slightly per feedback that the category rows felt oversized. */
 .sidebar .sidebar-menu > ul > li.submenu > a {
     white-space: nowrap;
+    padding-right: 28px !important;
 }
 .sidebar .sidebar-menu > ul > li.submenu > a span:not(.menu-arrow) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    font-size: 14px !important;
+}
+
+/* Dropdown arrows - this theme renders them as an icon-font glyph
+   (content: "\ea5f" / "\ea62"), not a CSS border triangle, so the
+   earlier border-color rule here was a no-op and the arrow was left to
+   inherit text color, which read as invisible. Set it explicitly. */
+.sidebar .sidebar-menu > ul > li.submenu > a .menu-arrow {
+    opacity: 1 !important;
+}
+.sidebar .sidebar-menu > ul > li.submenu > a .menu-arrow::before {
+    color: var(--gray-500) !important;
+    font-size: 13px !important;
+}
+.sidebar .sidebar-menu > ul > li.submenu > a.subdrop .menu-arrow::before,
+.sidebar .sidebar-menu > ul > li.submenu > a.active .menu-arrow::before {
+    color: var(--primary) !important;
+}
+
+/* Child (leaf) nav items - smaller text to match, with the icon locked
+   to its own column so a longer label truncates instead of wrapping
+   and pushing the icon out of alignment. */
+.sidebar .sidebar-menu > ul > li.submenu ul li a {
+    font-size: 13px !important;
+}
+.sidebar .sidebar-menu > ul > li.submenu ul li a span {
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
