@@ -12,7 +12,8 @@ const Controllers = {
   lilypadOpportunities: require('./lilypadOpportunities'),
   microsoftTeams: require('./microsoftTeams'),
   salesforceAuth: require('./salesforceAuth'),
-  salesforceExplorer: require('./salesforceExplorer')
+  salesforceExplorer: require('./salesforceExplorer'),
+  cartAuth: require('./cartAuth')
 }
 
 module.exports = Controllers

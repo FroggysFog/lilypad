@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const controllers = require('../controllers')
 const packagejson = require('../../package.json')
-const { requireLogin, requireLoginApi, redirectIfLoggedIn } = require('../middleware/lilypadAuth')
+const { requireLogin, requireLoginApi, requireAdminApi, redirectIfLoggedIn } = require('../middleware/lilypadAuth')
 const lilypadAuth = require('../controllers/lilypadAuth')
 
 function mainRoutes(router, controllers) {
@@ -40,6 +40,12 @@ function mainRoutes(router, controllers) {
   router.get('/auth/salesforce/connect', requireLogin, controllers.salesforceAuth.connect)
   router.get('/auth/salesforce/callback', requireLogin, controllers.salesforceAuth.callback)
   router.get('/api/salesforce/status', requireLoginApi, controllers.salesforceAuth.status)
+
+  // Cart.com integration (used by the Cart.com Explorer / api-credentials.html)
+  router.get('/auth/cart/connect', requireLogin, controllers.cartAuth.connect)
+  router.get('/auth/cart/callback', requireLogin, controllers.cartAuth.callback)
+  router.get('/api/cart/status', requireLoginApi, controllers.cartAuth.status)
+  router.get('/api/cart/test', requireAdminApi, controllers.cartAuth.testEndpoint)
 }
 
 module.exports = function (app) {

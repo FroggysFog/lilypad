@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Opportunities | LilyPad ERP</title>
+	<title>Cart.com Explorer | LilyPad ERP</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="robots" content="index, follow">
 	<link rel="shortcut icon" href="assets/img/favicon.png">
@@ -144,7 +144,7 @@
 							</a>
 							<ul>
 								<li><a href="salesforce-accounts.html"><i class="ti ti-building"></i><span>Accounts</span></a></li>
-								<li><a href="opportunities.html" class="active"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
+								<li><a href="opportunities.html"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
 							</ul>
 						</li>
 
@@ -158,7 +158,7 @@
 								<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
 								<li><a href="api-credentials.html"><i class="ti ti-key me-2 text-primary"></i>API Credentials Vault</a></li>
 								<li><a href="salesforce-explorer.html"><i class="ti ti-database-search me-2 text-primary"></i>Salesforce Explorer</a></li>
-								<li><a href="cart-explorer.html"><i class="ti ti-shopping-cart me-2 text-primary"></i>Cart.com Explorer</a></li>
+								<li><a href="cart-explorer.html" class="active"><i class="ti ti-shopping-cart me-2 text-primary"></i>Cart.com Explorer</a></li>
 							</ul>
 						</li>
 
@@ -179,39 +179,37 @@
 
 				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 					<div>
-						<h4 class="mb-1 fw-bold text-dark">Opportunities</h4>
-						<p class="text-muted fs-13 mb-0">Sales opportunities synced from Salesforce. Click a name to view details.</p>
+						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+							<span>Cart.com Explorer</span>
+							<span class="badge bg-soft-secondary text-secondary fs-12 rounded-pill fw-semibold" id="cartStatusBadge" style="display:none;"></span>
+						</h4>
+						<p class="text-muted fs-13 mb-0">Connect to Cart.com and try real endpoints to find what actually works before building a sync against it.</p>
 					</div>
-					<div class="d-flex align-items-center gap-2 flex-wrap">
-						<span class="fs-12 text-muted" id="oppLastSynced"></span>
-						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="syncOpportunities()" id="oppSyncBtn">
-							<i class="ti ti-refresh me-1"></i> Sync from Salesforce
-						</button>
-					</div>
-				</div>
-
-				<div class="card border-0 shadow-sm rounded-3 mb-3">
-					<div class="card-body py-2 px-3">
-						<input type="text" id="oppSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search name or account..." oninput="debounceOppSearch()">
-					</div>
+					<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" onclick="connectCart()" id="cartConnectBtn" style="display:none;">
+						<i class="ti ti-plug me-1"></i> Connect to Cart.com
+					</button>
 				</div>
 
 				<div class="card border-0 shadow-sm rounded-3 mb-4">
-					<div class="table-responsive">
-						<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
-							<thead class="table-light">
-								<tr id="oppTableHead"></tr>
-							</thead>
-							<tbody id="oppTableBody"></tbody>
-						</table>
-					</div>
-					<div class="d-flex align-items-center justify-content-between px-3 py-2 border-top flex-wrap gap-2">
-						<span class="fs-12 text-muted" id="oppPageInfo"></span>
-						<div class="d-flex align-items-center gap-2">
-							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToOppPage(oppPage - 1)" id="oppPrevBtn"><i class="ti ti-chevron-left"></i> Prev</button>
-							<span class="fs-13" id="oppPageIndicator"></span>
-							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToOppPage(oppPage + 1)" id="oppNextBtn">Next <i class="ti ti-chevron-right"></i></button>
+					<div class="card-header bg-transparent"><strong class="fs-14">Test an Endpoint</strong></div>
+					<div class="card-body">
+						<p class="text-muted fs-13">Cart.com's older prototype code guessed at several endpoint paths and auth header formats with no confirmation any of them worked. Instead of guessing, try a real path here (e.g. <code>/api/v1/orders.json</code>) and see the actual response.</p>
+						<div class="d-flex align-items-center gap-2 flex-wrap">
+							<input type="text" id="cartPathInput" class="form-control form-control-sm" style="max-width: 420px;" placeholder="/api/v1/orders.json" value="/api/v1/orders.json">
+							<button type="button" class="btn btn-primary btn-sm rounded-pill px-3" onclick="testCartEndpoint()" id="cartTestBtn">
+								<i class="ti ti-send me-1"></i> Test
+							</button>
 						</div>
+					</div>
+				</div>
+
+				<div class="card border-0 shadow-sm rounded-3 mb-4" id="cartResultCard" style="display:none;">
+					<div class="card-header bg-transparent d-flex align-items-center justify-content-between">
+						<strong class="fs-14">Response</strong>
+						<span class="fs-12 text-muted" id="cartResultStatus"></span>
+					</div>
+					<div class="card-body">
+						<pre class="fs-12 mb-0" id="cartResultBody" style="white-space: pre-wrap; word-break: break-word; max-height: 480px; overflow-y: auto;"></pre>
 					</div>
 				</div>
 
@@ -219,7 +217,7 @@
 					<p class="mb-md-0 mb-1">Copyright &copy; <script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.</p>
 					<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
 						<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
-						<a href="salesforce-accounts.html" class="text-muted fs-13">Accounts</a>
+						<a href="salesforce-explorer.html" class="text-muted fs-13">Salesforce Explorer</a>
 					</div>
 				</footer>
 			</div>
@@ -232,32 +230,10 @@
 	<script src="assets/js/lilypad-notifications.js"></script>
 
 	<script>
-		const OPP_COLUMNS = [
-			{ key: 'name', label: 'Opportunity', type: 'link' },
-			{ key: 'accountName', label: 'Account', type: 'text' },
-			{ key: 'stageName', label: 'Stage', type: 'text' },
-			{ key: 'amount', label: 'Amount', type: 'currency' },
-			{ key: 'closeDate', label: 'Close Date', type: 'date' },
-			{ key: 'ownerName', label: 'Owner', type: 'text' }
-		];
-
-		let OPPORTUNITIES = [];
-		let oppSortKey = 'closeDate';
-		let oppSortDir = 'desc';
-		let oppPage = 1;
-		let oppPageSize = 50;
-		let oppTotal = 0;
-		let oppTotalPages = 1;
-		let oppSearchDebounce = null;
-
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
 				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
 			});
-		}
-
-		function formatCurrency(amount) {
-			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(amount || 0));
 		}
 
 		async function doLogout() {
@@ -265,119 +241,59 @@
 			window.location.href = 'login.html';
 		}
 
-		function debounceOppSearch() {
-			clearTimeout(oppSearchDebounce);
-			oppSearchDebounce = setTimeout(() => { oppPage = 1; loadOpportunities(); }, 300);
-		}
-
-		function goToOppPage(page) {
-			if (page < 1 || page > oppTotalPages || page === oppPage) return;
-			oppPage = page;
-			loadOpportunities();
-		}
-
-		async function loadOpportunities() {
+		async function loadCartStatus() {
+			const badge = document.getElementById('cartStatusBadge');
+			const connectBtn = document.getElementById('cartConnectBtn');
 			try {
-				const search = document.getElementById('oppSearchInput').value.trim();
-				const params = new URLSearchParams({ page: oppPage, pageSize: oppPageSize, sortKey: oppSortKey, sortDir: oppSortDir });
-				if (search) params.set('search', search);
-
-				const res = await fetch('/api/v1/lilypad/opportunities?' + params.toString());
+				const res = await fetch('/api/cart/status');
 				const result = await res.json();
-				if (!result.success) throw new Error(result.error || 'Unable to load opportunities');
+				if (!result.success) throw new Error(result.error || 'Unable to load Cart.com status');
 
-				OPPORTUNITIES = result.data;
-				oppTotal = result.pagination.total;
-				oppTotalPages = result.pagination.totalPages;
-				oppPage = result.pagination.page;
-
-				const mostRecent = OPPORTUNITIES.reduce((latest, o) => {
-					const t = new Date(o.lastSyncAt).getTime();
-					return t > latest ? t : latest;
-				}, 0);
-				document.getElementById('oppLastSynced').textContent = mostRecent
-					? 'Last synced ' + new Date(mostRecent).toLocaleString()
-					: 'Not synced yet';
-
-				renderOpportunityHead();
-				renderOpportunityTable();
-				renderOpportunityPagination();
+				const { configured, connected, storeUrl } = result.data;
+				badge.style.display = '';
+				if (connected) {
+					badge.className = 'badge bg-soft-success text-success fs-12 rounded-pill fw-semibold';
+					badge.innerHTML = '<i class="ti ti-plug-connected"></i> Connected to ' + escapeHtml(storeUrl || 'Cart.com');
+					connectBtn.style.display = 'none';
+				} else if (configured) {
+					badge.className = 'badge bg-soft-warning text-warning fs-12 rounded-pill fw-semibold';
+					badge.innerHTML = '<i class="ti ti-plug-x"></i> Not Connected';
+					connectBtn.style.display = '';
+				} else {
+					badge.className = 'badge bg-soft-secondary text-secondary fs-12 rounded-pill fw-semibold';
+					badge.innerHTML = '<i class="ti ti-alert-triangle"></i> Not Configured';
+					connectBtn.style.display = 'none';
+				}
 			} catch (err) {
-				console.error('loadOpportunities failed:', err);
+				console.error('loadCartStatus failed:', err);
+				badge.style.display = 'none';
 			}
 		}
 
-		function renderOpportunityHead() {
-			const head = document.getElementById('oppTableHead');
-			head.innerHTML = OPP_COLUMNS.map(col => {
-				const arrow = oppSortKey === col.key ? (oppSortDir === 'asc' ? ' <i class="ti ti-arrow-up fs-12"></i>' : ' <i class="ti ti-arrow-down fs-12"></i>') : '';
-				return `<th style="cursor:pointer;" onclick="setOpportunitySortKey('${col.key}')">${escapeHtml(col.label)}${arrow}</th>`;
-			}).join('');
+		function connectCart() {
+			window.location.href = '/auth/cart/connect?returnTo=' + encodeURIComponent('/cart-explorer.html');
 		}
 
-		function setOpportunitySortKey(key) {
-			if (oppSortKey === key) {
-				oppSortDir = oppSortDir === 'asc' ? 'desc' : 'asc';
-			} else {
-				oppSortKey = key;
-				oppSortDir = 'asc';
-			}
-			oppPage = 1;
-			renderOpportunityHead();
-			loadOpportunities();
-		}
+		async function testCartEndpoint() {
+			const path = document.getElementById('cartPathInput').value.trim();
+			if (!path) return;
 
-		function renderOpportunityPagination() {
-			const start = oppTotal === 0 ? 0 : (oppPage - 1) * oppPageSize + 1;
-			const end = Math.min(oppPage * oppPageSize, oppTotal);
-			document.getElementById('oppPageInfo').textContent = `Showing ${start}-${end} of ${oppTotal}`;
-			document.getElementById('oppPageIndicator').textContent = `Page ${oppPage} of ${oppTotalPages}`;
-			document.getElementById('oppPrevBtn').disabled = oppPage <= 1;
-			document.getElementById('oppNextBtn').disabled = oppPage >= oppTotalPages;
-		}
-
-		function renderOpportunityTable() {
-			const tbody = document.getElementById('oppTableBody');
-			if (!OPPORTUNITIES.length) {
-				tbody.innerHTML = `<tr><td colspan="${OPP_COLUMNS.length}" class="text-center text-muted py-4">No opportunities yet. Click "Sync from Salesforce" to pull opportunities in.</td></tr>`;
-				return;
-			}
-
-			tbody.innerHTML = OPPORTUNITIES.map(o => {
-				const cells = OPP_COLUMNS.map(col => {
-					if (col.key === 'name') {
-						return `<td><a href="opportunity-detail.html?id=${o._id}" class="fw-semibold text-decoration-none">${escapeHtml(o.name || '(no name)')}</a></td>`;
-					}
-					if (col.type === 'date') {
-						return `<td>${o[col.key] ? new Date(o[col.key]).toLocaleDateString() : ''}</td>`;
-					}
-					if (col.type === 'currency') {
-						return `<td>${formatCurrency(o[col.key])}</td>`;
-					}
-					if (col.key === 'stageName') {
-						const isWon = o.isWon;
-						const isLost = o.isClosed && !o.isWon;
-						const badgeClass = isWon ? 'bg-soft-success text-success' : (isLost ? 'bg-soft-danger text-danger' : 'bg-soft-primary text-primary');
-						return `<td><span class="badge ${badgeClass} fs-12 rounded-pill fw-semibold">${escapeHtml(o.stageName)}</span></td>`;
-					}
-					return `<td>${escapeHtml(o[col.key])}</td>`;
-				}).join('');
-				return `<tr>${cells}</tr>`;
-			}).join('');
-		}
-
-		async function syncOpportunities() {
-			const btn = document.getElementById('oppSyncBtn');
+			const btn = document.getElementById('cartTestBtn');
 			btn.disabled = true;
+			document.getElementById('cartResultCard').style.display = '';
+			document.getElementById('cartResultStatus').textContent = 'Loading...';
+			document.getElementById('cartResultBody').textContent = '';
+
 			try {
-				const res = await fetch('/api/v1/lilypad/opportunities/sync', { method: 'POST' });
+				const res = await fetch('/api/cart/test?path=' + encodeURIComponent(path));
 				const result = await res.json();
-				if (!result.success) throw new Error(result.error || 'Sync failed');
-				oppPage = 1;
-				await loadOpportunities();
-				alert(result.message);
+				if (!result.success) throw new Error(result.error);
+
+				document.getElementById('cartResultStatus').textContent = 'HTTP ' + result.data.status;
+				document.getElementById('cartResultBody').textContent = JSON.stringify(result.data.data, null, 2);
 			} catch (err) {
-				alert(err.message || 'Unable to sync from Salesforce.');
+				document.getElementById('cartResultStatus').textContent = 'Error';
+				document.getElementById('cartResultBody').textContent = err.message || 'Request failed.';
 			} finally {
 				btn.disabled = false;
 			}
@@ -396,7 +312,12 @@
 				}
 			} catch (e) {}
 
-			loadOpportunities();
+			if (new URLSearchParams(window.location.search).get('cart') === 'connected') {
+				window.history.replaceState({}, '', 'cart-explorer.html');
+				alert('Cart.com connected successfully.');
+			}
+
+			loadCartStatus();
 		});
 	</script>
 </body>
