@@ -186,8 +186,12 @@
 				</div>
 
 				<div class="card border-0 shadow-sm rounded-3 mb-3">
-					<div class="card-body py-2 px-3">
+					<div class="card-body py-2 px-3 d-flex align-items-center gap-3 flex-wrap">
 						<input type="text" id="orderSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search order # or account..." oninput="debounceOrderSearch()">
+						<div class="form-check form-switch mb-0">
+							<input class="form-check-input" type="checkbox" id="pastDueOnlyToggle" onchange="orderPage = 1; loadOrders();">
+							<label class="form-check-label fs-13" for="pastDueOnlyToggle">Past due only</label>
+						</div>
 					</div>
 				</div>
 
@@ -233,6 +237,8 @@
 			{ key: 'accountName', label: 'Account', type: 'text' },
 			{ key: 'effectiveDate', label: 'Effective Date', type: 'date' },
 			{ key: 'totalAmount', label: 'Total Amount', type: 'currency' },
+			{ key: 'totalDue', label: 'Total Due', type: 'duecurrency' },
+			{ key: 'daysPastDue', label: 'Days Past Due', type: 'number' },
 			{ key: 'itemCount', label: 'Line Items', type: 'number' }
 		];
 
@@ -276,6 +282,7 @@
 				const search = document.getElementById('orderSearchInput').value.trim();
 				const params = new URLSearchParams({ page: orderPage, pageSize: orderPageSize, sortKey: orderSortKey, sortDir: orderSortDir });
 				if (search) params.set('search', search);
+				if (document.getElementById('pastDueOnlyToggle').checked) params.set('pastDueOnly', 'true');
 
 				const res = await fetch('/api/v1/lilypad/orders?' + params.toString());
 				const result = await res.json();
@@ -348,6 +355,12 @@
 					}
 					if (col.type === 'currency') {
 						return `<td>${formatCurrency(o[col.key])}</td>`;
+					}
+					if (col.type === 'duecurrency') {
+						const due = Number(o[col.key] || 0);
+						return due > 0
+							? `<td><span class="badge bg-soft-danger text-danger fs-12 rounded-pill fw-semibold">${formatCurrency(due)}</span></td>`
+							: `<td class="text-muted">${formatCurrency(due)}</td>`;
 					}
 					return `<td>${escapeHtml(o[col.key])}</td>`;
 				}).join('');

@@ -228,6 +228,21 @@
 			return [addr.street, addr.city, addr.state, addr.postalCode, addr.country].filter(Boolean).join(', ');
 		}
 
+		function dateOnly(value) {
+			return value ? new Date(value).toLocaleDateString() : '';
+		}
+
+		function section(title, fieldsHtml) {
+			return `
+				<div class="card border-0 shadow-sm rounded-3 mb-3">
+					<div class="card-header bg-transparent"><strong class="fs-14">${escapeHtml(title)}</strong></div>
+					<div class="card-body">
+						<div class="row">${fieldsHtml}</div>
+					</div>
+				</div>
+			`;
+		}
+
 		async function loadOrderDetail() {
 			const id = new URLSearchParams(window.location.search).get('id');
 			if (!id) {
@@ -244,6 +259,14 @@
 				document.getElementById('orderDetailNumber').textContent = o.orderNumber || '(no order number)';
 				document.getElementById('orderDetailAccount').textContent = o.accountName || '';
 
+				const isPastDue = Number(o.totalDue || 0) > 0 && Number(o.daysPastDue || 0) > 0;
+				const overdueBanner = isPastDue
+					? `<div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+						<i class="ti ti-alert-triangle fs-18"></i>
+						<span><strong>${o.daysPastDue} days past due</strong> &mdash; ${formatCurrency(o.totalDue)} outstanding</span>
+					</div>`
+					: '';
+
 				const itemsHtml = (o.items || []).length
 					? `<table class="table table-sm mb-0">
 						<thead class="table-light"><tr><th>Product</th><th>SKU</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
@@ -252,18 +275,87 @@
 					: '<p class="text-muted fs-13 mb-0">No line items on this order.</p>';
 
 				document.getElementById('orderDetailBody').innerHTML = `
-					<div class="card border-0 shadow-sm rounded-3 p-4 mb-3">
-						<div class="row">
-							${field('Status', o.status)}
-							${field('Total Amount', formatCurrency(o.totalAmount))}
-							${field('Effective Date', o.effectiveDate ? new Date(o.effectiveDate).toLocaleDateString() : '')}
-							${field('End Date', o.endDate ? new Date(o.endDate).toLocaleDateString() : '')}
-							${field('Account Phone', o.accountPhone)}
-							${field('Billing Address', formatAddress(o.billingAddress))}
-							${field('Shipping Address', formatAddress(o.shippingAddress))}
+					${overdueBanner}
+					${section('Order Information', [
+						field('Order Name', o.name),
+						field('Status', o.status),
+						field('Order Source', o.orderSource),
+						field('Case Status', o.caseStatus),
+						field('Record Type', o.recordTypeName),
+						field('Price Book', o.priceBookName),
+						field('Owner', o.ownerName),
+						field('Order Entry Rep', o.orderEntryRep),
+						field('Order Start Date', dateOnly(o.effectiveDate)),
+						field('Order End Date', dateOnly(o.endDate)),
+						field('Original Order Date', dateOnly(o.originalOrderDate)),
+						field('Reduction Order', o.isReductionOrder ? 'Yes' : 'No')
+					].join(''))}
+
+					${section('Financial Data', [
+						field('Payment Method', o.paymentMethod),
+						field('PO Number', o.poNumber),
+						field('PO Date', dateOnly(o.poDate)),
+						field('Net Terms', o.netTerms),
+						field('Shipped Date', dateOnly(o.shippedDate)),
+						field('Initial Due Date', dateOnly(o.initialDueDate)),
+						field('Final Due Date', dateOnly(o.finalDueDate)),
+						field('Days Past Due', o.daysPastDue),
+						field('Subtotal', formatCurrency(o.subtotal)),
+						field('Discount Amount', formatCurrency(o.discountAmount)),
+						field('Coupon Code', o.couponCode),
+						field('Tax Amount', formatCurrency(o.taxAmount)),
+						field('Shipping Amount', formatCurrency(o.shippingAmount)),
+						field('Order Amount', formatCurrency(o.totalAmount)),
+						field('Grand Total', formatCurrency(o.grandTotal)),
+						field('Total Invoiced', formatCurrency(o.totalInvoiced)),
+						field('Total Paid', formatCurrency(o.totalPaid)),
+						field('Total Due', formatCurrency(o.totalDue)),
+						field('Net Due Amount', formatCurrency(o.netDueAmount)),
+						field('Adjusted Amount', formatCurrency(o.adjustedAmount)),
+						field('Subtotal Refunded', formatCurrency(o.subtotalRefunded)),
+						field('Shipping Refunded', formatCurrency(o.shippingRefunded)),
+						field('Total Refunded', formatCurrency(o.totalRefunded)),
+						field('Product Cost', formatCurrency(o.productCost)),
+						field('Order Profitability', formatCurrency(o.orderProfitability)),
+						field('Gross Margin', o.grossMargin ? o.grossMargin + '%' : ''),
+						field('Order Products Volume', o.orderProductsVolume)
+					].join(''))}
+
+					${section('Customer & Billing', [
+						field('Account', o.accountName),
+						field('Account Phone', o.accountPhone),
+						field('Customer Email', o.customerEmail),
+						field('Customer ID', o.customerId),
+						field('Bill To Contact', o.billToContactName),
+						field('Bill To Email', o.billToContactEmail),
+						field('Bill To Phone', o.billToContactPhone),
+						field('Order Billing Company', o.orderBillingCompany),
+						field('Order Billing Name', o.orderBillingName),
+						field('Order Billing Phone', o.orderBillingPhone),
+						field('Billing Address', formatAddress(o.billingAddress))
+					].join(''))}
+
+					${section('Shipping', [
+						field('Ship To Contact', o.shipToContactName),
+						field('Order Shipping Company', o.orderShippingCompany),
+						field('Order Shipping Name', o.orderShippingName),
+						field('Order Shipping Phone', o.orderShippingPhone),
+						field('Shipping Description', o.shippingDescription),
+						field('Weight', o.weight ? o.weight + ' lb' : ''),
+						field('Shipping Address', formatAddress(o.shippingAddress))
+					].join(''))}
+
+					${(o.description || o.internalOrderNotes || o.externalOrderNotes) ? `
+						<div class="card border-0 shadow-sm rounded-3 mb-3">
+							<div class="card-header bg-transparent"><strong class="fs-14">Notes</strong></div>
+							<div class="card-body">
+								${o.description ? `<div class="mb-3"><span class="fs-12 text-muted d-block text-uppercase fw-semibold mb-1">Description</span><p class="text-dark mb-0">${escapeHtml(o.description)}</p></div>` : ''}
+								${o.internalOrderNotes ? `<div class="mb-3"><span class="fs-12 text-muted d-block text-uppercase fw-semibold mb-1">Internal Order Notes</span><p class="text-dark mb-0">${escapeHtml(o.internalOrderNotes)}</p></div>` : ''}
+								${o.externalOrderNotes ? `<div class="mb-0"><span class="fs-12 text-muted d-block text-uppercase fw-semibold mb-1">External Order Notes</span><p class="text-dark mb-0">${escapeHtml(o.externalOrderNotes)}</p></div>` : ''}
+							</div>
 						</div>
-						${o.description ? `<div class="mt-2"><span class="fs-12 text-muted d-block text-uppercase fw-semibold mb-1">Description</span><p class="text-dark mb-0">${escapeHtml(o.description)}</p></div>` : ''}
-					</div>
+					` : ''}
+
 					<div class="card border-0 shadow-sm rounded-3">
 						<div class="card-header bg-transparent"><strong class="fs-14">Line Items</strong></div>
 						<div class="table-responsive">${itemsHtml}</div>

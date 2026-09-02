@@ -7,7 +7,7 @@ const { syncOrdersFromSalesforce } = require('../services/orderSyncService')
 
 const lilypadOrdersController = {}
 
-const SORTABLE_FIELDS = ['orderNumber', 'status', 'accountName', 'effectiveDate', 'totalAmount']
+const SORTABLE_FIELDS = ['orderNumber', 'status', 'accountName', 'effectiveDate', 'totalAmount', 'totalDue', 'daysPastDue']
 
 /**
  * GET /api/v1/lilypad/orders
@@ -20,6 +20,10 @@ lilypadOrdersController.getOrders = async function (req, res) {
     if (req.query.search) {
       const search = String(req.query.search).trim()
       query.$or = [{ orderNumber: { $regex: search, $options: 'i' } }, { accountName: { $regex: search, $options: 'i' } }]
+    }
+    if (req.query.pastDueOnly === 'true') {
+      query.totalDue = { $gt: 0 }
+      query.daysPastDue = { $gt: 0 }
     }
 
     const page = Math.max(1, Number(req.query.page) || 1)

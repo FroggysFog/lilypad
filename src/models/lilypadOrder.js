@@ -68,6 +68,40 @@ const orderSchema = new Schema(
       trim: true,
       default: ''
     },
+    name: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    recordTypeName: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    priceBookName: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    orderSource: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    caseStatus: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    orderEntryRep: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    isReductionOrder: {
+      type: Boolean,
+      default: false
+    },
     poNumber: {
       type: String,
       trim: true,
@@ -86,6 +120,16 @@ const orderSchema = new Schema(
       type: String,
       trim: true,
       lowercase: true,
+      default: ''
+    },
+    billToContactPhone: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    shipToContactName: {
+      type: String,
+      trim: true,
       default: ''
     },
     netTerms: {
@@ -121,6 +165,145 @@ const orderSchema = new Schema(
     cartOrderId: {
       type: String,
       trim: true,
+      default: ''
+    },
+    discountAmount: {
+      type: Number,
+      default: 0
+    },
+    couponCode: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    subtotal: {
+      type: Number,
+      default: 0
+    },
+    taxAmount: {
+      type: Number,
+      default: 0
+    },
+    shippingAmount: {
+      type: Number,
+      default: 0
+    },
+    shippingRefunded: {
+      type: Number,
+      default: 0
+    },
+    subtotalRefunded: {
+      type: Number,
+      default: 0
+    },
+    totalRefunded: {
+      type: Number,
+      default: 0
+    },
+    totalInvoiced: {
+      type: Number,
+      default: 0
+    },
+    totalPaid: {
+      type: Number,
+      default: 0
+    },
+    grandTotal: {
+      type: Number,
+      default: 0
+    },
+    netShipping: {
+      type: Number,
+      default: 0
+    },
+    netDueAmount: {
+      type: Number,
+      default: 0
+    },
+    adjustedAmount: {
+      type: Number,
+      default: 0
+    },
+    productCost: {
+      type: Number,
+      default: 0
+    },
+    orderProfitability: {
+      type: Number,
+      default: 0
+    },
+    grossMargin: {
+      type: Number,
+      default: 0
+    },
+    orderProductsVolume: {
+      type: Number,
+      default: 0
+    },
+    originalOrderDate: {
+      type: String,
+      default: null
+    },
+    attainmentDate: {
+      type: String,
+      default: null
+    },
+    customerEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: ''
+    },
+    customerId: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    orderBillingCompany: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    orderBillingName: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    orderBillingPhone: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    orderShippingCompany: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    orderShippingName: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    orderShippingPhone: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    shippingDescription: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    weight: {
+      type: Number,
+      default: 0
+    },
+    internalOrderNotes: {
+      type: String,
+      default: ''
+    },
+    externalOrderNotes: {
+      type: String,
       default: ''
     },
     billingAddress: addressSchema,
