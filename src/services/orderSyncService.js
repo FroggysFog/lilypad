@@ -19,6 +19,43 @@ const winston = require('../logger')
 
 const SUB_QUERY_BATCH_SIZE = 200
 
+/**
+ * This org has ~85,000 historical Orders - syncing all of them (each with
+ * line items, Shipworks tracking, and 60+ fields) filled the 512MB MongoDB
+ * free-tier cluster completely, blocking all writes. Scope down to what
+ * actually matters: anything with money still owed (needed for Past Due,
+ * regardless of age) plus a recent rolling window (for Order History
+ * browsing). Configurable since "recent" is a judgment call.
+ */
+function getOrderRetentionCutoffDate () {
+  const months = Number(process.env.ORDER_SYNC_RETENTION_MONTHS || 12)
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - months)
+  return cutoff
+}
+
+function getOrderRetentionCutoffSoqlDate () {
+  return getOrderRetentionCutoffDate().toISOString().slice(0, 10)
+}
+
+/**
+ * Removes previously-synced Orders that no longer fall inside the
+ * retention scope (paid off and older than the cutoff) - runs before the
+ * Salesforce fetch so already-full storage has a chance to free up
+ * before new writes are attempted.
+ */
+async function cleanupOutOfScopeOrders () {
+  const cutoff = getOrderRetentionCutoffDate()
+  const result = await LilyPadOrder.deleteMany({
+    totalDue: { $lte: 0 },
+    effectiveDate: { $lt: cutoff.toISOString().slice(0, 10) }
+  })
+  if (result.deletedCount) {
+    winston.info(`Order sync cleanup: removed ${result.deletedCount} paid-off orders older than ${cutoff.toISOString().slice(0, 10)}`)
+  }
+  return result.deletedCount || 0
+}
+
 function normalizeOrderRecord (raw, items, shipments) {
   const source = raw && typeof raw === 'object' ? raw : {}
   const account = source.Account && typeof source.Account === 'object' ? source.Account : {}
@@ -194,6 +231,9 @@ async function syncOrdersFromSalesforce () {
   let total = 0
   const startedAt = Date.now()
 
+  const removed = await cleanupOutOfScopeOrders()
+  const cutoffDate = getOrderRetentionCutoffSoqlDate()
+
   await queryAllSalesforcePages(`
         SELECT Id, Name, OrderNumber, Status, EffectiveDate, EndDate, TotalAmount, AccountId,
                Account.Name, Account.Phone, Owner.Name, RecordType.Name, Pricebook2.Name,
@@ -214,6 +254,7 @@ async function syncOrdersFromSalesforce () {
                BillingPostalCode, BillingCountry, ShippingStreet, ShippingCity, ShippingState,
                ShippingPostalCode, ShippingCountry, Description, CreatedDate, LastModifiedDate
         FROM Order
+        WHERE Total_Due__c > 0 OR EffectiveDate >= ${cutoffDate}
         ORDER BY EffectiveDate DESC NULLS LAST, CreatedDate DESC
     `, async (page) => {
     const orderIds = page.map((order) => order.Id).filter(Boolean)
@@ -246,7 +287,7 @@ async function syncOrdersFromSalesforce () {
     winston.info(`Order sync progress: ${total} orders processed (${Math.round((Date.now() - startedAt) / 1000)}s elapsed)`)
   })
 
-  return { synced, total }
+  return { synced, total, removed }
 }
 
 module.exports = {

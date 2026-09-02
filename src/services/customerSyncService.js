@@ -15,10 +15,46 @@ const { queryAllSalesforcePages, singleFlight } = require('./salesforceService')
 const LilyPadCustomer = require('../models/lilypadCustomer')
 const winston = require('../logger')
 
-const DEFAULT_LEADS_SOQL = `
+/**
+ * This org has ~54,000 Leads - syncing all of them was a meaningful
+ * contributor to filling the 512MB MongoDB free-tier cluster (alongside
+ * Orders, the much larger contributor). Scoped to leads with activity or
+ * creation in a recent rolling window; older, stale leads aren't synced.
+ */
+function getCustomerRetentionCutoffDate () {
+  const months = Number(process.env.LEAD_SYNC_RETENTION_MONTHS || 12)
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - months)
+  return cutoff
+}
+
+function getCustomerRetentionCutoffSoqlDate () {
+  return getCustomerRetentionCutoffDate().toISOString().slice(0, 10)
+}
+
+async function cleanupOutOfScopeCustomers () {
+  const cutoffDate = getCustomerRetentionCutoffDate()
+  const cutoffDateStr = cutoffDate.toISOString().slice(0, 10)
+  const result = await LilyPadCustomer.deleteMany({
+    createdDate: { $lt: cutoffDate },
+    $or: [
+      { lastActivityDate: { $exists: false } },
+      { lastActivityDate: null },
+      { lastActivityDate: '' },
+      { lastActivityDate: { $lt: cutoffDateStr } }
+    ]
+  })
+  if (result.deletedCount) {
+    winston.info(`Customer sync cleanup: removed ${result.deletedCount} stale leads older than ${cutoffDateStr}`)
+  }
+  return result.deletedCount || 0
+}
+
+const DEFAULT_LEADS_SOQL_TEMPLATE = (cutoffDate) => `
     SELECT Id, Name, Company, Industry, State, Status, Owner.Alias, LastActivityDate,
            CreatedDate, Import_Notes__c, CreatedBy.Name, LeadSource, Phone, Email
     FROM Lead
+    WHERE LastActivityDate >= ${cutoffDate} OR CreatedDate >= ${cutoffDate}
     ORDER BY LastActivityDate DESC NULLS LAST, CreatedDate DESC
 `
 
@@ -47,7 +83,8 @@ function normalizeLeadRecord (raw) {
 }
 
 async function syncCustomersFromSalesforce () {
-  const soql = (process.env.SF_LEADS_SOQL || '').trim() || DEFAULT_LEADS_SOQL
+  const removed = await cleanupOutOfScopeCustomers()
+  const soql = (process.env.SF_LEADS_SOQL || '').trim() || DEFAULT_LEADS_SOQL_TEMPLATE(getCustomerRetentionCutoffSoqlDate())
   let synced = 0
   let total = 0
 
@@ -73,7 +110,7 @@ async function syncCustomersFromSalesforce () {
     winston.info(`Customer sync progress: ${total} leads processed`)
   })
 
-  return { synced, total }
+  return { synced, total, removed }
 }
 
 module.exports = {
