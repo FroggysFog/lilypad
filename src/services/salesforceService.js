@@ -16,8 +16,24 @@ const axios = require('axios')
 const LilyPadSetting = require('../models/lilypadSetting')
 
 const SETTING_KEY = 'salesforceTokens'
+const REQUEST_TIMEOUT_MS = 90000
 
 let cachedTokens = null
+
+/**
+ * Salesforce API calls have no timeout by default - a stalled connection
+ * would hang the calling sync forever with no error and nothing in the
+ * logs (observed: a Customer sync froze mid-run with no crash and no new
+ * log lines). Races every request against a timeout so a stalled call
+ * fails loudly instead of hanging silently.
+ */
+function withTimeout (promise, label) {
+  let timer
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${REQUEST_TIMEOUT_MS / 1000}s`)), REQUEST_TIMEOUT_MS)
+  })
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
+}
 
 async function loadPersistedSalesforceTokens () {
   if (cachedTokens) return cachedTokens
@@ -199,7 +215,7 @@ async function getSalesforceConnection () {
 async function querySalesforce (soqlQuery) {
   try {
     const conn = await getSalesforceConnection()
-    const result = await conn.query(soqlQuery)
+    const result = await withTimeout(conn.query(soqlQuery), 'Salesforce query')
     return result.records
   } catch (error) {
     const details = error.response && error.response.data
@@ -212,11 +228,11 @@ async function querySalesforce (soqlQuery) {
 async function queryAllSalesforce (soqlQuery) {
   const conn = await getSalesforceConnection()
   const records = []
-  let result = await conn.query(soqlQuery)
+  let result = await withTimeout(conn.query(soqlQuery), 'Salesforce query')
   records.push(...(result.records || []))
 
   while (!result.done && result.nextRecordsUrl) {
-    result = await conn.queryMore(result.nextRecordsUrl)
+    result = await withTimeout(conn.queryMore(result.nextRecordsUrl), 'Salesforce queryMore')
     records.push(...(result.records || []))
   }
 
@@ -232,11 +248,11 @@ async function queryAllSalesforce (soqlQuery) {
  */
 async function queryAllSalesforcePages (soqlQuery, onPage) {
   const conn = await getSalesforceConnection()
-  let result = await conn.query(soqlQuery)
+  let result = await withTimeout(conn.query(soqlQuery), 'Salesforce query')
   await onPage(result.records || [])
 
   while (!result.done && result.nextRecordsUrl) {
-    result = await conn.queryMore(result.nextRecordsUrl)
+    result = await withTimeout(conn.queryMore(result.nextRecordsUrl), 'Salesforce queryMore')
     await onPage(result.records || [])
   }
 }
