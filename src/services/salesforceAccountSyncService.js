@@ -9,6 +9,7 @@
 
 const { queryAllSalesforcePages } = require('./salesforceService')
 const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
+const winston = require('../logger')
 
 const DEFAULT_ACCOUNTS_SOQL = `
     SELECT Id, Name, Type, Industry, Phone, Website, Owner.Name,
@@ -63,14 +64,20 @@ async function syncSalesforceAccounts () {
       .filter((r) => r.sourceRecordId)
 
     total += normalized.length
-    for (const record of normalized) {
-      await LilyPadSalesforceAccount.findOneAndUpdate(
-        { sourceRecordId: record.sourceRecordId },
-        { $set: { ...record, lastSyncAt: new Date() } },
-        { upsert: true }
+    if (normalized.length) {
+      const bulkResult = await LilyPadSalesforceAccount.bulkWrite(
+        normalized.map((record) => ({
+          updateOne: {
+            filter: { sourceRecordId: record.sourceRecordId },
+            update: { $set: { ...record, lastSyncAt: new Date() } },
+            upsert: true
+          }
+        })),
+        { ordered: false }
       )
-      synced += 1
+      synced += (bulkResult.upsertedCount || 0) + (bulkResult.modifiedCount || 0)
     }
+    winston.info(`Salesforce Account sync progress: ${total} accounts processed`)
   })
 
   return { synced, total }

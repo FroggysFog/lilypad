@@ -19,6 +19,7 @@ const {
   RESOLVED_STATUSES
 } = require('../services/reminderEmailService')
 const xss = require('xss')
+const winston = require('../logger')
 
 const lilypadPastDueController = {}
 
@@ -124,14 +125,19 @@ lilypadPastDueController.getPastDueAccountDetail = async function (req, res) {
  * POST /api/v1/lilypad/past-due/sync
  */
 lilypadPastDueController.triggerSalesforceSync = async function (req, res) {
+  const startedAt = Date.now()
   try {
+    winston.info('Manual Past Due sync started (refreshing Orders first)')
     // Past due accounts are derived from Orders, so refresh Orders first
     // to make sure this button always reflects current Salesforce data.
-    await syncOrdersFromSalesforce()
+    const orderResult = await syncOrdersFromSalesforce()
+    winston.info(`Manual Past Due sync: Orders refreshed (${orderResult.synced}/${orderResult.total}), deriving past due accounts`)
     const result = await syncPastDueAccountsFromSalesforce()
     const removedNote = result.removed ? ` (${result.removed} removed - paid off or no longer eligible)` : ''
+    winston.info(`Manual Past Due sync finished in ${Math.round((Date.now() - startedAt) / 1000)}s`)
     return res.status(200).json({ success: true, message: `Synced ${result.synced} of ${result.total} accounts from Salesforce.${removedNote}`, ...result })
   } catch (err) {
+    winston.error(`Manual Past Due sync failed after ${Math.round((Date.now() - startedAt) / 1000)}s: ${err.message}`)
     return res.status(500).json({ success: false, error: err.message })
   }
 }

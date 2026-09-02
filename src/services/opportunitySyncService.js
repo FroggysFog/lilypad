@@ -7,6 +7,7 @@
 
 const { queryAllSalesforcePages } = require('./salesforceService')
 const LilyPadOpportunity = require('../models/lilypadOpportunity')
+const winston = require('../logger')
 
 const DEFAULT_OPPORTUNITIES_SOQL = `
     SELECT Id, Name, AccountId, Account.Name, StageName, Amount, CloseDate, Probability,
@@ -50,14 +51,20 @@ async function syncOpportunitiesFromSalesforce () {
       .filter((r) => r.sourceRecordId)
 
     total += normalized.length
-    for (const record of normalized) {
-      await LilyPadOpportunity.findOneAndUpdate(
-        { sourceRecordId: record.sourceRecordId },
-        { $set: { ...record, lastSyncAt: new Date() } },
-        { upsert: true }
+    if (normalized.length) {
+      const bulkResult = await LilyPadOpportunity.bulkWrite(
+        normalized.map((record) => ({
+          updateOne: {
+            filter: { sourceRecordId: record.sourceRecordId },
+            update: { $set: { ...record, lastSyncAt: new Date() } },
+            upsert: true
+          }
+        })),
+        { ordered: false }
       )
-      synced += 1
+      synced += (bulkResult.upsertedCount || 0) + (bulkResult.modifiedCount || 0)
     }
+    winston.info(`Opportunity sync progress: ${total} opportunities processed`)
   })
 
   return { synced, total }

@@ -12,6 +12,7 @@
 
 const LilyPadOrder = require('../models/lilypadOrder')
 const LilyPadPastDueAccount = require('../models/lilypadPastDueAccount')
+const winston = require('../logger')
 
 // Orders owned by anyone outside this list, or billed to FrightProps, are a
 // different brand sharing this Salesforce org and shouldn't appear as
@@ -95,40 +96,55 @@ async function syncPastDueAccountsFromSalesforce () {
   })
 
   const records = overdueOrders.map(derivePastDueRecordFromOrder)
-  let synced = 0
+  const qualifyingIds = records.map((r) => r.sourceRecordId)
 
-  for (const record of records) {
-    const existing = await LilyPadPastDueAccount.findOne({ sourceRecordId: record.sourceRecordId })
-
-    const update = {
-      accountName: record.accountName,
-      amountDue: record.amountDue,
-      originalDueDate: record.originalDueDate,
-      finalDueDate: record.finalDueDate,
-      salesRep: record.salesRep,
-      orderNumber: record.orderNumber,
-      poNumber: record.poNumber,
-      poDate: record.poDate,
-      paymentMethod: record.paymentMethod,
-      status: record.status,
-      lastSyncAt: new Date()
-    }
-
-    if (record.payerEmail || !(existing && existing.payerEmail)) {
-      update.payerName = record.payerName
-      if (record.payerEmail) update.payerEmail = record.payerEmail
-    }
-
-    await LilyPadPastDueAccount.findOneAndUpdate(
-      { sourceRecordId: record.sourceRecordId },
-      { $set: update, $setOnInsert: { sourceRecordId: record.sourceRecordId } },
-      { upsert: true }
+  const existingByRecordId = {}
+  if (qualifyingIds.length) {
+    const existingAccounts = await LilyPadPastDueAccount.find(
+      { sourceRecordId: { $in: qualifyingIds } },
+      'sourceRecordId payerEmail'
     )
-    synced += 1
+    existingAccounts.forEach((a) => { existingByRecordId[a.sourceRecordId] = a })
   }
 
-  const qualifyingIds = records.map((r) => r.sourceRecordId)
+  let synced = 0
+  if (records.length) {
+    const bulkResult = await LilyPadPastDueAccount.bulkWrite(
+      records.map((record) => {
+        const existing = existingByRecordId[record.sourceRecordId]
+        const update = {
+          accountName: record.accountName,
+          amountDue: record.amountDue,
+          originalDueDate: record.originalDueDate,
+          finalDueDate: record.finalDueDate,
+          salesRep: record.salesRep,
+          orderNumber: record.orderNumber,
+          poNumber: record.poNumber,
+          poDate: record.poDate,
+          paymentMethod: record.paymentMethod,
+          status: record.status,
+          lastSyncAt: new Date()
+        }
+        if (record.payerEmail || !(existing && existing.payerEmail)) {
+          update.payerName = record.payerName
+          if (record.payerEmail) update.payerEmail = record.payerEmail
+        }
+
+        return {
+          updateOne: {
+            filter: { sourceRecordId: record.sourceRecordId },
+            update: { $set: update, $setOnInsert: { sourceRecordId: record.sourceRecordId } },
+            upsert: true
+          }
+        }
+      }),
+      { ordered: false }
+    )
+    synced = (bulkResult.upsertedCount || 0) + (bulkResult.modifiedCount || 0)
+  }
+
   const removal = await LilyPadPastDueAccount.deleteMany({ sourceRecordId: { $nin: qualifyingIds } })
+  winston.info(`Past Due sync: ${records.length} qualifying orders, ${removal.deletedCount} removed (paid off or excluded)`)
 
   return { synced, total: records.length, removed: removal.deletedCount }
 }

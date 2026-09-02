@@ -15,6 +15,9 @@
 
 const { querySalesforce, queryAllSalesforcePages } = require('./salesforceService')
 const LilyPadOrder = require('../models/lilypadOrder')
+const winston = require('../logger')
+
+const SUB_QUERY_BATCH_SIZE = 200
 
 function normalizeOrderRecord (raw, items, shipments) {
   const source = raw && typeof raw === 'object' ? raw : {}
@@ -131,8 +134,8 @@ function normalizeOrderRecord (raw, items, shipments) {
 
 async function fetchOrderItemsByOrderId (orderIds) {
   const itemsByOrderId = {}
-  for (let index = 0; index < orderIds.length; index += 50) {
-    const batch = orderIds.slice(index, index + 50)
+  for (let index = 0; index < orderIds.length; index += SUB_QUERY_BATCH_SIZE) {
+    const batch = orderIds.slice(index, index + SUB_QUERY_BATCH_SIZE)
     if (!batch.length) continue
 
     try {
@@ -156,8 +159,8 @@ async function fetchOrderItemsByOrderId (orderIds) {
 
 async function fetchShipworksDataByOrderId (orderIds) {
   const shipmentsByOrderId = {}
-  for (let index = 0; index < orderIds.length; index += 50) {
-    const batch = orderIds.slice(index, index + 50)
+  for (let index = 0; index < orderIds.length; index += SUB_QUERY_BATCH_SIZE) {
+    const batch = orderIds.slice(index, index + SUB_QUERY_BATCH_SIZE)
     if (!batch.length) continue
 
     try {
@@ -189,6 +192,7 @@ async function fetchShipworksDataByOrderId (orderIds) {
 async function syncOrdersFromSalesforce () {
   let synced = 0
   let total = 0
+  const startedAt = Date.now()
 
   await queryAllSalesforcePages(`
         SELECT Id, Name, OrderNumber, Status, EffectiveDate, EndDate, TotalAmount, AccountId,
@@ -221,14 +225,25 @@ async function syncOrdersFromSalesforce () {
       .filter((r) => r.sourceRecordId)
 
     total += normalized.length
-    for (const record of normalized) {
-      await LilyPadOrder.findOneAndUpdate(
-        { sourceRecordId: record.sourceRecordId },
-        { $set: { ...record, lastSyncAt: new Date() } },
-        { upsert: true }
+    if (normalized.length) {
+      // One bulk round-trip for the whole page instead of one await per
+      // order - thousands of sequential single-document upserts is what
+      // made a full sync feel hung once Shipworks tracking doubled the
+      // per-order Salesforce sub-queries on top of it.
+      const bulkResult = await LilyPadOrder.bulkWrite(
+        normalized.map((record) => ({
+          updateOne: {
+            filter: { sourceRecordId: record.sourceRecordId },
+            update: { $set: { ...record, lastSyncAt: new Date() } },
+            upsert: true
+          }
+        })),
+        { ordered: false }
       )
-      synced += 1
+      synced += (bulkResult.upsertedCount || 0) + (bulkResult.modifiedCount || 0)
     }
+
+    winston.info(`Order sync progress: ${total} orders processed (${Math.round((Date.now() - startedAt) / 1000)}s elapsed)`)
   })
 
   return { synced, total }

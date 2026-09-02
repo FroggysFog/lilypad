@@ -13,6 +13,7 @@
 
 const { queryAllSalesforcePages } = require('./salesforceService')
 const LilyPadCustomer = require('../models/lilypadCustomer')
+const winston = require('../logger')
 
 const DEFAULT_LEADS_SOQL = `
     SELECT Id, Name, Company, Industry, State, Status, Owner.Alias, LastActivityDate,
@@ -56,14 +57,20 @@ async function syncCustomersFromSalesforce () {
       .filter((r) => r.sourceRecordId)
 
     total += normalized.length
-    for (const record of normalized) {
-      await LilyPadCustomer.findOneAndUpdate(
-        { sourceRecordId: record.sourceRecordId },
-        { $set: { ...record, lastSyncAt: new Date() } },
-        { upsert: true }
+    if (normalized.length) {
+      const bulkResult = await LilyPadCustomer.bulkWrite(
+        normalized.map((record) => ({
+          updateOne: {
+            filter: { sourceRecordId: record.sourceRecordId },
+            update: { $set: { ...record, lastSyncAt: new Date() } },
+            upsert: true
+          }
+        })),
+        { ordered: false }
       )
-      synced += 1
+      synced += (bulkResult.upsertedCount || 0) + (bulkResult.modifiedCount || 0)
     }
+    winston.info(`Customer sync progress: ${total} leads processed`)
   })
 
   return { synced, total }
