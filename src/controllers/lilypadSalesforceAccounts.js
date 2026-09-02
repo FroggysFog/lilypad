@@ -7,16 +7,31 @@ const { syncSalesforceAccounts } = require('../services/salesforceAccountSyncSer
 
 const controller = {}
 
+const SORTABLE_FIELDS = ['name', 'industry', 'type', 'ownerName', 'phone', 'annualRevenue']
+
 /**
  * GET /api/v1/lilypad/salesforce-accounts
  */
 controller.getAccounts = async function (req, res) {
   try {
-    const query = {}
-    if (req.query.name) query.name = { $regex: String(req.query.name).trim(), $options: 'i' }
+    const search = String(req.query.name || req.query.search || '').trim()
+    const query = search ? { name: { $regex: search, $options: 'i' } } : {}
 
-    const accounts = await LilyPadSalesforceAccount.find(query).sort('name').limit(500)
-    return res.status(200).json({ success: true, data: accounts, count: accounts.length })
+    const page = Math.max(1, Number(req.query.page) || 1)
+    const pageSize = Math.min(200, Math.max(1, Number(req.query.pageSize) || 50))
+    const sortKey = SORTABLE_FIELDS.includes(req.query.sortKey) ? req.query.sortKey : 'name'
+    const sortDir = req.query.sortDir === 'desc' ? -1 : 1
+
+    const [accounts, total] = await Promise.all([
+      LilyPadSalesforceAccount.find(query).sort({ [sortKey]: sortDir }).skip((page - 1) * pageSize).limit(pageSize),
+      LilyPadSalesforceAccount.countDocuments(query)
+    ])
+
+    return res.status(200).json({
+      success: true,
+      data: accounts,
+      pagination: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) }
+    })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

@@ -187,7 +187,7 @@
 
 				<div class="card border-0 shadow-sm rounded-3 mb-3">
 					<div class="card-body py-2 px-3">
-						<input type="text" id="oppSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search name or account..." oninput="renderOpportunityTable()">
+						<input type="text" id="oppSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search name or account..." oninput="debounceOppSearch()">
 					</div>
 				</div>
 
@@ -199,6 +199,14 @@
 							</thead>
 							<tbody id="oppTableBody"></tbody>
 						</table>
+					</div>
+					<div class="d-flex align-items-center justify-content-between px-3 py-2 border-top flex-wrap gap-2">
+						<span class="fs-12 text-muted" id="oppPageInfo"></span>
+						<div class="d-flex align-items-center gap-2">
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToOppPage(oppPage - 1)" id="oppPrevBtn"><i class="ti ti-chevron-left"></i> Prev</button>
+							<span class="fs-13" id="oppPageIndicator"></span>
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToOppPage(oppPage + 1)" id="oppNextBtn">Next <i class="ti ti-chevron-right"></i></button>
+						</div>
 					</div>
 				</div>
 
@@ -231,6 +239,11 @@
 		let OPPORTUNITIES = [];
 		let oppSortKey = 'closeDate';
 		let oppSortDir = 'desc';
+		let oppPage = 1;
+		let oppPageSize = 50;
+		let oppTotal = 0;
+		let oppTotalPages = 1;
+		let oppSearchDebounce = null;
 
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -247,13 +260,31 @@
 			window.location.href = 'login.html';
 		}
 
+		function debounceOppSearch() {
+			clearTimeout(oppSearchDebounce);
+			oppSearchDebounce = setTimeout(() => { oppPage = 1; loadOpportunities(); }, 300);
+		}
+
+		function goToOppPage(page) {
+			if (page < 1 || page > oppTotalPages || page === oppPage) return;
+			oppPage = page;
+			loadOpportunities();
+		}
+
 		async function loadOpportunities() {
 			try {
-				const res = await fetch('/api/v1/lilypad/opportunities');
+				const search = document.getElementById('oppSearchInput').value.trim();
+				const params = new URLSearchParams({ page: oppPage, pageSize: oppPageSize, sortKey: oppSortKey, sortDir: oppSortDir });
+				if (search) params.set('search', search);
+
+				const res = await fetch('/api/v1/lilypad/opportunities?' + params.toString());
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Unable to load opportunities');
 
 				OPPORTUNITIES = result.data;
+				oppTotal = result.pagination.total;
+				oppTotalPages = result.pagination.totalPages;
+				oppPage = result.pagination.page;
 
 				const mostRecent = OPPORTUNITIES.reduce((latest, o) => {
 					const t = new Date(o.lastSyncAt).getTime();
@@ -265,6 +296,7 @@
 
 				renderOpportunityHead();
 				renderOpportunityTable();
+				renderOpportunityPagination();
 			} catch (err) {
 				console.error('loadOpportunities failed:', err);
 			}
@@ -285,34 +317,28 @@
 				oppSortKey = key;
 				oppSortDir = 'asc';
 			}
+			oppPage = 1;
 			renderOpportunityHead();
-			renderOpportunityTable();
+			loadOpportunities();
+		}
+
+		function renderOpportunityPagination() {
+			const start = oppTotal === 0 ? 0 : (oppPage - 1) * oppPageSize + 1;
+			const end = Math.min(oppPage * oppPageSize, oppTotal);
+			document.getElementById('oppPageInfo').textContent = `Showing ${start}-${end} of ${oppTotal}`;
+			document.getElementById('oppPageIndicator').textContent = `Page ${oppPage} of ${oppTotalPages}`;
+			document.getElementById('oppPrevBtn').disabled = oppPage <= 1;
+			document.getElementById('oppNextBtn').disabled = oppPage >= oppTotalPages;
 		}
 
 		function renderOpportunityTable() {
-			const search = document.getElementById('oppSearchInput').value.trim().toLowerCase();
-			let rows = OPPORTUNITIES.filter(o => {
-				if (!search) return true;
-				return (o.name + ' ' + o.accountName).toLowerCase().includes(search);
-			});
-
-			rows = rows.slice().sort((a, b) => {
-				let av = a[oppSortKey], bv = b[oppSortKey];
-				if (oppSortKey.toLowerCase().includes('date')) { av = av ? new Date(av).getTime() : 0; bv = bv ? new Date(bv).getTime() : 0; }
-				else if (typeof av === 'number' || typeof bv === 'number') { av = Number(av) || 0; bv = Number(bv) || 0; }
-				else { av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase(); }
-				if (av < bv) return oppSortDir === 'asc' ? -1 : 1;
-				if (av > bv) return oppSortDir === 'asc' ? 1 : -1;
-				return 0;
-			});
-
 			const tbody = document.getElementById('oppTableBody');
-			if (!rows.length) {
+			if (!OPPORTUNITIES.length) {
 				tbody.innerHTML = `<tr><td colspan="${OPP_COLUMNS.length}" class="text-center text-muted py-4">No opportunities yet. Click "Sync from Salesforce" to pull opportunities in.</td></tr>`;
 				return;
 			}
 
-			tbody.innerHTML = rows.map(o => {
+			tbody.innerHTML = OPPORTUNITIES.map(o => {
 				const cells = OPP_COLUMNS.map(col => {
 					if (col.key === 'name') {
 						return `<td><a href="opportunity-detail.html?id=${o._id}" class="fw-semibold text-decoration-none">${escapeHtml(o.name || '(no name)')}</a></td>`;
@@ -342,6 +368,7 @@
 				const res = await fetch('/api/v1/lilypad/opportunities/sync', { method: 'POST' });
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Sync failed');
+				oppPage = 1;
 				await loadOpportunities();
 				alert(result.message);
 			} catch (err) {

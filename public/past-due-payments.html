@@ -339,10 +339,10 @@
 					<div class="card-body py-2 px-3">
 						<div class="row g-2 align-items-center">
 							<div class="col-md-4">
-								<input type="text" id="pdSearchInput" class="form-control form-control-sm" placeholder="Search account or payer..." oninput="renderPastDueList()">
+								<input type="text" id="pdSearchInput" class="form-control form-control-sm" placeholder="Search account or payer..." oninput="debouncePastDueSearch()">
 							</div>
 							<div class="col-md-3">
-								<select id="pdStageFilter" class="form-select form-select-sm" onchange="renderPastDueList()">
+								<select id="pdStageFilter" class="form-select form-select-sm" onchange="pdPage = 1; loadPastDue();">
 									<option value="">All Stages</option>
 									<option value="Late">Late</option>
 									<option value="Email 1 Sent">Email 1 Sent</option>
@@ -375,6 +375,14 @@
 							</thead>
 							<tbody id="pdTableBody"></tbody>
 						</table>
+					</div>
+					<div class="d-flex align-items-center justify-content-between px-3 py-2 border-top flex-wrap gap-2">
+						<span class="fs-12 text-muted" id="pdPageInfo"></span>
+						<div class="d-flex align-items-center gap-2">
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToPdPage(pdPage - 1)" id="pdPrevBtn"><i class="ti ti-chevron-left"></i> Prev</button>
+							<span class="fs-13" id="pdPageIndicator"></span>
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToPdPage(pdPage + 1)" id="pdNextBtn">Next <i class="ti ti-chevron-right"></i></button>
+						</div>
 					</div>
 				</div>
 
@@ -448,6 +456,22 @@
 	<script>
 		let PAST_DUE_ACCOUNTS = [];
 		let currentDetailAccountId = null;
+		let pdPage = 1;
+		let pdPageSize = 50;
+		let pdTotal = 0;
+		let pdTotalPages = 1;
+		let pdSearchDebounce = null;
+
+		function debouncePastDueSearch() {
+			clearTimeout(pdSearchDebounce);
+			pdSearchDebounce = setTimeout(() => { pdPage = 1; loadPastDue(); }, 300);
+		}
+
+		function goToPdPage(page) {
+			if (page < 1 || page > pdTotalPages || page === pdPage) return;
+			pdPage = page;
+			loadPastDue();
+		}
 
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -474,11 +498,21 @@
 
 		async function loadPastDue() {
 			try {
-				const res = await fetch('/api/v1/lilypad/past-due');
+				const search = document.getElementById('pdSearchInput').value.trim();
+				const stageFilter = document.getElementById('pdStageFilter').value;
+				const params = new URLSearchParams({ page: pdPage, pageSize: pdPageSize });
+				if (search) params.set('search', search);
+				if (stageFilter) params.set('status', stageFilter);
+
+				const res = await fetch('/api/v1/lilypad/past-due?' + params.toString());
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Unable to load past due accounts');
 
 				PAST_DUE_ACCOUNTS = result.data;
+				pdTotal = result.pagination.total;
+				pdTotalPages = result.pagination.totalPages;
+				pdPage = result.pagination.page;
+
 				document.getElementById('kpiTotalLate').textContent = formatCurrency(result.summary.totalAmountLate);
 				document.getElementById('kpiPending').textContent = formatCurrency(result.summary.pendingAmount);
 				document.getElementById('kpiAvgDays').textContent = result.summary.averageLateDays;
@@ -493,31 +527,29 @@
 					: 'Not synced yet';
 
 				renderPastDueList();
+				renderPastDuePagination();
 			} catch (err) {
 				console.error('loadPastDue failed:', err);
 			}
 		}
 
+		function renderPastDuePagination() {
+			const start = pdTotal === 0 ? 0 : (pdPage - 1) * pdPageSize + 1;
+			const end = Math.min(pdPage * pdPageSize, pdTotal);
+			document.getElementById('pdPageInfo').textContent = `Showing ${start}-${end} of ${pdTotal}`;
+			document.getElementById('pdPageIndicator').textContent = `Page ${pdPage} of ${pdTotalPages}`;
+			document.getElementById('pdPrevBtn').disabled = pdPage <= 1;
+			document.getElementById('pdNextBtn').disabled = pdPage >= pdTotalPages;
+		}
+
 		function renderPastDueList() {
-			const search = document.getElementById('pdSearchInput').value.trim().toLowerCase();
-			const stageFilter = document.getElementById('pdStageFilter').value;
-
-			const filtered = PAST_DUE_ACCOUNTS.filter(a => {
-				if (stageFilter && a.status !== stageFilter) return false;
-				if (search) {
-					const haystack = (a.accountName + ' ' + a.payerName).toLowerCase();
-					if (!haystack.includes(search)) return false;
-				}
-				return true;
-			}).sort((a, b) => b.daysLate - a.daysLate);
-
 			const tbody = document.getElementById('pdTableBody');
-			if (!filtered.length) {
+			if (!PAST_DUE_ACCOUNTS.length) {
 				tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No past due accounts. Click "Sync from Salesforce" to pull the latest data.</td></tr>';
 				return;
 			}
 
-			tbody.innerHTML = filtered.map(a => `
+			tbody.innerHTML = PAST_DUE_ACCOUNTS.map(a => `
 				<tr style="cursor:pointer;" onclick="openAccountDetail('${a.id}')">
 					<td><strong>${escapeHtml(a.accountName)}</strong></td>
 					<td><span class="badge ${stageBadgeClass(a.stage)} fs-11">${escapeHtml(a.stage)}</span></td>
@@ -537,6 +569,7 @@
 				const res = await fetch('/api/v1/lilypad/past-due/sync', { method: 'POST' });
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Sync failed');
+				pdPage = 1;
 				await loadPastDue();
 				alert(result.message);
 			} catch (err) {

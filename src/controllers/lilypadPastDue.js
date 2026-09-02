@@ -57,11 +57,30 @@ function toRow (account) {
 lilypadPastDueController.getPastDueAccounts = async function (req, res) {
   try {
     const accounts = await LilyPadPastDueAccount.find({})
-    const rows = accounts.map(toRow)
+    const allRows = accounts.map(toRow)
 
-    const totalLate = rows.filter((r) => r.daysLate > 0).reduce((sum, r) => sum + Number(r.amountDue || 0), 0)
-    const pendingAmount = rows.filter((r) => r.isPending).reduce((sum, r) => sum + Number(r.amountDue || 0), 0)
-    const avgDaysLate = rows.length ? rows.reduce((sum, r) => sum + r.daysLate, 0) / rows.length : 0
+    // Summary reflects every past due account regardless of the list's
+    // search/filter/pagination below.
+    const totalLate = allRows.filter((r) => r.daysLate > 0).reduce((sum, r) => sum + Number(r.amountDue || 0), 0)
+    const pendingAmount = allRows.filter((r) => r.isPending).reduce((sum, r) => sum + Number(r.amountDue || 0), 0)
+    const avgDaysLate = allRows.length ? allRows.reduce((sum, r) => sum + r.daysLate, 0) / allRows.length : 0
+
+    const search = String(req.query.search || '').trim().toLowerCase()
+    const stageFilter = String(req.query.status || '').trim()
+
+    let rows = allRows
+    if (search) {
+      rows = rows.filter((r) => `${r.accountName} ${r.payerName}`.toLowerCase().includes(search))
+    }
+    if (stageFilter) {
+      rows = rows.filter((r) => r.status === stageFilter)
+    }
+    rows = rows.slice().sort((a, b) => b.daysLate - a.daysLate)
+
+    const page = Math.max(1, Number(req.query.page) || 1)
+    const pageSize = Math.min(200, Math.max(1, Number(req.query.pageSize) || 50))
+    const total = rows.length
+    const pageRows = rows.slice((page - 1) * pageSize, page * pageSize)
 
     return res.status(200).json({
       success: true,
@@ -69,9 +88,10 @@ lilypadPastDueController.getPastDueAccounts = async function (req, res) {
         averageLateDays: Number(avgDaysLate.toFixed(1)),
         totalAmountLate: Number(totalLate.toFixed(2)),
         pendingAmount: Number(pendingAmount.toFixed(2)),
-        count: rows.length
+        count: allRows.length
       },
-      data: rows
+      data: pageRows,
+      pagination: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) }
     })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })

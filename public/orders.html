@@ -187,7 +187,7 @@
 
 				<div class="card border-0 shadow-sm rounded-3 mb-3">
 					<div class="card-body py-2 px-3">
-						<input type="text" id="orderSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search order # or account..." oninput="renderOrderTable()">
+						<input type="text" id="orderSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search order # or account..." oninput="debounceOrderSearch()">
 					</div>
 				</div>
 
@@ -199,6 +199,14 @@
 							</thead>
 							<tbody id="orderTableBody"></tbody>
 						</table>
+					</div>
+					<div class="d-flex align-items-center justify-content-between px-3 py-2 border-top flex-wrap gap-2">
+						<span class="fs-12 text-muted" id="orderPageInfo"></span>
+						<div class="d-flex align-items-center gap-2">
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToOrderPage(orderPage - 1)" id="orderPrevBtn"><i class="ti ti-chevron-left"></i> Prev</button>
+							<span class="fs-13" id="orderPageIndicator"></span>
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToOrderPage(orderPage + 1)" id="orderNextBtn">Next <i class="ti ti-chevron-right"></i></button>
+						</div>
 					</div>
 				</div>
 
@@ -231,6 +239,11 @@
 		let ORDERS = [];
 		let orderSortKey = 'effectiveDate';
 		let orderSortDir = 'desc';
+		let orderPage = 1;
+		let orderPageSize = 50;
+		let orderTotal = 0;
+		let orderTotalPages = 1;
+		let orderSearchDebounce = null;
 
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -247,13 +260,31 @@
 			window.location.href = 'login.html';
 		}
 
+		function debounceOrderSearch() {
+			clearTimeout(orderSearchDebounce);
+			orderSearchDebounce = setTimeout(() => { orderPage = 1; loadOrders(); }, 300);
+		}
+
+		function goToOrderPage(page) {
+			if (page < 1 || page > orderTotalPages || page === orderPage) return;
+			orderPage = page;
+			loadOrders();
+		}
+
 		async function loadOrders() {
 			try {
-				const res = await fetch('/api/v1/lilypad/orders');
+				const search = document.getElementById('orderSearchInput').value.trim();
+				const params = new URLSearchParams({ page: orderPage, pageSize: orderPageSize, sortKey: orderSortKey, sortDir: orderSortDir });
+				if (search) params.set('search', search);
+
+				const res = await fetch('/api/v1/lilypad/orders?' + params.toString());
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Unable to load orders');
 
 				ORDERS = result.data.map(o => ({ ...o, itemCount: (o.items || []).length }));
+				orderTotal = result.pagination.total;
+				orderTotalPages = result.pagination.totalPages;
+				orderPage = result.pagination.page;
 
 				const mostRecent = ORDERS.reduce((latest, o) => {
 					const t = new Date(o.lastSyncAt).getTime();
@@ -265,6 +296,7 @@
 
 				renderOrderHead();
 				renderOrderTable();
+				renderOrderPagination();
 			} catch (err) {
 				console.error('loadOrders failed:', err);
 			}
@@ -285,34 +317,28 @@
 				orderSortKey = key;
 				orderSortDir = 'asc';
 			}
+			orderPage = 1;
 			renderOrderHead();
-			renderOrderTable();
+			loadOrders();
+		}
+
+		function renderOrderPagination() {
+			const start = orderTotal === 0 ? 0 : (orderPage - 1) * orderPageSize + 1;
+			const end = Math.min(orderPage * orderPageSize, orderTotal);
+			document.getElementById('orderPageInfo').textContent = `Showing ${start}-${end} of ${orderTotal}`;
+			document.getElementById('orderPageIndicator').textContent = `Page ${orderPage} of ${orderTotalPages}`;
+			document.getElementById('orderPrevBtn').disabled = orderPage <= 1;
+			document.getElementById('orderNextBtn').disabled = orderPage >= orderTotalPages;
 		}
 
 		function renderOrderTable() {
-			const search = document.getElementById('orderSearchInput').value.trim().toLowerCase();
-			let rows = ORDERS.filter(o => {
-				if (!search) return true;
-				return (o.orderNumber + ' ' + o.accountName).toLowerCase().includes(search);
-			});
-
-			rows = rows.slice().sort((a, b) => {
-				let av = a[orderSortKey], bv = b[orderSortKey];
-				if (orderSortKey.toLowerCase().includes('date')) { av = av ? new Date(av).getTime() : 0; bv = bv ? new Date(bv).getTime() : 0; }
-				else if (typeof av === 'number' || typeof bv === 'number') { av = Number(av) || 0; bv = Number(bv) || 0; }
-				else { av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase(); }
-				if (av < bv) return orderSortDir === 'asc' ? -1 : 1;
-				if (av > bv) return orderSortDir === 'asc' ? 1 : -1;
-				return 0;
-			});
-
 			const tbody = document.getElementById('orderTableBody');
-			if (!rows.length) {
+			if (!ORDERS.length) {
 				tbody.innerHTML = `<tr><td colspan="${ORDER_COLUMNS.length}" class="text-center text-muted py-4">No orders yet. Click "Sync from Salesforce" to pull orders in.</td></tr>`;
 				return;
 			}
 
-			tbody.innerHTML = rows.map(o => {
+			tbody.innerHTML = ORDERS.map(o => {
 				const cells = ORDER_COLUMNS.map(col => {
 					if (col.key === 'orderNumber') {
 						return `<td><a href="order-detail.html?id=${o._id}" class="fw-semibold text-decoration-none">${escapeHtml(o.orderNumber || '(no number)')}</a></td>`;
@@ -336,6 +362,7 @@
 				const res = await fetch('/api/v1/lilypad/orders/sync', { method: 'POST' });
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Sync failed');
+				orderPage = 1;
 				await loadOrders();
 				alert(result.message);
 			} catch (err) {

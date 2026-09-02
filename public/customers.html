@@ -193,7 +193,7 @@
 
 				<div class="card border-0 shadow-sm rounded-3 mb-3">
 					<div class="card-body py-2 px-3">
-						<input type="text" id="custSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search name or company..." oninput="renderCustomerTable()">
+						<input type="text" id="custSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search name or company..." oninput="debounceCustomerSearch()">
 					</div>
 				</div>
 
@@ -205,6 +205,14 @@
 							</thead>
 							<tbody id="custTableBody"></tbody>
 						</table>
+					</div>
+					<div class="d-flex align-items-center justify-content-between px-3 py-2 border-top flex-wrap gap-2">
+						<span class="fs-12 text-muted" id="custPageInfo"></span>
+						<div class="d-flex align-items-center gap-2">
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToCustPage(custPage - 1)" id="custPrevBtn"><i class="ti ti-chevron-left"></i> Prev</button>
+							<span class="fs-13" id="custPageIndicator"></span>
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToCustPage(custPage + 1)" id="custNextBtn">Next <i class="ti ti-chevron-right"></i></button>
+						</div>
 					</div>
 				</div>
 
@@ -240,6 +248,11 @@
 		let CUSTOMERS = [];
 		let custSortKey = 'lastActivityDate';
 		let custSortDir = 'desc';
+		let custPage = 1;
+		let custPageSize = 50;
+		let custTotal = 0;
+		let custTotalPages = 1;
+		let custSearchDebounce = null;
 
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -258,13 +271,33 @@
 			return Math.max(0, Math.floor(diff / 86400000));
 		}
 
+		function debounceCustomerSearch() {
+			clearTimeout(custSearchDebounce);
+			custSearchDebounce = setTimeout(() => { custPage = 1; loadCustomers(); }, 300);
+		}
+
+		function goToCustPage(page) {
+			if (page < 1 || page > custTotalPages || page === custPage) return;
+			custPage = page;
+			loadCustomers();
+		}
+
 		async function loadCustomers() {
 			try {
-				const res = await fetch('/api/v1/lilypad/customers');
+				const search = document.getElementById('custSearchInput').value.trim();
+				// The "Age" column is derived from createdDate client-side, so sort by that instead.
+				const sortKey = custSortKey === 'age' ? 'createdDate' : custSortKey;
+				const params = new URLSearchParams({ page: custPage, pageSize: custPageSize, sortKey, sortDir: custSortDir });
+				if (search) params.set('search', search);
+
+				const res = await fetch('/api/v1/lilypad/customers?' + params.toString());
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Unable to load customers');
 
 				CUSTOMERS = result.data.map(c => ({ ...c, age: daysAgo(c.createdDate) }));
+				custTotal = result.pagination.total;
+				custTotalPages = result.pagination.totalPages;
+				custPage = result.pagination.page;
 
 				const mostRecent = CUSTOMERS.reduce((latest, c) => {
 					const t = new Date(c.lastSyncAt).getTime();
@@ -276,6 +309,7 @@
 
 				renderCustomerHead();
 				renderCustomerTable();
+				renderCustomerPagination();
 			} catch (err) {
 				console.error('loadCustomers failed:', err);
 			}
@@ -297,34 +331,28 @@
 				custSortKey = key;
 				custSortDir = 'asc';
 			}
+			custPage = 1;
 			renderCustomerHead();
-			renderCustomerTable();
+			loadCustomers();
+		}
+
+		function renderCustomerPagination() {
+			const start = custTotal === 0 ? 0 : (custPage - 1) * custPageSize + 1;
+			const end = Math.min(custPage * custPageSize, custTotal);
+			document.getElementById('custPageInfo').textContent = `Showing ${start}-${end} of ${custTotal}`;
+			document.getElementById('custPageIndicator').textContent = `Page ${custPage} of ${custTotalPages}`;
+			document.getElementById('custPrevBtn').disabled = custPage <= 1;
+			document.getElementById('custNextBtn').disabled = custPage >= custTotalPages;
 		}
 
 		function renderCustomerTable() {
-			const search = document.getElementById('custSearchInput').value.trim().toLowerCase();
-			let rows = CUSTOMERS.filter(c => {
-				if (!search) return true;
-				return (c.name + ' ' + c.company).toLowerCase().includes(search);
-			});
-
-			rows = rows.slice().sort((a, b) => {
-				let av = a[custSortKey], bv = b[custSortKey];
-				if (custSortKey.toLowerCase().includes('date')) { av = av ? new Date(av).getTime() : 0; bv = bv ? new Date(bv).getTime() : 0; }
-				else if (typeof av === 'number' || typeof bv === 'number') { av = Number(av) || 0; bv = Number(bv) || 0; }
-				else { av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase(); }
-				if (av < bv) return custSortDir === 'asc' ? -1 : 1;
-				if (av > bv) return custSortDir === 'asc' ? 1 : -1;
-				return 0;
-			});
-
 			const tbody = document.getElementById('custTableBody');
-			if (!rows.length) {
+			if (!CUSTOMERS.length) {
 				tbody.innerHTML = `<tr><td colspan="${CUST_COLUMNS.length + 1}" class="text-center text-muted py-4">No customers yet. Click "Sync from Salesforce" to pull leads in.</td></tr>`;
 				return;
 			}
 
-			tbody.innerHTML = rows.map(c => {
+			tbody.innerHTML = CUSTOMERS.map(c => {
 				const cells = CUST_COLUMNS.map(col => {
 					if (col.key === 'name') {
 						return `<td><a href="customer-detail.html?id=${c._id}" class="fw-semibold text-decoration-none">${escapeHtml(c.name)}</a></td>`;
@@ -388,6 +416,7 @@
 				const res = await fetch('/api/v1/lilypad/customers/sync', { method: 'POST' });
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Sync failed');
+				custPage = 1;
 				await loadCustomers();
 				alert(result.message);
 			} catch (err) {

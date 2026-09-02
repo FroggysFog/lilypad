@@ -187,7 +187,7 @@
 
 				<div class="card border-0 shadow-sm rounded-3 mb-3">
 					<div class="card-body py-2 px-3">
-						<input type="text" id="acctSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search account name..." oninput="renderAccountTable()">
+						<input type="text" id="acctSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search account name..." oninput="debounceAccountSearch()">
 					</div>
 				</div>
 
@@ -199,6 +199,14 @@
 							</thead>
 							<tbody id="acctTableBody"></tbody>
 						</table>
+					</div>
+					<div class="d-flex align-items-center justify-content-between px-3 py-2 border-top flex-wrap gap-2">
+						<span class="fs-12 text-muted" id="acctPageInfo"></span>
+						<div class="d-flex align-items-center gap-2">
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToAcctPage(acctPage - 1)" id="acctPrevBtn"><i class="ti ti-chevron-left"></i> Prev</button>
+							<span class="fs-13" id="acctPageIndicator"></span>
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToAcctPage(acctPage + 1)" id="acctNextBtn">Next <i class="ti ti-chevron-right"></i></button>
+						</div>
 					</div>
 				</div>
 
@@ -231,6 +239,11 @@
 		let ACCOUNTS = [];
 		let acctSortKey = 'name';
 		let acctSortDir = 'asc';
+		let acctPage = 1;
+		let acctPageSize = 50;
+		let acctTotal = 0;
+		let acctTotalPages = 1;
+		let acctSearchDebounce = null;
 
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -247,13 +260,31 @@
 			window.location.href = 'login.html';
 		}
 
+		function debounceAccountSearch() {
+			clearTimeout(acctSearchDebounce);
+			acctSearchDebounce = setTimeout(() => { acctPage = 1; loadAccounts(); }, 300);
+		}
+
+		function goToAcctPage(page) {
+			if (page < 1 || page > acctTotalPages || page === acctPage) return;
+			acctPage = page;
+			loadAccounts();
+		}
+
 		async function loadAccounts() {
 			try {
-				const res = await fetch('/api/v1/lilypad/salesforce-accounts');
+				const search = document.getElementById('acctSearchInput').value.trim();
+				const params = new URLSearchParams({ page: acctPage, pageSize: acctPageSize, sortKey: acctSortKey, sortDir: acctSortDir });
+				if (search) params.set('search', search);
+
+				const res = await fetch('/api/v1/lilypad/salesforce-accounts?' + params.toString());
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Unable to load accounts');
 
 				ACCOUNTS = result.data;
+				acctTotal = result.pagination.total;
+				acctTotalPages = result.pagination.totalPages;
+				acctPage = result.pagination.page;
 
 				const mostRecent = ACCOUNTS.reduce((latest, a) => {
 					const t = new Date(a.lastSyncAt).getTime();
@@ -265,6 +296,7 @@
 
 				renderAccountHead();
 				renderAccountTable();
+				renderAccountPagination();
 			} catch (err) {
 				console.error('loadAccounts failed:', err);
 			}
@@ -285,33 +317,28 @@
 				acctSortKey = key;
 				acctSortDir = 'asc';
 			}
+			acctPage = 1;
 			renderAccountHead();
-			renderAccountTable();
+			loadAccounts();
+		}
+
+		function renderAccountPagination() {
+			const start = acctTotal === 0 ? 0 : (acctPage - 1) * acctPageSize + 1;
+			const end = Math.min(acctPage * acctPageSize, acctTotal);
+			document.getElementById('acctPageInfo').textContent = `Showing ${start}-${end} of ${acctTotal}`;
+			document.getElementById('acctPageIndicator').textContent = `Page ${acctPage} of ${acctTotalPages}`;
+			document.getElementById('acctPrevBtn').disabled = acctPage <= 1;
+			document.getElementById('acctNextBtn').disabled = acctPage >= acctTotalPages;
 		}
 
 		function renderAccountTable() {
-			const search = document.getElementById('acctSearchInput').value.trim().toLowerCase();
-			let rows = ACCOUNTS.filter(a => {
-				if (!search) return true;
-				return String(a.name || '').toLowerCase().includes(search);
-			});
-
-			rows = rows.slice().sort((a, b) => {
-				let av = a[acctSortKey], bv = b[acctSortKey];
-				if (typeof av === 'number' || typeof bv === 'number') { av = Number(av) || 0; bv = Number(bv) || 0; }
-				else { av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase(); }
-				if (av < bv) return acctSortDir === 'asc' ? -1 : 1;
-				if (av > bv) return acctSortDir === 'asc' ? 1 : -1;
-				return 0;
-			});
-
 			const tbody = document.getElementById('acctTableBody');
-			if (!rows.length) {
+			if (!ACCOUNTS.length) {
 				tbody.innerHTML = `<tr><td colspan="${ACCOUNT_COLUMNS.length}" class="text-center text-muted py-4">No accounts yet. Click "Sync from Salesforce" to pull accounts in.</td></tr>`;
 				return;
 			}
 
-			tbody.innerHTML = rows.map(a => {
+			tbody.innerHTML = ACCOUNTS.map(a => {
 				const cells = ACCOUNT_COLUMNS.map(col => {
 					if (col.key === 'name') {
 						return `<td><a href="salesforce-account-detail.html?id=${a._id}" class="fw-semibold text-decoration-none">${escapeHtml(a.name || '(no name)')}</a></td>`;
@@ -332,6 +359,7 @@
 				const res = await fetch('/api/v1/lilypad/salesforce-accounts/sync', { method: 'POST' });
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Sync failed');
+				acctPage = 1;
 				await loadAccounts();
 				alert(result.message);
 			} catch (err) {
