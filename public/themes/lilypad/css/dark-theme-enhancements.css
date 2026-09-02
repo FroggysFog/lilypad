@@ -439,6 +439,43 @@
     border-color: #ffffff !important;
 }
 
+/* Top-level nav category dropdowns (Operations, Accounting, Customers,
+   Orders, Salesforce Data, Administration & Setup) got the same solid
+   brand-color fill meant for an actually-active leaf link above, making
+   every category header look like an identical solid button whether or
+   not it was open. Keep those to a subtler highlight instead - higher
+   specificity than the block above so this wins despite both using
+   !important. */
+.sidebar .sidebar-menu > ul > li.submenu > a.subdrop,
+.sidebar .sidebar-menu > ul > li.submenu > a.active {
+    background: var(--menu-item-active-bg) !important;
+    color: var(--primary) !important;
+}
+.sidebar .sidebar-menu > ul > li.submenu > a.subdrop i,
+.sidebar .sidebar-menu > ul > li.submenu > a.active i {
+    background-color: var(--primary) !important;
+    color: #ffffff !important;
+}
+.sidebar .sidebar-menu > ul > li.submenu > a.subdrop span:not(.menu-arrow),
+.sidebar .sidebar-menu > ul > li.submenu > a.active span:not(.menu-arrow) {
+    color: var(--primary) !important;
+}
+.sidebar .sidebar-menu > ul > li.submenu > a.subdrop .menu-arrow::before,
+.sidebar .sidebar-menu > ul > li.submenu > a.active .menu-arrow::before {
+    border-color: var(--primary) !important;
+}
+
+/* Keep category labels ("Administration & Setup") on one line instead of
+   wrapping under the chevron arrow */
+.sidebar .sidebar-menu > ul > li.submenu > a {
+    white-space: nowrap;
+}
+.sidebar .sidebar-menu > ul > li.submenu > a span:not(.menu-arrow) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
 /* Mini-Sidebar Mode Icon Tiles */
 .mini-sidebar .sidebar .sidebar-menu li > a:hover {
     background: var(--bs-primary) !important;
