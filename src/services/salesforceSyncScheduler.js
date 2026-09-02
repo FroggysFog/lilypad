@@ -24,9 +24,17 @@ const SYNC_JOBS = [
   { name: 'Opportunities', run: syncOpportunitiesFromSalesforce }
 ]
 
+function logHeapUsedMb (winston, label) {
+  if (!winston) return
+  const heapUsedMb = Math.round(process.memoryUsage().heapUsed / 1024 / 1024)
+  winston.info(`Salesforce sync memory: ${label} - heap used ${heapUsedMb}MB`)
+}
+
 async function runScheduledSalesforceSync (winston) {
   const status = await getSalesforceOAuthStatus()
   if (!status.connected) return { skipped: true, reason: 'Salesforce is not connected.' }
+
+  logHeapUsedMb(winston, 'before sync')
 
   const results = {}
   for (const job of SYNC_JOBS) {
@@ -36,6 +44,7 @@ async function runScheduledSalesforceSync (winston) {
       results[job.name] = { error: err.message }
       if (winston) winston.error(`Scheduled Salesforce sync failed for ${job.name}: ${err.message}`)
     }
+    logHeapUsedMb(winston, `after ${job.name}`)
   }
   return { skipped: false, results }
 }
