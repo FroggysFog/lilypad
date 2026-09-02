@@ -45,6 +45,15 @@ services:
         sync: false
       - key: SF_OPPORTUNITIES_SOQL
         sync: false
+      # Cart.com Connected App ("LilyPad", App ID 13) - fill in via the Render dashboard
+      - key: CART_STORE_URL
+        value: https://www.froggysfog.com
+      - key: CART_APP_ID
+        sync: false
+      - key: CART_APP_SECRET
+        sync: false
+      - key: CART_CALLBACK_URL
+        sync: false
       - key: REMINDER_CHECK_MINUTES
         value: "5"
       # How often the background job pulls Customers/Orders/Accounts/Opportunities/
