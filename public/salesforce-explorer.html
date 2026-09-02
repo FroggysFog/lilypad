@@ -335,7 +335,8 @@
 
 		async function copyFieldList() {
 			if (!CURRENT_FIELDS.length) return;
-			const text = CURRENT_FIELDS.map(f =>
+			const header = `Object: ${selectedObjectName}\n`;
+			const text = header + CURRENT_FIELDS.map(f =>
 				`${f.label}\t${f.name}\t${f.type}${f.referenceTo && f.referenceTo.length ? ' -> ' + f.referenceTo.join(', ') : ''}`
 			).join('\n');
 
