@@ -27,7 +27,13 @@ const cartService = require('../services/cartService')
 const LilyPadCartOrder = require('../models/lilypadCartOrder')
 const winston = require('../logger')
 
-const CUSTOMER_FETCH_CONCURRENCY = 8
+// Confirmed live: 8-way concurrent payment/customer lookups tripped
+// Cart.com's rate limit (429). Lower concurrency plus honoring
+// Retry-After (falling back to exponential backoff when that header
+// isn't present) keeps a sync running instead of failing outright.
+const CUSTOMER_FETCH_CONCURRENCY = 3
+const MAX_RATE_LIMIT_RETRIES = 6
+const DEFAULT_RETRY_DELAY_MS = 3000
 
 function singleFlight (fn) {
   let inFlight = null
@@ -35,6 +41,23 @@ function singleFlight (fn) {
     if (inFlight) return inFlight
     inFlight = fn(...args).finally(() => { inFlight = null })
     return inFlight
+  }
+}
+
+function delay (ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function cartRequestWithRetry (path) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await cartService.cartRequest(path)
+    } catch (err) {
+      if (err.cartStatus !== 429 || attempt > MAX_RATE_LIMIT_RETRIES) throw err
+      const waitMs = err.retryAfterSeconds ? err.retryAfterSeconds * 1000 : DEFAULT_RETRY_DELAY_MS * attempt
+      winston.warn(`Cart.com Order sync: rate limited on ${path} - waiting ${Math.round(waitMs / 1000)}s (retry ${attempt}/${MAX_RATE_LIMIT_RETRIES})`)
+      await delay(waitMs)
+    }
   }
 }
 
@@ -52,13 +75,13 @@ async function mapWithConcurrency (items, limit, iteratee) {
 }
 
 async function getOpenOrderStatuses () {
-  const result = await cartService.cartRequest('/api/v1/order_statuses.json')
+  const result = await cartRequestWithRetry('/api/v1/order_statuses.json')
   const statuses = (result.data && result.data.order_statuses) || []
   return statuses.filter((s) => s.is_open && !s.is_cancelled && !s.is_quote_status)
 }
 
 async function fetchApprovedPaymentsTotal (orderId) {
-  const result = await cartService.cartRequest(`/api/v1/order_payments.json?order_id=${orderId}`)
+  const result = await cartRequestWithRetry(`/api/v1/order_payments.json?order_id=${orderId}`)
   const payments = (result.data && result.data.payments) || []
   return payments.reduce((sum, p) => (p.is_approved && !p.is_void ? sum + Number(p.amount || 0) : sum), 0)
 }
@@ -67,7 +90,7 @@ async function fetchCustomer (customerId, cache) {
   if (!customerId) return null
   if (cache.has(customerId)) return cache.get(customerId)
   try {
-    const result = await cartService.cartRequest(`/api/v1/customers/${customerId}.json`)
+    const result = await cartRequestWithRetry(`/api/v1/customers/${customerId}.json`)
     cache.set(customerId, result.data || null)
     return result.data || null
   } catch (err) {
@@ -138,7 +161,7 @@ async function syncCartOrders () {
   for (const openStatus of openStatuses) {
     let nextPath = `/api/v1/orders.json?order_status_id=${openStatus.id}`
     while (nextPath) {
-      const result = await cartService.cartRequest(nextPath)
+      const result = await cartRequestWithRetry(nextPath)
       const data = result.data || {}
       const orders = data.orders || []
       total += orders.length

@@ -158,7 +158,11 @@ async function cartRequest (path) {
   } catch (error) {
     const status = error.response && error.response.status
     const body = error.response && error.response.data
-    throw new Error(`Cart.com request failed${status ? ` (${status})` : ''}: ${body ? JSON.stringify(body) : error.message}`)
+    const retryAfterHeader = error.response && error.response.headers && error.response.headers['retry-after']
+    const wrapped = new Error(`Cart.com request failed${status ? ` (${status})` : ''}: ${body ? JSON.stringify(body) : error.message}`)
+    wrapped.cartStatus = status || null
+    wrapped.retryAfterSeconds = retryAfterHeader ? Number(retryAfterHeader) : null
+    throw wrapped
   }
 }
 
