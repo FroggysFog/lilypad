@@ -129,7 +129,8 @@ lilypadPastDueController.triggerSalesforceSync = async function (req, res) {
     // to make sure this button always reflects current Salesforce data.
     await syncOrdersFromSalesforce()
     const result = await syncPastDueAccountsFromSalesforce()
-    return res.status(200).json({ success: true, message: `Synced ${result.synced} of ${result.total} accounts from Salesforce.`, ...result })
+    const removedNote = result.removed ? ` (${result.removed} removed - paid off or no longer eligible)` : ''
+    return res.status(200).json({ success: true, message: `Synced ${result.synced} of ${result.total} accounts from Salesforce.${removedNote}`, ...result })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

@@ -13,6 +13,21 @@
 const LilyPadOrder = require('../models/lilypadOrder')
 const LilyPadPastDueAccount = require('../models/lilypadPastDueAccount')
 
+// Orders owned by anyone outside this list, or billed to FrightProps, are a
+// different brand sharing this Salesforce org and shouldn't appear as
+// Froggy's Fog collections/reminders.
+const ALLOWED_OWNERS = [
+  'Joey Olaerts',
+  "Froggy's Fog",
+  'Scott Lynd',
+  'Katie Lane',
+  'Eli Phipps',
+  'Mitchell Wolf',
+  'Chris Markgraf',
+  'Adam Pogue'
+]
+const EXCLUDED_ACCOUNT_PATTERN = /fright\s*props/i
+
 function parseCurrencyLikeNumber (value) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0
   const normalized = String(value || '').replace(/[^0-9.-]/g, '')
@@ -60,16 +75,23 @@ function derivePastDueRecordFromOrder (order) {
 }
 
 /**
- * Reads currently-synced Orders with money owed and upserts them into
- * LilyPadPastDueAccount by sourceRecordId (the underlying Salesforce
- * Order Id, so this stays 1:1 with Orders). Preserves any locally-edited
- * payer info (payerEmail/payerPhone/payerNotes) unless the order now has
- * a non-empty value for it.
+ * Reads currently-synced Orders with money owed (excluding other brands
+ * sharing this org - see ALLOWED_OWNERS/EXCLUDED_ACCOUNT_PATTERN above)
+ * and upserts them into LilyPadPastDueAccount by sourceRecordId (the
+ * underlying Salesforce Order Id, so this stays 1:1 with Orders).
+ * Preserves any locally-edited payer info (payerEmail/payerPhone/
+ * payerNotes) unless the order now has a non-empty value for it. Also
+ * removes any previously-synced past due account that no longer
+ * qualifies - paid off, or newly excluded by the brand/owner filter -
+ * so the list and the reminder pipeline both stay current instead of
+ * accumulating stale entries forever.
  */
 async function syncPastDueAccountsFromSalesforce () {
   const overdueOrders = await LilyPadOrder.find({
     totalDue: { $gt: 0 },
-    daysPastDue: { $gt: 0 }
+    daysPastDue: { $gt: 0 },
+    ownerName: { $in: ALLOWED_OWNERS },
+    accountName: { $not: EXCLUDED_ACCOUNT_PATTERN }
   })
 
   const records = overdueOrders.map(derivePastDueRecordFromOrder)
@@ -105,7 +127,10 @@ async function syncPastDueAccountsFromSalesforce () {
     synced += 1
   }
 
-  return { synced, total: records.length }
+  const qualifyingIds = records.map((r) => r.sourceRecordId)
+  const removal = await LilyPadPastDueAccount.deleteMany({ sourceRecordId: { $nin: qualifyingIds } })
+
+  return { synced, total: records.length, removed: removal.deletedCount }
 }
 
 module.exports = {
