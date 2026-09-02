@@ -206,9 +206,14 @@
 						<div class="card border-0 shadow-sm rounded-3" id="objectDetailCard" style="display:none;">
 							<div class="card-header bg-transparent d-flex align-items-center justify-content-between flex-wrap gap-2">
 								<strong class="fs-14" id="objectDetailTitle">&nbsp;</strong>
-								<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="previewSelectedObject()" id="previewBtn">
-									<i class="ti ti-eye me-1"></i> Preview 5 Rows
-								</button>
+								<div class="d-flex align-items-center gap-2">
+									<button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="copyFieldList()" id="copyFieldsBtn">
+										<i class="ti ti-copy me-1"></i> Copy All Fields
+									</button>
+									<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="previewSelectedObject()" id="previewBtn">
+										<i class="ti ti-eye me-1"></i> Preview 5 Rows
+									</button>
+								</div>
 							</div>
 							<div class="card-body py-2 px-3 border-bottom">
 								<input type="text" id="fieldSearchInput" class="form-control form-control-sm" placeholder="Filter fields by name or label (e.g. due, PO, cart)..." oninput="renderFieldTable()">
@@ -325,6 +330,24 @@
 			} catch (err) {
 				document.getElementById('objectDetailTitle').textContent = 'Unable to load fields';
 				document.getElementById('fieldTableBody').innerHTML = `<tr><td colspan="3" class="text-danger">${escapeHtml(err.message)}</td></tr>`;
+			}
+		}
+
+		async function copyFieldList() {
+			if (!CURRENT_FIELDS.length) return;
+			const text = CURRENT_FIELDS.map(f =>
+				`${f.label}\t${f.name}\t${f.type}${f.referenceTo && f.referenceTo.length ? ' -> ' + f.referenceTo.join(', ') : ''}`
+			).join('\n');
+
+			const btn = document.getElementById('copyFieldsBtn');
+			try {
+				await navigator.clipboard.writeText(text);
+				const original = btn.innerHTML;
+				btn.innerHTML = '<i class="ti ti-check me-1"></i> Copied!';
+				setTimeout(() => { btn.innerHTML = original; }, 1500);
+			} catch (err) {
+				alert('Unable to copy automatically. Select the text in the console or try again.');
+				console.log(text);
 			}
 		}
 
