@@ -293,7 +293,7 @@
 					<div>
 						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
 							<span>Past Due Payments</span>
-							<span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold"><i class="ti ti-refresh"></i> Synced from Salesforce</span>
+							<span class="badge bg-soft-primary text-primary fs-12 rounded-pill fw-semibold"><i class="ti ti-refresh"></i> Salesforce + Cart.com</span>
 						</h4>
 						<p class="text-muted fs-13 mb-0">Collections reminder queue: overdue accounts, staged email reminders, and delivery history.</p>
 					</div>
@@ -307,6 +307,9 @@
 						</a>
 						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="syncFromSalesforce()" id="syncBtn">
 							<i class="ti ti-refresh me-1"></i> Sync from Salesforce
+						</button>
+						<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" onclick="syncFromCart()" id="syncCartBtn">
+							<i class="ti ti-refresh me-1"></i> Sync from Cart.com
 						</button>
 					</div>
 				</div>
@@ -356,6 +359,13 @@
 									<option value="Collections">Collections</option>
 								</select>
 							</div>
+							<div class="col-md-2">
+								<select id="pdSourceFilter" class="form-select form-select-sm" onchange="pdPage = 1; loadPastDue();">
+									<option value="">All Sources</option>
+									<option value="salesforce">Salesforce</option>
+									<option value="cart">Cart.com</option>
+								</select>
+							</div>
 							<div class="col-auto ms-auto">
 								<span class="fs-12 text-muted" id="pdLastSynced"></span>
 							</div>
@@ -370,6 +380,7 @@
 							<thead class="table-light">
 								<tr>
 									<th>Account</th>
+									<th>Source</th>
 									<th>Stage</th>
 									<th>Days Late</th>
 									<th>Amount Due</th>
@@ -412,7 +423,10 @@
 		<div class="modal-dialog modal-lg modal-dialog-scrollable">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h5 class="modal-title fw-bold" id="detailAccountName">Account</h5>
+					<h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+						<span id="detailAccountName">Account</span>
+						<span id="detailSourceBadge"></span>
+					</h5>
 					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 				</div>
 				<div class="modal-body">
@@ -511,6 +525,12 @@
 			return 'bg-dark';
 		}
 
+		function sourceBadge(source) {
+			return source === 'cart'
+				? '<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold"><i class="ti ti-shopping-cart"></i> Cart.com</span>'
+				: '<span class="badge bg-soft-primary text-primary fs-11 rounded-pill fw-semibold"><i class="ti ti-cloud"></i> Salesforce</span>';
+		}
+
 		async function doLogout() {
 			try { await fetch('/logout'); } catch (e) {}
 			window.location.href = 'login.html';
@@ -520,9 +540,11 @@
 			try {
 				const search = document.getElementById('pdSearchInput').value.trim();
 				const stageFilter = document.getElementById('pdStageFilter').value;
+				const sourceFilter = document.getElementById('pdSourceFilter').value;
 				const params = new URLSearchParams({ page: pdPage, pageSize: pdPageSize });
 				if (search) params.set('search', search);
 				if (stageFilter) params.set('status', stageFilter);
+				if (sourceFilter) params.set('source', sourceFilter);
 
 				const res = await fetch('/api/v1/lilypad/past-due?' + params.toString());
 				const result = await res.json();
@@ -565,13 +587,14 @@
 		function renderPastDueList() {
 			const tbody = document.getElementById('pdTableBody');
 			if (!PAST_DUE_ACCOUNTS.length) {
-				tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No past due accounts. Click "Sync from Salesforce" to pull the latest data.</td></tr>';
+				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No past due accounts. Click "Sync from Salesforce" or "Sync from Cart.com" to pull the latest data.</td></tr>';
 				return;
 			}
 
 			tbody.innerHTML = PAST_DUE_ACCOUNTS.map(a => `
 				<tr style="cursor:pointer;" onclick="openAccountDetail('${a.id}')">
 					<td><strong>${escapeHtml(a.accountName)}</strong></td>
+					<td>${sourceBadge(a.source)}</td>
 					<td><span class="badge ${stageBadgeClass(a.stage)} fs-11">${escapeHtml(a.stage)}</span></td>
 					<td>${a.daysLate}</td>
 					<td>${formatCurrency(a.amountDue)}</td>
@@ -594,6 +617,23 @@
 				alert(result.message);
 			} catch (err) {
 				alert(err.message || 'Unable to sync from Salesforce.');
+			} finally {
+				btn.disabled = false;
+			}
+		}
+
+		async function syncFromCart() {
+			const btn = document.getElementById('syncCartBtn');
+			btn.disabled = true;
+			try {
+				const res = await fetch('/api/v1/lilypad/past-due/sync-cart', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Sync failed');
+				pdPage = 1;
+				await loadPastDue();
+				alert(result.message);
+			} catch (err) {
+				alert(err.message || 'Unable to sync from Cart.com.');
 			} finally {
 				btn.disabled = false;
 			}
@@ -631,6 +671,7 @@
 
 				const a = result.data;
 				document.getElementById('detailAccountName').textContent = a.accountName;
+				document.getElementById('detailSourceBadge').innerHTML = sourceBadge(a.source);
 				document.getElementById('detailStage').textContent = a.stage;
 				document.getElementById('detailStage').className = 'badge fs-12 ' + stageBadgeClass(a.stage);
 				document.getElementById('detailDaysLate').textContent = a.daysLate + ' days';

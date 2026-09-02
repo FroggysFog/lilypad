@@ -162,10 +162,31 @@ async function cartRequest (path) {
   }
 }
 
+/**
+ * Cart.com's list endpoints hand back a full "next_page" URL for
+ * pagination (confirmed live - per_page is silently ignored, but
+ * next_page reliably advances the cursor). cartRequest() only accepts
+ * relative paths for SSRF protection, so this converts a next_page URL
+ * back to a relative path IF it actually points at the configured
+ * store - otherwise it's dropped rather than followed.
+ */
+function relativizeCartUrl (absoluteUrl) {
+  if (!absoluteUrl) return null
+  try {
+    const target = new URL(absoluteUrl)
+    const store = new URL(getCartOAuthConfig().storeUrl)
+    if (target.host !== store.host) return null
+    return `${target.pathname}${target.search}`
+  } catch (err) {
+    return null
+  }
+}
+
 module.exports = {
   getCartOAuthConfig,
   getCartAuthUrl,
   exchangeCartCode,
   getCartOAuthStatus,
-  cartRequest
+  cartRequest,
+  relativizeCartUrl
 }

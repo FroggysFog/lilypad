@@ -9,6 +9,8 @@ const LilyPadEmailTemplate = require('../models/lilypadEmailTemplate')
 const LilyPadReminderDelivery = require('../models/lilypadReminderDelivery')
 const { syncPastDueAccountsFromSalesforce } = require('../services/pastDueSyncService')
 const { syncOrdersFromSalesforce } = require('../services/orderSyncService')
+const { syncCartOrders } = require('../services/cartOrderSyncService')
+const { syncCartPastDueAccounts } = require('../services/cartPastDueSyncService')
 const {
   getDaysLate,
   getPastDueStage,
@@ -48,6 +50,7 @@ function toRow (account) {
     orderNumber: account.orderNumber,
     poNumber: account.poNumber,
     poDate: account.poDate,
+    source: account.source || 'salesforce',
     lastSyncAt: account.lastSyncAt
   }
 }
@@ -68,6 +71,7 @@ lilypadPastDueController.getPastDueAccounts = async function (req, res) {
 
     const search = String(req.query.search || '').trim().toLowerCase()
     const stageFilter = String(req.query.status || '').trim()
+    const sourceFilter = String(req.query.source || '').trim()
 
     let rows = allRows
     if (search) {
@@ -75,6 +79,9 @@ lilypadPastDueController.getPastDueAccounts = async function (req, res) {
     }
     if (stageFilter) {
       rows = rows.filter((r) => r.status === stageFilter)
+    }
+    if (sourceFilter) {
+      rows = rows.filter((r) => r.source === sourceFilter)
     }
     rows = rows.slice().sort((a, b) => b.daysLate - a.daysLate)
 
@@ -143,6 +150,31 @@ lilypadPastDueController.triggerSalesforceSync = async function (req, res) {
     return res.status(200).json({ success: true, message: `Synced ${result.synced} of ${result.total} accounts from Salesforce.${removedNote}`, ...result })
   } catch (err) {
     winston.error(`Manual Past Due sync failed after ${Math.round((Date.now() - startedAt) / 1000)}s: ${err.message}`)
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/past-due/sync-cart
+ */
+lilypadPastDueController.triggerCartSync = async function (req, res) {
+  const startedAt = Date.now()
+  try {
+    const orderResult = await syncCartOrders()
+    if (orderResult.skipped) {
+      return res.status(400).json({ success: false, error: orderResult.reason })
+    }
+    const pastDueResult = await syncCartPastDueAccounts()
+    const removedNote = pastDueResult.removed ? ` (${pastDueResult.removed} removed - paid off)` : ''
+    winston.info(`Manual Cart.com sync finished in ${Math.round((Date.now() - startedAt) / 1000)}s`)
+    return res.status(200).json({
+      success: true,
+      message: `Synced ${orderResult.synced} Cart.com orders, ${pastDueResult.synced} past due.${removedNote}`,
+      orders: orderResult,
+      pastDue: pastDueResult
+    })
+  } catch (err) {
+    winston.error(`Manual Cart.com sync failed after ${Math.round((Date.now() - startedAt) / 1000)}s: ${err.message}`)
     return res.status(500).json({ success: false, error: err.message })
   }
 }

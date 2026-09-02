@@ -58,6 +58,7 @@ function derivePastDueRecordFromOrder (order) {
     poDate: order.poDate || null,
     paymentMethod: order.paymentMethod || '',
     status: order.status || '',
+    source: 'salesforce',
     sourceRecordId: order.sourceRecordId
   }
 }
@@ -110,6 +111,7 @@ async function syncPastDueAccountsFromSalesforce () {
           poDate: record.poDate,
           paymentMethod: record.paymentMethod,
           status: record.status,
+          source: 'salesforce',
           lastSyncAt: new Date()
         }
         if (record.payerEmail || !(existing && existing.payerEmail)) {
@@ -130,7 +132,10 @@ async function syncPastDueAccountsFromSalesforce () {
     synced = (bulkResult.upsertedCount || 0) + (bulkResult.modifiedCount || 0)
   }
 
-  const removal = await LilyPadPastDueAccount.deleteMany({ sourceRecordId: { $nin: qualifyingIds } })
+  // Scoped to source: 'salesforce' - this collection also holds
+  // Cart.com-derived records (see cartPastDueSyncService.js), which have
+  // their own cleanup and must not get swept up by this one.
+  const removal = await LilyPadPastDueAccount.deleteMany({ source: 'salesforce', sourceRecordId: { $nin: qualifyingIds } })
   winston.info(`Past Due sync: ${records.length} qualifying orders, ${removal.deletedCount} removed (paid off or excluded)`)
 
   return { synced, total: records.length, removed: removal.deletedCount }

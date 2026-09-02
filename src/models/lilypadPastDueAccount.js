@@ -78,6 +78,15 @@ const pastDueAccountSchema = new Schema(
       trim: true,
       default: ''
     },
+    // Which sync pulled this record in - lets Salesforce's and Cart.com's
+    // sync/cleanup jobs each manage only their own records in this shared
+    // collection instead of stepping on each other's deleteMany calls.
+    source: {
+      type: String,
+      enum: ['salesforce', 'cart'],
+      default: 'salesforce',
+      index: true
+    },
     sourceRecordId: {
       type: String,
       required: true,

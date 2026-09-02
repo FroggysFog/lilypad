@@ -16,6 +16,7 @@ module.exports = function () {
   router.get('/past-due/automation', requireLoginApi, controllers.lilypadPastDue.getReminderAutomationStatus)
   router.post('/past-due/automation/toggle', requireLoginApi, controllers.lilypadPastDue.toggleReminderAutomation)
   router.post('/past-due/sync', requireLoginApi, controllers.lilypadPastDue.triggerSalesforceSync)
+  router.post('/past-due/sync-cart', requireLoginApi, controllers.lilypadPastDue.triggerCartSync)
   router.get('/past-due/:id', requireLoginApi, controllers.lilypadPastDue.getPastDueAccountDetail)
   router.put('/past-due/:id/payer-info', requireLoginApi, controllers.lilypadPastDue.updatePayerInfo)
   router.post('/past-due/:id/send-reminder', requireLoginApi, controllers.lilypadPastDue.sendManualReminder)

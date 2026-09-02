@@ -11,6 +11,7 @@ const LilyPadCustomer = require('./lilypadCustomer')
 const LilyPadOrder = require('./lilypadOrder')
 const LilyPadSalesforceAccount = require('./lilypadSalesforceAccount')
 const LilyPadOpportunity = require('./lilypadOpportunity')
+const LilyPadCartOrder = require('./lilypadCartOrder')
 
 module.exports = {
   LilyPadTicket,
@@ -25,5 +26,6 @@ module.exports = {
   LilyPadCustomer,
   LilyPadOrder,
   LilyPadSalesforceAccount,
-  LilyPadOpportunity
+  LilyPadOpportunity,
+  LilyPadCartOrder
 }
