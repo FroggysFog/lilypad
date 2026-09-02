@@ -138,7 +138,16 @@ async function sendReminderForAccount (account, options = {}) {
   const stage = getPastDueStage(daysLate)
   const status = account.status || stage.status
 
-  if (!options.force) {
+  // Test sends (to selected addresses, using this account's real data to
+  // render merge fields - like sending a test in an ESP) always bypass
+  // the "already sent"/resolved-status gating and never require a real
+  // payer email on file, since nothing is actually going to the customer.
+  const testRecipients = Array.isArray(options.testRecipients)
+    ? options.testRecipients.map((e) => String(e || '').trim()).filter(Boolean)
+    : []
+  const isTest = testRecipients.length > 0
+
+  if (!options.force && !isTest) {
     if (RESOLVED_STATUSES.includes(status)) {
       return { skipped: true, reason: 'Account status excludes automated reminders.' }
     }
@@ -151,46 +160,56 @@ async function sendReminderForAccount (account, options = {}) {
   }
 
   const templateKey = options.templateKey || determineReminderTemplateKey(status, daysLate)
-  const payerEmail = (account.payerEmail || '').trim()
-  if (!payerEmail) {
-    return { skipped: true, reason: 'No payer email on file for this account.' }
+
+  let recipient
+  if (isTest) {
+    recipient = testRecipients.join(', ')
+  } else {
+    recipient = (account.payerEmail || '').trim()
+    if (!recipient) {
+      return { skipped: true, reason: 'No payer email on file for this account.' }
+    }
   }
 
   const rendered = options.subject || options.body
     ? { subject: options.subject || '', body: options.body || '' }
     : await getConfiguredReminderTemplate(account, templateKey, daysLate)
 
+  const subject = isTest ? `[TEST] ${rendered.subject}` : rendered.subject
+
   try {
     const result = await sendReminderEmail({
-      to: payerEmail,
-      subject: rendered.subject,
+      to: recipient,
+      subject,
       body: rendered.body,
       senderEmail: process.env.SMTP_FROM
     })
 
     await LilyPadReminderDelivery.create({
       accountName: account.accountName,
-      recipientEmail: payerEmail,
+      recipientEmail: recipient,
       templateKey,
       status: 'sent',
-      subject: rendered.subject,
+      subject,
       senderEmail: process.env.SMTP_FROM || '',
-      messageId: result.messageId || ''
+      messageId: result.messageId || '',
+      isTest
     })
 
-    return { sent: true, templateKey, recipient: payerEmail }
+    return { sent: true, templateKey, recipient, isTest }
   } catch (error) {
     await LilyPadReminderDelivery.create({
       accountName: account.accountName,
-      recipientEmail: payerEmail,
+      recipientEmail: recipient,
       templateKey,
       status: 'failed',
-      subject: rendered.subject,
+      subject,
       senderEmail: process.env.SMTP_FROM || '',
-      failedReason: error.message || 'Failed to send reminder.'
+      failedReason: error.message || 'Failed to send reminder.',
+      isTest
     })
 
-    return { sent: false, templateKey, recipient: payerEmail, error: error.message }
+    return { sent: false, templateKey, recipient, isTest, error: error.message }
   }
 }
 

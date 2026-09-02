@@ -51,6 +51,10 @@ const reminderDeliverySchema = new Schema(
     messageId: {
       type: String,
       default: ''
+    },
+    isTest: {
+      type: Boolean,
+      default: false
     }
   },
   { timestamps: true }

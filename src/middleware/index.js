@@ -31,9 +31,14 @@ module.exports = function (app, db, callback) {
     return next()
   })
 
+  // 1-year sessions meant the sessions collection just kept growing (31k+
+  // documents observed) since MongoDB's TTL cleanup couldn't catch up.
+  // 90 days is still a long convenience window for an internal tool, but
+  // bounds growth - adjustable via SESSION_MAX_AGE_DAYS if 90 is wrong.
+  const sessionMaxAgeDays = Number(process.env.SESSION_MAX_AGE_DAYS || 90)
   const cookie = {
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 365 // 1 year
+    maxAge: 1000 * 60 * 60 * 24 * sessionMaxAgeDays
   }
 
   const sessionSecret = nconf.get('tokens:secret') ? nconf.get('tokens:secret') : 'trudesk$1234#SessionKeY!2288'

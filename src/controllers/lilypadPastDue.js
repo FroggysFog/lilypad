@@ -181,8 +181,18 @@ lilypadPastDueController.sendManualReminder = async function (req, res) {
       return res.status(404).json({ success: false, error: 'Account not found' })
     }
 
-    const { subject, body, templateKey } = req.body || {}
-    const result = await sendReminderForAccount(account, { force: true, subject, body, templateKey })
+    const { subject, body, templateKey, testRecipients } = req.body || {}
+    const cleanTestRecipients = Array.isArray(testRecipients)
+      ? testRecipients.map((e) => String(e || '').trim()).filter((e) => e.includes('@'))
+      : []
+
+    const result = await sendReminderForAccount(account, {
+      force: true,
+      subject,
+      body,
+      templateKey,
+      testRecipients: cleanTestRecipients
+    })
 
     if (result.skipped) {
       return res.status(400).json({ success: false, error: result.reason })

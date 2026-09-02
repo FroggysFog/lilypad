@@ -14,21 +14,7 @@ const LilyPadOrder = require('../models/lilypadOrder')
 const LilyPadPastDueAccount = require('../models/lilypadPastDueAccount')
 const winston = require('../logger')
 const { singleFlight } = require('./salesforceService')
-
-// Orders owned by anyone outside this list, or billed to FrightProps, are a
-// different brand sharing this Salesforce org and shouldn't appear as
-// Froggy's Fog collections/reminders.
-const ALLOWED_OWNERS = [
-  'Joey Olaerts',
-  "Froggy's Fog",
-  'Scott Lynd',
-  'Katie Lane',
-  'Eli Phipps',
-  'Mitchell Wolf',
-  'Chris Markgraf',
-  'Adam Pogue'
-]
-const EXCLUDED_ACCOUNT_PATTERN = /fright\s*props/i
+const { ALLOWED_OWNERS, EXCLUDED_ACCOUNT_PATTERN } = require('./brandFilter')
 
 function parseCurrencyLikeNumber (value) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0

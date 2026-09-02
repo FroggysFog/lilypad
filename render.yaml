@@ -60,6 +60,10 @@ services:
       # Past Due data from Salesforce into local storage (minutes)
       - key: SF_SYNC_CHECK_MINUTES
         value: "60"
+      # How long a login session lasts before auto-expiring (days) - was
+      # hardcoded to 365, which let the sessions collection grow unbounded
+      - key: SESSION_MAX_AGE_DAYS
+        value: "90"
       # SMTP (past-due payment reminder emails) - fill in via the Render dashboard
       - key: SMTP_HOST
         sync: false
