@@ -13,11 +13,14 @@
  * brute-forced combinations of guessed base URLs (including an
  * AmeriCommerce subdomain guess), guessed endpoint paths, and five
  * different guessed auth header formats, with no confirmation any
- * specific combination worked. Rather than repeat that, cartRequest()
- * below just makes a single request the admin specifies, surfaced
- * through the Cart.com Explorer page - the same pattern the Salesforce
- * Explorer used to replace guessing at field names with actually looking
- * them up.
+ * specific combination worked. Confirmed via Cart.com's actual docs
+ * (developers.cart.com/docs/rest-api) instead: base URL is
+ * https://[storename]/api/v1/, auth header is X-AC-Auth-Token (not
+ * Authorization: Bearer, the initial guess here that got a 401).
+ * cartRequest() below makes a single request the admin specifies,
+ * surfaced through the Cart.com Explorer page - the same pattern the
+ * Salesforce Explorer used to replace guessing at field names with
+ * actually looking them up.
  *
  * Tokens persisted to LilyPadSetting, same pattern as Salesforce's.
  */
@@ -142,8 +145,11 @@ async function cartRequest (path) {
   }
 
   try {
+    // Confirmed via Cart.com's own docs (developers.cart.com/docs/rest-api -
+    // "Online Store API Authentication"): the access token goes in a custom
+    // X-AC-Auth-Token header, not a standard Authorization: Bearer header.
     const response = await axios.get(`${config.storeUrl}${cleanPath}`, {
-      headers: { Authorization: `Bearer ${tokens.accessToken}` },
+      headers: { 'X-AC-Auth-Token': tokens.accessToken },
       timeout: REQUEST_TIMEOUT_MS
     })
     return { status: response.status, data: response.data }
