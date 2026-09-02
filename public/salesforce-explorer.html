@@ -94,66 +94,70 @@
 			<div class="sidebar-inner" data-simplebar>
 				<div id="sidebar-menu" class="sidebar-menu">
 					<ul>
-						<li class="menu-title"><span>Main Operations</span></li>
 						<li>
 							<ul>
 								<li><a href="dashboard.html"><i class="ti ti-dashboard"></i><span>Main Dashboard</span></a></li>
 							</ul>
 						</li>
 
-						<li class="menu-title"><span>Operations</span></li>
-						<li>
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-ticket"></i><span>Operations</span><span class="menu-arrow"></span>
+							</a>
 							<ul>
 								<li><a href="tickets.html"><i class="ti ti-ticket"></i><span>Ticket Operations</span></a></li>
 								<li><a href="knowledge-base.html"><i class="ti ti-book"></i><span>Knowledge Base & SOPs</span></a></li>
 							</ul>
 						</li>
 
-						<li class="menu-title"><span>Accounting</span></li>
-						<li>
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-cash-banknote"></i><span>Accounting</span><span class="menu-arrow"></span>
+							</a>
 							<ul>
 								<li><a href="past-due-payments.html"><i class="ti ti-cash-banknote"></i><span>Past Due Payments</span></a></li>
 								<li><a href="reminder-templates.html"><i class="ti ti-mail-cog"></i><span>Reminder Templates</span></a></li>
 							</ul>
 						</li>
 
-						<li class="menu-title"><span>Customers</span></li>
-						<li>
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-users-group"></i><span>Customers</span><span class="menu-arrow"></span>
+							</a>
 							<ul>
 								<li><a href="customers.html"><i class="ti ti-users-group"></i><span>Customer Directory</span></a></li>
 							</ul>
 						</li>
 
-						<li class="menu-title"><span>Orders</span></li>
-						<li>
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-package"></i><span>Orders</span><span class="menu-arrow"></span>
+							</a>
 							<ul>
 								<li><a href="orders.html"><i class="ti ti-package"></i><span>Order History</span></a></li>
 							</ul>
 						</li>
 
-						<li class="menu-title"><span>Salesforce Data</span></li>
-						<li>
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-building"></i><span>Salesforce Data</span><span class="menu-arrow"></span>
+							</a>
 							<ul>
 								<li><a href="salesforce-accounts.html"><i class="ti ti-building"></i><span>Accounts</span></a></li>
 								<li><a href="opportunities.html"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
 							</ul>
 						</li>
 
-						<li class="menu-title" id="adminSetupTitle" style="display:none;"><span>Administration & Setup</span></li>
-						<li id="adminSetupNavItem" style="display:none;">
+						<li class="submenu" id="adminSetupNavItem" style="display:none;">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-settings-2"></i><span>Administration & Setup</span><span class="menu-arrow"></span>
+							</a>
 							<ul>
-								<li class="submenu">
-									<a href="javascript:void(0);" class="subdrop">
-										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
-									</a>
-									<ul>
-										<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
-										<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
-										<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
-										<li><a href="api-credentials.html"><i class="ti ti-key me-2 text-primary"></i>API Credentials Vault</a></li>
-										<li><a href="salesforce-explorer.html" class="active"><i class="ti ti-database-search me-2 text-primary"></i>Salesforce Explorer</a></li>
-									</ul>
-								</li>
+								<li><a href="admin-email.html"><i class="ti ti-mail-forward me-2 text-primary"></i>Inbound Email & Anti-Spam</a></li>
+								<li><a href="admin-team.html"><i class="ti ti-users me-2 text-primary"></i>Team & User Permissions</a></li>
+								<li><a href="admin-forms.html"><i class="ti ti-adjustments me-2 text-primary"></i>Dynamic Form Builder</a></li>
+								<li><a href="api-credentials.html"><i class="ti ti-key me-2 text-primary"></i>API Credentials Vault</a></li>
+								<li><a href="salesforce-explorer.html" class="active"><i class="ti ti-database-search me-2 text-primary"></i>Salesforce Explorer</a></li>
 							</ul>
 						</li>
 
@@ -436,7 +440,6 @@
 					document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
 					if (result.data.role === 'admin') {
 						document.getElementById('adminSetupNavItem').style.display = '';
-						document.getElementById('adminSetupTitle').style.display = '';
 						loadObjects();
 					} else {
 						document.getElementById('explorerNotConnected').style.display = '';
