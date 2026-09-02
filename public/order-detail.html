@@ -232,6 +232,16 @@
 			return value ? new Date(value).toLocaleDateString() : '';
 		}
 
+		function trackingUrl(carrier, trackingNumber) {
+			if (!trackingNumber) return null;
+			const c = String(carrier || '').toUpperCase();
+			if (c.includes('UPS')) return 'https://www.ups.com/track?tracknum=' + encodeURIComponent(trackingNumber);
+			if (c.includes('FEDEX')) return 'https://www.fedex.com/fedextrack/?trknbr=' + encodeURIComponent(trackingNumber);
+			if (c.includes('USPS')) return 'https://tools.usps.com/go/TrackConfirmAction?tLabels=' + encodeURIComponent(trackingNumber);
+			if (c.includes('DHL')) return 'https://www.dhl.com/us-en/home/tracking.html?tracking-id=' + encodeURIComponent(trackingNumber);
+			return null;
+		}
+
 		function section(title, fieldsHtml) {
 			return `
 				<div class="card border-0 shadow-sm rounded-3 mb-3">
@@ -273,6 +283,21 @@
 						<tbody>${o.items.map(i => `<tr><td>${escapeHtml(i.productName)}</td><td>${escapeHtml(i.sku)}</td><td>${i.quantity}</td><td>${formatCurrency(i.unitPrice)}</td><td>${formatCurrency(i.totalPrice)}</td></tr>`).join('')}</tbody>
 					</table>`
 					: '<p class="text-muted fs-13 mb-0">No line items on this order.</p>';
+
+				const shipments = o.shipments || [];
+				const shipmentsHtml = shipments.length
+					? `<table class="table table-sm mb-0">
+						<thead class="table-light"><tr><th>Tracking #</th><th>Carrier</th><th>Service</th><th>Ship Date</th><th>Weight</th><th>Shipping Cost</th></tr></thead>
+						<tbody>${shipments.map(s => {
+							const number = s.trackingNumber || s.trackingNumberAlt || '';
+							const url = trackingUrl(s.carrier, number);
+							const trackingCell = number
+								? (url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(number)}</a>` : escapeHtml(number))
+								: '—';
+							return `<tr><td>${trackingCell}</td><td>${escapeHtml(s.carrier || '—')}</td><td>${escapeHtml(s.service || '—')}</td><td>${escapeHtml(s.shipDate || '—')}</td><td>${s.shipmentWeight ? s.shipmentWeight + ' lb' : '—'}</td><td>${formatCurrency(s.shippingCost)}</td></tr>`;
+						}).join('')}</tbody>
+					</table>`
+					: '<p class="text-muted fs-13 mb-0">No shipment tracking on this order.</p>';
 
 				document.getElementById('orderDetailBody').innerHTML = `
 					${overdueBanner}
@@ -344,6 +369,11 @@
 						field('Weight', o.weight ? o.weight + ' lb' : ''),
 						field('Shipping Address', formatAddress(o.shippingAddress))
 					].join(''))}
+
+					<div class="card border-0 shadow-sm rounded-3 mb-3">
+						<div class="card-header bg-transparent"><strong class="fs-14">Tracking</strong></div>
+						<div class="table-responsive">${shipmentsHtml}</div>
+					</div>
 
 					${(o.description || o.internalOrderNotes || o.externalOrderNotes) ? `
 						<div class="card border-0 shadow-sm rounded-3 mb-3">

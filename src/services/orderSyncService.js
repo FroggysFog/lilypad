@@ -16,7 +16,7 @@
 const { querySalesforce, queryAllSalesforcePages } = require('./salesforceService')
 const LilyPadOrder = require('../models/lilypadOrder')
 
-function normalizeOrderRecord (raw, items) {
+function normalizeOrderRecord (raw, items, shipments) {
   const source = raw && typeof raw === 'object' ? raw : {}
   const account = source.Account && typeof source.Account === 'object' ? source.Account : {}
   const owner = source.Owner && typeof source.Owner === 'object' ? source.Owner : {}
@@ -114,6 +114,17 @@ function normalizeOrderRecord (raw, items) {
         totalPrice: Number(item.TotalPrice || 0)
       }
     }),
+    shipments: (shipments || []).map((s) => ({
+      trackingNumber: String(s.Tracking_Number__c || '').trim(),
+      trackingNumberAlt: String(s.Tracking__c || '').trim(),
+      carrier: String(s.Carrier__c || '').trim(),
+      service: String(s.Service__c || '').trim(),
+      shippingCost: Number(s.Shipping_Cost__c || 0),
+      shipmentWeight: Number(s.Shipment_Weight__c || 0),
+      magentoOrderNumber: String(s.Magento_Order_Number__c || '').trim(),
+      shipDate: String(s.Date__c || '').trim(),
+      sourceRecordId: String(s.Id || '').trim()
+    })),
     sourceRecordId: String(source.Id || '').trim()
   }
 }
@@ -141,6 +152,31 @@ async function fetchOrderItemsByOrderId (orderIds) {
     }
   }
   return itemsByOrderId
+}
+
+async function fetchShipworksDataByOrderId (orderIds) {
+  const shipmentsByOrderId = {}
+  for (let index = 0; index < orderIds.length; index += 50) {
+    const batch = orderIds.slice(index, index + 50)
+    if (!batch.length) continue
+
+    try {
+      const shipworksRecords = await querySalesforce(`
+                SELECT Id, Order__c, Carrier__c, Magento_Order_Number__c, Service__c,
+                       Shipping_Cost__c, Tracking_Number__c, Tracking__c, Shipment_Weight__c, Date__c
+                FROM Shipworks_Data__c
+                WHERE Order__c IN ('${batch.join("','")}')
+                ORDER BY Order__c, CreatedDate
+            `)
+      shipworksRecords.forEach((s) => {
+        if (!shipmentsByOrderId[s.Order__c]) shipmentsByOrderId[s.Order__c] = []
+        shipmentsByOrderId[s.Order__c].push(s)
+      })
+    } catch (shipworksError) {
+      // Tracking data is a nice-to-have; keep the order sync itself alive if this fails
+    }
+  }
+  return shipmentsByOrderId
 }
 
 /**
@@ -178,9 +214,10 @@ async function syncOrdersFromSalesforce () {
     `, async (page) => {
     const orderIds = page.map((order) => order.Id).filter(Boolean)
     const itemsByOrderId = await fetchOrderItemsByOrderId(orderIds)
+    const shipmentsByOrderId = await fetchShipworksDataByOrderId(orderIds)
 
     const normalized = page
-      .map((order) => normalizeOrderRecord(order, itemsByOrderId[order.Id]))
+      .map((order) => normalizeOrderRecord(order, itemsByOrderId[order.Id], shipmentsByOrderId[order.Id]))
       .filter((r) => r.sourceRecordId)
 
     total += normalized.length

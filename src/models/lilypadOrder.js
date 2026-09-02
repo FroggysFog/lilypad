@@ -24,6 +24,18 @@ const orderItemSchema = new Schema({
   totalPrice: { type: Number, default: 0 }
 }, { _id: false })
 
+const shipmentSchema = new Schema({
+  trackingNumber: { type: String, trim: true, default: '' },
+  trackingNumberAlt: { type: String, trim: true, default: '' },
+  carrier: { type: String, trim: true, default: '' },
+  service: { type: String, trim: true, default: '' },
+  shippingCost: { type: Number, default: 0 },
+  shipmentWeight: { type: Number, default: 0 },
+  magentoOrderNumber: { type: String, trim: true, default: '' },
+  shipDate: { type: String, trim: true, default: '' },
+  sourceRecordId: { type: String, trim: true, default: '' }
+}, { _id: false })
+
 const orderSchema = new Schema(
   {
     orderNumber: {
@@ -313,6 +325,7 @@ const orderSchema = new Schema(
       default: ''
     },
     items: [orderItemSchema],
+    shipments: [shipmentSchema],
     sourceRecordId: {
       type: String,
       required: true,
