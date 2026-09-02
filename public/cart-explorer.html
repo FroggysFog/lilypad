@@ -186,7 +186,7 @@
 						<p class="text-muted fs-13 mb-0">Connect to Cart.com and try real endpoints to find what actually works before building a sync against it.</p>
 					</div>
 					<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" onclick="connectCart()" id="cartConnectBtn" style="display:none;">
-						<i class="ti ti-plug me-1"></i> Connect to Cart.com
+						<i class="ti ti-plug me-1"></i> <span id="cartConnectBtnLabel">Connect to Cart.com</span>
 					</button>
 				</div>
 
@@ -252,12 +252,17 @@
 				const { configured, connected, storeUrl } = result.data;
 				badge.style.display = '';
 				if (connected) {
+					// A token being present doesn't mean it's still valid - Cart.com
+					// access tokens expire and this app doesn't auto-refresh them yet,
+					// so always leave a way to reconnect even when "connected".
 					badge.className = 'badge bg-soft-success text-success fs-12 rounded-pill fw-semibold';
-					badge.innerHTML = '<i class="ti ti-plug-connected"></i> Connected to ' + escapeHtml(storeUrl || 'Cart.com');
-					connectBtn.style.display = 'none';
+					badge.innerHTML = '<i class="ti ti-plug-connected"></i> Token on file for ' + escapeHtml(storeUrl || 'Cart.com');
+					document.getElementById('cartConnectBtnLabel').textContent = 'Reconnect to Cart.com';
+					connectBtn.style.display = '';
 				} else if (configured) {
 					badge.className = 'badge bg-soft-warning text-warning fs-12 rounded-pill fw-semibold';
 					badge.innerHTML = '<i class="ti ti-plug-x"></i> Not Connected';
+					document.getElementById('cartConnectBtnLabel').textContent = 'Connect to Cart.com';
 					connectBtn.style.display = '';
 				} else {
 					badge.className = 'badge bg-soft-secondary text-secondary fs-12 rounded-pill fw-semibold';
