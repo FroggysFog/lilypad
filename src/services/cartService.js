@@ -30,7 +30,9 @@ const axios = require('axios')
 const LilyPadSetting = require('../models/lilypadSetting')
 
 const SETTING_KEY = 'cartTokens'
-const SCOPE = 'read_orders,read_customers,read_reports'
+// Confirmed via a live 401 on /api/v1/customers/*.json: Cart.com's scope for
+// customer data is "read_people", not "read_customers" (which was a guess).
+const SCOPE = 'read_orders,read_people,read_reports'
 const REQUEST_TIMEOUT_MS = 30000
 
 let cachedTokens = null
