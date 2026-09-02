@@ -127,11 +127,16 @@ lilypadPastDueController.getPastDueAccountDetail = async function (req, res) {
 lilypadPastDueController.triggerSalesforceSync = async function (req, res) {
   const startedAt = Date.now()
   try {
-    winston.info('Manual Past Due sync started (refreshing Orders first)')
-    // Past due accounts are derived from Orders, so refresh Orders first
-    // to make sure this button always reflects current Salesforce data.
-    const orderResult = await syncOrdersFromSalesforce()
-    winston.info(`Manual Past Due sync: Orders refreshed (${orderResult.synced}/${orderResult.total}), deriving past due accounts`)
+    // Past due accounts are derived from whatever Orders are already
+    // synced locally - deliberately NOT awaited here. With ~85k orders in
+    // this org, a full Orders resync takes 10+ minutes, so blocking this
+    // button on it made Past Due look broken/unresponsive every time.
+    // Kick a refresh off in the background (singleFlight-protected, so it
+    // just joins the hourly scheduler's run if one is already in
+    // progress) and derive from current data immediately instead.
+    syncOrdersFromSalesforce().catch((err) => {
+      winston.error(`Background Orders refresh (from Past Due sync) failed: ${err.message}`)
+    })
     const result = await syncPastDueAccountsFromSalesforce()
     const removedNote = result.removed ? ` (${result.removed} removed - paid off or no longer eligible)` : ''
     winston.info(`Manual Past Due sync finished in ${Math.round((Date.now() - startedAt) / 1000)}s`)

@@ -13,7 +13,7 @@
  * a separate Salesforce report or Invoice__c query.
  */
 
-const { querySalesforce, queryAllSalesforcePages } = require('./salesforceService')
+const { querySalesforce, queryAllSalesforcePages, singleFlight } = require('./salesforceService')
 const LilyPadOrder = require('../models/lilypadOrder')
 const winston = require('../logger')
 
@@ -251,5 +251,5 @@ async function syncOrdersFromSalesforce () {
 
 module.exports = {
   normalizeOrderRecord,
-  syncOrdersFromSalesforce
+  syncOrdersFromSalesforce: singleFlight(syncOrdersFromSalesforce)
 }

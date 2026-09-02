@@ -5,7 +5,7 @@
  * for org-specific customization, same escape hatch as the other syncs.
  */
 
-const { queryAllSalesforcePages } = require('./salesforceService')
+const { queryAllSalesforcePages, singleFlight } = require('./salesforceService')
 const LilyPadOpportunity = require('../models/lilypadOpportunity')
 const winston = require('../logger')
 
@@ -72,5 +72,5 @@ async function syncOpportunitiesFromSalesforce () {
 
 module.exports = {
   normalizeOpportunityRecord,
-  syncOpportunitiesFromSalesforce
+  syncOpportunitiesFromSalesforce: singleFlight(syncOpportunitiesFromSalesforce)
 }

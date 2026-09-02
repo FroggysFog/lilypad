@@ -13,6 +13,7 @@
 const LilyPadOrder = require('../models/lilypadOrder')
 const LilyPadPastDueAccount = require('../models/lilypadPastDueAccount')
 const winston = require('../logger')
+const { singleFlight } = require('./salesforceService')
 
 // Orders owned by anyone outside this list, or billed to FrightProps, are a
 // different brand sharing this Salesforce org and shouldn't appear as
@@ -154,5 +155,5 @@ module.exports = {
   normalizeIsoDate,
   computeDaysLateFromDate,
   derivePastDueRecordFromOrder,
-  syncPastDueAccountsFromSalesforce
+  syncPastDueAccountsFromSalesforce: singleFlight(syncPastDueAccountsFromSalesforce)
 }

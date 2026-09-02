@@ -7,7 +7,7 @@
  * for consistency with the other sync services.
  */
 
-const { queryAllSalesforcePages } = require('./salesforceService')
+const { queryAllSalesforcePages, singleFlight } = require('./salesforceService')
 const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
 const winston = require('../logger')
 
@@ -85,5 +85,5 @@ async function syncSalesforceAccounts () {
 
 module.exports = {
   normalizeAccountRecord,
-  syncSalesforceAccounts
+  syncSalesforceAccounts: singleFlight(syncSalesforceAccounts)
 }

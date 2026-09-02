@@ -11,7 +11,7 @@
  * hatch already used for Past Due Payments' SF_OVERDUE_SOQL).
  */
 
-const { queryAllSalesforcePages } = require('./salesforceService')
+const { queryAllSalesforcePages, singleFlight } = require('./salesforceService')
 const LilyPadCustomer = require('../models/lilypadCustomer')
 const winston = require('../logger')
 
@@ -78,5 +78,5 @@ async function syncCustomersFromSalesforce () {
 
 module.exports = {
   normalizeLeadRecord,
-  syncCustomersFromSalesforce
+  syncCustomersFromSalesforce: singleFlight(syncCustomersFromSalesforce)
 }

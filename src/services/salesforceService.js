@@ -258,6 +258,23 @@ async function queryAllSalesforcePages (soqlQuery, onPage) {
 }
 
 /**
+ * Wraps an async function so overlapping calls share one in-flight
+ * execution instead of racing (observed: the manual "Sync from
+ * Salesforce" button and the hourly scheduler both running
+ * syncOrdersFromSalesforce at once, doubling Salesforce API load and
+ * MongoDB writes for an 85k-order sync that already takes 10+ minutes).
+ * Every sync service wraps its main export with this.
+ */
+function singleFlight (fn) {
+  let inFlight = null
+  return function (...args) {
+    if (inFlight) return inFlight
+    inFlight = Promise.resolve(fn.apply(this, args)).finally(() => { inFlight = null })
+    return inFlight
+  }
+}
+
+/**
  * Fetches a Salesforce report payload including detailed rows.
  */
 async function fetchSalesforceReport (reportId) {
@@ -340,6 +357,7 @@ module.exports = {
   querySalesforce,
   queryAllSalesforce,
   queryAllSalesforcePages,
+  singleFlight,
   fetchSalesforceReport,
   describeGlobalSalesforce,
   describeSalesforceObject,
