@@ -5,6 +5,7 @@ const { enqueueBatch } = require('../services/leadProspectorWorker')
 const { promoteStagedLeads } = require('../services/leadProspectorService')
 const { isApolloConfigured } = require('../services/apolloService')
 const { isExtractionConfigured } = require('../services/prospecting/crawl/pageExtractionService')
+const { isCrawlerSupported } = require('../services/prospecting/crawl/crawlerService')
 const { listAvailableVerticals } = require('../services/prospecting/discovery')
 
 const lilypadProspectorController = {}
@@ -61,6 +62,12 @@ lilypadProspectorController.prospectLeads = async function (req, res) {
     }
     if ((sourceMode === 'in_house' || sourceMode === 'refresh') && !isExtractionConfigured()) {
       return res.status(503).json({ success: false, error: 'In-house extraction is not configured. Set ANTHROPIC_API_KEY on the server.' })
+    }
+    if ((sourceMode === 'in_house' || sourceMode === 'refresh') && !isCrawlerSupported()) {
+      return res.status(503).json({
+        success: false,
+        error: `The in-house crawler requires Node.js 20 or higher (this server is running ${process.versions.node}). Ask an admin to upgrade NODE_VERSION on Render - Apollo mode is unaffected.`
+      })
     }
 
     const targetVertical = String(req.body.targetVertical || '').trim()

@@ -15,9 +15,28 @@
  * avoid crawling paths a site has explicitly opted out of.
  */
 
-const { chromium } = require('playwright')
 const axios = require('axios')
 const winston = require('../../../logger')
+
+// Playwright is required lazily, inside getBrowser(), not at module load
+// time - a top-level require crashed the ENTIRE app on every boot
+// (leadProspectorScheduler.js pulls this file in at startup via
+// leadProspectorWorker.js) on Render's pinned Node 16.20.2, since
+// Playwright requires Node 20+.
+//
+// Lazy-requiring alone is NOT enough, though: Playwright's own version
+// check (playwright-core/lib/bootstrap.js) calls process.exit(1) directly
+// when the Node version is too old - not a catchable Error - so simply
+// deferring the require to first use would just move the outage from
+// "on boot" to "the instant anyone starts an in-house/refresh run,"
+// killing the whole server mid-request for every user, not just that
+// batch. isCrawlerSupported() below is checked BEFORE ever requiring
+// playwright, so an old Node version fails as a normal catchable Error
+// (the worker's existing try/catch turns it into a failed-batch message)
+// instead of taking the process down.
+function isCrawlerSupported () {
+  return Number(String(process.versions.node).split('.')[0]) >= 20
+}
 
 const NAV_TIMEOUT_MS = 20000
 const MAX_KEY_PAGES_PER_SITE = 6
@@ -36,6 +55,10 @@ let browserPromise = null
 
 function getBrowser () {
   if (!browserPromise) {
+    if (!isCrawlerSupported()) {
+      throw new Error(`The in-house crawler requires Node.js 20 or higher (this server is running ${process.versions.node}). Upgrade NODE_VERSION on Render to use directory crawling or CRM refresh - Apollo and Customer Intelligence's AI scoring are unaffected.`)
+    }
+    const { chromium } = require('playwright')
     browserPromise = chromium.launch({ headless: true })
   }
   return browserPromise
@@ -395,6 +418,7 @@ async function submitFormAndCollectLinks (url, config) {
 }
 
 module.exports = {
+  isCrawlerSupported,
   discoverKeyPages,
   enumerateListingLinks,
   submitFormAndCollectLinks,
