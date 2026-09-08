@@ -15,6 +15,17 @@ FROM node:24.19.0-bookworm-slim
 
 WORKDIR /usr/src/lilypad
 
+# node-sass has no prebuilt binary for Node 24, so npm install falls back to
+# compiling it from source via node-gyp - confirmed live this fails on the
+# bare -slim image ("Could not find any Python installation to use") since
+# -slim strips the compiler toolchain Render's native runtime buildpack
+# normally provides for free. make/g++ are node-gyp's other two standard
+# requirements alongside Python, added preemptively rather than one at a
+# time through repeated failed deploys.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
 # No package-lock.json to copy - it's gitignored in this repo (yarn.lock is
 # the tracked lockfile, but the native buildCommand this replaces always
 # ran plain `npm install`, not `npm ci`, so no lock file is required here
