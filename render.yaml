@@ -22,8 +22,12 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Upgraded from 16.20.2 (already end-of-life) to the current Active
+      # LTS. 16 also can't run Playwright (hard-requires Node 20+) - see
+      # the crawlerService.js Node-version guard for what happens if this
+      # ever regresses to an unsupported version again.
       - key: NODE_VERSION
-        value: 16.20.2
+        value: 24.19.0
       - key: PORT
         value: 8118
       - key: PRIMARY_INBOUND_EMAIL

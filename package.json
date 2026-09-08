@@ -3,7 +3,7 @@
   "version": "1.2.11",
   "private": true,
   "engines": {
-    "node": "16.20.2"
+    "node": "24.19.0"
   },
   "bin": "./app.js",
   "overrides": {
