@@ -1,24 +1,22 @@
 services:
   - type: web
     name: lilypad-erp-dev
-    runtime: node
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     plan: starter
     region: oregon
     branch: main
-    # playwright install pulls down Chromium for the Lead Prospector's
-    # in-house crawler. Confirmed live: --with-deps fails the whole build
-    # ("su: Authentication failure") because it needs root to apt-get
-    # install system libraries (libnss3 etc.), and Render's build
-    # container doesn't grant that. Downloading just the Chromium binary
-    # without --with-deps at least lets the build succeed - if a crawl
-    # then fails at runtime with a missing-shared-library error, that's
-    # the next thing to solve (likely needs a Docker-based deploy using
-    # Playwright's official base image instead of the native Node
-    # buildpack, since we can't apt-get install here either way). Fails
-    # as a normal caught error inside one batch either way, not an outage
-    # - see crawlerService.js's isCrawlerSupported() guard.
-    buildCommand: "npm install --legacy-peer-deps && npx playwright install chromium"
-    startCommand: "node app.js"
+    # Switched from the native Node runtime to a Dockerfile build.
+    # Confirmed live: the in-house crawler's directory/form searches were
+    # completing with 0 businesses found - `chromium.launch()` was
+    # throwing on a missing shared library (libnss3 etc.) and getting
+    # swallowed by discovery's per-source try/catch, so nothing surfaced
+    # in the UI. Root cause: `playwright install --with-deps` needs root
+    # to apt-get those libraries, and Render's native runtime build
+    # container doesn't grant that ("su: Authentication failure" when
+    # first tried) - a plain Docker build runs as root by default, so
+    # --with-deps works there. See Dockerfile for the actual install step.
     healthCheckPath: "/api/v1/lilypad/tickets/todo"
     autoDeploy: true
     disk:
@@ -28,12 +26,11 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      # Upgraded from 16.20.2 (already end-of-life) to the current Active
-      # LTS. 16 also can't run Playwright (hard-requires Node 20+) - see
-      # the crawlerService.js Node-version guard for what happens if this
-      # ever regresses to an unsupported version again.
-      - key: NODE_VERSION
-        value: 24.19.0
+      # Node version is now pinned by the Dockerfile's FROM line, not this
+      # env var (NODE_VERSION only affects Render's native-runtime nvm
+      # install, which is no longer in play) - see crawlerService.js's
+      # Node-version guard for what happens if the Dockerfile's base image
+      # ever regresses below the Node 20+ Playwright requires.
       - key: PORT
         value: 8118
       - key: PRIMARY_INBOUND_EMAIL

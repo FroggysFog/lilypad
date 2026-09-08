@@ -1,30 +1,26 @@
-#FROM golang:1.17-alpine AS gcsfuse
-#RUN apk add --no-cache git
-#ENV GOPATH /go
-#RUN go install github.com/googlecloudplatform/gcsfuse@latest
+# Debian-based (not Alpine - Playwright's bundled Chromium needs glibc, not
+# musl, so it will not run on an Alpine image) and pinned to the same Node
+# version as package.json's engines field.
+#
+# This replaces Render's native Node runtime for one reason: the in-house
+# Lead Prospector crawler needs `playwright install --with-deps chromium`,
+# which apt-get-installs Chromium's shared libraries (libnss3, etc.) and
+# requires root. Render's native runtime build container denies that
+# ("su: Authentication failure" - confirmed live), which is why the
+# previous buildCommand had to drop --with-deps and only fetch the browser
+# binary itself - crawls then failed silently at runtime with a missing-
+# shared-library error the moment chromium.launch() actually ran. A plain
+# Docker build runs as root by default, so --with-deps works here.
+FROM node:24.19.0-bookworm-slim
 
-FROM node:16.14-alpine AS builder
+WORKDIR /usr/src/lilypad
 
-RUN mkdir -p /usr/src/trudesk
-WORKDIR /usr/src/trudesk
+COPY package.json package-lock.json ./
+RUN npm install --legacy-peer-deps
 
-COPY . /usr/src/trudesk
+RUN npx playwright install --with-deps chromium
 
-RUN apk add --no-cache --update bash make gcc g++ python3
-RUN yarn plugin import workspace-tools
-RUN yarn workspaces focus --all --production
-RUN cp -R node_modules prod_node_modules
-RUN yarn install
-RUN yarn build
-RUN rm -rf node_modules && mv prod_node_modules node_modules
-RUN rm -rf .yarn/cache
-
-FROM node:16.14-alpine
-WORKDIR /usr/src/trudesk
-RUN apk add --no-cache ca-certificates bash mongodb-tools && rm -rf /tmp/*
-COPY --from=builder /usr/src/trudesk .
-#COPY --from=gcsfuse /go/bin/gcsfuse /usr/local/bin
+COPY . .
 
 EXPOSE 8118
-
-CMD [ "/bin/bash", "/usr/src/trudesk/startup.sh" ]
+CMD ["node", "app.js"]
