@@ -92,94 +92,7 @@
 			</div>
 
 			<div class="sidebar-inner" data-simplebar>
-				<div id="sidebar-menu" class="sidebar-menu">
-					<ul>
-						<li>
-							<ul>
-								<li><a href="dashboard.html"><i class="ti ti-dashboard"></i><span>Main Dashboard</span></a></li>
-							</ul>
-						</li>
-
-						<li class="submenu">
-							<a href="javascript:void(0);" class="subdrop">
-								<i class="ti ti-ticket"></i><span>Operations</span><span class="menu-arrow"></span>
-							</a>
-							<ul>
-								<li><a href="tickets.html"><i class="ti ti-ticket"></i><span>Ticket Operations</span></a></li>
-								<li><a href="knowledge-base.html"><i class="ti ti-book"></i><span>Knowledge Base & SOPs</span></a></li>
-							</ul>
-						</li>
-
-						<li class="submenu">
-							<a href="javascript:void(0);" class="subdrop">
-								<i class="ti ti-cash-banknote"></i><span>Accounting</span><span class="menu-arrow"></span>
-							</a>
-							<ul>
-								<li><a href="past-due-payments.html"><i class="ti ti-cash-banknote"></i><span>Past Due Payments</span></a></li>
-								<li><a href="reminder-templates.html"><i class="ti ti-mail-cog"></i><span>Reminder Templates</span></a></li>
-							</ul>
-						</li>
-
-						<li class="submenu">
-							<a href="javascript:void(0);" class="subdrop">
-								<i class="ti ti-users-group"></i><span>Customers</span><span class="menu-arrow"></span>
-							</a>
-							<ul>
-								<li><a href="customers.html"><i class="ti ti-users-group"></i><span>Customer Directory</span></a></li>
-							</ul>
-						</li>
-
-						<li class="submenu">
-							<a href="javascript:void(0);" class="subdrop">
-								<i class="ti ti-package"></i><span>Orders</span><span class="menu-arrow"></span>
-							</a>
-							<ul>
-								<li><a href="orders.html"><i class="ti ti-package"></i><span>Order History</span></a></li>
-							</ul>
-						</li>
-
-						<li class="submenu">
-							<a href="javascript:void(0);" class="subdrop">
-								<i class="ti ti-building"></i><span>Salesforce Data</span><span class="menu-arrow"></span>
-							</a>
-							<ul>
-								<li><a href="salesforce-accounts.html" class="active"><i class="ti ti-building"></i><span>Accounts</span></a></li>
-								<li><a href="opportunities.html"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
-							</ul>
-						</li>
-
-						<li class="submenu">
-							<a href="javascript:void(0);" class="subdrop">
-								<i class="ti ti-user-search"></i><span>Prospecting</span><span class="menu-arrow"></span>
-							</a>
-							<ul>
-								<li><a href="prospects.html"><i class="ti ti-user-search"></i><span>Lead Prospector</span></a></li>
-								<li><a href="customer-intelligence.html"><i class="ti ti-chart-arrows"></i><span>Customer Intelligence</span></a></li>
-							</ul>
-						</li>
-
-						<li class="submenu" id="adminSetupNavItem" style="display:none;">
-							<a href="javascript:void(0);" class="subdrop">
-								<i class="ti ti-settings-2"></i><span>Administration & Setup</span><span class="menu-arrow"></span>
-							</a>
-							<ul>
-								<li><a href="admin-email.html"><i class="ti ti-mail-forward"></i><span>Inbound Email & Anti-Spam</span></a></li>
-								<li><a href="admin-team.html"><i class="ti ti-users"></i><span>Team & User Permissions</span></a></li>
-								<li><a href="admin-forms.html"><i class="ti ti-adjustments"></i><span>Dynamic Form Builder</span></a></li>
-								<li><a href="api-credentials.html"><i class="ti ti-key"></i><span>API Credentials Vault</span></a></li>
-								<li><a href="salesforce-explorer.html"><i class="ti ti-database-search"></i><span>Salesforce Explorer</span></a></li>
-								<li><a href="cart-explorer.html"><i class="ti ti-shopping-cart"></i><span>Cart.com Explorer</span></a></li>
-							</ul>
-						</li>
-
-						<li class="menu-title"><span>Account</span></li>
-						<li>
-							<ul>
-								<li><a href="javascript:void(0);" onclick="doLogout()"><i class="ti ti-logout text-danger"></i><span class="text-danger fw-semibold">Sign Out</span></a></li>
-							</ul>
-						</li>
-					</ul>
-				</div>
+				<div id="sidebar-menu" class="sidebar-menu"></div>
 			</div>
 		</div>
 		<!-- Sidenav Menu End -->
@@ -197,6 +110,27 @@
 
 				<div id="acctDetailBody"></div>
 
+				<div class="card border-0 shadow-sm rounded-3 mb-4" id="acctCustomersCard" style="display:none;">
+					<div class="card-header bg-white border-0 pb-0 d-flex align-items-center justify-content-between flex-wrap gap-2">
+						<h6 class="fw-bold mb-0"><i class="ti ti-users-group me-1 text-primary"></i> Individuals at this Account</h6>
+						<span class="badge fs-11 rounded-pill fw-semibold" id="acctCustomersMatchBadge"></span>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
+							<thead class="table-light">
+								<tr>
+									<th>Name</th>
+									<th>Email</th>
+									<th>Phone</th>
+									<th>Lead Status</th>
+									<th>Last Activity</th>
+								</tr>
+							</thead>
+							<tbody id="acctCustomersTableBody"></tbody>
+						</table>
+					</div>
+				</div>
+
 				<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
 					<p class="mb-md-0 mb-1">Copyright &copy; <script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.</p>
 					<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
@@ -210,6 +144,7 @@
 
 	<script src="assets/js/bootstrap.bundle.min.js"></script>
 	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<script src="assets/js/lilypad-nav.js"></script>
 	<script src="assets/js/script.js"></script>
 	<script src="assets/js/lilypad-notifications.js"></script>
 
@@ -274,10 +209,49 @@
 						${a.description ? `<div class="mt-2"><span class="fs-12 text-muted d-block text-uppercase fw-semibold mb-1">Description</span><p class="text-dark mb-0">${escapeHtml(a.description)}</p></div>` : ''}
 					</div>
 				`;
+
+				renderMatchedCustomers(result.customers || [], result.customerMatchType || 'none');
 			} catch (err) {
 				document.getElementById('acctDetailName').textContent = 'Unable to load account';
 				document.getElementById('acctDetailBody').innerHTML = '<p class="text-danger">' + escapeHtml(err.message) + '</p>';
 			}
+		}
+
+		const MATCH_TYPE_LABELS = {
+			domain: { text: 'Matched by email domain', cls: 'bg-soft-success text-success' },
+			fuzzy_name: { text: 'Matched by company name (approximate)', cls: 'bg-soft-warning text-warning' },
+			none: { text: '', cls: '' }
+		};
+
+		/**
+		 * Individual Customers (Leads) have no clean ID link to this Account -
+		 * the backend matches them live by email domain first, falling back
+		 * to fuzzy company-name matching (same logic Customer Intelligence
+		 * uses). "fuzzy_name" matches are shown with a distinct badge since
+		 * they're an approximation, not a confirmed link.
+		 */
+		function renderMatchedCustomers(customers, matchType) {
+			const card = document.getElementById('acctCustomersCard');
+			if (!customers.length) {
+				card.style.display = 'none';
+				return;
+			}
+			card.style.display = '';
+
+			const badge = document.getElementById('acctCustomersMatchBadge');
+			const label = MATCH_TYPE_LABELS[matchType] || MATCH_TYPE_LABELS.none;
+			badge.textContent = label.text;
+			badge.className = 'badge fs-11 rounded-pill fw-semibold ' + label.cls;
+
+			document.getElementById('acctCustomersTableBody').innerHTML = customers.map(c => `
+				<tr>
+					<td><a href="customer-detail.html?id=${c._id}" class="fw-semibold text-decoration-none">${escapeHtml(c.name)}</a></td>
+					<td>${escapeHtml(c.email) || '<span class="text-muted">—</span>'}</td>
+					<td>${escapeHtml(c.phone) || '<span class="text-muted">—</span>'}</td>
+					<td>${escapeHtml(c.leadStatus) || '<span class="text-muted">—</span>'}</td>
+					<td>${c.lastActivityDate ? new Date(c.lastActivityDate).toLocaleDateString() : '<span class="text-muted">—</span>'}</td>
+				</tr>
+			`).join('');
 		}
 
 		document.addEventListener('DOMContentLoaded', async () => {

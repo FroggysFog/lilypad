@@ -7,7 +7,7 @@ Author URL: https://themeforest.net/user/dreamstechnologies
 */
 @import url("https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&display=swap");
 :root {
-  --sidenav-width: 240px;
+  --sidenav-width: 330px;
   --sidenav-width-sm: 70px;
   --topbar-height: 56px;
   --topbar-bg: #fff;

@@ -269,57 +269,7 @@
 
 			<!-- Sidenav Menu -->
 			<div class="sidebar-inner" data-simplebar>
-				<div id="sidebar-menu" class="sidebar-menu">
-					<ul>
-						<li class="menu-title"><span>Main Operations</span></li>
-						<li>
-							<ul>
-								<li>
-									<a href="dashboard.html" class="active">
-										<i class="ti ti-dashboard"></i><span>Main Dashboard</span>
-									</a>
-								</li>
-								<li>
-									<a href="tickets.html">
-										<i class="ti ti-ticket"></i><span>Ticket Operations</span>
-									</a>
-								</li>
-								<li>
-									<a href="tickets.html?view=kb">
-										<i class="ti ti-book"></i><span>Knowledge Base & SOPs</span>
-									</a>
-								</li>
-							</ul>
-						</li>
-
-						<li class="menu-title"><span>Administration & Setup</span></li>
-						<li>
-							<ul>
-								<li class="submenu">
-									<a href="javascript:void(0);">
-										<i class="ti ti-settings-2"></i><span>Operations Admin</span><span class="menu-arrow"></span>
-									</a>
-									<ul>
-										<li><a href="tickets.html?admin=email"><i class="ti ti-mail-shield"></i><span>Inbound Email & Anti-Spam</span></a></li>
-										<li><a href="tickets.html?admin=team"><i class="ti ti-users"></i><span>Team & User Permissions</span></a></li>
-										<li><a href="tickets.html?admin=forms"><i class="ti ti-tool"></i><span>Dynamic Form Builder</span></a></li>
-									</ul>
-								</li>
-							</ul>
-						</li>
-
-						<li class="menu-title"><span>Account</span></li>
-						<li>
-							<ul>
-								<li>
-									<a href="login.html" onclick="sessionStorage.removeItem('lilypad_auth_user'); localStorage.removeItem('lilypad_logged_in');">
-										<i class="ti ti-logout text-danger"></i><span class="text-danger fw-semibold">Sign Out</span>
-									</a>
-								</li>
-							</ul>
-						</li>
-					</ul>
-				</div>
+				<div id="sidebar-menu" class="sidebar-menu"></div>
 			</div>
 
 		</div>
@@ -387,7 +337,8 @@
 	<!-- Flatpickr JS -->
     <script src="assets/plugins/flatpickr/flatpickr.min.js"></script>
 
-    <script src="assets/js/script.js"></script>
+    <script src="assets/js/lilypad-nav.js"></script>
+	<script src="assets/js/script.js"></script>
     <script src="assets/js/lilypad-notifications.js"></script>
 
 </body>

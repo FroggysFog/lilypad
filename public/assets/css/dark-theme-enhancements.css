@@ -497,9 +497,21 @@
 
 /* Child (leaf) nav items - smaller text to match, with the icon locked
    to its own column so a longer label truncates instead of wrapping
-   and pushing the icon out of alignment. */
+   and pushing the icon out of alignment.
+   display/align-items/padding here override a pre-existing specificity
+   conflict in the base theme's style.css: its own
+   ".sidebar-menu > ul > li.submenu ul li a" rule (display: block,
+   padding-left: 30px) has higher specificity than the sibling
+   ".sidebar-menu > ul > li ul li a" rule (display: flex) meant to lay
+   the icon and label out on one line, so every leaf link under any
+   submenu was silently losing the flex layout and stacking the icon
+   above the text instead - confirmed live via computed styles, not
+   something introduced by adding new nav items. */
 .sidebar .sidebar-menu > ul > li.submenu ul li a {
     font-size: 13px !important;
+    display: flex;
+    align-items: center;
+    padding: 4px 4px;
 }
 .sidebar .sidebar-menu > ul > li.submenu ul li a span {
     overflow: hidden;

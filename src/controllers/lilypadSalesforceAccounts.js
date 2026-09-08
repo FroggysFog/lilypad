@@ -3,9 +3,52 @@
  */
 
 const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
+const LilyPadCustomer = require('../models/lilypadCustomer')
 const { syncSalesforceAccounts } = require('../services/salesforceAccountSyncService')
+const { normalizeDomain, normalizeCompanyName, isNameMatch } = require('../services/customerIntelligence/fuzzyMatchService')
 
 const controller = {}
+
+function escapeRegExp (value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * Individual Customers (Leads) have no clean ID link to Accounts - see
+ * customerIntelligence/entityResolutionService.js for why. Reuses the
+ * exact same domain-first, fuzzy-name-fallback matching it already does
+ * for the Customer Intelligence rebuild, computed live here for just
+ * this one account (cheap - one narrowed query, not a full-collection
+ * scan) so "who are the individuals at this company" works immediately
+ * on any account detail page view, without depending on a separate
+ * rebuild job having ever run.
+ */
+async function findMatchedCustomersForAccount (account) {
+  const projection = 'name email phone leadStatus company industry lastActivityDate'
+  const domain = normalizeDomain(account.website)
+
+  if (domain) {
+    const byDomain = await LilyPadCustomer.find({ email: new RegExp('@' + escapeRegExp(domain) + '$', 'i') })
+      .select(projection)
+      .lean()
+    if (byDomain.length) return { matches: byDomain, matchType: 'domain' }
+  }
+
+  const normalizedName = normalizeCompanyName(account.name)
+  const firstToken = normalizedName.split(' ')[0]
+  if (firstToken) {
+    // Narrows the query with a cheap regex on the first significant word
+    // before the more expensive fuzzy comparison, so this never scans
+    // the whole ~54k-row Leads collection on every account page view.
+    const candidates = await LilyPadCustomer.find({ company: new RegExp(escapeRegExp(firstToken), 'i') })
+      .select(projection)
+      .lean()
+    const matched = candidates.filter((c) => isNameMatch(normalizedName, c.company))
+    if (matched.length) return { matches: matched, matchType: 'fuzzy_name' }
+  }
+
+  return { matches: [], matchType: 'none' }
+}
 
 const SORTABLE_FIELDS = ['name', 'industry', 'type', 'ownerName', 'phone', 'annualRevenue']
 
@@ -46,7 +89,15 @@ controller.getAccountDetail = async function (req, res) {
     if (!account) {
       return res.status(404).json({ success: false, error: 'Account not found' })
     }
-    return res.status(200).json({ success: true, data: account })
+
+    const { matches, matchType } = await findMatchedCustomersForAccount(account)
+
+    return res.status(200).json({
+      success: true,
+      data: account,
+      customers: matches,
+      customerMatchType: matchType
+    })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

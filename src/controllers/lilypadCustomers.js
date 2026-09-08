@@ -3,11 +3,49 @@
  */
 
 const LilyPadCustomer = require('../models/lilypadCustomer')
+const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
 const { syncCustomersFromSalesforce } = require('../services/customerSyncService')
+const { normalizeDomain, normalizeCompanyName, isNameMatch } = require('../services/customerIntelligence/fuzzyMatchService')
 
 const lilypadCustomersController = {}
 
 const SORTABLE_FIELDS = ['lastActivityDate', 'name', 'company', 'industry', 'state', 'leadStatus', 'ownerAlias', 'createdDate']
+
+function escapeRegExp (value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * The reverse of findMatchedCustomersForAccount in
+ * lilypadSalesforceAccounts.js - given an individual Customer (Lead),
+ * finds its parent Account (company) the same way: email domain first,
+ * fuzzy company-name as fallback, since there's no clean ID link either
+ * direction. Computed live, scoped to one customer, so it costs one
+ * narrowed query rather than a collection scan.
+ */
+async function findParentAccountForCustomer (customer) {
+  const projection = 'name industry phone website'
+  const domain = normalizeDomain(customer.email)
+
+  if (domain) {
+    const byDomain = await LilyPadSalesforceAccount.findOne({ website: new RegExp(escapeRegExp(domain) + '$', 'i') })
+      .select(projection)
+      .lean()
+    if (byDomain) return { account: byDomain, matchType: 'domain' }
+  }
+
+  const normalizedName = normalizeCompanyName(customer.company)
+  const firstToken = normalizedName.split(' ')[0]
+  if (firstToken) {
+    const candidates = await LilyPadSalesforceAccount.find({ name: new RegExp(escapeRegExp(firstToken), 'i') })
+      .select(projection)
+      .lean()
+    const matched = candidates.find((a) => isNameMatch(normalizedName, a.name))
+    if (matched) return { account: matched, matchType: 'fuzzy_name' }
+  }
+
+  return { account: null, matchType: 'none' }
+}
 
 /**
  * GET /api/v1/lilypad/customers
@@ -48,7 +86,15 @@ lilypadCustomersController.getCustomerDetail = async function (req, res) {
     if (!customer) {
       return res.status(404).json({ success: false, error: 'Customer not found' })
     }
-    return res.status(200).json({ success: true, data: customer })
+
+    const { account, matchType } = await findParentAccountForCustomer(customer)
+
+    return res.status(200).json({
+      success: true,
+      data: customer,
+      parentAccount: account,
+      parentAccountMatchType: matchType
+    })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }
