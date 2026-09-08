@@ -6,12 +6,18 @@ services:
     region: oregon
     branch: main
     # playwright install pulls down Chromium for the Lead Prospector's
-    # in-house crawler - untested on Render specifically as of this change,
-    # worth watching the first deploy's build log to confirm it succeeds
-    # (some managed build environments restrict the apt-get --with-deps
-    # needs under the hood; if it fails, drop --with-deps and see whether
-    # Chromium's bundled dependencies are already present on this image).
-    buildCommand: "npm install --legacy-peer-deps && npx playwright install --with-deps chromium"
+    # in-house crawler. Confirmed live: --with-deps fails the whole build
+    # ("su: Authentication failure") because it needs root to apt-get
+    # install system libraries (libnss3 etc.), and Render's build
+    # container doesn't grant that. Downloading just the Chromium binary
+    # without --with-deps at least lets the build succeed - if a crawl
+    # then fails at runtime with a missing-shared-library error, that's
+    # the next thing to solve (likely needs a Docker-based deploy using
+    # Playwright's official base image instead of the native Node
+    # buildpack, since we can't apt-get install here either way). Fails
+    # as a normal caught error inside one batch either way, not an outage
+    # - see crawlerService.js's isCrawlerSupported() guard.
+    buildCommand: "npm install --legacy-peer-deps && npx playwright install chromium"
     startCommand: "node app.js"
     healthCheckPath: "/api/v1/lilypad/tickets/todo"
     autoDeploy: true
