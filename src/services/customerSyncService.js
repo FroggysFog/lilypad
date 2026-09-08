@@ -32,6 +32,19 @@ function getCustomerRetentionCutoffSoqlDate () {
   return getCustomerRetentionCutoffDate().toISOString().slice(0, 10)
 }
 
+/**
+ * Lead.LastActivityDate is a Date field (accepts a bare YYYY-MM-DD SOQL
+ * literal), but Lead.CreatedDate is a DateTime field - confirmed live
+ * that comparing it against a bare date literal fails ("must be of type
+ * dateTime and should not be enclosed in quotes"), so it needs the full
+ * dateTime literal instead. Milliseconds are stripped since SOQL's
+ * dateTime literal grammar is YYYY-MM-DDThh:mm:ssZ, not
+ * toISOString()'s default .SSSZ.
+ */
+function getCustomerRetentionCutoffSoqlDateTime () {
+  return getCustomerRetentionCutoffDate().toISOString().replace(/\.\d{3}Z$/, 'Z')
+}
+
 async function cleanupOutOfScopeCustomers () {
   const cutoffDate = getCustomerRetentionCutoffDate()
   const cutoffDateStr = cutoffDate.toISOString().slice(0, 10)
@@ -50,11 +63,11 @@ async function cleanupOutOfScopeCustomers () {
   return result.deletedCount || 0
 }
 
-const DEFAULT_LEADS_SOQL_TEMPLATE = (cutoffDate) => `
+const DEFAULT_LEADS_SOQL_TEMPLATE = (cutoffDate, cutoffDateTime) => `
     SELECT Id, Name, Company, Industry, State, Status, Owner.Alias, LastActivityDate,
            CreatedDate, Import_Notes__c, CreatedBy.Name, LeadSource, Phone, Email
     FROM Lead
-    WHERE LastActivityDate >= ${cutoffDate} OR CreatedDate >= ${cutoffDate}
+    WHERE LastActivityDate >= ${cutoffDate} OR CreatedDate >= ${cutoffDateTime}
     ORDER BY LastActivityDate DESC NULLS LAST, CreatedDate DESC
 `
 
@@ -84,7 +97,8 @@ function normalizeLeadRecord (raw) {
 
 async function syncCustomersFromSalesforce () {
   const removed = await cleanupOutOfScopeCustomers()
-  const soql = (process.env.SF_LEADS_SOQL || '').trim() || DEFAULT_LEADS_SOQL_TEMPLATE(getCustomerRetentionCutoffSoqlDate())
+  const soql = (process.env.SF_LEADS_SOQL || '').trim() ||
+    DEFAULT_LEADS_SOQL_TEMPLATE(getCustomerRetentionCutoffSoqlDate(), getCustomerRetentionCutoffSoqlDateTime())
   let synced = 0
   let total = 0
 
