@@ -13,6 +13,8 @@
 const LilyPadLeadBatch = require('../models/lilypadLeadBatch')
 const LilyPadStagedLead = require('../models/lilypadStagedLead')
 const apolloService = require('./apolloService')
+const { normalizeApolloRecord } = require('./prospecting/normalize/apolloNormalizer')
+const { processInHouseBatch } = require('./leadProspectorInHouseWorker')
 const {
   buildApolloFilters,
   buildStagedLeadDoc
@@ -72,6 +74,18 @@ async function processBatch (batchId) {
   if (!batch) return
   if (!['queued', 'processing', 'paused'].includes(batch.status)) return
 
+  if (batch.sourceMode === 'in_house' || batch.sourceMode === 'refresh') {
+    await saveProgress(batch, {
+      status: 'processing',
+      startedAt: batch.startedAt || new Date(),
+      errorMessage: null,
+      statusMessage: batch.statusMessage || (batch.sourceMode === 'refresh'
+        ? 'Starting CRM account refresh...'
+        : 'Starting in-house directory discovery...')
+    })
+    return processInHouseBatch(batch)
+  }
+
   await saveProgress(batch, {
     status: 'processing',
     startedAt: batch.startedAt || new Date(),
@@ -125,7 +139,8 @@ async function processBatch (batchId) {
       for (const person of people) {
         const enriched = enrichedById.get(String(person.id)) || null
         try {
-          docs.push(await buildStagedLeadDoc(batch, person, enriched))
+          const normalized = normalizeApolloRecord(person, enriched)
+          docs.push(await buildStagedLeadDoc(batch, normalized))
         } catch (err) {
           winston.warn(`Lead Prospector batch ${batchId}: failed to stage person ${person.id}: ${err.message}`)
         }

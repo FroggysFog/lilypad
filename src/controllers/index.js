@@ -11,6 +11,7 @@ const Controllers = {
   lilypadSalesforceAccounts: require('./lilypadSalesforceAccounts'),
   lilypadOpportunities: require('./lilypadOpportunities'),
   lilypadProspector: require('./lilypadProspector'),
+  lilypadCustomerIntelligence: require('./lilypadCustomerIntelligence'),
   microsoftTeams: require('./microsoftTeams'),
   salesforceAuth: require('./salesforceAuth'),
   salesforceExplorer: require('./salesforceExplorer'),

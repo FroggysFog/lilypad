@@ -4,8 +4,41 @@ const LilyPadStagedLead = require('../models/lilypadStagedLead')
 const { enqueueBatch } = require('../services/leadProspectorWorker')
 const { promoteStagedLeads } = require('../services/leadProspectorService')
 const { isApolloConfigured } = require('../services/apolloService')
+const { isExtractionConfigured } = require('../services/prospecting/crawl/pageExtractionService')
+const { listAvailableVerticals } = require('../services/prospecting/discovery')
 
 const lilypadProspectorController = {}
+
+const VERTICAL_LABELS = {
+  fire_department: 'Fire Departments',
+  fire_training: 'Fire Training Academies',
+  haunted_attraction: 'Haunted Attractions',
+  theme_park: 'Theme Parks',
+  theater_professional: 'Professional Theaters',
+  theater_community: 'Community Theaters',
+  av_lighting_design: 'A/V & Lighting Design',
+  entertainment_venue: 'Entertainment Venues',
+  family_entertainment_center: 'Family Entertainment Centers',
+  roller_rink: 'Roller Rinks',
+  bar_nightclub: 'Bars & Nightclubs',
+  museum: 'Museums',
+  childrens_museum: "Children's Museums"
+}
+
+/**
+ * GET /api/v1/lilypad/leads/verticals
+ * Only reports verticals with a real directory source wired up in
+ * directoryAdapter.js - the rest of LilyPadLeadBatch.VERTICALS exist as
+ * placeholders for future adapters and shouldn't be selectable yet.
+ */
+lilypadProspectorController.getVerticals = async function (req, res) {
+  try {
+    const available = listAvailableVerticals().map((value) => ({ value, label: VERTICAL_LABELS[value] || value }))
+    return res.status(200).json({ success: true, data: available })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
 
 function toStringArray (value) {
   if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean)
@@ -21,8 +54,21 @@ function toStringArray (value) {
  */
 lilypadProspectorController.prospectLeads = async function (req, res) {
   try {
-    if (!isApolloConfigured()) {
+    const sourceMode = LilyPadLeadBatch.SOURCE_MODES.includes(req.body.sourceMode) ? req.body.sourceMode : 'apollo'
+
+    if (sourceMode === 'apollo' && !isApolloConfigured()) {
       return res.status(503).json({ success: false, error: 'Apollo.io is not configured. Set APOLLO_API_KEY on the server.' })
+    }
+    if ((sourceMode === 'in_house' || sourceMode === 'refresh') && !isExtractionConfigured()) {
+      return res.status(503).json({ success: false, error: 'In-house extraction is not configured. Set ANTHROPIC_API_KEY on the server.' })
+    }
+
+    const targetVertical = String(req.body.targetVertical || '').trim()
+    if (sourceMode === 'in_house' && !LilyPadLeadBatch.VERTICALS.includes(targetVertical)) {
+      return res.status(400).json({
+        success: false,
+        error: `targetVertical must be one of: ${listAvailableVerticals().join(', ')} (directory source not yet built for the rest of ${LilyPadLeadBatch.VERTICALS.join(', ')})`
+      })
     }
 
     const sector = LilyPadLeadBatch.SECTORS.includes(req.body.sector) ? req.body.sector : 'all'
@@ -35,6 +81,8 @@ lilypadProspectorController.prospectLeads = async function (req, res) {
       createdByUserId: req.user._id,
       createdByName: req.user.fullname || req.user.username || '',
       sector,
+      sourceMode,
+      targetVertical: sourceMode === 'in_house' ? targetVertical : '',
       targetIndustry: toStringArray(req.body.targetIndustry),
       targetLocations: toStringArray(req.body.targetLocations),
       targetTitles: toStringArray(req.body.targetTitles),

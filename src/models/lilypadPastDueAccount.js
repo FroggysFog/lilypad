@@ -73,6 +73,14 @@ const pastDueAccountSchema = new Schema(
       type: String,
       default: null
     },
+    // True when originalDueDate/finalDueDate were inferred (orderedAt +
+    // assumed payment terms) rather than a due date Cart.com actually
+    // stated - see cartOrderSyncService.js's computeDueDate. Salesforce-
+    // sourced records never set this; it's always false for those.
+    dueDateIsEstimated: {
+      type: Boolean,
+      default: false
+    },
     status: {
       type: String,
       trim: true,

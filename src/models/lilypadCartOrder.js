@@ -35,6 +35,11 @@ const cartOrderSchema = new Schema(
     orderStatusName: { type: String, trim: true, default: '' },
     orderedAt: { type: Date, default: null },
     dueDate: { type: Date, default: null },
+    // true when Cart.com didn't provide a due_date and this was inferred
+    // as orderedAt + CART_DEFAULT_PAYMENT_TERMS_DAYS instead - without this
+    // fallback, an order with a real unpaid balance but no due_date could
+    // never be flagged past due at all. See cartOrderSyncService.js.
+    dueDateIsEstimated: { type: Boolean, default: false },
     grandTotal: { type: Number, default: 0 },
     subtotal: { type: Number, default: 0 },
     taxTotal: { type: Number, default: 0 },

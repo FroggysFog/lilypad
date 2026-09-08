@@ -13,7 +13,7 @@ const COLLECTION = 'lilypad_staged_leads'
 const EMAIL_STATUSES = ['verified', 'extrapolated', 'unverified', 'catch_all', 'invalid']
 const PHONE_TYPES = ['direct', 'hq', 'mobile', '']
 const SECTORS = ['commercial', 'non_profit', 'government']
-const SOURCE_PROVIDERS = ['apollo', 'propublica', 'manual']
+const SOURCE_PROVIDERS = ['apollo', 'propublica', 'manual', 'in_house_crawler']
 const STATUSES = ['staged', 'approved', 'rejected', 'imported']
 
 const stagedLeadSchema = new Schema(
@@ -40,6 +40,11 @@ const stagedLeadSchema = new Schema(
       default: ''
     },
     jobTitle: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    department: {
       type: String,
       trim: true,
       default: ''
@@ -109,6 +114,20 @@ const stagedLeadSchema = new Schema(
       type: String,
       enum: SECTORS,
       required: true
+    },
+    // Finer-grained business category for in-house crawler runs (e.g.
+    // 'fire_department', 'haunted_attraction', 'theater_professional') -
+    // distinct from the coarser Apollo-era `sector` bucket, since directory
+    // sources are picked per-vertical rather than per-sector.
+    vertical: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    sourceUrl: {
+      type: String,
+      trim: true,
+      default: ''
     },
     nonProfitEin: {
       type: String,

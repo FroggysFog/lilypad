@@ -13,6 +13,18 @@ const COLLECTION = 'lilypad_lead_batches'
 
 const SECTORS = ['commercial', 'non_profit', 'government', 'all']
 const STATUSES = ['queued', 'processing', 'completed', 'failed', 'paused']
+// 'refresh' re-crawls accounts already in the CRM to update stale contact
+// info, instead of discovering new businesses - see existingAccountsAdapter.js.
+const SOURCE_MODES = ['apollo', 'in_house', 'refresh']
+// Niche verticals served by the in-house directory-crawl pipeline instead
+// of Apollo's title-based search - each maps to a discoveryAdapter config
+// (see src/services/prospecting/discovery/directoryAdapter.js).
+const VERTICALS = [
+  'fire_department', 'fire_training', 'haunted_attraction', 'theme_park',
+  'theater_professional', 'theater_community', 'av_lighting_design',
+  'entertainment_venue', 'family_entertainment_center', 'roller_rink',
+  'bar_nightclub', 'museum', 'childrens_museum'
+]
 
 const leadBatchSchema = new Schema(
   {
@@ -31,6 +43,18 @@ const leadBatchSchema = new Schema(
       enum: SECTORS,
       required: true,
       default: 'all'
+    },
+    sourceMode: {
+      type: String,
+      enum: SOURCE_MODES,
+      default: 'apollo'
+    },
+    // Required when sourceMode is 'in_house' - selects which directory
+    // adapter config to enumerate candidate businesses from.
+    targetVertical: {
+      type: String,
+      enum: [...VERTICALS, ''],
+      default: ''
     },
     targetIndustry: {
       type: [String],
@@ -101,5 +125,7 @@ leadBatchSchema.index({ createdByUserId: 1, createdAt: -1 })
 
 leadBatchSchema.statics.SECTORS = SECTORS
 leadBatchSchema.statics.STATUSES = STATUSES
+leadBatchSchema.statics.SOURCE_MODES = SOURCE_MODES
+leadBatchSchema.statics.VERTICALS = VERTICALS
 
 module.exports = mongoose.model(COLLECTION, leadBatchSchema)

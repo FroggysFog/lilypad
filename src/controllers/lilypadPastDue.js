@@ -36,6 +36,7 @@ function toRow (account) {
     amountDue: account.amountDue,
     originalDueDate: account.originalDueDate,
     finalDueDate: account.finalDueDate,
+    dueDateIsEstimated: Boolean(account.dueDateIsEstimated),
     daysLate,
     status,
     stage: stage.emailStage,

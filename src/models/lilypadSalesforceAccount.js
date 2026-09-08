@@ -72,6 +72,14 @@ const salesforceAccountSchema = new Schema(
     lastSyncAt: {
       type: Date,
       default: Date.now
+    },
+    // Set by the Lead Prospector's refresh pipeline (existingAccountsAdapter.js)
+    // after crawling this account's own website to refresh stale contact
+    // info - lets repeated refresh runs skip accounts already tried
+    // recently instead of re-crawling the same site every run.
+    lastProspectorCrawlAt: {
+      type: Date,
+      default: null
     }
   },
   { timestamps: true }

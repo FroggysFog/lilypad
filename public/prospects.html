@@ -164,6 +164,7 @@
 							</a>
 							<ul>
 								<li><a href="prospects.html" class="active"><i class="ti ti-user-search"></i><span>Lead Prospector</span></a></li>
+								<li><a href="customer-intelligence.html"><i class="ti ti-chart-arrows"></i><span>Customer Intelligence</span></a></li>
 							</ul>
 						</li>
 
@@ -214,6 +215,33 @@
 					<div class="card-body">
 						<form id="prospectForm" onsubmit="submitProspectRun(event)">
 							<div class="row g-3">
+								<div class="col-md-4">
+									<label class="form-label fs-13 fw-semibold">Data Source</label>
+									<select class="form-select form-select-sm" id="pfSourceMode" onchange="onSourceModeChange()">
+										<option value="apollo">Apollo.io (title-based search)</option>
+										<option value="in_house">In-House Directory Crawl</option>
+										<option value="refresh">Refresh Existing CRM Accounts</option>
+									</select>
+									<span class="text-muted tag-input-hint">Refresh re-crawls accounts you already have to update stale contact info instead of finding new ones.</span>
+								</div>
+								<div class="col-md-4" id="pfVerticalWrap" style="display:none;">
+									<label class="form-label fs-13 fw-semibold">Target Vertical</label>
+									<select class="form-select form-select-sm" id="pfVertical"></select>
+									<span class="text-muted tag-input-hint">Only verticals with a working directory source are listed.</span>
+								</div>
+								<div class="col-md-4" id="pfCountWrap">
+									<label class="form-label fs-13 fw-semibold">Desired Lead Count</label>
+									<input type="number" class="form-control form-control-sm" id="pfCount" value="500" min="1" max="50000" required>
+								</div>
+							</div>
+							<div class="row g-3 mt-0" id="pfRefreshFields" style="display:none;">
+								<div class="col-md-6">
+									<label class="form-label fs-13 fw-semibold">Account Filter <span class="text-muted fw-normal">(optional)</span></label>
+									<input type="text" class="form-control form-control-sm" id="pfRefreshKeywords" placeholder="e.g. haunt, haunted attraction">
+									<span class="text-muted tag-input-hint">Comma-separated keywords matched against account name/industry/description. Leave blank to refresh across all accounts with a website, oldest-refreshed first.</span>
+								</div>
+							</div>
+							<div class="row g-3 mt-0" id="pfApolloFields">
 								<div class="col-md-3">
 									<label class="form-label fs-13 fw-semibold">Sector</label>
 									<select class="form-select form-select-sm" id="pfSector">
@@ -222,10 +250,6 @@
 										<option value="non_profit">Non-Profit</option>
 										<option value="government">Government</option>
 									</select>
-								</div>
-								<div class="col-md-3">
-									<label class="form-label fs-13 fw-semibold">Desired Lead Count</label>
-									<input type="number" class="form-control form-control-sm" id="pfCount" value="500" min="1" max="50000" required>
 								</div>
 								<div class="col-md-3">
 									<label class="form-label fs-13 fw-semibold">Industry Keywords</label>
@@ -237,7 +261,7 @@
 									<input type="text" class="form-control form-control-sm" id="pfLocations" placeholder="e.g. California, United States">
 									<span class="text-muted tag-input-hint">Comma-separated cities/states/countries.</span>
 								</div>
-								<div class="col-md-12">
+								<div class="col-md-3">
 									<label class="form-label fs-13 fw-semibold">Target Titles <span class="text-muted fw-normal">(optional override)</span></label>
 									<input type="text" class="form-control form-control-sm" id="pfTitles" placeholder="Leave blank to use the sector's default procurement titles">
 									<span class="text-muted tag-input-hint" id="pfTitlesHint"></span>
@@ -328,6 +352,7 @@
 									<th style="width:30px;"><input type="checkbox" class="form-check-input" id="leadsSelectAll" onchange="toggleSelectAllLeads(this)"></th>
 									<th>Name</th>
 									<th>Title</th>
+									<th>Department</th>
 									<th>Company</th>
 									<th>Sector</th>
 									<th>Email</th>
@@ -439,18 +464,45 @@
 			document.getElementById('pfTitlesHint').textContent = SECTOR_TITLE_DEFAULTS[this.value] || '';
 		});
 
+		function onSourceModeChange() {
+			const mode = document.getElementById('pfSourceMode').value;
+			document.getElementById('pfVerticalWrap').style.display = mode === 'in_house' ? '' : 'none';
+			document.getElementById('pfRefreshFields').style.display = mode === 'refresh' ? '' : 'none';
+			document.getElementById('pfApolloFields').style.display = mode === 'apollo' ? '' : 'none';
+		}
+
+		async function loadVerticals() {
+			try {
+				const res = await fetch('/api/v1/lilypad/leads/verticals');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to load verticals');
+				const select = document.getElementById('pfVertical');
+				select.innerHTML = result.data.map(v => `<option value="${v.value}">${escapeHtml(v.label)}</option>`).join('');
+			} catch (err) {
+				console.error('loadVerticals failed:', err);
+			}
+		}
+
 		async function submitProspectRun(event) {
 			event.preventDefault();
 			const btn = document.getElementById('pfSubmitBtn');
 			btn.disabled = true;
 			try {
+				const sourceMode = document.getElementById('pfSourceMode').value;
 				const payload = {
-					sector: document.getElementById('pfSector').value,
-					requestedCount: Number(document.getElementById('pfCount').value),
-					targetIndustry: parseTagInput(document.getElementById('pfIndustry').value),
-					targetLocations: parseTagInput(document.getElementById('pfLocations').value),
-					targetTitles: parseTagInput(document.getElementById('pfTitles').value)
+					sourceMode,
+					requestedCount: Number(document.getElementById('pfCount').value)
 				};
+				if (sourceMode === 'in_house') {
+					payload.targetVertical = document.getElementById('pfVertical').value;
+				} else if (sourceMode === 'refresh') {
+					payload.targetIndustry = parseTagInput(document.getElementById('pfRefreshKeywords').value);
+				} else {
+					payload.sector = document.getElementById('pfSector').value;
+					payload.targetIndustry = parseTagInput(document.getElementById('pfIndustry').value);
+					payload.targetLocations = parseTagInput(document.getElementById('pfLocations').value);
+					payload.targetTitles = parseTagInput(document.getElementById('pfTitles').value);
+				}
 
 				const res = await fetch('/api/v1/lilypad/leads/prospect', {
 					method: 'POST',
@@ -469,8 +521,16 @@
 			}
 		}
 
+		function batchSourceLabel(batch) {
+			if (batch.sourceMode === 'refresh') return 'CRM Refresh';
+			if (batch.sourceMode === 'in_house') {
+				return (batch.targetVertical || 'in-house').replace(/_/g, ' ');
+			}
+			return SECTOR_LABELS[batch.sector] || batch.sector;
+		}
+
 		function formatBatchLabel(batch) {
-			return `${SECTOR_LABELS[batch.sector] || batch.sector} run - ${new Date(batch.createdAt).toLocaleString()}`;
+			return `${batchSourceLabel(batch)} run - ${new Date(batch.createdAt).toLocaleString()}`;
 		}
 
 		async function loadBatches() {
@@ -509,8 +569,12 @@
 					actions += ` <button class="btn btn-outline-success btn-sm" onclick="resumeBatch('${b._id}')"><i class="ti ti-player-play"></i> Resume</button>`;
 				}
 
+				const sourceBadgeClass = b.sourceMode === 'refresh' ? 'bg-soft-success text-success' : (b.sourceMode === 'in_house' ? 'bg-soft-info text-info' : sectorBadge);
 				return `<tr class="${isActive ? 'table-active' : ''}">
-					<td><span class="badge ${sectorBadge} fs-12 rounded-pill fw-semibold">${SECTOR_LABELS[b.sector] || b.sector}</span></td>
+					<td>
+						<span class="badge ${sourceBadgeClass} fs-12 rounded-pill fw-semibold text-capitalize">${escapeHtml(batchSourceLabel(b))}</span>
+						${b.sourceMode === 'in_house' ? '<div class="fs-10 text-muted mt-1">In-House Crawl</div>' : ''}
+					</td>
 					<td>${b.requestedCount.toLocaleString()}</td>
 					<td>
 						<div class="d-flex align-items-center gap-2">
@@ -520,6 +584,7 @@
 							<span class="fs-12 text-muted">${b.fetchedCount}/${b.requestedCount} (${pct}%)</span>
 						</div>
 						<div class="fs-11 text-muted mt-1">${escapeHtml(b.statusMessage || '')}</div>
+						${b.status === 'failed' && b.errorMessage ? `<div class="fs-11 text-danger mt-1"><i class="ti ti-alert-triangle"></i> ${escapeHtml(b.errorMessage)}</div>` : ''}
 					</td>
 					<td><span class="badge ${statusBadge} fs-12 rounded-pill fw-semibold text-capitalize">${b.status}</span></td>
 					<td>${b.startedAt ? new Date(b.startedAt).toLocaleString() : ''}</td>
@@ -641,7 +706,7 @@
 		function renderLeadsTable() {
 			const tbody = document.getElementById('leadsTableBody');
 			if (!LEADS.length) {
-				tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">No staged leads match these filters yet.</td></tr>';
+				tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-4">No staged leads match these filters yet.</td></tr>';
 				return;
 			}
 
@@ -663,6 +728,7 @@
 						${l.linkedinUrl ? `<a href="${escapeHtml(l.linkedinUrl)}" target="_blank" class="fs-11 text-muted">LinkedIn <i class="ti ti-external-link fs-10"></i></a>` : ''}
 					</td>
 					<td>${escapeHtml(l.jobTitle)}</td>
+					<td>${escapeHtml(l.department) || '<span class="text-muted">—</span>'}</td>
 					<td>
 						<div>${escapeHtml(l.companyName)}</div>
 						<div class="fs-11 text-muted">${escapeHtml(l.companyDomain)}</div>
@@ -737,6 +803,7 @@
 			} catch (e) {}
 
 			document.getElementById('pfTitlesHint').textContent = SECTOR_TITLE_DEFAULTS.all;
+			loadVerticals();
 			loadBatches();
 		});
 	</script>

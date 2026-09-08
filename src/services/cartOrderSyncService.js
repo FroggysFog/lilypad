@@ -21,6 +21,16 @@
  * that a paid-in-full order still carries a due_date. It has to be
  * computed as grand_total minus the sum of approved, non-voided
  * payments from /api/v1/order_payments.json.
+ *
+ * Two gaps this file used to have, both now handled: (1) an order that
+ * moves to a non-"open" status while still owing money used to just
+ * disappear (fetched only from open statuses, then deleted for no longer
+ * being in that set) - dropped orders now get a single-order
+ * re-verification before deletion instead of being deleted on sight (see
+ * reconcileDroppedOrders). (2) an order with no due_date at all used to
+ * never qualify as past due regardless of balance - computeDueDate now
+ * falls back to orderedAt + DEFAULT_PAYMENT_TERMS_DAYS when Cart.com
+ * didn't set one, flagged via dueDateIsEstimated.
  */
 
 const cartService = require('../services/cartService')
@@ -34,6 +44,13 @@ const winston = require('../logger')
 const CUSTOMER_FETCH_CONCURRENCY = 3
 const MAX_RATE_LIMIT_RETRIES = 6
 const DEFAULT_RETRY_DELAY_MS = 3000
+
+// Fallback assumed payment terms when Cart.com doesn't set due_date on an
+// order at all - without this, an order with a real unpaid balance but no
+// due_date could never be flagged past due, full stop. Not confirmed
+// against a real contract term; override via env if Froggy's Fog's actual
+// terms differ.
+const DEFAULT_PAYMENT_TERMS_DAYS = Number(process.env.CART_DEFAULT_PAYMENT_TERMS_DAYS || 30)
 
 function singleFlight (fn) {
   let inFlight = null
@@ -86,6 +103,66 @@ async function fetchApprovedPaymentsTotal (orderId) {
   return payments.reduce((sum, p) => (p.is_approved && !p.is_void ? sum + Number(p.amount || 0) : sum), 0)
 }
 
+/**
+ * Single-order lookup, used only to re-verify orders that dropped out of
+ * the "open status" fetch (see reconcileDroppedOrders below) - mirrors
+ * fetchCustomer's /api/v1/customers/{id}.json singular-resource shape.
+ * Not confirmed live the way the rest of this file's endpoints are
+ * (flagged in comments elsewhere) - if Cart.com's actual path differs,
+ * this fails closed (throws, caller keeps the record rather than
+ * wrongly deleting a real receivable).
+ */
+async function fetchOrderById (orderId) {
+  const result = await cartRequestWithRetry(`/api/v1/orders/${orderId}.json`)
+  const order = (result.data && (result.data.order || result.data)) || null
+  if (!order || !order.id) throw new Error(`No order data returned for ${orderId}`)
+  return order
+}
+
+/**
+ * An order dropping out of the "open status" fetch (see syncCartOrders)
+ * could mean it was paid off - or it could mean Cart.com moved it to some
+ * other status (On Hold, Disputed, a custom status) while a real balance
+ * is still owed. Treating "not open anymore" as "resolved" would silently
+ * delete a genuine receivable the moment its status changes. Instead,
+ * each dropped order gets a fresh single-order lookup: still a balance
+ * owed -> keep it (refreshed), balance actually cleared or the order is
+ * gone/cancelled -> safe to delete. A lookup failure keeps the record
+ * rather than deleting - losing visibility into money owed is worse than
+ * a stale row sticking around an extra sync cycle.
+ */
+async function reconcileDroppedOrders (droppedSourceRecordIds, openStatusNameById) {
+  if (!droppedSourceRecordIds.length) return { toDelete: [], toKeep: 0 }
+
+  const droppedOrders = await LilyPadCartOrder.find({ sourceRecordId: { $in: droppedSourceRecordIds } })
+  const customerCache = new Map()
+  const toDelete = []
+  let kept = 0
+
+  for (const existing of droppedOrders) {
+    try {
+      const raw = await fetchOrderById(existing.cartOrderId)
+      const [amountPaid, customer] = await Promise.all([
+        fetchApprovedPaymentsTotal(existing.cartOrderId),
+        fetchCustomer(raw.customer_id, customerCache)
+      ])
+      const normalized = normalizeCartOrder(raw, amountPaid, customer, openStatusNameById.get(raw.order_status_id) || existing.orderStatusName)
+
+      if (normalized.balanceDue > 0.01) {
+        await LilyPadCartOrder.updateOne({ cartOrderId: existing.cartOrderId }, { $set: normalized })
+        kept++
+      } else {
+        toDelete.push(existing.sourceRecordId)
+      }
+    } catch (err) {
+      winston.warn(`Cart.com Order sync: could not re-verify order ${existing.cartOrderId} before removal, keeping it: ${err.message}`)
+      kept++
+    }
+  }
+
+  return { toDelete, toKeep: kept }
+}
+
 async function fetchCustomer (customerId, cache) {
   if (!customerId) return null
   if (cache.has(customerId)) return cache.get(customerId)
@@ -100,10 +177,27 @@ async function fetchCustomer (customerId, cache) {
   }
 }
 
+/**
+ * Cart.com's due_date is missing on some orders entirely (confirmed:
+ * order.due_date can be absent even when a balance is owed) - falling
+ * back to orderedAt + DEFAULT_PAYMENT_TERMS_DAYS means those orders can
+ * still be flagged past due instead of silently never qualifying.
+ * dueDateIsEstimated marks which case this is so the UI/data isn't
+ * presenting a guess as a fact Cart.com actually stated.
+ */
+function computeDueDate (raw) {
+  if (raw.due_date) return { dueDate: new Date(raw.due_date), isEstimated: false }
+  if (raw.ordered_at) {
+    const estimated = new Date(new Date(raw.ordered_at).getTime() + DEFAULT_PAYMENT_TERMS_DAYS * 24 * 60 * 60 * 1000)
+    return { dueDate: estimated, isEstimated: true }
+  }
+  return { dueDate: null, isEstimated: false }
+}
+
 function normalizeCartOrder (raw, amountPaid, customer, statusName) {
   const grandTotal = Number(raw.grand_total || 0)
   const balanceDue = Math.max(0, Math.round((grandTotal - amountPaid) * 100) / 100)
-  const dueDate = raw.due_date ? new Date(raw.due_date) : null
+  const { dueDate, isEstimated } = computeDueDate(raw)
   const now = new Date()
 
   return {
@@ -114,6 +208,7 @@ function normalizeCartOrder (raw, amountPaid, customer, statusName) {
     orderStatusName: statusName || '',
     orderedAt: raw.ordered_at ? new Date(raw.ordered_at) : null,
     dueDate,
+    dueDateIsEstimated: isEstimated,
     grandTotal,
     subtotal: Number(raw.subtotal || 0),
     taxTotal: Number(raw.tax_total || 0),
@@ -142,9 +237,11 @@ function normalizeCartOrder (raw, amountPaid, customer, statusName) {
 
 /**
  * Pulls every order in an "open" status (see module docs) into
- * LilyPadCartOrder, then removes any previously-synced order that's no
- * longer in that qualifying set (paid off, cancelled, etc.) so the
- * collection stays scoped instead of accumulating stale records.
+ * LilyPadCartOrder, then reconciles any previously-synced order that's
+ * no longer in that qualifying set - re-verifying each one individually
+ * (reconcileDroppedOrders) rather than assuming "not open anymore" means
+ * "resolved," so a real receivable doesn't vanish the moment Cart.com
+ * changes its status.
  */
 async function syncCartOrders () {
   const status = await cartService.getCartOAuthStatus()
@@ -193,10 +290,16 @@ async function syncCartOrders () {
     }
   }
 
-  const removal = await LilyPadCartOrder.deleteMany({ sourceRecordId: { $nin: seenIds } })
-  winston.info(`Cart.com Order sync: ${synced} synced across ${openStatuses.length} open statuses, ${removal.deletedCount} removed (no longer open)`)
+  const droppedIds = await LilyPadCartOrder.find({ sourceRecordId: { $nin: seenIds } }).distinct('sourceRecordId')
+  const { toDelete, toKeep } = await reconcileDroppedOrders(droppedIds, statusNameById)
 
-  return { synced, total, removed: removal.deletedCount || 0 }
+  const removal = toDelete.length
+    ? await LilyPadCartOrder.deleteMany({ sourceRecordId: { $in: toDelete } })
+    : { deletedCount: 0 }
+
+  winston.info(`Cart.com Order sync: ${synced} synced across ${openStatuses.length} open statuses, ${removal.deletedCount} removed (confirmed paid off/gone), ${toKeep} kept despite leaving the open-status set (still owe a balance or couldn't be re-verified)`)
+
+  return { synced, total, removed: removal.deletedCount || 0, keptAfterStatusChange: toKeep }
 }
 
 module.exports = {

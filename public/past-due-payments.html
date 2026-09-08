@@ -261,6 +261,7 @@
 							</a>
 							<ul>
 								<li><a href="prospects.html"><i class="ti ti-user-search"></i><span>Lead Prospector</span></a></li>
+								<li><a href="customer-intelligence.html"><i class="ti ti-chart-arrows"></i><span>Customer Intelligence</span></a></li>
 							</ul>
 						</li>
 
@@ -441,7 +442,7 @@
 				<div class="modal-body">
 					<div class="row g-3 mb-3">
 						<div class="col-md-3"><span class="fs-12 text-muted d-block">Stage</span><span id="detailStage" class="badge fs-12"></span></div>
-						<div class="col-md-3"><span class="fs-12 text-muted d-block">Days Late</span><strong id="detailDaysLate"></strong></div>
+						<div class="col-md-3"><span class="fs-12 text-muted d-block">Days Late</span><strong id="detailDaysLate"></strong> <span class="badge bg-soft-warning text-warning fs-10 rounded-pill" id="detailEstimatedDueBadge" style="display:none;" title="Cart.com didn't provide a due date for this order - estimated from order date + assumed payment terms.">Estimated Due Date</span></div>
 						<div class="col-md-3"><span class="fs-12 text-muted d-block">Amount Due</span><strong id="detailAmount"></strong></div>
 						<div class="col-md-3"><span class="fs-12 text-muted d-block">Sales Rep</span><strong id="detailSalesRep"></strong></div>
 					</div>
@@ -684,6 +685,7 @@
 				document.getElementById('detailStage').textContent = a.stage;
 				document.getElementById('detailStage').className = 'badge fs-12 ' + stageBadgeClass(a.stage);
 				document.getElementById('detailDaysLate').textContent = a.daysLate + ' days';
+				document.getElementById('detailEstimatedDueBadge').style.display = a.dueDateIsEstimated ? '' : 'none';
 				document.getElementById('detailAmount').textContent = formatCurrency(a.amountDue);
 				document.getElementById('detailSalesRep').textContent = a.salesRep || '—';
 

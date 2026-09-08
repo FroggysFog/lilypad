@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Opportunities | LilyPad ERP</title>
+	<title>Customer Intelligence | LilyPad ERP</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="robots" content="index, follow">
 	<link rel="shortcut icon" href="assets/img/favicon.png">
@@ -15,6 +15,10 @@
 	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
 	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
 	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+	<style>
+		.ci-reason-cell { max-width: 320px; white-space: normal; }
+		.ci-score-bar { height: 6px; }
+	</style>
 </head>
 
 <body>
@@ -144,7 +148,7 @@
 							</a>
 							<ul>
 								<li><a href="salesforce-accounts.html"><i class="ti ti-building"></i><span>Accounts</span></a></li>
-								<li><a href="opportunities.html" class="active"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
+								<li><a href="opportunities.html"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
 							</ul>
 						</li>
 
@@ -154,7 +158,7 @@
 							</a>
 							<ul>
 								<li><a href="prospects.html"><i class="ti ti-user-search"></i><span>Lead Prospector</span></a></li>
-								<li><a href="customer-intelligence.html"><i class="ti ti-chart-arrows"></i><span>Customer Intelligence</span></a></li>
+								<li><a href="customer-intelligence.html" class="active"><i class="ti ti-chart-arrows"></i><span>Customer Intelligence</span></a></li>
 							</ul>
 						</li>
 
@@ -189,20 +193,94 @@
 
 				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 					<div>
-						<h4 class="mb-1 fw-bold text-dark">Opportunities</h4>
-						<p class="text-muted fs-13 mb-0">Sales opportunities synced from Salesforce. Click a name to view details.</p>
+						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+							<span>Customer Intelligence</span>
+						</h4>
+						<p class="text-muted fs-13 mb-0">AI-scored view of accounts already in the CRM - who's gone quiet, who has an upsell gap, and which chain locations we haven't sold to yet.</p>
 					</div>
 					<div class="d-flex align-items-center gap-2 flex-wrap">
-						<span class="fs-12 text-muted" id="oppLastSynced"></span>
-						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="syncOpportunities()" id="oppSyncBtn">
-							<i class="ti ti-refresh me-1"></i> Sync from Salesforce
+						<span class="fs-12 text-muted" id="ciJobStatus"></span>
+						<input type="text" class="form-control form-control-sm" id="ciRebuildKeywords" placeholder="Filter e.g. haunt (optional)" style="max-width: 220px;">
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="checkbox" id="ciIncludeRecommendations" checked>
+							<label class="form-check-label fs-12" for="ciIncludeRecommendations">Score with AI</label>
+						</div>
+						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="triggerRebuild()" id="ciRebuildBtn">
+							<i class="ti ti-refresh me-1"></i> Rebuild Profiles
 						</button>
+					</div>
+				</div>
+
+				<div class="row g-3 mb-4">
+					<div class="col-md-2">
+						<div class="card border-0 shadow-sm rounded-3 h-100"><div class="card-body py-3 text-center">
+							<div class="fs-22 fw-bold text-dark" id="statActive">-</div>
+							<div class="fs-12 text-muted">Active</div>
+						</div></div>
+					</div>
+					<div class="col-md-2">
+						<div class="card border-0 shadow-sm rounded-3 h-100"><div class="card-body py-3 text-center">
+							<div class="fs-22 fw-bold text-warning" id="statDormant">-</div>
+							<div class="fs-12 text-muted">Dormant</div>
+						</div></div>
+					</div>
+					<div class="col-md-2">
+						<div class="card border-0 shadow-sm rounded-3 h-100"><div class="card-body py-3 text-center">
+							<div class="fs-22 fw-bold text-danger" id="statChurned">-</div>
+							<div class="fs-12 text-muted">Churned</div>
+						</div></div>
+					</div>
+					<div class="col-md-2">
+						<div class="card border-0 shadow-sm rounded-3 h-100"><div class="card-body py-3 text-center">
+							<div class="fs-22 fw-bold text-secondary" id="statLeadOnly">-</div>
+							<div class="fs-12 text-muted">Lead Only</div>
+						</div></div>
+					</div>
+					<div class="col-md-2">
+						<div class="card border-0 shadow-sm rounded-3 h-100"><div class="card-body py-3 text-center">
+							<div class="fs-22 fw-bold text-muted" id="statNeverPurchased">-</div>
+							<div class="fs-12 text-muted">Never Purchased</div>
+						</div></div>
+					</div>
+					<div class="col-md-2">
+						<div class="card border-0 shadow-sm rounded-3 h-100"><div class="card-body py-3 text-center">
+							<div class="fs-22 fw-bold text-info" id="statSiblings">-</div>
+							<div class="fs-12 text-muted">In a Chain</div>
+						</div></div>
 					</div>
 				</div>
 
 				<div class="card border-0 shadow-sm rounded-3 mb-3">
 					<div class="card-body py-2 px-3">
-						<input type="text" id="oppSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search name or account..." oninput="debounceOppSearch()">
+						<div class="row g-2 align-items-center">
+							<div class="col-md-3">
+								<input type="text" id="ciSearchInput" class="form-control form-control-sm" placeholder="Search account name..." oninput="debounceSearch()">
+							</div>
+							<div class="col-md-2">
+								<select class="form-select form-select-sm" id="ciStatusFilter" onchange="goToPage(1)">
+									<option value="">Any Status</option>
+									<option value="active">Active</option>
+									<option value="dormant">Dormant</option>
+									<option value="churned">Churned</option>
+									<option value="lead_only">Lead Only</option>
+									<option value="never_purchased">Never Purchased</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<select class="form-select form-select-sm" id="ciSiblingFilter" onchange="goToPage(1)">
+									<option value="">All Accounts</option>
+									<option value="true">Part of a Chain Only</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<select class="form-select form-select-sm" id="ciSortKey" onchange="goToPage(1)">
+									<option value="recommendation.score">Sort: AI Score</option>
+									<option value="daysSinceLastOrder">Sort: Days Since Order</option>
+									<option value="orderStats.lifetimeRevenue">Sort: Lifetime Revenue</option>
+									<option value="name">Sort: Name</option>
+								</select>
+							</div>
+						</div>
 					</div>
 				</div>
 
@@ -210,17 +288,26 @@
 					<div class="table-responsive">
 						<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
 							<thead class="table-light">
-								<tr id="oppTableHead"></tr>
+								<tr>
+									<th>Account</th>
+									<th>Status</th>
+									<th>Days Since Order</th>
+									<th>Lifetime Revenue</th>
+									<th>Open Opps</th>
+									<th>Product Mix</th>
+									<th>Chain</th>
+									<th style="min-width: 260px;">AI Score & Reason</th>
+								</tr>
 							</thead>
-							<tbody id="oppTableBody"></tbody>
+							<tbody id="profilesTableBody"></tbody>
 						</table>
 					</div>
 					<div class="d-flex align-items-center justify-content-between px-3 py-2 border-top flex-wrap gap-2">
-						<span class="fs-12 text-muted" id="oppPageInfo"></span>
+						<span class="fs-12 text-muted" id="ciPageInfo"></span>
 						<div class="d-flex align-items-center gap-2">
-							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToOppPage(oppPage - 1)" id="oppPrevBtn"><i class="ti ti-chevron-left"></i> Prev</button>
-							<span class="fs-13" id="oppPageIndicator"></span>
-							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToOppPage(oppPage + 1)" id="oppNextBtn">Next <i class="ti ti-chevron-right"></i></button>
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToPage(ciPage - 1)" id="ciPrevBtn"><i class="ti ti-chevron-left"></i> Prev</button>
+							<span class="fs-13" id="ciPageIndicator"></span>
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToPage(ciPage + 1)" id="ciNextBtn">Next <i class="ti ti-chevron-right"></i></button>
 						</div>
 					</div>
 				</div>
@@ -229,7 +316,7 @@
 					<p class="mb-md-0 mb-1">Copyright &copy; <script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.</p>
 					<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
 						<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
-						<a href="salesforce-accounts.html" class="text-muted fs-13">Accounts</a>
+						<a href="prospects.html" class="text-muted fs-13">Lead Prospector</a>
 					</div>
 				</footer>
 			</div>
@@ -242,23 +329,25 @@
 	<script src="assets/js/lilypad-notifications.js"></script>
 
 	<script>
-		const OPP_COLUMNS = [
-			{ key: 'name', label: 'Opportunity', type: 'link' },
-			{ key: 'accountName', label: 'Account', type: 'text' },
-			{ key: 'stageName', label: 'Stage', type: 'text' },
-			{ key: 'amount', label: 'Amount', type: 'currency' },
-			{ key: 'closeDate', label: 'Close Date', type: 'date' },
-			{ key: 'ownerName', label: 'Owner', type: 'text' }
-		];
+		const STATUS_BADGES = {
+			active: 'bg-soft-success text-success',
+			dormant: 'bg-soft-warning text-warning',
+			churned: 'bg-soft-danger text-danger',
+			lead_only: 'bg-soft-secondary text-secondary',
+			never_purchased: 'bg-soft-secondary text-secondary'
+		};
+		const STATUS_LABELS = {
+			active: 'Active', dormant: 'Dormant', churned: 'Churned',
+			lead_only: 'Lead Only', never_purchased: 'Never Purchased'
+		};
 
-		let OPPORTUNITIES = [];
-		let oppSortKey = 'closeDate';
-		let oppSortDir = 'desc';
-		let oppPage = 1;
-		let oppPageSize = 50;
-		let oppTotal = 0;
-		let oppTotalPages = 1;
-		let oppSearchDebounce = null;
+		let PROFILES = [];
+		let ciPage = 1;
+		let ciPageSize = 50;
+		let ciTotal = 0;
+		let ciTotalPages = 1;
+		let ciSearchDebounce = null;
+		let pollTimer = null;
 
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -266,131 +355,173 @@
 			});
 		}
 
-		function formatCurrency(amount) {
-			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(amount || 0));
-		}
-
 		async function doLogout() {
 			try { await fetch('/logout'); } catch (e) {}
 			window.location.href = 'login.html';
 		}
 
-		function debounceOppSearch() {
-			clearTimeout(oppSearchDebounce);
-			oppSearchDebounce = setTimeout(() => { oppPage = 1; loadOpportunities(); }, 300);
+		function formatMoney(n) {
+			return '$' + Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
 		}
 
-		function goToOppPage(page) {
-			if (page < 1 || page > oppTotalPages || page === oppPage) return;
-			oppPage = page;
-			loadOpportunities();
+		function debounceSearch() {
+			clearTimeout(ciSearchDebounce);
+			ciSearchDebounce = setTimeout(() => { ciPage = 1; loadProfiles(); }, 300);
 		}
 
-		async function loadOpportunities() {
+		function goToPage(page) {
+			if (page < 1 || page > ciTotalPages || page === ciPage) return;
+			ciPage = page;
+			loadProfiles();
+		}
+
+		async function triggerRebuild() {
+			const btn = document.getElementById('ciRebuildBtn');
+			btn.disabled = true;
 			try {
-				const search = document.getElementById('oppSearchInput').value.trim();
-				const params = new URLSearchParams({ page: oppPage, pageSize: oppPageSize, sortKey: oppSortKey, sortDir: oppSortDir });
-				if (search) params.set('search', search);
-
-				const res = await fetch('/api/v1/lilypad/opportunities?' + params.toString());
+				const keywords = document.getElementById('ciRebuildKeywords').value.trim();
+				const payload = {
+					industryKeywords: keywords ? keywords.split(',').map(s => s.trim()).filter(Boolean) : [],
+					includeRecommendations: document.getElementById('ciIncludeRecommendations').checked
+				};
+				const res = await fetch('/api/v1/lilypad/customer-intelligence/rebuild', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
 				const result = await res.json();
-				if (!result.success) throw new Error(result.error || 'Unable to load opportunities');
-
-				OPPORTUNITIES = result.data;
-				oppTotal = result.pagination.total;
-				oppTotalPages = result.pagination.totalPages;
-				oppPage = result.pagination.page;
-
-				const mostRecent = OPPORTUNITIES.reduce((latest, o) => {
-					const t = new Date(o.lastSyncAt).getTime();
-					return t > latest ? t : latest;
-				}, 0);
-				document.getElementById('oppLastSynced').textContent = mostRecent
-					? 'Last synced ' + new Date(mostRecent).toLocaleString()
-					: 'Not synced yet';
-
-				renderOpportunityHead();
-				renderOpportunityTable();
-				renderOpportunityPagination();
+				if (!result.success) throw new Error(result.error || 'Failed to start rebuild.');
+				startPolling();
 			} catch (err) {
-				console.error('loadOpportunities failed:', err);
+				alert(err.message || 'Unable to start rebuild.');
+				btn.disabled = false;
 			}
 		}
 
-		function renderOpportunityHead() {
-			const head = document.getElementById('oppTableHead');
-			head.innerHTML = OPP_COLUMNS.map(col => {
-				const arrow = oppSortKey === col.key ? (oppSortDir === 'asc' ? ' <i class="ti ti-arrow-up fs-12"></i>' : ' <i class="ti ti-arrow-down fs-12"></i>') : '';
-				return `<th style="cursor:pointer;" onclick="setOpportunitySortKey('${col.key}')">${escapeHtml(col.label)}${arrow}</th>`;
-			}).join('');
-		}
+		async function pollStatus() {
+			try {
+				const res = await fetch('/api/v1/lilypad/customer-intelligence/status');
+				const result = await res.json();
+				if (!result.success) return;
+				const state = result.data;
+				const statusEl = document.getElementById('ciJobStatus');
+				const btn = document.getElementById('ciRebuildBtn');
 
-		function setOpportunitySortKey(key) {
-			if (oppSortKey === key) {
-				oppSortDir = oppSortDir === 'asc' ? 'desc' : 'asc';
-			} else {
-				oppSortKey = key;
-				oppSortDir = 'asc';
+				if (state.running) {
+					statusEl.textContent = 'Rebuilding profiles...';
+					btn.disabled = true;
+				} else {
+					btn.disabled = false;
+					if (state.error) {
+						statusEl.textContent = 'Last rebuild failed: ' + state.error;
+					} else if (state.finishedAt) {
+						statusEl.textContent = 'Last rebuilt ' + new Date(state.finishedAt).toLocaleString();
+					} else {
+						statusEl.textContent = 'Not built yet - click Rebuild Profiles to start.';
+					}
+					if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+					loadProfiles();
+				}
+			} catch (err) {
+				console.error('pollStatus failed:', err);
 			}
-			oppPage = 1;
-			renderOpportunityHead();
-			loadOpportunities();
 		}
 
-		function renderOpportunityPagination() {
-			const start = oppTotal === 0 ? 0 : (oppPage - 1) * oppPageSize + 1;
-			const end = Math.min(oppPage * oppPageSize, oppTotal);
-			document.getElementById('oppPageInfo').textContent = `Showing ${start}-${end} of ${oppTotal}`;
-			document.getElementById('oppPageIndicator').textContent = `Page ${oppPage} of ${oppTotalPages}`;
-			document.getElementById('oppPrevBtn').disabled = oppPage <= 1;
-			document.getElementById('oppNextBtn').disabled = oppPage >= oppTotalPages;
+		function startPolling() {
+			if (pollTimer) clearInterval(pollTimer);
+			pollStatus();
+			pollTimer = setInterval(pollStatus, 4000);
 		}
 
-		function renderOpportunityTable() {
-			const tbody = document.getElementById('oppTableBody');
-			if (!OPPORTUNITIES.length) {
-				tbody.innerHTML = `<tr><td colspan="${OPP_COLUMNS.length}" class="text-center text-muted py-4">No opportunities yet. Click "Sync from Salesforce" to pull opportunities in.</td></tr>`;
+		async function loadProfiles() {
+			try {
+				const params = new URLSearchParams({ page: ciPage, pageSize: ciPageSize, sortKey: document.getElementById('ciSortKey').value, sortDir: 'desc' });
+				const search = document.getElementById('ciSearchInput').value.trim();
+				if (search) params.set('search', search);
+				const status = document.getElementById('ciStatusFilter').value;
+				if (status) params.set('engagementStatus', status);
+				const siblingsOnly = document.getElementById('ciSiblingFilter').value;
+				if (siblingsOnly) params.set('siblingsOnly', siblingsOnly);
+
+				const res = await fetch('/api/v1/lilypad/customer-intelligence/profiles?' + params.toString());
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to load profiles');
+
+				PROFILES = result.data;
+				ciTotal = result.pagination.total;
+				ciTotalPages = result.pagination.totalPages;
+				ciPage = result.pagination.page;
+
+				renderStats();
+				renderTable();
+				renderPagination();
+			} catch (err) {
+				console.error('loadProfiles failed:', err);
+			}
+		}
+
+		function renderStats() {
+			const counts = { active: 0, dormant: 0, churned: 0, lead_only: 0, never_purchased: 0 };
+			let siblings = 0;
+			PROFILES.forEach(p => {
+				if (counts[p.engagementStatus] !== undefined) counts[p.engagementStatus]++;
+				if (p.siblingGroupKey) siblings++;
+			});
+			document.getElementById('statActive').textContent = counts.active;
+			document.getElementById('statDormant').textContent = counts.dormant;
+			document.getElementById('statChurned').textContent = counts.churned;
+			document.getElementById('statLeadOnly').textContent = counts.lead_only;
+			document.getElementById('statNeverPurchased').textContent = counts.never_purchased;
+			document.getElementById('statSiblings').textContent = siblings;
+		}
+
+		function renderPagination() {
+			const start = ciTotal === 0 ? 0 : (ciPage - 1) * ciPageSize + 1;
+			const end = Math.min(ciPage * ciPageSize, ciTotal);
+			document.getElementById('ciPageInfo').textContent = `Showing ${start}-${end} of ${ciTotal}`;
+			document.getElementById('ciPageIndicator').textContent = `Page ${ciPage} of ${ciTotalPages}`;
+			document.getElementById('ciPrevBtn').disabled = ciPage <= 1;
+			document.getElementById('ciNextBtn').disabled = ciPage >= ciTotalPages;
+		}
+
+		function renderTable() {
+			const tbody = document.getElementById('profilesTableBody');
+			if (!PROFILES.length) {
+				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No profiles yet. Click "Rebuild Profiles" to resolve accounts against orders, opportunities, and leads.</td></tr>';
 				return;
 			}
 
-			tbody.innerHTML = OPPORTUNITIES.map(o => {
-				const cells = OPP_COLUMNS.map(col => {
-					if (col.key === 'name') {
-						return `<td><a href="opportunity-detail.html?id=${o._id}" class="fw-semibold text-decoration-none">${escapeHtml(o.name || '(no name)')}</a></td>`;
-					}
-					if (col.type === 'date') {
-						return `<td>${o[col.key] ? new Date(o[col.key]).toLocaleDateString() : ''}</td>`;
-					}
-					if (col.type === 'currency') {
-						return `<td>${formatCurrency(o[col.key])}</td>`;
-					}
-					if (col.key === 'stageName') {
-						const isWon = o.isWon;
-						const isLost = o.isClosed && !o.isWon;
-						const badgeClass = isWon ? 'bg-soft-success text-success' : (isLost ? 'bg-soft-danger text-danger' : 'bg-soft-primary text-primary');
-						return `<td><span class="badge ${badgeClass} fs-12 rounded-pill fw-semibold">${escapeHtml(o.stageName)}</span></td>`;
-					}
-					return `<td>${escapeHtml(o[col.key])}</td>`;
-				}).join('');
-				return `<tr>${cells}</tr>`;
-			}).join('');
-		}
+			tbody.innerHTML = PROFILES.map(p => {
+				const statusBadge = STATUS_BADGES[p.engagementStatus] || STATUS_BADGES.never_purchased;
+				const statusLabel = STATUS_LABELS[p.engagementStatus] || p.engagementStatus;
+				const productMix = (p.productMix || []).filter(m => m.category !== 'other' && m.itemCount > 0)
+					.map(m => `<span class="badge bg-soft-secondary text-secondary fs-10 rounded-pill me-1 text-capitalize">${m.category.replace('_', ' ')}</span>`).join('') || '<span class="text-muted fs-12">—</span>';
+				const chainBadge = p.siblingGroupKey
+					? `<span class="badge bg-soft-info text-info fs-11 rounded-pill" title="${(p.siblingProfileIds || []).length} other location(s)"><i class="ti ti-building-community"></i> ${(p.siblingProfileIds || []).length + 1} locations</span>`
+					: '<span class="text-muted fs-12">—</span>';
+				const score = p.recommendation && p.recommendation.score != null ? p.recommendation.score : null;
+				const reason = p.recommendation && p.recommendation.reason ? p.recommendation.reason : '';
+				const scoreBar = score != null
+					? `<div class="d-flex align-items-center gap-2 mb-1">
+							<div class="progress ci-score-bar flex-grow-1" style="max-width:80px;"><div class="progress-bar ${score >= 70 ? 'bg-danger' : score >= 40 ? 'bg-warning' : 'bg-secondary'}" style="width:${score}%"></div></div>
+							<span class="fs-12 fw-semibold">${score}</span>
+						</div>`
+					: '';
 
-		async function syncOpportunities() {
-			const btn = document.getElementById('oppSyncBtn');
-			btn.disabled = true;
-			try {
-				const res = await fetch('/api/v1/lilypad/opportunities/sync', { method: 'POST' });
-				const result = await res.json();
-				if (!result.success) throw new Error(result.error || 'Sync failed');
-				oppPage = 1;
-				await loadOpportunities();
-				alert(result.message);
-			} catch (err) {
-				alert(err.message || 'Unable to sync from Salesforce.');
-			} finally {
-				btn.disabled = false;
-			}
+				return `<tr>
+					<td>
+						<div class="fw-semibold">${escapeHtml(p.name)}</div>
+						<div class="fs-11 text-muted">${escapeHtml(p.industry || p.domain || '')}</div>
+					</td>
+					<td><span class="badge ${statusBadge} fs-12 rounded-pill fw-semibold">${statusLabel}</span></td>
+					<td>${p.daysSinceLastOrder != null ? p.daysSinceLastOrder + ' days' : '<span class="text-muted">—</span>'}</td>
+					<td>${formatMoney(p.orderStats ? p.orderStats.lifetimeRevenue : 0)}</td>
+					<td>${p.opportunityStats ? p.opportunityStats.openCount : 0}</td>
+					<td>${productMix}</td>
+					<td>${chainBadge}</td>
+					<td class="ci-reason-cell fs-12">${scoreBar}${escapeHtml(reason)}</td>
+				</tr>`;
+			}).join('');
 		}
 
 		document.addEventListener('DOMContentLoaded', async () => {
@@ -406,7 +537,8 @@
 				}
 			} catch (e) {}
 
-			loadOpportunities();
+			pollStatus();
+			loadProfiles();
 		});
 	</script>
 </body>

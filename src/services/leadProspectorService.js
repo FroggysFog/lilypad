@@ -73,28 +73,22 @@ function normalizeDomain (value) {
   return v
 }
 
-function mapApolloEmailStatus (rawStatus) {
-  const status = String(rawStatus || '').toLowerCase()
-  if (status === 'verified') return 'verified'
-  if (status === 'guessed' || status === 'extrapolated') return 'extrapolated'
-  if (status === 'catch-all' || status === 'catch_all') return 'catch_all'
-  if (status === 'unavailable' || status === 'invalid') return 'invalid'
-  return 'unverified'
-}
-
 /**
- * Apollo's mixed_people/search doesn't return a "sector" field, so for
- * sector: 'all' runs each record is classified from organization
- * industry/keyword text. Falls back to 'commercial' - the most common
- * case - when no non-profit/government signal is present.
+ * Neither Apollo's mixed_people/search nor the in-house crawler reliably
+ * returns a "sector" field, so for sector: 'all' runs each record is
+ * classified from company industry/description/keyword text. Falls back
+ * to 'commercial' - the most common case - when no non-profit/government
+ * signal is present. Takes the common normalized record shape (see
+ * normalize/apolloNormalizer.js and normalize/crawlNormalizer.js), not a
+ * provider's raw response.
  */
-function classifySector (batchSector, organization) {
+function classifySector (batchSector, normalizedRecord) {
   if (batchSector !== 'all') return batchSector
 
   const haystack = [
-    organization && organization.industry,
-    organization && organization.short_description,
-    ...(organization && organization.keywords ? organization.keywords : [])
+    normalizedRecord.companyIndustry,
+    normalizedRecord.companyDescription,
+    ...(normalizedRecord.companyKeywords || [])
   ].filter(Boolean).join(' ').toLowerCase()
 
   if (GOVERNMENT_HINT_WORDS.some((w) => haystack.includes(w))) return 'government'
@@ -145,33 +139,37 @@ async function findDuplicateMatch (email, domain) {
 }
 
 /**
- * Turns one Apollo search result (plus its optional bulk_match
- * enrichment) into a staged_leads document. Dedup, ProPublica validation,
- * and email verification are looked up here so the worker's paging loop
- * stays focused on pagination/rate limits.
+ * Turns one normalized record - from apolloNormalizer.js or
+ * crawlNormalizer.js, both producing the same common shape - into a
+ * staged_leads document. Dedup, ProPublica validation, and email
+ * verification are looked up here so both the Apollo worker's paging
+ * loop and the in-house crawl worker stay focused on their own
+ * orchestration concerns (pagination/retries vs. crawl/extraction) and
+ * never duplicate this logic.
+ *
+ * Expected shape of `record` (see normalize/*.js for exact producers):
+ *   { externalId, firstName, lastName, jobTitle, department, email,
+ *     emailStatusHint, phoneNumber, phoneType, companyName,
+ *     companyWebsite, companyIndustry, companyDescription,
+ *     companyKeywords, personBio, linkedinUrl, city, state, country,
+ *     postalCode, sourceProvider, sourceUrl, vertical, rawPayload }
  */
-async function buildStagedLeadDoc (batch, person, enrichedMatch) {
-  const org = person.organization || {}
-  const enriched = enrichedMatch || {}
-
-  const email = String(enriched.email || person.email || '').trim().toLowerCase()
-  const phoneEntry = (enriched.phone_numbers && enriched.phone_numbers[0]) || null
-  const phoneNumber = (phoneEntry && phoneEntry.sanitized_number) || person.sanitized_phone || ''
-  const phoneType = !phoneNumber ? '' : (person.sanitized_phone ? 'direct' : 'hq')
-  const domain = normalizeDomain(org.website_url || org.primary_domain || email)
-  const sector = classifySector(batch.sector, org)
+async function buildStagedLeadDoc (batch, record) {
+  const email = String(record.email || '').trim().toLowerCase()
+  const domain = normalizeDomain(record.companyWebsite || email)
+  const sector = classifySector(batch.sector, record)
 
   const duplicate = await findDuplicateMatch(email, domain)
 
   let nonProfitEin = ''
   let nonProfitVerified = false
-  if (sector === 'non_profit' && org.name) {
-    const npCheck = await verifyNonProfit(org.name)
+  if (sector === 'non_profit' && record.companyName) {
+    const npCheck = await verifyNonProfit(record.companyName)
     nonProfitEin = npCheck.ein
     nonProfitVerified = npCheck.verified
   }
 
-  let emailStatus = mapApolloEmailStatus(enriched.email_status || person.email_status)
+  let emailStatus = record.emailStatusHint || 'unverified'
   let emailVerification = { provider: '', result: '', checkedAt: null }
   if (email) {
     const verification = await verifyEmail(email, emailStatus)
@@ -183,30 +181,33 @@ async function buildStagedLeadDoc (batch, person, enrichedMatch) {
 
   return {
     batchId: batch._id,
-    externalId: String(person.id || ''),
-    firstName: person.first_name || '',
-    lastName: person.last_name || '',
-    jobTitle: person.title || '',
-    companyName: org.name || '',
+    externalId: record.externalId || '',
+    firstName: record.firstName || '',
+    lastName: record.lastName || '',
+    jobTitle: record.jobTitle || '',
+    department: record.department || '',
+    companyName: record.companyName || '',
     companyDomain: domain,
-    companyIndustry: org.industry || '',
-    companyDescription: org.short_description || '',
-    personBio: person.headline || person.bio || '',
-    linkedinUrl: person.linkedin_url || '',
+    companyIndustry: record.companyIndustry || '',
+    companyDescription: record.companyDescription || '',
+    personBio: record.personBio || '',
+    linkedinUrl: record.linkedinUrl || '',
     email,
     emailStatus,
     emailVerification,
-    phoneNumber,
-    phoneType,
-    city: person.city || org.city || '',
-    state: person.state || org.state || '',
-    country: person.country || org.country || '',
-    postalCode: org.postal_code || '',
+    phoneNumber: record.phoneNumber || '',
+    phoneType: record.phoneType || '',
+    city: record.city || '',
+    state: record.state || '',
+    country: record.country || '',
+    postalCode: record.postalCode || '',
     sector,
+    vertical: record.vertical || '',
+    sourceUrl: record.sourceUrl || '',
     nonProfitEin,
     nonProfitVerified,
-    sourceProvider: 'apollo',
-    rawPayload: { person, enriched },
+    sourceProvider: record.sourceProvider || 'manual',
+    rawPayload: record.rawPayload || null,
     isDuplicate: duplicate.isDuplicate,
     duplicateMatchType: duplicate.matchType,
     duplicateMatchedId: duplicate.matchedId,

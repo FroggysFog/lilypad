@@ -5,7 +5,13 @@ services:
     plan: starter
     region: oregon
     branch: main
-    buildCommand: "npm install --legacy-peer-deps"
+    # playwright install pulls down Chromium for the Lead Prospector's
+    # in-house crawler - untested on Render specifically as of this change,
+    # worth watching the first deploy's build log to confirm it succeeds
+    # (some managed build environments restrict the apt-get --with-deps
+    # needs under the hood; if it fails, drop --with-deps and see whether
+    # Chromium's bundled dependencies are already present on this image).
+    buildCommand: "npm install --legacy-peer-deps && npx playwright install --with-deps chromium"
     startCommand: "node app.js"
     healthCheckPath: "/api/v1/lilypad/tickets/todo"
     autoDeploy: true
@@ -90,4 +96,24 @@ services:
         sync: false
       - key: MILLIONVERIFIER_API_KEY
         sync: false
+      # In-house Lead Prospector pipeline: LLM structured extraction from
+      # crawled pages (names/roles/emails) - fill in via the Render dashboard.
+      # PROSPECTOR_EXTRACTION_MODEL defaults to a fast/cheap model if unset.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PROSPECTOR_EXTRACTION_MODEL
+        value: claude-haiku-4-5
+      # NOTE: this service is on the "starter" plan (512MB RAM). Running
+      # headless Chromium for the in-house crawler alongside the rest of
+      # this Node app is a real memory risk on that plan - if crawl batches
+      # start crashing the dyno (OOM restarts), the fix is upgrading to at
+      # least a "Standard" instance, not a code change.
+      # Customer Intelligence (entity resolution + AI recommendations over
+      # existing accounts) - reuses ANTHROPIC_API_KEY above, no separate key.
+      - key: RECOMMENDATION_MODEL
+        value: claude-haiku-4-5
+      # How many days since existingAccountsAdapter.js last crawled an
+      # account before it's eligible to be refreshed again.
+      - key: PROSPECTOR_REFRESH_STALE_DAYS
+        value: "90"
 
