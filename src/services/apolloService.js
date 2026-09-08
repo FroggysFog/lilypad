@@ -113,6 +113,19 @@ async function apolloPost (path, body) {
  * shape produced by leadProspectorService's sector logic:
  *   { personTitles, personLocations, organizationLocations, keywordTags, organizationNumEmployeesRanges }
  * Returns { people, pagination: { page, perPage, totalEntries, totalPages } }.
+ *
+ * Uses /mixed_people/api_search, not the older /mixed_people/search -
+ * confirmed live that the old one now hard-rejects API callers with a
+ * 422 (SEARCH.ROUTING.LEGACY_PEOPLE_SEARCH_DEPRECATED). The replacement
+ * isn't a drop-in swap: per Apollo's own docs for the new endpoint,
+ * results come back with last_name_obfuscated instead of a real last
+ * name and no email/phone at all - full details only exist after
+ * bulkEnrichPeople() unlocks them (see apolloNormalizer.js, which now
+ * prefers the enriched last name over this endpoint's obfuscated one).
+ * q_organization_keyword_tags also isn't in the new endpoint's
+ * documented parameter list, so industry keywords are folded into
+ * q_keywords (a general keyword search, still supported) instead of
+ * risking an unknown-parameter rejection.
  */
 async function searchPeople (filters, page, perPage) {
   const f = filters || {}
@@ -124,15 +137,21 @@ async function searchPeople (filters, page, perPage) {
   if (f.personTitles && f.personTitles.length) body.person_titles = f.personTitles
   if (f.personLocations && f.personLocations.length) body.person_locations = f.personLocations
   if (f.organizationLocations && f.organizationLocations.length) body.organization_locations = f.organizationLocations
-  if (f.keywordTags && f.keywordTags.length) body.q_organization_keyword_tags = f.keywordTags
   if (f.organizationNumEmployeesRanges && f.organizationNumEmployeesRanges.length) {
     body.organization_num_employees_ranges = f.organizationNumEmployeesRanges
   }
-  if (f.qKeywords) body.q_keywords = f.qKeywords
 
-  const data = await apolloPost('/mixed_people/search', body)
+  const keywordParts = [...(f.keywordTags || []), f.qKeywords].filter(Boolean)
+  if (keywordParts.length) body.q_keywords = keywordParts.join(' ')
+
+  const data = await apolloPost('/mixed_people/api_search', body)
   const people = Array.isArray(data.people) ? data.people : []
-  const pagination = data.pagination || {}
+  // Never actually confirmed live which shape Apollo returns for this
+  // field (the old endpoint's 422 meant a successful response was never
+  // seen) - tolerate both a nested `pagination` object and top-level
+  // total_entries/total_pages so this doesn't silently mis-paginate if
+  // the assumption is wrong.
+  const pagination = data.pagination || data
 
   return {
     people,

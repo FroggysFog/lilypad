@@ -482,6 +482,7 @@
 				} else if (b.status === 'paused') {
 					actions += ` <button class="btn btn-outline-success btn-sm" onclick="resumeBatch('${b._id}')"><i class="ti ti-player-play"></i> Resume</button>`;
 				}
+				actions += ` <button class="btn btn-outline-danger btn-sm" onclick="deleteBatch('${b._id}')" title="Remove this run from the list"><i class="ti ti-trash"></i></button>`;
 
 				const sourceBadgeClass = b.sourceMode === 'refresh' ? 'bg-soft-success text-success' : (b.sourceMode === 'in_house' ? 'bg-soft-info text-info' : sectorBadge);
 				return `<tr class="${isActive ? 'table-active' : ''}">
@@ -527,6 +528,24 @@
 				startPolling();
 			} catch (err) {
 				alert(err.message || 'Unable to resume batch.');
+			}
+		}
+
+		async function deleteBatch(id) {
+			if (!confirm('Remove this prospecting run and its staged leads? This cannot be undone.')) return;
+			try {
+				const res = await fetch(`/api/v1/lilypad/leads/batches/${id}`, { method: 'DELETE' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				if (currentBatchId === id) {
+					currentBatchId = null;
+					if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+					document.getElementById('stagedLeadsCard').style.display = 'none';
+				}
+				await loadBatches();
+			} catch (err) {
+				alert(err.message || 'Unable to delete batch.');
 			}
 		}
 

@@ -255,6 +255,33 @@ lilypadProspectorController.resumeBatch = async function (req, res) {
 }
 
 /**
+ * DELETE /api/v1/lilypad/leads/batches/:id
+ * Removes a batch (and its staged leads) from the Prospecting Runs list -
+ * mainly for clearing out failed test runs. Safe to call at any status:
+ * every worker loop (leadProspectorWorker.js, leadProspectorInHouseWorker.js)
+ * already reloads the batch and bails out cleanly the moment
+ * findById returns null, so deleting one that's still queued or actively
+ * processing just makes it stop on its next check rather than erroring.
+ */
+lilypadProspectorController.deleteBatch = async function (req, res) {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, error: 'Invalid batch id.' })
+    }
+
+    const batch = await LilyPadLeadBatch.findById(req.params.id)
+    if (!batch) return res.status(404).json({ success: false, error: 'Batch not found.' })
+
+    const leadsResult = await LilyPadStagedLead.deleteMany({ batchId: batch._id })
+    await LilyPadLeadBatch.deleteOne({ _id: batch._id })
+
+    return res.status(200).json({ success: true, data: { deletedLeads: leadsResult.deletedCount || 0 } })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
  * POST /api/v1/lilypad/leads/promote
  * Bulk-approves staged leads and commits them into LilyPadCustomer /
  * LilyPadSalesforceAccount.

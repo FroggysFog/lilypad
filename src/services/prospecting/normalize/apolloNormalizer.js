@@ -32,7 +32,11 @@ function normalizeApolloRecord (person, enrichedMatch) {
   return {
     externalId: String(person.id || ''),
     firstName: person.first_name || '',
-    lastName: person.last_name || '',
+    // The search endpoint (mixed_people/api_search) only ever returns
+    // last_name_obfuscated (e.g. "S." instead of "Smith") - the real
+    // last_name only exists once bulkEnrichPeople() has unlocked it, so
+    // that has to win whenever it's present.
+    lastName: enriched.last_name || person.last_name || '',
     jobTitle: person.title || '',
     department: '',
     email,

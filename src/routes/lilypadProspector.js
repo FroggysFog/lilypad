@@ -11,6 +11,7 @@ module.exports = function () {
   router.get('/leads/batches/:id/leads', requireLoginApi, controllers.lilypadProspector.getBatchLeads)
   router.post('/leads/batches/:id/pause', requireLoginApi, controllers.lilypadProspector.pauseBatch)
   router.post('/leads/batches/:id/resume', requireLoginApi, controllers.lilypadProspector.resumeBatch)
+  router.delete('/leads/batches/:id', requireLoginApi, controllers.lilypadProspector.deleteBatch)
   router.post('/leads/promote', requireLoginApi, controllers.lilypadProspector.promoteLeads)
   return router
 }
