@@ -15,7 +15,11 @@ FROM node:24.19.0-bookworm-slim
 
 WORKDIR /usr/src/lilypad
 
-COPY package.json package-lock.json ./
+# No package-lock.json to copy - it's gitignored in this repo (yarn.lock is
+# the tracked lockfile, but the native buildCommand this replaces always
+# ran plain `npm install`, not `npm ci`, so no lock file is required here
+# either).
+COPY package.json ./
 RUN npm install --legacy-peer-deps
 
 RUN npx playwright install --with-deps chromium
