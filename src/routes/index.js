@@ -79,6 +79,9 @@ module.exports = function (app) {
   const lilypadSalesforceExplorerRouter = require('./lilypadSalesforceExplorer')()
   app.use('/api/v1/lilypad', lilypadSalesforceExplorerRouter)
 
+  const lilypadProspectorRouter = require('./lilypadProspector')()
+  app.use('/api/v1/lilypad', lilypadProspectorRouter)
+
   mainRoutes(router, controllers)
   app.use('/', router)
 

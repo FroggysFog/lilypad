@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Lead Prospector | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="index, follow">
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+	<script src="assets/js/theme-script.js"></script>
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+	<style>
+		.prospector-progress { height: 10px; }
+		.prospector-bio-cell { max-width: 260px; white-space: normal; }
+		#leadsActionBar {
+			position: sticky;
+			bottom: 0;
+			z-index: 10;
+		}
+		.tag-input-hint { font-size: 11px; }
+	</style>
+</head>
+
+<body>
+
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar"><i class="ti ti-menu-deep fs-24"></i></a>
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2"><i class="ti ti-arrow-bar-to-right"></i></button>
+				</div>
+				<div class="header-search d-none d-md-flex align-items-center justify-content-center mx-auto" style="width: 100%; max-width: 520px;">
+					<div class="input-icon position-relative w-100">
+						<input type="text" class="form-control rounded-pill py-2 px-4 shadow-sm" placeholder="Search anything in LilyPad ERP... (Ctrl + K)" style="font-size: 14px; height: 42px;">
+						<span class="input-icon-addon d-inline-flex p-0 header-search-icon pe-3"><i class="ti ti-command fs-16 text-muted"></i></span>
+					</div>
+				</div>
+				<div class="d-flex align-items-center">
+					<div class="header-item me-2">
+						<a href="tickets.html?action=new" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 py-2 text-white shadow-sm fw-semibold rounded-pill" style="font-size: 13px;"><i class="ti ti-plus fs-16"></i><span>New Ticket</span></a>
+					</div>
+					<div class="header-item"><div class="dropdown me-2"><a href="javascript:void(0);" class="btn topbar-link btnFullscreen"><i class="ti ti-maximize"></i></a></div></div>
+					<div class="header-item d-none d-sm-flex me-2"><button class="topbar-link btn topbar-link" id="light-dark-mode" type="button"><i class="ti ti-moon fs-16"></i></button></div>
+					<div class="header-item">
+						<div class="dropdown me-2 position-relative">
+							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false" aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
+								<i class="ti ti-bell fs-19" id="notificationBellIcon"></i>
+								<span class="notification-badge" id="notificationBadge" data-notif-badge style="display:none;">0</span>
+							</button>
+							<div class="dropdown-menu p-0 dropdown-menu-end shadow-lg border-0" style="min-width: 360px; max-width: 380px; z-index: 1060;">
+								<div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+									<div class="d-flex align-items-center gap-2"><h6 class="m-0 fs-15 fw-bold text-dark">Notifications</h6><span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold">Live Feed</span></div>
+									<a href="javascript:void(0);" onclick="LilypadNotifications.markAllAsRead(event)" class="fs-12 text-decoration-none fw-semibold text-primary">Mark all read</a>
+								</div>
+								<div class="notification-body position-relative z-2" id="notificationListContainer" style="max-height: 360px; overflow-y: auto;"></div>
+								<div class="p-2 rounded-bottom border-top text-center bg-light"><a href="tickets.html" class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2"><i class="ti ti-ticket fs-16"></i><span>Open Ticket Operations</span></a></div>
+							</div>
+						</div>
+					</div>
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);" class="topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex" alt="user-image">
+							<span class="online text-success"><i class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42" alt="Img">
+								<div class="ms-2"><p class="fw-medium text-dark mb-0 topbar-user-name">Scott Karan</p><span class="d-block fs-13 topbar-user-role">Operations Admin</span></div>
+							</div>
+							<a href="profile-settings.html" class="dropdown-item"><i class="ti ti-user-circle me-1 align-middle"></i><span class="align-middle">Profile Settings</span></a>
+							<div class="pt-2 mt-2 border-top"><a href="javascript:void(0);" onclick="doLogout()" class="dropdown-item text-danger"><i class="ti ti-logout me-1 fs-17 align-middle"></i><span class="align-middle">Sign Out</span></a></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+			<div class="sidebar-logo">
+				<div>
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:30px; height:30px; font-size:15px;"><i class="ti ti-leaf"></i></div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span class="text-primary">ERP</span></span>
+					</a>
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:16px;"><i class="ti ti-leaf"></i></div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn"><i class="ti ti-arrow-bar-to-left"></i></button>
+				<button class="sidebar-close"><i class="ti ti-x align-middle"></i></button>
+			</div>
+
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu">
+					<ul>
+						<li>
+							<ul>
+								<li><a href="dashboard.html"><i class="ti ti-dashboard"></i><span>Main Dashboard</span></a></li>
+							</ul>
+						</li>
+
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-ticket"></i><span>Operations</span><span class="menu-arrow"></span>
+							</a>
+							<ul>
+								<li><a href="tickets.html"><i class="ti ti-ticket"></i><span>Ticket Operations</span></a></li>
+								<li><a href="knowledge-base.html"><i class="ti ti-book"></i><span>Knowledge Base & SOPs</span></a></li>
+							</ul>
+						</li>
+
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-cash-banknote"></i><span>Accounting</span><span class="menu-arrow"></span>
+							</a>
+							<ul>
+								<li><a href="past-due-payments.html"><i class="ti ti-cash-banknote"></i><span>Past Due Payments</span></a></li>
+								<li><a href="reminder-templates.html"><i class="ti ti-mail-cog"></i><span>Reminder Templates</span></a></li>
+							</ul>
+						</li>
+
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-users-group"></i><span>Customers</span><span class="menu-arrow"></span>
+							</a>
+							<ul>
+								<li><a href="customers.html"><i class="ti ti-users-group"></i><span>Customer Directory</span></a></li>
+							</ul>
+						</li>
+
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-package"></i><span>Orders</span><span class="menu-arrow"></span>
+							</a>
+							<ul>
+								<li><a href="orders.html"><i class="ti ti-package"></i><span>Order History</span></a></li>
+							</ul>
+						</li>
+
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-building"></i><span>Salesforce Data</span><span class="menu-arrow"></span>
+							</a>
+							<ul>
+								<li><a href="salesforce-accounts.html"><i class="ti ti-building"></i><span>Accounts</span></a></li>
+								<li><a href="opportunities.html"><i class="ti ti-target-arrow"></i><span>Opportunities</span></a></li>
+							</ul>
+						</li>
+
+						<li class="submenu">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-user-search"></i><span>Prospecting</span><span class="menu-arrow"></span>
+							</a>
+							<ul>
+								<li><a href="prospects.html" class="active"><i class="ti ti-user-search"></i><span>Lead Prospector</span></a></li>
+							</ul>
+						</li>
+
+						<li class="submenu" id="adminSetupNavItem" style="display:none;">
+							<a href="javascript:void(0);" class="subdrop">
+								<i class="ti ti-settings-2"></i><span>Administration & Setup</span><span class="menu-arrow"></span>
+							</a>
+							<ul>
+								<li><a href="admin-email.html"><i class="ti ti-mail-forward"></i><span>Inbound Email & Anti-Spam</span></a></li>
+								<li><a href="admin-team.html"><i class="ti ti-users"></i><span>Team & User Permissions</span></a></li>
+								<li><a href="admin-forms.html"><i class="ti ti-adjustments"></i><span>Dynamic Form Builder</span></a></li>
+								<li><a href="api-credentials.html"><i class="ti ti-key"></i><span>API Credentials Vault</span></a></li>
+								<li><a href="salesforce-explorer.html"><i class="ti ti-database-search"></i><span>Salesforce Explorer</span></a></li>
+								<li><a href="cart-explorer.html"><i class="ti ti-shopping-cart"></i><span>Cart.com Explorer</span></a></li>
+							</ul>
+						</li>
+
+						<li class="menu-title"><span>Account</span></li>
+						<li>
+							<ul>
+								<li><a href="javascript:void(0);" onclick="doLogout()"><i class="ti ti-logout text-danger"></i><span class="text-danger fw-semibold">Sign Out</span></a></li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<div class="page-wrapper">
+			<div class="content pb-0">
+
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+							<span>Lead Prospector</span>
+							<span class="badge bg-soft-secondary text-secondary fs-12 rounded-pill fw-semibold" id="apolloStatusBadge" style="display:none;"></span>
+						</h4>
+						<p class="text-muted fs-13 mb-0">Run deep, asynchronous prospecting searches against Apollo.io for purchasing/procurement contacts, then review and import the results.</p>
+					</div>
+				</div>
+
+				<!-- Search Builder -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-header bg-white border-0 pb-0">
+						<h6 class="fw-bold mb-0"><i class="ti ti-target-arrow me-1 text-primary"></i> Search Builder</h6>
+					</div>
+					<div class="card-body">
+						<form id="prospectForm" onsubmit="submitProspectRun(event)">
+							<div class="row g-3">
+								<div class="col-md-3">
+									<label class="form-label fs-13 fw-semibold">Sector</label>
+									<select class="form-select form-select-sm" id="pfSector">
+										<option value="all">All Sectors</option>
+										<option value="commercial">Commercial / For-Profit</option>
+										<option value="non_profit">Non-Profit</option>
+										<option value="government">Government</option>
+									</select>
+								</div>
+								<div class="col-md-3">
+									<label class="form-label fs-13 fw-semibold">Desired Lead Count</label>
+									<input type="number" class="form-control form-control-sm" id="pfCount" value="500" min="1" max="50000" required>
+								</div>
+								<div class="col-md-3">
+									<label class="form-label fs-13 fw-semibold">Industry Keywords</label>
+									<input type="text" class="form-control form-control-sm" id="pfIndustry" placeholder="e.g. packaging, textiles">
+									<span class="text-muted tag-input-hint">Comma-separated. Optional.</span>
+								</div>
+								<div class="col-md-3">
+									<label class="form-label fs-13 fw-semibold">Locations</label>
+									<input type="text" class="form-control form-control-sm" id="pfLocations" placeholder="e.g. California, United States">
+									<span class="text-muted tag-input-hint">Comma-separated cities/states/countries.</span>
+								</div>
+								<div class="col-md-12">
+									<label class="form-label fs-13 fw-semibold">Target Titles <span class="text-muted fw-normal">(optional override)</span></label>
+									<input type="text" class="form-control form-control-sm" id="pfTitles" placeholder="Leave blank to use the sector's default procurement titles">
+									<span class="text-muted tag-input-hint" id="pfTitlesHint"></span>
+								</div>
+							</div>
+							<div class="d-flex justify-content-end mt-3">
+								<button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm" id="pfSubmitBtn">
+									<i class="ti ti-player-play-filled me-1"></i> Start Deep Run
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+
+				<!-- Batch History / Progress Monitor -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-header bg-white border-0 pb-0 d-flex align-items-center justify-content-between">
+						<h6 class="fw-bold mb-0"><i class="ti ti-list-details me-1 text-primary"></i> Prospecting Runs</h6>
+						<button class="btn btn-outline-secondary btn-sm" onclick="loadBatches()"><i class="ti ti-refresh"></i></button>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
+							<thead class="table-light">
+								<tr>
+									<th>Sector</th>
+									<th>Requested</th>
+									<th style="min-width: 220px;">Progress</th>
+									<th>Status</th>
+									<th>Started</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody id="batchTableBody"></tbody>
+						</table>
+					</div>
+				</div>
+
+				<!-- Staged Leads Table -->
+				<div class="card border-0 shadow-sm rounded-3 mb-3" id="stagedLeadsCard" style="display:none;">
+					<div class="card-header bg-white border-0 pb-0">
+						<h6 class="fw-bold mb-0"><i class="ti ti-users-group me-1 text-primary"></i> Staged Leads <span class="text-muted fw-normal" id="stagedLeadsBatchLabel"></span></h6>
+					</div>
+					<div class="card-body py-2 px-3">
+						<div class="row g-2 align-items-center">
+							<div class="col-md-3">
+								<input type="text" id="leadsSearchInput" class="form-control form-control-sm" placeholder="Search name, company, email..." oninput="debounceLeadsSearch()">
+							</div>
+							<div class="col-md-2">
+								<select class="form-select form-select-sm" id="leadsSectorFilter" onchange="goToLeadsPage(1)">
+									<option value="">All Sectors</option>
+									<option value="commercial">Commercial</option>
+									<option value="non_profit">Non-Profit</option>
+									<option value="government">Government</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<select class="form-select form-select-sm" id="leadsEmailStatusFilter" onchange="goToLeadsPage(1)">
+									<option value="">Any Email Status</option>
+									<option value="verified">Verified</option>
+									<option value="extrapolated">Extrapolated</option>
+									<option value="catch_all">Catch-All</option>
+									<option value="unverified">Unverified</option>
+									<option value="invalid">Invalid</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<select class="form-select form-select-sm" id="leadsDupFilter" onchange="goToLeadsPage(1)">
+									<option value="">Duplicates & Unique</option>
+									<option value="false">Unique Only</option>
+									<option value="true">Duplicates Only</option>
+								</select>
+							</div>
+							<div class="col-md-3">
+								<select class="form-select form-select-sm" id="leadsStatusFilter" onchange="goToLeadsPage(1)">
+									<option value="">Any Status</option>
+									<option value="staged">Staged</option>
+									<option value="approved">Approved</option>
+									<option value="imported">Imported</option>
+									<option value="rejected">Rejected</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
+							<thead class="table-light">
+								<tr>
+									<th style="width:30px;"><input type="checkbox" class="form-check-input" id="leadsSelectAll" onchange="toggleSelectAllLeads(this)"></th>
+									<th>Name</th>
+									<th>Title</th>
+									<th>Company</th>
+									<th>Sector</th>
+									<th>Email</th>
+									<th>Phone</th>
+									<th>Bio</th>
+									<th>Flags</th>
+								</tr>
+							</thead>
+							<tbody id="leadsTableBody"></tbody>
+						</table>
+					</div>
+					<div class="d-flex align-items-center justify-content-between px-3 py-2 border-top flex-wrap gap-2">
+						<span class="fs-12 text-muted" id="leadsPageInfo"></span>
+						<div class="d-flex align-items-center gap-2">
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToLeadsPage(leadsPage - 1)" id="leadsPrevBtn"><i class="ti ti-chevron-left"></i> Prev</button>
+							<span class="fs-13" id="leadsPageIndicator"></span>
+							<button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToLeadsPage(leadsPage + 1)" id="leadsNextBtn">Next <i class="ti ti-chevron-right"></i></button>
+						</div>
+					</div>
+				</div>
+
+				<!-- Bulk Action Bar -->
+				<div class="card border-0 shadow-lg rounded-3 mb-4 bg-dark text-white" id="leadsActionBar" style="display:none;">
+					<div class="card-body py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+						<span class="fs-13 fw-semibold"><span id="leadsSelectedCount">0</span> lead(s) selected</span>
+						<button type="button" class="btn btn-success btn-sm rounded-pill px-3" onclick="importSelectedLeads()" id="importLeadsBtn">
+							<i class="ti ti-cloud-upload me-1"></i> Import to CRM Contacts
+						</button>
+					</div>
+				</div>
+
+				<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+					<p class="mb-md-0 mb-1">Copyright &copy; <script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.</p>
+					<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
+						<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
+						<a href="customers.html" class="text-muted fs-13">Customers</a>
+					</div>
+				</footer>
+			</div>
+		</div>
+	</div>
+
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<script src="assets/js/script.js"></script>
+	<script src="assets/js/lilypad-notifications.js"></script>
+
+	<script>
+		const SECTOR_TITLE_DEFAULTS = {
+			all: 'Default: union of every sector\'s procurement titles below.',
+			commercial: 'Default: Purchasing Manager, Director of Procurement, Buyer, Head of Sourcing, VP Supply Chain',
+			non_profit: 'Default: Procurement Specialist, Director of Finance, Operations Director, Purchasing Agent',
+			government: 'Default: Contracting Officer, Purchasing Agent, Procurement Specialist, Comptroller, Buyer'
+		};
+
+		const SECTOR_BADGES = {
+			commercial: 'bg-soft-primary text-primary',
+			non_profit: 'bg-soft-success text-success',
+			government: 'bg-soft-warning text-warning',
+			all: 'bg-soft-secondary text-secondary'
+		};
+
+		const SECTOR_LABELS = { commercial: 'Commercial', non_profit: 'Non-Profit', government: 'Government', all: 'All' };
+
+		const STATUS_BADGES = {
+			queued: 'bg-soft-secondary text-secondary',
+			processing: 'bg-soft-primary text-primary',
+			completed: 'bg-soft-success text-success',
+			failed: 'bg-soft-danger text-danger',
+			paused: 'bg-soft-warning text-warning'
+		};
+
+		const EMAIL_STATUS_BADGES = {
+			verified: 'bg-soft-success text-success',
+			extrapolated: 'bg-soft-warning text-warning',
+			catch_all: 'bg-soft-warning text-warning',
+			unverified: 'bg-soft-secondary text-secondary',
+			invalid: 'bg-soft-danger text-danger'
+		};
+
+		let BATCHES = [];
+		let currentBatchId = null;
+		let pollTimer = null;
+
+		let LEADS = [];
+		let leadsPage = 1;
+		let leadsPageSize = 50;
+		let leadsTotal = 0;
+		let leadsTotalPages = 1;
+		let leadsSearchDebounce = null;
+		let selectedLeadIds = new Set();
+
+		function escapeHtml(value) {
+			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+			});
+		}
+
+		async function doLogout() {
+			try { await fetch('/logout'); } catch (e) {}
+			window.location.href = 'login.html';
+		}
+
+		function parseTagInput(value) {
+			return String(value || '').split(',').map(s => s.trim()).filter(Boolean);
+		}
+
+		document.getElementById('pfSector').addEventListener('change', function () {
+			document.getElementById('pfTitlesHint').textContent = SECTOR_TITLE_DEFAULTS[this.value] || '';
+		});
+
+		async function submitProspectRun(event) {
+			event.preventDefault();
+			const btn = document.getElementById('pfSubmitBtn');
+			btn.disabled = true;
+			try {
+				const payload = {
+					sector: document.getElementById('pfSector').value,
+					requestedCount: Number(document.getElementById('pfCount').value),
+					targetIndustry: parseTagInput(document.getElementById('pfIndustry').value),
+					targetLocations: parseTagInput(document.getElementById('pfLocations').value),
+					targetTitles: parseTagInput(document.getElementById('pfTitles').value)
+				};
+
+				const res = await fetch('/api/v1/lilypad/leads/prospect', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Failed to start prospecting run.');
+
+				await loadBatches();
+				viewBatch(result.data._id);
+			} catch (err) {
+				alert(err.message || 'Unable to start the prospecting run.');
+			} finally {
+				btn.disabled = false;
+			}
+		}
+
+		function formatBatchLabel(batch) {
+			return `${SECTOR_LABELS[batch.sector] || batch.sector} run - ${new Date(batch.createdAt).toLocaleString()}`;
+		}
+
+		async function loadBatches() {
+			try {
+				const res = await fetch('/api/v1/lilypad/leads/batches?page=1&pageSize=25');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to load batches');
+				BATCHES = result.data;
+				renderBatchTable();
+
+				if (!currentBatchId && BATCHES.length) {
+					viewBatch(BATCHES[0]._id);
+				}
+			} catch (err) {
+				console.error('loadBatches failed:', err);
+			}
+		}
+
+		function renderBatchTable() {
+			const tbody = document.getElementById('batchTableBody');
+			if (!BATCHES.length) {
+				tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No prospecting runs yet. Use the Search Builder above to start one.</td></tr>';
+				return;
+			}
+
+			tbody.innerHTML = BATCHES.map(b => {
+				const pct = b.requestedCount ? Math.min(100, Math.round((b.fetchedCount / b.requestedCount) * 100)) : 0;
+				const sectorBadge = SECTOR_BADGES[b.sector] || SECTOR_BADGES.all;
+				const statusBadge = STATUS_BADGES[b.status] || STATUS_BADGES.queued;
+				const isActive = b._id === currentBatchId;
+
+				let actions = `<button class="btn btn-outline-primary btn-sm" onclick="viewBatch('${b._id}')"><i class="ti ti-eye"></i> View</button>`;
+				if (['queued', 'processing'].includes(b.status)) {
+					actions += ` <button class="btn btn-outline-warning btn-sm" onclick="pauseBatch('${b._id}')"><i class="ti ti-player-pause"></i> Pause</button>`;
+				} else if (b.status === 'paused') {
+					actions += ` <button class="btn btn-outline-success btn-sm" onclick="resumeBatch('${b._id}')"><i class="ti ti-player-play"></i> Resume</button>`;
+				}
+
+				return `<tr class="${isActive ? 'table-active' : ''}">
+					<td><span class="badge ${sectorBadge} fs-12 rounded-pill fw-semibold">${SECTOR_LABELS[b.sector] || b.sector}</span></td>
+					<td>${b.requestedCount.toLocaleString()}</td>
+					<td>
+						<div class="d-flex align-items-center gap-2">
+							<div class="progress prospector-progress flex-grow-1">
+								<div class="progress-bar ${b.status === 'failed' ? 'bg-danger' : ''}" role="progressbar" style="width:${pct}%"></div>
+							</div>
+							<span class="fs-12 text-muted">${b.fetchedCount}/${b.requestedCount} (${pct}%)</span>
+						</div>
+						<div class="fs-11 text-muted mt-1">${escapeHtml(b.statusMessage || '')}</div>
+					</td>
+					<td><span class="badge ${statusBadge} fs-12 rounded-pill fw-semibold text-capitalize">${b.status}</span></td>
+					<td>${b.startedAt ? new Date(b.startedAt).toLocaleString() : ''}</td>
+					<td>${actions}</td>
+				</tr>`;
+			}).join('');
+		}
+
+		async function pauseBatch(id) {
+			try {
+				const res = await fetch(`/api/v1/lilypad/leads/batches/${id}/pause`, { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadBatches();
+			} catch (err) {
+				alert(err.message || 'Unable to pause batch.');
+			}
+		}
+
+		async function resumeBatch(id) {
+			try {
+				const res = await fetch(`/api/v1/lilypad/leads/batches/${id}/resume`, { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadBatches();
+				startPolling();
+			} catch (err) {
+				alert(err.message || 'Unable to resume batch.');
+			}
+		}
+
+		function viewBatch(id) {
+			currentBatchId = id;
+			document.getElementById('stagedLeadsCard').style.display = '';
+			const batch = BATCHES.find(b => b._id === id);
+			document.getElementById('stagedLeadsBatchLabel').textContent = batch ? '- ' + formatBatchLabel(batch) : '';
+			leadsPage = 1;
+			selectedLeadIds.clear();
+			renderBatchTable();
+			loadLeads();
+			startPolling();
+		}
+
+		function startPolling() {
+			if (pollTimer) clearInterval(pollTimer);
+			pollTimer = setInterval(async () => {
+				if (!currentBatchId) return;
+				try {
+					const res = await fetch(`/api/v1/lilypad/leads/batches/${currentBatchId}`);
+					const result = await res.json();
+					if (!result.success) return;
+
+					const idx = BATCHES.findIndex(b => b._id === currentBatchId);
+					if (idx >= 0) BATCHES[idx] = result.data; else BATCHES.unshift(result.data);
+					renderBatchTable();
+
+					if (['completed', 'failed', 'paused'].includes(result.data.status)) {
+						clearInterval(pollTimer);
+						loadLeads();
+					}
+				} catch (err) {
+					console.error('poll failed:', err);
+				}
+			}, 3000);
+		}
+
+		function debounceLeadsSearch() {
+			clearTimeout(leadsSearchDebounce);
+			leadsSearchDebounce = setTimeout(() => { leadsPage = 1; loadLeads(); }, 300);
+		}
+
+		function goToLeadsPage(page) {
+			if (page < 1 || page > leadsTotalPages || page === leadsPage) return;
+			leadsPage = page;
+			loadLeads();
+		}
+
+		async function loadLeads() {
+			if (!currentBatchId) return;
+			try {
+				const params = new URLSearchParams({ page: leadsPage, pageSize: leadsPageSize });
+				const search = document.getElementById('leadsSearchInput').value.trim();
+				if (search) params.set('search', search);
+				const sector = document.getElementById('leadsSectorFilter').value;
+				if (sector) params.set('sector', sector);
+				const emailStatus = document.getElementById('leadsEmailStatusFilter').value;
+				if (emailStatus) params.set('emailStatus', emailStatus);
+				const isDup = document.getElementById('leadsDupFilter').value;
+				if (isDup) params.set('isDuplicate', isDup);
+				const status = document.getElementById('leadsStatusFilter').value;
+				if (status) params.set('status', status);
+
+				const res = await fetch(`/api/v1/lilypad/leads/batches/${currentBatchId}/leads?` + params.toString());
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to load staged leads');
+
+				LEADS = result.data;
+				leadsTotal = result.pagination.total;
+				leadsTotalPages = result.pagination.totalPages;
+				leadsPage = result.pagination.page;
+
+				renderLeadsTable();
+				renderLeadsPagination();
+				updateActionBar();
+			} catch (err) {
+				console.error('loadLeads failed:', err);
+			}
+		}
+
+		function renderLeadsPagination() {
+			const start = leadsTotal === 0 ? 0 : (leadsPage - 1) * leadsPageSize + 1;
+			const end = Math.min(leadsPage * leadsPageSize, leadsTotal);
+			document.getElementById('leadsPageInfo').textContent = `Showing ${start}-${end} of ${leadsTotal}`;
+			document.getElementById('leadsPageIndicator').textContent = `Page ${leadsPage} of ${leadsTotalPages}`;
+			document.getElementById('leadsPrevBtn').disabled = leadsPage <= 1;
+			document.getElementById('leadsNextBtn').disabled = leadsPage >= leadsTotalPages;
+		}
+
+		function renderLeadsTable() {
+			const tbody = document.getElementById('leadsTableBody');
+			if (!LEADS.length) {
+				tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">No staged leads match these filters yet.</td></tr>';
+				return;
+			}
+
+			tbody.innerHTML = LEADS.map(l => {
+				const checked = selectedLeadIds.has(l._id) ? 'checked' : '';
+				const sectorBadge = SECTOR_BADGES[l.sector] || SECTOR_BADGES.all;
+				const emailBadge = EMAIL_STATUS_BADGES[l.emailStatus] || EMAIL_STATUS_BADGES.unverified;
+				const fullName = `${l.firstName || ''} ${l.lastName || ''}`.trim() || '(no name)';
+
+				const flags = [];
+				if (l.isDuplicate) flags.push('<span class="badge bg-soft-danger text-danger fs-11 rounded-pill">Duplicate</span>');
+				if (l.status === 'imported') flags.push('<span class="badge bg-soft-success text-success fs-11 rounded-pill">Imported</span>');
+				if (l.sector === 'non_profit' && l.nonProfitVerified) flags.push('<span class="badge bg-soft-info text-info fs-11 rounded-pill" title="Validated via ProPublica">501(c) Verified</span>');
+
+				return `<tr>
+					<td><input type="checkbox" class="form-check-input lead-checkbox" data-id="${l._id}" ${checked} onchange="toggleLeadSelection('${l._id}', this.checked)"></td>
+					<td>
+						<div class="fw-semibold">${escapeHtml(fullName)}</div>
+						${l.linkedinUrl ? `<a href="${escapeHtml(l.linkedinUrl)}" target="_blank" class="fs-11 text-muted">LinkedIn <i class="ti ti-external-link fs-10"></i></a>` : ''}
+					</td>
+					<td>${escapeHtml(l.jobTitle)}</td>
+					<td>
+						<div>${escapeHtml(l.companyName)}</div>
+						<div class="fs-11 text-muted">${escapeHtml(l.companyDomain)}</div>
+					</td>
+					<td><span class="badge ${sectorBadge} fs-11 rounded-pill fw-semibold">${SECTOR_LABELS[l.sector] || l.sector}</span></td>
+					<td>
+						<div>${escapeHtml(l.email) || '<span class="text-muted">—</span>'}</div>
+						${l.email ? `<span class="badge ${emailBadge} fs-10 rounded-pill fw-semibold text-capitalize">${l.emailStatus.replace('_', ' ')}</span>` : ''}
+					</td>
+					<td>${escapeHtml(l.phoneNumber) || '<span class="text-muted">—</span>'}${l.phoneType ? ` <span class="fs-10 text-muted text-capitalize">(${l.phoneType})</span>` : ''}</td>
+					<td class="prospector-bio-cell fs-12 text-muted" title="${escapeHtml(l.personBio)}">${escapeHtml((l.personBio || '').slice(0, 110))}${(l.personBio || '').length > 110 ? '…' : ''}</td>
+					<td>${flags.join(' ') || '<span class="text-muted fs-12">—</span>'}</td>
+				</tr>`;
+			}).join('');
+		}
+
+		function toggleLeadSelection(id, checked) {
+			if (checked) selectedLeadIds.add(id); else selectedLeadIds.delete(id);
+			updateActionBar();
+		}
+
+		function toggleSelectAllLeads(checkbox) {
+			document.querySelectorAll('.lead-checkbox').forEach(cb => {
+				cb.checked = checkbox.checked;
+				const id = cb.getAttribute('data-id');
+				if (checkbox.checked) selectedLeadIds.add(id); else selectedLeadIds.delete(id);
+			});
+			updateActionBar();
+		}
+
+		function updateActionBar() {
+			const bar = document.getElementById('leadsActionBar');
+			const count = selectedLeadIds.size;
+			document.getElementById('leadsSelectedCount').textContent = count;
+			bar.style.display = count > 0 ? '' : 'none';
+		}
+
+		async function importSelectedLeads() {
+			const btn = document.getElementById('importLeadsBtn');
+			btn.disabled = true;
+			try {
+				const leadIds = Array.from(selectedLeadIds);
+				const res = await fetch('/api/v1/lilypad/leads/promote', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ leadIds })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Import failed');
+
+				alert(`Imported ${result.data.succeeded} lead(s) to CRM Contacts.${result.data.failed ? ` ${result.data.failed} failed.` : ''}`);
+				selectedLeadIds.clear();
+				await loadLeads();
+			} catch (err) {
+				alert(err.message || 'Unable to import selected leads.');
+			} finally {
+				btn.disabled = false;
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			try {
+				const res = await fetch('/api/v1/lilypad/account/me');
+				const result = await res.json();
+				if (result.success) {
+					document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
+					document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
+					if (result.data.role === 'admin') {
+						document.getElementById('adminSetupNavItem').style.display = '';
+					}
+				}
+			} catch (e) {}
+
+			document.getElementById('pfTitlesHint').textContent = SECTOR_TITLE_DEFAULTS.all;
+			loadBatches();
+		});
+	</script>
+</body>
+</html>

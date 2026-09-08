@@ -50,6 +50,9 @@ function launchServer (db) {
 
       const { startSalesforceSyncScheduler } = require('./src/services/salesforceSyncScheduler')
       startSalesforceSyncScheduler(winston)
+
+      const { startLeadProspectorRecoverySweep } = require('./src/services/leadProspectorScheduler')
+      startLeadProspectorRecoverySweep(winston)
     })
   })
 }

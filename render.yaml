@@ -77,4 +77,17 @@ services:
         sync: false
       - key: SMTP_FROM
         sync: false
+      # Lead Prospector (Apollo.io API key, required) - fill in via the Render dashboard
+      - key: APOLLO_API_KEY
+        sync: false
+      # Optional secondary email verification hook for staged leads - leave
+      # unset to use the built-in stub (passes Apollo's own email status
+      # through unchanged). Set to "zerobounce" or "millionverifier" plus
+      # the matching API key below to enable a real verifier.
+      - key: EMAIL_VERIFIER_PROVIDER
+        value: stub
+      - key: ZEROBOUNCE_API_KEY
+        sync: false
+      - key: MILLIONVERIFIER_API_KEY
+        sync: false
 

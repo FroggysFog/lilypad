@@ -10,6 +10,7 @@ const Controllers = {
   lilypadOrders: require('./lilypadOrders'),
   lilypadSalesforceAccounts: require('./lilypadSalesforceAccounts'),
   lilypadOpportunities: require('./lilypadOpportunities'),
+  lilypadProspector: require('./lilypadProspector'),
   microsoftTeams: require('./microsoftTeams'),
   salesforceAuth: require('./salesforceAuth'),
   salesforceExplorer: require('./salesforceExplorer'),
