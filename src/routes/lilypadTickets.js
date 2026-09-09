@@ -6,7 +6,7 @@
 const express = require('express')
 const router = express.Router()
 const controllers = require('../controllers')
-const { requireLogin, requireLoginApi } = require('../middleware/lilypadAuth')
+const { requireLogin, requireLoginApi, requireAdminApi } = require('../middleware/lilypadAuth')
 
 module.exports = function () {
   // Public / Shared: Dynamic Intake Form Definitions
@@ -47,6 +47,12 @@ module.exports = function () {
   router.post('/users', requireLogin, controllers.lilypadUsers.createUser)
   router.put('/users/:id', requireLogin, controllers.lilypadUsers.updateUser)
   router.delete('/users/:id', requireLogin, controllers.lilypadUsers.deleteUser)
+
+  // Roles & Permissions - admin-only, this literally controls who can
+  // see what, so no exceptions the way /users above has.
+  router.get('/role-permissions', requireAdminApi, controllers.lilypadRolePermissions.getRolePermissions)
+  router.put('/role-permissions/:role', requireAdminApi, controllers.lilypadRolePermissions.setRolePermissions)
+  router.post('/preview-role', requireAdminApi, controllers.lilypadRolePermissions.setPreviewRole)
 
   return router
 }

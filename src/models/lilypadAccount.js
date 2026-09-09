@@ -36,9 +36,16 @@ const accountSchema = new Schema(
       trim: true,
       lowercase: true
     },
+    // Not a fixed enum on purpose - admins can define new role names
+    // (e.g. "sales") via the Roles & Permissions admin page, each with
+    // its own set of visible pages (see lilypadRolePermission.js).
+    // 'admin' is the one reserved value: it always sees every page and
+    // is the only role that can manage permissions, regardless of what
+    // (if anything) is configured for it.
     role: {
       type: String,
-      enum: ['admin', 'agent', 'user'],
+      trim: true,
+      lowercase: true,
       default: 'user'
     },
     title: {

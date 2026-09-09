@@ -7,6 +7,9 @@ const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')
+const pageAccessGate = require('./pageAccess')
+
+const PUBLIC_DIR = path.join(__dirname, '../../public')
 
 module.exports = function (app, db, callback) {
   app.disable('x-powered-by')
@@ -15,13 +18,16 @@ module.exports = function (app, db, callback) {
   app.use(bodyParser.json({ limit: '2mb' }))
   app.use(cookieParser())
 
+  // Assets (CSS/JS/images/fonts) are the bulk of requests per page load
+  // and never need auth - served here, before session, so they're never
+  // slowed down by a session-store round trip. Page loads (.html) still
+  // need session (see pageAccessGate below), so they're served further
+  // down, after it.
   if (global.env === 'production') {
-    app.use(
-      expressStaticGzip(path.join(__dirname, '../../public'), {
-        index: false
-      })
-    )
-  } else app.use(express.static(path.join(__dirname, '../../public')))
+    app.use('/assets', expressStaticGzip(path.join(PUBLIC_DIR, 'assets'), { index: false }))
+  } else {
+    app.use('/assets', express.static(path.join(PUBLIC_DIR, 'assets')))
+  }
 
   app.use(function (req, res, next) {
     if (mongoose.connection.readyState !== 1) {
@@ -56,6 +62,20 @@ module.exports = function (app, db, callback) {
       resave: false
     })
   )
+
+  // Role-based page access - see middleware/pageAccess.js. Has to run
+  // between session (needs req.session) and the full static mount below
+  // (which would otherwise serve any .html file unconditionally).
+  app.use(pageAccessGate)
+
+  // Everything else static (HTML pages, login.html, favicon, etc) - the
+  // gate above has already had its chance to redirect by the time a
+  // request reaches here.
+  if (global.env === 'production') {
+    app.use(expressStaticGzip(PUBLIC_DIR, { index: false }))
+  } else {
+    app.use(express.static(PUBLIC_DIR))
+  }
 
   app.use(allowCrossDomain)
 

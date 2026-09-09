@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Roles & Permissions | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+				</div>
+
+				<div class="d-flex align-items-center">
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);" class="topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex" alt="user-image">
+							<span class="online text-success"><i class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42" alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0 topbar-user-name">User</p>
+									<span class="d-block fs-13 topbar-user-role">Role</span>
+								</div>
+							</div>
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+							<div class="pt-2 mt-2 border-top">
+								<a href="javascript:void(0);" onclick="doLogout()" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+			<div class="sidebar-logo">
+				<div>
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span class="text-primary">ERP</span></span>
+					</a>
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu"></div>
+			</div>
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<div class="page-wrapper">
+			<div class="content pb-0">
+
+				<!-- Page Header -->
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark">Roles & Permissions</h4>
+						<p class="text-muted fs-13 mb-0">Choose which pages each role can see. Admins always see everything.</p>
+					</div>
+				</div>
+
+				<!-- Preview As -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-body py-3">
+						<h6 class="fw-bold fs-13 mb-2"><i class="ti ti-eye me-1 text-primary"></i>Preview As</h6>
+						<p class="fs-12 text-muted mb-2">See LilyPad exactly as a given role would, without a second account. A purple banner appears everywhere until you exit.</p>
+						<div class="d-flex align-items-center gap-2">
+							<select class="form-select form-select-sm w-auto" id="previewRoleSelect"></select>
+							<button type="button" class="btn btn-sm btn-primary" onclick="startPreview()">Preview This Role</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- New Role -->
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-body py-3">
+						<h6 class="fw-bold fs-13 mb-2"><i class="ti ti-plus me-1 text-primary"></i>Define a New Role</h6>
+						<p class="fs-12 text-muted mb-2">A brand new role starts with access to nothing - check the pages it should see below once it appears.</p>
+						<div class="d-flex align-items-center gap-2">
+							<input type="text" class="form-control form-control-sm w-auto" id="newRoleName" placeholder="e.g. sales, support, ops">
+							<button type="button" class="btn btn-sm btn-outline-primary" onclick="addNewRole()">Add Role</button>
+						</div>
+					</div>
+				</div>
+
+				<div id="rolesContainer"></div>
+
+				<!-- Start Footer -->
+				<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+					<p class="mb-md-0 mb-1">Copyright &copy;
+						<script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.
+					</p>
+				</footer>
+				<!-- End Footer -->
+			</div>
+		</div>
+	</div>
+	<!-- End Wrapper -->
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<!-- Main JS -->
+	<script src="assets/js/lilypad-nav.js"></script>
+	<script src="assets/js/script.js"></script>
+
+	<script>
+		let CATALOG = [];
+		let ROLES = [];
+
+		function escapeHtml(str) {
+			return String(str == null ? '' : str).replace(/[&<>'"]/g, function(c) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+			});
+		}
+
+		async function loadMe() {
+			try {
+				const res = await fetch('/api/v1/lilypad/account/me');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
+				document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
+				if (result.data.realRole !== 'admin') {
+					document.body.innerHTML = '<div class="p-5 text-center text-muted">Admin access required.</div>';
+				}
+			} catch (err) {
+				console.error('loadMe failed:', err);
+			}
+		}
+
+		async function loadRolePermissions() {
+			try {
+				const res = await fetch('/api/v1/lilypad/role-permissions');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				CATALOG = result.data.catalog;
+				ROLES = result.data.roles;
+				renderPreviewSelect();
+				renderRoles();
+			} catch (err) {
+				document.getElementById('rolesContainer').innerHTML = `<div class="alert alert-danger">${escapeHtml(err.message || 'Unable to load roles.')}</div>`;
+			}
+		}
+
+		function renderPreviewSelect() {
+			const select = document.getElementById('previewRoleSelect');
+			select.innerHTML = ROLES.map(r => `<option value="${escapeHtml(r.role)}">${escapeHtml(r.role)}</option>`).join('') || '<option value="">No roles defined yet</option>';
+		}
+
+		function renderRoles() {
+			const container = document.getElementById('rolesContainer');
+			if (!ROLES.length) {
+				container.innerHTML = '<div class="text-center text-muted py-4">No roles yet - add one above (e.g. "sales") to start configuring what it can see.</div>';
+				return;
+			}
+
+			container.innerHTML = ROLES.map((roleData, roleIdx) => {
+				const allowedSet = new Set(roleData.allowedPages);
+				const groupsHtml = CATALOG.map((group, groupIdx) => `
+					<div class="col-md-4 mb-3">
+						<h6 class="fs-12 text-uppercase text-muted fw-semibold mb-2">${escapeHtml(group.label)}</h6>
+						${group.items.map((item, itemIdx) => `
+							<div class="form-check mb-1">
+								<input type="checkbox" class="form-check-input role-page-checkbox" id="role${roleIdx}_g${groupIdx}_i${itemIdx}" value="${escapeHtml(item.href)}" data-role="${escapeHtml(roleData.role)}" ${allowedSet.has(item.href) ? 'checked' : ''}>
+								<label class="form-check-label fs-13" for="role${roleIdx}_g${groupIdx}_i${itemIdx}">${escapeHtml(item.label)}</label>
+							</div>
+						`).join('')}
+					</div>
+				`).join('');
+
+				return `
+					<div class="card border-0 shadow-sm rounded-3 mb-3">
+						<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
+							<h6 class="fw-bold mb-0 text-capitalize"><i class="ti ti-shield-lock me-1 text-primary"></i>${escapeHtml(roleData.role)} ${roleData.inUse ? '' : '<span class="badge bg-light text-muted border fs-10 ms-1">not yet assigned to anyone</span>'}</h6>
+							<button type="button" class="btn btn-sm btn-primary" onclick="saveRolePermissions('${escapeHtml(roleData.role)}')">Save</button>
+						</div>
+						<div class="card-body">
+							<div class="row">${groupsHtml}</div>
+						</div>
+					</div>
+				`;
+			}).join('');
+		}
+
+		function addNewRole() {
+			const input = document.getElementById('newRoleName');
+			const role = input.value.trim().toLowerCase();
+			if (!role) return;
+			if (role === 'admin') { alert('"admin" already has full access by default.'); return; }
+			if (ROLES.some(r => r.role === role)) { alert('That role already exists.'); return; }
+
+			ROLES.push({ role, allowedPages: [], inUse: false });
+			input.value = '';
+			renderPreviewSelect();
+			renderRoles();
+		}
+
+		async function saveRolePermissions(role) {
+			const checkboxes = document.querySelectorAll(`.role-page-checkbox[data-role="${CSS.escape(role)}"]`);
+			const allowedPages = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
+
+			try {
+				const res = await fetch(`/api/v1/lilypad/role-permissions/${encodeURIComponent(role)}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ allowedPages })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				alert(`Saved permissions for "${role}".`);
+			} catch (err) {
+				alert(err.message || 'Unable to save permissions.');
+			}
+		}
+
+		async function startPreview() {
+			const role = document.getElementById('previewRoleSelect').value;
+			if (!role) { alert('Add a role first.'); return; }
+
+			try {
+				const res = await fetch('/api/v1/lilypad/preview-role', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ role })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				window.location.href = 'dashboard.html';
+			} catch (err) {
+				alert(err.message || 'Unable to start preview.');
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			await loadMe();
+			await loadRolePermissions();
+		});
+	</script>
+</body>
+
+</html>

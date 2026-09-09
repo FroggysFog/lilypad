@@ -74,6 +74,7 @@ const LILYPAD_NAV_SECTIONS = [
     items: [
       { href: 'admin-email.html', icon: 'ti-mail-forward', label: 'Inbound Email & Anti-Spam' },
       { href: 'admin-team.html', icon: 'ti-users', label: 'Team & User Permissions' },
+      { href: 'admin-roles.html', icon: 'ti-shield-lock', label: 'Roles & Permissions' },
       { href: 'admin-forms.html', icon: 'ti-adjustments', label: 'Dynamic Form Builder' },
       { href: 'api-credentials.html', icon: 'ti-key', label: 'API Credentials Vault' },
       { href: 'salesforce-explorer.html', icon: 'ti-database-search', label: 'Salesforce Explorer' },
@@ -159,9 +160,93 @@ function lilypadRenderSidebarNav () {
   </ul>`
 }
 
-const lilypadNavContainer = document.getElementById('sidebar-menu')
+/**
+ * Every page href that could ever appear in the nav, flattened - the
+ * canonical page catalog the Roles & Permissions admin page and the
+ * server-side page gate both build their checklists/allowlists from,
+ * so there's exactly one place page identifiers are defined.
+ */
+function lilypadNavAllPages () {
+  const pages = []
+  LILYPAD_NAV_SECTIONS.forEach((section) => {
+    if (section.type === 'single') pages.push(section.href)
+    else section.items.forEach((item) => pages.push(item.href))
+  })
+  return pages
+}
+
+/**
+ * Prunes the already-rendered sidebar down to just the pages a role is
+ * allowed to see. `allowedPages` of null/undefined means "no
+ * restriction" (true admins, or a status check that failed open) - every
+ * link stays. An empty array is a real "sees nothing configured yet."
+ * Runs after the initial render (permissions arrive from /account/me,
+ * an async call) rather than blocking first paint on it.
+ */
+function lilypadNavApplyPermissions (allowedPages) {
+  if (allowedPages == null) return
+  const allowed = new Set(allowedPages)
+  const container = document.getElementById('sidebar-menu')
+  if (!container) return
+
+  container.querySelectorAll('.sidebar-menu > ul > li').forEach((li) => {
+    if (li.classList.contains('menu-title')) return // "Account" section header
+    const links = Array.from(li.querySelectorAll('a[href]')).filter((a) => a.getAttribute('href') !== 'javascript:void(0);')
+    if (!links.length) return // Sign Out row, or a group toggle with no direct href
+
+    links.forEach((a) => {
+      const parentLi = a.closest('li')
+      if (parentLi && parentLi !== li && !allowed.has(a.getAttribute('href'))) parentLi.remove()
+    })
+
+    // A "single" top-level item's own href lives on li > ul > li > a - if
+    // that leaf survived above, this li stays; if the group's own href
+    // (a top-level single item) isn't allowed, or a group's items were
+    // all pruned above leaving it empty, remove the whole entry.
+    const remainingLinks = li.querySelectorAll('a[href]')
+    const hasRealLink = Array.from(remainingLinks).some((a) => a.getAttribute('href') !== 'javascript:void(0);')
+    if (!hasRealLink) li.remove()
+  })
+}
+
+/**
+ * A slim, unmissable banner so an admin using "Preview as" never loses
+ * track of the fact they're not looking at their own real view. Exiting
+ * clears the session-side preview and reloads.
+ */
+function lilypadNavShowPreviewBanner (role) {
+  if (document.getElementById('lilypadPreviewBanner')) return
+  const banner = document.createElement('div')
+  banner.id = 'lilypadPreviewBanner'
+  banner.style.cssText = 'position:sticky;top:0;z-index:1080;background:#7c3aed;color:#fff;padding:8px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px;'
+  banner.innerHTML = `<i class="ti ti-eye"></i> Previewing as <span style="text-transform:capitalize;">${role}</span> - this is what that role sees, not your own account.
+    <button type="button" style="background:#fff;color:#7c3aed;border:none;border-radius:20px;padding:2px 12px;font-weight:600;cursor:pointer;">Exit Preview</button>`
+  banner.querySelector('button').onclick = async () => {
+    try { await fetch('/api/v1/lilypad/preview-role', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: null }) }) } catch (e) {}
+    window.location.reload()
+  }
+  document.body.prepend(banner)
+}
+
+const lilypadNavContainer = typeof document !== 'undefined' ? document.getElementById('sidebar-menu') : null
 if (lilypadNavContainer) {
   lilypadNavContainer.innerHTML = lilypadRenderSidebarNav()
+
+  // Self-contained on purpose: every page already fetches its own
+  // /account/me for topbar name/role display, so this is a second, small
+  // call rather than requiring ~20 pages to each remember to wire nav
+  // pruning + the preview banner into their own bootstrap code.
+  fetch('/api/v1/lilypad/account/me').then((r) => r.json()).then((result) => {
+    if (!result.success) return
+    lilypadNavApplyPermissions(result.data.allowedPages)
+    if (result.data.previewRole) lilypadNavShowPreviewBanner(result.data.previewRole)
+  }).catch(() => {})
+}
+
+// Node-side reuse (pagePermissionService.js) needs the raw page catalog,
+// not the DOM-rendering functions above (document doesn't exist there).
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { LILYPAD_NAV_SECTIONS, DETAIL_PAGE_ACTIVE_MAP, lilypadNavAllPages }
 }
 
 // Canonical Sign Out handler - actually destroys the server-side

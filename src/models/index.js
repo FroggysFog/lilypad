@@ -15,6 +15,7 @@ const LilyPadOpportunity = require('./lilypadOpportunity')
 const LilyPadCartOrder = require('./lilypadCartOrder')
 const LilyPadCalendarEvent = require('./lilypadCalendarEvent')
 const LilyPadMicrosoftAccount = require('./lilypadMicrosoftAccount')
+const LilyPadRolePermission = require('./lilypadRolePermission')
 
 module.exports = {
   LilyPadTicket,
@@ -33,5 +34,6 @@ module.exports = {
   LilyPadOpportunity,
   LilyPadCartOrder,
   LilyPadCalendarEvent,
-  LilyPadMicrosoftAccount
+  LilyPadMicrosoftAccount,
+  LilyPadRolePermission
 }

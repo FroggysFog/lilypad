@@ -4,6 +4,7 @@
  */
 
 const LilyPadAccount = require('../models/lilypadAccount')
+const pagePermissionService = require('../services/pagePermissionService')
 const xss = require('xss')
 
 const lilypadUsersController = {}
@@ -129,18 +130,35 @@ lilypadUsersController.updateUser = async function (req, res) {
  * Returns the logged-in user's own identity
  */
 lilypadUsersController.getMe = async function (req, res) {
-  return res.status(200).json({
-    success: true,
-    data: {
-      id: req.user._id,
-      username: req.user.username,
-      fullname: req.user.fullname,
-      email: req.user.email,
-      role: req.user.role,
-      title: req.user.title,
-      department: req.user.department
-    }
-  })
+  try {
+    // Admins previewing another role (see /preview-role) get `role` set
+    // to the PREVIEWED role here, not their real one - every existing
+    // "role === 'admin'" check across the app (showing the admin nav
+    // section, etc) then behaves correctly for the preview automatically,
+    // without each page needing its own preview-aware logic. realRole is
+    // what actually gates whether the preview switcher itself shows.
+    const previewRole = req.user.role === 'admin' ? req.session.previewRole : null
+    const effectiveRole = previewRole || req.user.role
+    const allowedPages = await pagePermissionService.getAllowedPagesForRole(effectiveRole)
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: req.user._id,
+        username: req.user.username,
+        fullname: req.user.fullname,
+        email: req.user.email,
+        role: effectiveRole,
+        realRole: req.user.role,
+        previewRole,
+        allowedPages,
+        title: req.user.title,
+        department: req.user.department
+      }
+    })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
 }
 
 /**
