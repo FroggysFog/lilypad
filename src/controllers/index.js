@@ -1,6 +1,7 @@
 const Controllers = {
   main: require('./main'),
   lilypadTickets: require('./lilypadTickets'),
+  lilypadTasks: require('./lilypadTasks'),
   lilypadUsers: require('./lilypadUsers'),
   lilypadMachines: require('./lilypadMachines'),
   lilypadNotifications: require('./lilypadNotifications'),

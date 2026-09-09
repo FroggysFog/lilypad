@@ -1,4 +1,5 @@
 const LilyPadTicket = require('./lilypadTicket')
+const LilyPadTask = require('./lilypadTask')
 const IntakeForm = require('./intakeForm')
 const LilyPadAccount = require('./lilypadAccount')
 const LilyPadNotification = require('./lilypadNotification')
@@ -15,6 +16,7 @@ const LilyPadCartOrder = require('./lilypadCartOrder')
 
 module.exports = {
   LilyPadTicket,
+  LilyPadTask,
   IntakeForm,
   LilyPadAccount,
   LilyPadNotification,

@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Task Manager | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
+	<style>
+		.badge-todo { background-color: rgba(var(--bs-primary-rgb), 0.12); color: var(--bs-primary); font-weight: 600; }
+		.badge-inprogress { background-color: rgba(13, 110, 253, 0.12); color: #0d6efd; font-weight: 600; }
+		.badge-done { background-color: rgba(25, 135, 84, 0.12); color: #198754; font-weight: 600; }
+
+		.priority-urgent { color: #dc2626; background: #fee2e2; border: 1px solid #fecaca; font-weight: 700; }
+		.priority-high { color: #d97706; background: #fef3c7; border: 1px solid #fde68a; font-weight: 600; }
+		.priority-normal { color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; }
+		.priority-low { color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; }
+
+		.task-row {
+			background: #ffffff;
+			border: 1px solid #e2e8f0;
+			border-radius: 10px;
+			padding: 14px 18px;
+			margin-bottom: 10px;
+			transition: all 0.15s ease;
+			cursor: pointer;
+		}
+		.task-row:hover {
+			border-color: var(--bs-primary);
+			box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.08);
+		}
+		.task-row.is-done .task-title { text-decoration: line-through; color: #94a3b8; }
+		.task-row.is-overdue { border-color: #fecaca; }
+
+		.tag-pill {
+			display: inline-block;
+			background: #f1f5f9;
+			color: #475569;
+			font-size: 11px;
+			padding: 2px 8px;
+			border-radius: 10px;
+			margin-right: 4px;
+		}
+
+		.kanban-board { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 16px; }
+		.kanban-col { flex: 1; min-width: 290px; background: #f1f5f9; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; }
+		.kanban-cards { min-height: 250px; display: flex; flex-direction: column; gap: 12px; }
+		.kanban-card {
+			background: #ffffff;
+			border: 1px solid #e2e8f0;
+			border-radius: 10px;
+			padding: 14px;
+			box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+			cursor: grab;
+			transition: transform 0.15s ease, box-shadow 0.15s ease;
+		}
+		.kanban-card:active { cursor: grabbing; }
+		.kanban-card:hover { transform: translateY(-2px); border-color: var(--bs-primary); box-shadow: 0 6px 16px rgba(var(--bs-primary-rgb), 0.12); }
+
+		.timeline-item { position: relative; padding-left: 24px; margin-bottom: 16px; }
+		.timeline-item::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: -16px; width: 2px; background: #e2e8f0; }
+		.timeline-item:last-child::before { display: none; }
+		.timeline-dot { position: absolute; left: 0; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--bs-primary); }
+	</style>
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+				</div>
+
+				<div class="d-flex align-items-center">
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);" class="topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex" alt="user-image">
+							<span class="online text-success"><i class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42" alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0 topbar-user-name">User</p>
+									<span class="d-block fs-13 topbar-user-role">Role</span>
+								</div>
+							</div>
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+							<div class="pt-2 mt-2 border-top">
+								<a href="javascript:void(0);" onclick="doLogout()" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+			<div class="sidebar-logo">
+				<div>
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span class="text-primary">ERP</span></span>
+					</a>
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu"></div>
+			</div>
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<div class="page-wrapper">
+			<div class="content pb-0">
+
+				<!-- Page Header -->
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark">Task Manager</h4>
+						<p class="text-muted fs-13 mb-0">Your personal task list - share a task with a teammate and it moves to their list too.</p>
+					</div>
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<div class="btn-group" role="group">
+							<button type="button" class="btn btn-sm btn-primary" id="viewTabMine" onclick="switchTaskView('mine')">My Tasks</button>
+							<button type="button" class="btn btn-sm btn-outline-primary" id="viewTabAssigned" onclick="switchTaskView('assignedByMe')">Assigned by Me</button>
+						</div>
+						<div class="btn-group" role="group">
+							<button type="button" class="btn btn-sm btn-outline-secondary active" id="displayModeList" onclick="switchDisplayMode('list')"><i class="ti ti-list"></i></button>
+							<button type="button" class="btn btn-sm btn-outline-secondary" id="displayModeKanban" onclick="switchDisplayMode('kanban')"><i class="ti ti-layout-kanban"></i></button>
+						</div>
+						<button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" onclick="openNewTaskModal()">
+							<i class="ti ti-plus me-1"></i> New Task
+						</button>
+					</div>
+				</div>
+
+				<!-- KPI Row -->
+				<div class="row g-3 mb-4">
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<span class="fs-12 text-muted fw-semibold text-uppercase">To-Do</span>
+							<h3 class="fw-bold mb-0 mt-1" id="kpiTodo">0</h3>
+						</div>
+					</div>
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<span class="fs-12 text-muted fw-semibold text-uppercase">In Progress</span>
+							<h3 class="fw-bold mb-0 mt-1 text-primary" id="kpiInProgress">0</h3>
+						</div>
+					</div>
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<span class="fs-12 text-muted fw-semibold text-uppercase">Done</span>
+							<h3 class="fw-bold mb-0 mt-1 text-success" id="kpiDone">0</h3>
+						</div>
+					</div>
+					<div class="col-xl-3 col-sm-6">
+						<div class="card border-0 shadow-sm rounded-3 p-3 h-100">
+							<span class="fs-12 text-muted fw-semibold text-uppercase">Overdue</span>
+							<h3 class="fw-bold mb-0 mt-1 text-danger" id="kpiOverdue">0</h3>
+						</div>
+					</div>
+				</div>
+
+				<!-- Filter Bar -->
+				<div class="card border-0 shadow-sm rounded-3 mb-3">
+					<div class="card-body py-2">
+						<div class="row g-2 align-items-center">
+							<div class="col-md-4">
+								<input type="text" class="form-control form-control-sm" id="taskSearchInput" placeholder="Search tasks..." oninput="loadTasks()">
+							</div>
+							<div class="col-md-3">
+								<select class="form-select form-select-sm" id="taskStatusFilter" onchange="loadTasks()">
+									<option value="">All Statuses</option>
+									<option value="To-Do">To-Do</option>
+									<option value="In Progress">In Progress</option>
+									<option value="Done">Done</option>
+								</select>
+							</div>
+							<div class="col-md-3">
+								<select class="form-select form-select-sm" id="taskPriorityFilter" onchange="loadTasks()">
+									<option value="">All Priorities</option>
+									<option value="Urgent">Urgent</option>
+									<option value="High">High</option>
+									<option value="Normal">Normal</option>
+									<option value="Low">Low</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<input type="text" class="form-control form-control-sm" id="taskTagFilter" placeholder="Filter by tag" onchange="loadTasks()">
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- List View -->
+				<div id="taskListView">
+					<div id="taskListContainer"></div>
+				</div>
+
+				<!-- Kanban View -->
+				<div id="taskKanbanView" style="display:none;">
+					<div class="kanban-board">
+						<div class="kanban-col">
+							<h6 class="fw-bold fs-13 mb-3">To-Do</h6>
+							<div class="kanban-cards" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'To-Do')" id="kanbanColTodo"></div>
+						</div>
+						<div class="kanban-col">
+							<h6 class="fw-bold fs-13 mb-3">In Progress</h6>
+							<div class="kanban-cards" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'In Progress')" id="kanbanColProgress"></div>
+						</div>
+						<div class="kanban-col">
+							<h6 class="fw-bold fs-13 mb-3">Done</h6>
+							<div class="kanban-cards" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'Done')" id="kanbanColDone"></div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Start Footer -->
+				<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+					<p class="mb-md-0 mb-1">Copyright &copy;
+						<script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.
+					</p>
+				</footer>
+				<!-- End Footer -->
+			</div>
+		</div>
+	</div>
+	<!-- End Wrapper -->
+
+	<!-- New Task Modal -->
+	<div class="modal fade" id="newTaskModal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title fw-bold">New Task</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Title <span class="text-danger">*</span></label>
+						<input type="text" class="form-control form-control-sm" id="newTaskTitle" placeholder="What needs to get done?">
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Notes</label>
+						<textarea class="form-control form-control-sm" id="newTaskNotes" rows="3"></textarea>
+					</div>
+					<div class="row g-2 mb-2">
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">Priority</label>
+							<select class="form-select form-select-sm" id="newTaskPriority">
+								<option value="Low">Low</option>
+								<option value="Normal" selected>Normal</option>
+								<option value="High">High</option>
+								<option value="Urgent">Urgent</option>
+							</select>
+						</div>
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">Due Date</label>
+							<input type="date" class="form-control form-control-sm" id="newTaskDueDate">
+						</div>
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Tags</label>
+						<input type="text" class="form-control form-control-sm" id="newTaskTags" placeholder="Comma-separated, e.g. follow-up, urgent">
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Share With <span class="text-muted fw-normal">(optional - moves it onto their list)</span></label>
+						<select class="form-select form-select-sm" id="newTaskOwner">
+							<option value="">Just me</option>
+						</select>
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Link to Ticket <span class="text-muted fw-normal">(optional)</span></label>
+						<input type="text" class="form-control form-control-sm" id="newTaskTicketSearch" placeholder="Search by ticket # or title" oninput="searchTicketsForLink(this.value, 'newTaskTicketResults', 'new')">
+						<div id="newTaskTicketResults" class="list-group mt-1"></div>
+						<div id="newTaskLinkedTicketDisplay" class="fs-12 text-muted mt-1"></div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary btn-sm" onclick="submitNewTask()">Create Task</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Task Detail Modal -->
+	<div class="modal fade" id="taskDetailModal" tabindex="-1">
+		<div class="modal-dialog modal-lg modal-dialog-scrollable">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+						<span id="detailTaskUid" class="badge bg-secondary"></span>
+						<span id="detailTaskStatusBadge" class="badge"></span>
+					</h5>
+					<div class="d-flex align-items-center gap-2">
+						<button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="deleteCurrentTask()"><i class="ti ti-trash"></i></button>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					</div>
+				</div>
+				<div class="modal-body">
+					<div class="mb-3">
+						<input type="text" class="form-control fw-bold mb-2" id="detailTaskTitle" onchange="saveTaskField('title', this.value)">
+						<textarea class="form-control fs-13" id="detailTaskNotes" rows="3" placeholder="Notes" onchange="saveTaskField('notes', this.value)"></textarea>
+					</div>
+
+					<div class="row g-2 mb-3">
+						<div class="col-6 col-md-3">
+							<span class="text-muted fs-12 d-block">Priority</span>
+							<select class="form-select form-select-sm mt-1" id="detailTaskPriority" onchange="saveTaskField('priority', this.value)">
+								<option value="Low">Low</option>
+								<option value="Normal">Normal</option>
+								<option value="High">High</option>
+								<option value="Urgent">Urgent</option>
+							</select>
+						</div>
+						<div class="col-6 col-md-3">
+							<span class="text-muted fs-12 d-block">Due Date</span>
+							<input type="date" class="form-control form-control-sm mt-1" id="detailTaskDueDate" onchange="saveTaskField('dueDate', this.value)">
+						</div>
+						<div class="col-6 col-md-3">
+							<span class="text-muted fs-12 d-block">Owner</span>
+							<strong id="detailTaskOwner" class="d-block mt-1"></strong>
+						</div>
+						<div class="col-6 col-md-3">
+							<span class="text-muted fs-12 d-block">Created By</span>
+							<strong id="detailTaskCreatedBy" class="d-block mt-1"></strong>
+						</div>
+					</div>
+
+					<div class="mb-3">
+						<span class="text-muted fs-12 d-block mb-1">Tags</span>
+						<input type="text" class="form-control form-control-sm" id="detailTaskTags" placeholder="Comma-separated" onchange="saveTaskField('tags', this.value)">
+					</div>
+
+					<div class="mb-3">
+						<span class="text-muted fs-12 d-block mb-1">Status</span>
+						<div class="btn-group">
+							<button type="button" class="btn btn-sm btn-outline-secondary" onclick="setTaskStatus('To-Do')">To-Do</button>
+							<button type="button" class="btn btn-sm btn-outline-primary" onclick="setTaskStatus('In Progress')">In Progress</button>
+							<button type="button" class="btn btn-sm btn-outline-success" onclick="setTaskStatus('Done')">Done</button>
+						</div>
+					</div>
+
+					<div class="card bg-light border-0 rounded-3 p-3 mb-3">
+						<h6 class="fw-bold fs-12 text-uppercase mb-2"><i class="ti ti-share me-1"></i>Share This Task</h6>
+						<div class="d-flex align-items-center gap-2">
+							<select class="form-select form-select-sm" id="detailTaskShareSelect"></select>
+							<button type="button" class="btn btn-sm btn-primary" onclick="shareCurrentTask()">Share</button>
+						</div>
+					</div>
+
+					<div class="card bg-light border-0 rounded-3 p-3 mb-3">
+						<h6 class="fw-bold fs-12 text-uppercase mb-2"><i class="ti ti-link me-1"></i>Linked Ticket</h6>
+						<div id="detailLinkedTicketDisplay" class="mb-2"></div>
+						<input type="text" class="form-control form-control-sm" id="detailTaskTicketSearch" placeholder="Search by ticket # or title to link" oninput="searchTicketsForLink(this.value, 'detailTaskTicketResults', 'detail')">
+						<div id="detailTaskTicketResults" class="list-group mt-1"></div>
+					</div>
+
+					<h6 class="fw-bold fs-13 mb-2">Comments</h6>
+					<div id="detailTaskComments" class="mb-3"></div>
+					<form onsubmit="postTaskComment(event)" class="d-flex gap-2">
+						<input type="text" class="form-control form-control-sm" id="taskCommentInput" placeholder="Add a comment...">
+						<button type="submit" class="btn btn-sm btn-primary">Post</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<!-- Main JS -->
+	<script src="assets/js/lilypad-nav.js"></script>
+	<script src="assets/js/script.js"></script>
+
+	<script>
+		let TASKS = [];
+		let USERS = [];
+		let currentUserId = null;
+		let currentTaskView = 'mine';
+		let currentDisplayMode = 'list';
+		let currentDetailTask = null;
+		let newTaskLinkedTicketId = null;
+
+		function escapeHtml(str) {
+			return String(str == null ? '' : str).replace(/[&<>'"]/g, function(c) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+			});
+		}
+
+		function parseTagInput(value) {
+			return String(value || '').split(',').map(s => s.trim()).filter(Boolean);
+		}
+
+		async function loadMe() {
+			try {
+				const res = await fetch('/api/v1/lilypad/account/me');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				currentUserId = result.data.id;
+				document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
+				document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
+			} catch (err) {
+				console.error('loadMe failed:', err);
+			}
+		}
+
+		async function loadUsers() {
+			try {
+				const res = await fetch('/api/v1/lilypad/users');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				USERS = result.data.map(u => ({ id: u._id, fullname: u.fullname }));
+
+				const ownerSelect = document.getElementById('newTaskOwner');
+				const shareSelect = document.getElementById('detailTaskShareSelect');
+				const options = USERS.filter(u => u.id !== currentUserId).map(u => `<option value="${u.id}">${escapeHtml(u.fullname)}</option>`).join('');
+				ownerSelect.innerHTML = '<option value="">Just me</option>' + options;
+				shareSelect.innerHTML = options || '<option value="">No other users</option>';
+			} catch (err) {
+				console.error('loadUsers failed:', err);
+			}
+		}
+
+		function mapTask(t) {
+			return {
+				id: t._id,
+				uid: t.formattedUid,
+				title: t.title,
+				notes: t.notes || '',
+				status: t.status,
+				priority: t.priority,
+				dueDate: t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '',
+				tags: t.tags || [],
+				owner: t.owner,
+				createdBy: t.createdBy,
+				linkedTicket: t.linkedTicket,
+				comments: t.comments || [],
+				history: t.history || [],
+				createdAt: t.createdAt
+			};
+		}
+
+		function switchTaskView(view) {
+			currentTaskView = view;
+			document.getElementById('viewTabMine').className = 'btn btn-sm ' + (view === 'mine' ? 'btn-primary' : 'btn-outline-primary');
+			document.getElementById('viewTabAssigned').className = 'btn btn-sm ' + (view === 'assignedByMe' ? 'btn-primary' : 'btn-outline-primary');
+			loadTasks();
+		}
+
+		function switchDisplayMode(mode) {
+			currentDisplayMode = mode;
+			document.getElementById('displayModeList').classList.toggle('active', mode === 'list');
+			document.getElementById('displayModeKanban').classList.toggle('active', mode === 'kanban');
+			document.getElementById('taskListView').style.display = mode === 'list' ? '' : 'none';
+			document.getElementById('taskKanbanView').style.display = mode === 'kanban' ? '' : 'none';
+			if (mode === 'kanban') renderKanban();
+		}
+
+		async function loadTasks() {
+			try {
+				const params = new URLSearchParams();
+				params.set('view', currentTaskView);
+				const search = document.getElementById('taskSearchInput').value.trim();
+				const status = document.getElementById('taskStatusFilter').value;
+				const priority = document.getElementById('taskPriorityFilter').value;
+				const tag = document.getElementById('taskTagFilter').value.trim();
+				if (search) params.set('search', search);
+				if (status) params.set('status', status);
+				if (priority) params.set('priority', priority);
+				if (tag) params.set('tag', tag);
+
+				const res = await fetch('/api/v1/lilypad/tasks?' + params.toString());
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				TASKS = result.data.map(mapTask);
+				document.getElementById('kpiTodo').textContent = result.counts.todo;
+				document.getElementById('kpiInProgress').textContent = result.counts.inProgress;
+				document.getElementById('kpiDone').textContent = result.counts.done;
+				document.getElementById('kpiOverdue').textContent = result.counts.overdue;
+
+				renderTaskList();
+				if (currentDisplayMode === 'kanban') renderKanban();
+			} catch (err) {
+				console.error('loadTasks failed:', err);
+			}
+		}
+
+		function renderTaskList() {
+			const container = document.getElementById('taskListContainer');
+			if (!TASKS.length) {
+				container.innerHTML = '<div class="text-center text-muted py-5"><i class="ti ti-checklist fs-32 d-block mb-2"></i>No tasks here yet.</div>';
+				return;
+			}
+
+			const now = new Date().toISOString().slice(0, 10);
+			container.innerHTML = TASKS.map(t => {
+				const isDone = t.status === 'Done';
+				const isOverdue = !isDone && t.dueDate && t.dueDate < now;
+				const ownerName = (t.owner && t.owner.fullname) || 'Unknown';
+				const tagsHtml = t.tags.map(tag => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join(' ');
+				const ticketBadge = t.linkedTicket ? `<span class="badge bg-soft-secondary text-secondary fs-11"><i class="ti ti-link me-1"></i>${escapeHtml(t.linkedTicket.formattedUid)}</span>` : '';
+				const dueBadge = t.dueDate ? `<span class="badge ${isOverdue ? 'bg-danger-subtle text-danger' : 'bg-light text-muted border'} fs-11"><i class="ti ti-calendar me-1"></i>${t.dueDate}</span>` : '';
+				const ownerBadge = currentTaskView === 'assignedByMe' ? `<span class="badge bg-soft-info text-info fs-11"><i class="ti ti-user me-1"></i>${escapeHtml(ownerName)}</span>` : '';
+
+				return `
+					<div class="task-row ${isDone ? 'is-done' : ''} ${isOverdue ? 'is-overdue' : ''}" onclick="openTaskModal('${t.id}')">
+						<div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+							<div class="d-flex align-items-center gap-2">
+								<span class="badge priority-${t.priority.toLowerCase()} fs-11">${t.priority}</span>
+								<strong class="task-title">${escapeHtml(t.title)}</strong>
+							</div>
+							<div class="d-flex align-items-center gap-2">
+								${dueBadge}${ticketBadge}${ownerBadge}
+								<span class="badge badge-${t.status.toLowerCase().replace(/\s+/g, '')} fs-11">${t.status}</span>
+							</div>
+						</div>
+						${tagsHtml ? `<div class="mt-2">${tagsHtml}</div>` : ''}
+					</div>
+				`;
+			}).join('');
+		}
+
+		function renderKanban() {
+			const cols = { 'To-Do': 'kanbanColTodo', 'In Progress': 'kanbanColProgress', 'Done': 'kanbanColDone' };
+			Object.values(cols).forEach(id => { document.getElementById(id).innerHTML = ''; });
+
+			TASKS.forEach(t => {
+				const card = document.createElement('div');
+				card.className = 'kanban-card';
+				card.draggable = true;
+				card.ondragstart = (e) => e.dataTransfer.setData('text/plain', t.id);
+				card.onclick = () => openTaskModal(t.id);
+				card.innerHTML = `
+					<div class="d-flex justify-content-between align-items-center mb-2">
+						<span class="badge bg-secondary fs-11">${t.uid}</span>
+						<span class="badge priority-${t.priority.toLowerCase()} fs-11">${t.priority}</span>
+					</div>
+					<h6 class="fw-bold fs-13 mb-1 text-dark">${escapeHtml(t.title)}</h6>
+					${t.dueDate ? `<span class="fs-11 text-muted"><i class="ti ti-calendar"></i> ${t.dueDate}</span>` : ''}
+				`;
+				const colEl = document.getElementById(cols[t.status] || 'kanbanColTodo');
+				if (colEl) colEl.appendChild(card);
+			});
+		}
+
+		function allowDrop(e) { e.preventDefault(); }
+		async function handleDrop(e, newStatus) {
+			e.preventDefault();
+			const id = e.dataTransfer.getData('text/plain');
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${id}/status`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ status: newStatus })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadTasks();
+			} catch (err) {
+				alert(err.message || 'Unable to update task status.');
+			}
+		}
+
+		function openNewTaskModal() {
+			document.getElementById('newTaskTitle').value = '';
+			document.getElementById('newTaskNotes').value = '';
+			document.getElementById('newTaskPriority').value = 'Normal';
+			document.getElementById('newTaskDueDate').value = '';
+			document.getElementById('newTaskTags').value = '';
+			document.getElementById('newTaskOwner').value = '';
+			document.getElementById('newTaskTicketSearch').value = '';
+			document.getElementById('newTaskTicketResults').innerHTML = '';
+			document.getElementById('newTaskLinkedTicketDisplay').textContent = '';
+			newTaskLinkedTicketId = null;
+			bootstrap.Modal.getOrCreateInstance(document.getElementById('newTaskModal')).show();
+		}
+
+		async function submitNewTask() {
+			const title = document.getElementById('newTaskTitle').value.trim();
+			if (!title) { alert('Title is required.'); return; }
+
+			try {
+				const res = await fetch('/api/v1/lilypad/tasks', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						title,
+						notes: document.getElementById('newTaskNotes').value,
+						priority: document.getElementById('newTaskPriority').value,
+						dueDate: document.getElementById('newTaskDueDate').value || null,
+						tags: parseTagInput(document.getElementById('newTaskTags').value),
+						ownerId: document.getElementById('newTaskOwner').value || null,
+						linkedTicketId: newTaskLinkedTicketId
+					})
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				bootstrap.Modal.getInstance(document.getElementById('newTaskModal'))?.hide();
+				await loadTasks();
+			} catch (err) {
+				alert(err.message || 'Unable to create task.');
+			}
+		}
+
+		let ticketSearchDebounce = null;
+		function searchTicketsForLink(query, resultsElId, context) {
+			clearTimeout(ticketSearchDebounce);
+			const resultsEl = document.getElementById(resultsElId);
+			if (!query || query.trim().length < 2) { resultsEl.innerHTML = ''; return; }
+
+			ticketSearchDebounce = setTimeout(async () => {
+				try {
+					const res = await fetch('/api/v1/lilypad/tickets/todo?search=' + encodeURIComponent(query.trim()) + '&limit=5');
+					const result = await res.json();
+					if (!result.success) throw new Error(result.error);
+
+					resultsEl.innerHTML = result.data.map(t => `
+						<a href="javascript:void(0);" class="list-group-item list-group-item-action fs-12" onclick='selectLinkedTicket(${JSON.stringify(t._id)}, ${JSON.stringify(t.formattedUid)}, ${JSON.stringify(t.title)}, "${context}")'>
+							<strong>${escapeHtml(t.formattedUid)}</strong> - ${escapeHtml(t.title)}
+						</a>
+					`).join('') || '<span class="list-group-item fs-12 text-muted">No matching tickets.</span>';
+				} catch (err) {
+					console.error('searchTicketsForLink failed:', err);
+				}
+			}, 300);
+		}
+
+		function selectLinkedTicket(id, uid, title, context) {
+			if (context === 'new') {
+				newTaskLinkedTicketId = id;
+				document.getElementById('newTaskTicketResults').innerHTML = '';
+				document.getElementById('newTaskTicketSearch').value = '';
+				document.getElementById('newTaskLinkedTicketDisplay').innerHTML = `<i class="ti ti-link me-1"></i>Linked to <strong>${escapeHtml(uid)}</strong> - ${escapeHtml(title)}`;
+			} else {
+				linkTicketToCurrentTask(id);
+			}
+		}
+
+		async function linkTicketToCurrentTask(ticketId) {
+			if (!currentDetailTask) return;
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ linkedTicketId: ticketId })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				document.getElementById('detailTaskTicketSearch').value = '';
+				document.getElementById('detailTaskTicketResults').innerHTML = '';
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to link ticket.');
+			}
+		}
+
+		async function unlinkTicketFromCurrentTask() {
+			if (!currentDetailTask) return;
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ linkedTicketId: null })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to unlink ticket.');
+			}
+		}
+
+		async function refreshCurrentTask() {
+			if (!currentDetailTask) return;
+			const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}`);
+			const result = await res.json();
+			if (!result.success) return;
+			currentDetailTask = mapTask(result.data);
+			renderTaskDetail();
+			await loadTasks();
+		}
+
+		function renderTaskDetail() {
+			const t = currentDetailTask;
+			document.getElementById('detailTaskUid').textContent = t.uid;
+			document.getElementById('detailTaskStatusBadge').textContent = t.status;
+			document.getElementById('detailTaskStatusBadge').className = 'badge badge-' + t.status.toLowerCase().replace(/\s+/g, '');
+			document.getElementById('detailTaskTitle').value = t.title;
+			document.getElementById('detailTaskNotes').value = t.notes;
+			document.getElementById('detailTaskPriority').value = t.priority;
+			document.getElementById('detailTaskDueDate').value = t.dueDate;
+			document.getElementById('detailTaskTags').value = t.tags.join(', ');
+			document.getElementById('detailTaskOwner').textContent = (t.owner && t.owner.fullname) || 'Unknown';
+			document.getElementById('detailTaskCreatedBy').textContent = (t.createdBy && t.createdBy.fullname) || 'Unknown';
+
+			const linkedEl = document.getElementById('detailLinkedTicketDisplay');
+			linkedEl.innerHTML = t.linkedTicket
+				? `<span class="badge bg-soft-secondary text-secondary fs-12 me-2"><i class="ti ti-link me-1"></i>${escapeHtml(t.linkedTicket.formattedUid)} - ${escapeHtml(t.linkedTicket.title)}</span><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="unlinkTicketFromCurrentTask()">Unlink</button>`
+				: '<span class="text-muted fs-13">No ticket linked.</span>';
+
+			const commentsEl = document.getElementById('detailTaskComments');
+			commentsEl.innerHTML = t.comments.length
+				? t.comments.map(c => `
+					<div class="p-2 rounded-3 mb-2 fs-13 bg-light border">
+						<div class="d-flex justify-content-between mb-1">
+							<strong class="text-primary fs-12">${escapeHtml(c.authorName)}</strong>
+							<span class="text-muted fs-11">${new Date(c.createdAt).toLocaleString()}</span>
+						</div>
+						<p class="mb-0 text-dark">${escapeHtml(c.body)}</p>
+					</div>
+				`).join('')
+				: '<p class="text-muted fs-13">No comments yet.</p>';
+		}
+
+		function openTaskModal(id) {
+			const task = TASKS.find(t => t.id === id);
+			if (!task) return;
+			currentDetailTask = task;
+			renderTaskDetail();
+			bootstrap.Modal.getOrCreateInstance(document.getElementById('taskDetailModal')).show();
+		}
+
+		async function saveTaskField(field, value) {
+			if (!currentDetailTask) return;
+			const payload = {};
+			if (field === 'tags') payload.tags = parseTagInput(value);
+			else if (field === 'dueDate') payload.dueDate = value || null;
+			else payload[field] = value;
+
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to save changes.');
+			}
+		}
+
+		async function setTaskStatus(status) {
+			if (!currentDetailTask) return;
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}/status`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ status })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to update status.');
+			}
+		}
+
+		async function shareCurrentTask() {
+			if (!currentDetailTask) return;
+			const userId = document.getElementById('detailTaskShareSelect').value;
+			if (!userId) { alert('Choose someone to share this task with.'); return; }
+			if (!confirm('Share this task? It will move onto their list.')) return;
+
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}/assign`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ userId })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				bootstrap.Modal.getInstance(document.getElementById('taskDetailModal'))?.hide();
+				await loadTasks();
+			} catch (err) {
+				alert(err.message || 'Unable to share task.');
+			}
+		}
+
+		async function deleteCurrentTask() {
+			if (!currentDetailTask) return;
+			if (!confirm(`Delete "${currentDetailTask.title}"?`)) return;
+
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}`, { method: 'DELETE' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				bootstrap.Modal.getInstance(document.getElementById('taskDetailModal'))?.hide();
+				currentDetailTask = null;
+				await loadTasks();
+			} catch (err) {
+				alert(err.message || 'Unable to delete task.');
+			}
+		}
+
+		async function postTaskComment(e) {
+			e.preventDefault();
+			const input = document.getElementById('taskCommentInput');
+			const body = input.value.trim();
+			if (!body || !currentDetailTask) return;
+
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}/comments`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ body })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				input.value = '';
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to post comment.');
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			await loadMe();
+			await loadUsers();
+			await loadTasks();
+		});
+	</script>
+</body>
+
+</html>
