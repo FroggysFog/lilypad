@@ -452,6 +452,28 @@
 						<div id="detailTaskTicketResults" class="list-group mt-1"></div>
 					</div>
 
+					<div class="card bg-light border-0 rounded-3 p-3 mb-3">
+						<div class="d-flex align-items-center justify-content-between mb-2">
+							<h6 class="fw-bold fs-12 text-uppercase mb-0"><i class="ti ti-list-check me-1"></i>Subtasks</h6>
+							<span class="fs-11 text-muted" id="subtaskProgressLabel"></span>
+						</div>
+						<p class="fs-12 text-muted mb-2">Assign each piece to a specific person - the task can't be marked Done until everyone's subtask is checked off.</p>
+						<div id="detailSubtasksList" class="mb-2"></div>
+						<div class="d-flex align-items-center gap-2">
+							<input type="text" class="form-control form-control-sm" id="newSubtaskText" placeholder="Subtask description">
+							<select class="form-select form-select-sm" id="newSubtaskAssignee" style="max-width:160px;">
+								<option value="">Unassigned</option>
+							</select>
+							<button type="button" class="btn btn-sm btn-primary text-nowrap" onclick="addTaskSubtask()">Add</button>
+						</div>
+					</div>
+
+					<div class="card bg-light border-0 rounded-3 p-3 mb-3">
+						<h6 class="fw-bold fs-12 text-uppercase mb-2"><i class="ti ti-paperclip me-1"></i>Attachments</h6>
+						<div id="detailAttachmentsList" class="mb-2"></div>
+						<input type="file" class="form-control form-control-sm" id="taskFileInput" onchange="handleTaskFileUpload(event)">
+					</div>
+
 					<h6 class="fw-bold fs-13 mb-2">Comments</h6>
 					<div id="detailTaskComments" class="mb-3"></div>
 					<form onsubmit="postTaskComment(event)" class="d-flex gap-2">
@@ -518,6 +540,9 @@
 
 				const newTagSelect = document.getElementById('newTaskTagPeople');
 				newTagSelect.innerHTML = USERS.filter(u => u.id !== currentUserId).map(u => `<option value="${u.id}">${escapeHtml(u.fullname)}</option>`).join('');
+
+				const subtaskAssigneeSelect = document.getElementById('newSubtaskAssignee');
+				subtaskAssigneeSelect.innerHTML = '<option value="">Unassigned</option>' + USERS.map(u => `<option value="${u.id}">${escapeHtml(u.fullname)}</option>`).join('');
 			} catch (err) {
 				console.error('loadUsers failed:', err);
 			}
@@ -537,10 +562,25 @@
 				createdBy: t.createdBy,
 				taggedUsers: t.taggedUsers || [],
 				linkedTicket: t.linkedTicket,
+				subtasks: t.subtasks || [],
+				attachments: (t.attachments || []).map(a => ({
+					id: a._id,
+					name: a.originalName,
+					path: a.path,
+					sizeBytes: a.size,
+					uploader: a.uploadedByName || 'Unknown',
+					uploadedAt: a.uploadedAt ? new Date(a.uploadedAt).toLocaleString() : ''
+				})),
 				comments: t.comments || [],
 				history: t.history || [],
 				createdAt: t.createdAt
 			};
+		}
+
+		function formatFileSize(bytes) {
+			if (!bytes) return '0 KB';
+			if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+			return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 		}
 
 		function switchTaskView(view) {
@@ -606,6 +646,9 @@
 				const dueBadge = t.dueDate ? `<span class="badge ${isOverdue ? 'bg-danger-subtle text-danger' : 'bg-light text-muted border'} fs-11"><i class="ti ti-calendar me-1"></i>${t.dueDate}</span>` : '';
 				const ownerBadge = currentTaskView === 'assignedByMe' ? `<span class="badge bg-soft-info text-info fs-11"><i class="ti ti-user me-1"></i>${escapeHtml(ownerName)}</span>` : '';
 				const taggedBadge = t.taggedUsers.length ? `<span class="badge bg-light text-muted border fs-11" title="${t.taggedUsers.map(u => escapeHtml(u.fullname)).join(', ')}"><i class="ti ti-users me-1"></i>${t.taggedUsers.length}</span>` : '';
+				const subtaskDone = (t.subtasks || []).filter(s => s.done).length;
+				const subtaskBadge = (t.subtasks || []).length ? `<span class="badge bg-light text-muted border fs-11"><i class="ti ti-list-check me-1"></i>${subtaskDone}/${t.subtasks.length}</span>` : '';
+				const attachmentBadge = (t.attachments || []).length ? `<span class="badge bg-light text-muted border fs-11"><i class="ti ti-paperclip me-1"></i>${t.attachments.length}</span>` : '';
 
 				return `
 					<div class="task-row ${isDone ? 'is-done' : ''} ${isOverdue ? 'is-overdue' : ''}" onclick="openTaskModal('${t.id}')">
@@ -615,7 +658,7 @@
 								<strong class="task-title">${escapeHtml(t.title)}</strong>
 							</div>
 							<div class="d-flex align-items-center gap-2">
-								${dueBadge}${ticketBadge}${ownerBadge}${taggedBadge}
+								${dueBadge}${ticketBadge}${ownerBadge}${taggedBadge}${subtaskBadge}${attachmentBadge}
 								<span class="badge badge-${t.status.toLowerCase().replace(/\s+/g, '')} fs-11">${t.status}</span>
 							</div>
 						</div>
@@ -822,6 +865,38 @@
 				? `<span class="badge bg-soft-secondary text-secondary fs-12 me-2"><i class="ti ti-link me-1"></i>${escapeHtml(t.linkedTicket.formattedUid)} - ${escapeHtml(t.linkedTicket.title)}</span><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="unlinkTicketFromCurrentTask()">Unlink</button>`
 				: '<span class="text-muted fs-13">No ticket linked.</span>';
 
+			const subtasksEl = document.getElementById('detailSubtasksList');
+			const progressEl = document.getElementById('subtaskProgressLabel');
+			const doneCount = t.subtasks.filter(s => s.done).length;
+			progressEl.textContent = t.subtasks.length ? `${doneCount}/${t.subtasks.length} complete` : '';
+			subtasksEl.innerHTML = t.subtasks.length
+				? t.subtasks.map(s => `
+					<div class="d-flex align-items-center justify-content-between p-2 rounded-2 border bg-white mb-1">
+						<div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+							<input type="checkbox" class="form-check-input mt-0 flex-shrink-0" ${s.done ? 'checked' : ''} onchange="toggleTaskSubtask('${s._id}', this.checked)">
+							<span class="fs-13 ${s.done ? 'text-decoration-line-through text-muted' : 'text-dark'}">${escapeHtml(s.text)}</span>
+						</div>
+						<div class="d-flex align-items-center gap-2 flex-shrink-0">
+							<span class="badge bg-light text-muted border fs-10">${s.assignee ? escapeHtml(s.assignee.fullname) : 'Unassigned'}</span>
+							<button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="deleteTaskSubtask('${s._id}')"><i class="ti ti-trash fs-13"></i></button>
+						</div>
+					</div>
+				`).join('')
+				: '<p class="text-muted fs-13 mb-0">No subtasks yet.</p>';
+
+			const attachmentsEl = document.getElementById('detailAttachmentsList');
+			attachmentsEl.innerHTML = t.attachments.length
+				? t.attachments.map(a => `
+					<div class="d-flex align-items-center justify-content-between p-2 rounded-2 border bg-white mb-1">
+						<div class="min-w-0">
+							<a href="/api/v1/lilypad/uploads/${a.path}" target="_blank" class="fs-13 text-dark fw-semibold text-decoration-none text-truncate d-block" style="max-width:280px;">${escapeHtml(a.name)}</a>
+							<span class="fs-11 text-muted">${formatFileSize(a.sizeBytes)} &middot; ${escapeHtml(a.uploader)} &middot; ${a.uploadedAt}</span>
+						</div>
+						<button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="deleteTaskAttachment('${a.id}')"><i class="ti ti-trash fs-14"></i></button>
+					</div>
+				`).join('')
+				: '<p class="text-muted fs-13 mb-0">No files attached yet.</p>';
+
 			const commentsEl = document.getElementById('detailTaskComments');
 			commentsEl.innerHTML = t.comments.length
 				? t.comments.map(c => `
@@ -931,6 +1006,91 @@
 				await refreshCurrentTask();
 			} catch (err) {
 				alert(err.message || 'Unable to remove tagged person.');
+			}
+		}
+
+		async function addTaskSubtask() {
+			if (!currentDetailTask) return;
+			const textInput = document.getElementById('newSubtaskText');
+			const text = textInput.value.trim();
+			if (!text) return;
+			const assigneeId = document.getElementById('newSubtaskAssignee').value;
+
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}/subtasks`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ text, assigneeId: assigneeId || null })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				textInput.value = '';
+				document.getElementById('newSubtaskAssignee').value = '';
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to add subtask.');
+			}
+		}
+
+		async function toggleTaskSubtask(subtaskId, done) {
+			if (!currentDetailTask) return;
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}/subtasks/${subtaskId}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ done })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to update subtask.');
+				await refreshCurrentTask();
+			}
+		}
+
+		async function deleteTaskSubtask(subtaskId) {
+			if (!currentDetailTask) return;
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}/subtasks/${subtaskId}`, { method: 'DELETE' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to delete subtask.');
+			}
+		}
+
+		async function handleTaskFileUpload(e) {
+			if (!currentDetailTask || !e.target.files.length) return;
+			const file = e.target.files[0];
+			const formData = new FormData();
+			formData.append('file', file);
+
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}/attachments`, {
+					method: 'POST',
+					body: formData
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to upload file.');
+			} finally {
+				e.target.value = '';
+			}
+		}
+
+		async function deleteTaskAttachment(attachmentId) {
+			if (!currentDetailTask) return;
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}/attachments/${attachmentId}`, { method: 'DELETE' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to delete file.');
 			}
 		}
 
