@@ -11,6 +11,7 @@ const { syncPastDueAccountsFromSalesforce } = require('../services/pastDueSyncSe
 const { syncOrdersFromSalesforce } = require('../services/orderSyncService')
 const { syncCartOrders } = require('../services/cartOrderSyncService')
 const { syncCartPastDueAccounts } = require('../services/cartPastDueSyncService')
+const { verifySmtpConnection } = require('../services/emailSenderService')
 const {
   getDaysLate,
   getPastDueStage,
@@ -41,7 +42,11 @@ function toRow (account) {
     status,
     stage: stage.emailStage,
     nextAction: stage.nextAction,
-    isPending: !RESOLVED_STATUSES.includes(status),
+    isPending: !RESOLVED_STATUSES.includes(status) && !account.manuallyResolved,
+    manuallyResolved: Boolean(account.manuallyResolved),
+    manuallyResolvedAt: account.manuallyResolvedAt,
+    manuallyResolvedBy: account.manuallyResolvedBy,
+    manuallyResolvedNote: account.manuallyResolvedNote,
     salesRep: account.salesRep,
     payerName: account.payerName,
     payerEmail: account.payerEmail,
@@ -199,6 +204,49 @@ lilypadPastDueController.updatePayerInfo = async function (req, res) {
 
     await account.save()
     return res.status(200).json({ success: true, data: toRow(account) })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * PUT /api/v1/lilypad/past-due/:id/resolve
+ * Manual override for a payment settled somewhere the Salesforce/Cart.com
+ * sync doesn't see yet (check received, disputed, payment plan agreed,
+ * etc) - stops automated/scheduled reminders without waiting for the
+ * upstream system to catch up. Reopening (resolved: false) is the same
+ * endpoint so staff can undo a mistaken resolve.
+ */
+lilypadPastDueController.setResolved = async function (req, res) {
+  try {
+    const account = await LilyPadPastDueAccount.findById(req.params.id)
+    if (!account) {
+      return res.status(404).json({ success: false, error: 'Account not found' })
+    }
+
+    const resolved = Boolean(req.body && req.body.resolved)
+    account.manuallyResolved = resolved
+    account.manuallyResolvedAt = resolved ? new Date() : null
+    account.manuallyResolvedBy = resolved ? (req.user.fullname || req.user.username || '') : ''
+    account.manuallyResolvedNote = resolved ? xss(String((req.body && req.body.note) || '').trim()) : ''
+
+    await account.save()
+    return res.status(200).json({ success: true, data: toRow(account) })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/past-due/smtp-status
+ * Actually opens/authenticates an SMTP connection (not just an env-var
+ * presence check) so launch-readiness can be confirmed without sending a
+ * real or test email just to find out.
+ */
+lilypadPastDueController.getSmtpStatus = async function (req, res) {
+  try {
+    const result = await verifySmtpConnection()
+    return res.status(200).json({ success: true, ...result })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

@@ -151,6 +151,9 @@ async function sendReminderForAccount (account, options = {}) {
     if (RESOLVED_STATUSES.includes(status)) {
       return { skipped: true, reason: 'Account status excludes automated reminders.' }
     }
+    if (account.manuallyResolved) {
+      return { skipped: true, reason: 'Account marked resolved manually.' }
+    }
 
     const templateKey = determineReminderTemplateKey(status, daysLate)
     const lastDelivery = await getLastDelivery(account.accountName, templateKey)
@@ -217,7 +220,7 @@ async function runScheduledReminderCheck () {
   const enabled = await getReminderAutomationEnabled()
   if (!enabled) return { skipped: true, reason: 'Reminder automation is disabled.' }
 
-  const accounts = await LilyPadPastDueAccount.find({ status: { $nin: RESOLVED_STATUSES } })
+  const accounts = await LilyPadPastDueAccount.find({ status: { $nin: RESOLVED_STATUSES }, manuallyResolved: { $ne: true } })
   const dueAccounts = accounts.filter((account) => getDaysLate(account) >= 7)
 
   const results = []

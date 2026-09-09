@@ -16,16 +16,8 @@ function hasSmtpConfig () {
   )
 }
 
-async function sendReminderEmail ({ to, subject, body, senderEmail }) {
-  if (!to) {
-    throw new Error('Recipient email is required.')
-  }
-
-  if (!hasSmtpConfig()) {
-    throw new Error('SMTP is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, and SMTP_FROM.')
-  }
-
-  const transporter = nodemailer.createTransport({
+function buildTransporter () {
+  return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT),
     secure: String(process.env.SMTP_SECURE || '').toLowerCase() === 'true',
@@ -38,6 +30,39 @@ async function sendReminderEmail ({ to, subject, body, senderEmail }) {
     greetingTimeout: 15000,
     socketTimeout: 20000
   })
+}
+
+/**
+ * Actually opens a connection and authenticates with the SMTP server
+ * (nodemailer's transporter.verify()) rather than just checking that the
+ * env vars are non-empty - a wrong password or unreachable host still
+ * "has config" but can't send. Used by the Past Due page's readiness
+ * check so launch-readiness can be confirmed without sending a real or
+ * test email just to find out.
+ */
+async function verifySmtpConnection () {
+  if (!hasSmtpConfig()) {
+    return { configured: false, verified: false, error: 'SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, and SMTP_FROM must all be set.' }
+  }
+
+  try {
+    await buildTransporter().verify()
+    return { configured: true, verified: true, error: null }
+  } catch (err) {
+    return { configured: true, verified: false, error: err.message }
+  }
+}
+
+async function sendReminderEmail ({ to, subject, body, senderEmail }) {
+  if (!to) {
+    throw new Error('Recipient email is required.')
+  }
+
+  if (!hasSmtpConfig()) {
+    throw new Error('SMTP is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, and SMTP_FROM.')
+  }
+
+  const transporter = buildTransporter()
 
   const htmlBody = String(body || '').trim() || '<p>No message body provided.</p>'
   const result = await transporter.sendMail({
@@ -58,5 +83,6 @@ async function sendReminderEmail ({ to, subject, body, senderEmail }) {
 
 module.exports = {
   hasSmtpConfig,
+  verifySmtpConnection,
   sendReminderEmail
 }

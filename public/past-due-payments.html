@@ -189,6 +189,9 @@
 						<p class="text-muted fs-13 mb-0">Collections reminder queue: overdue accounts, staged email reminders, and delivery history.</p>
 					</div>
 					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<span class="badge fs-12 rounded-pill fw-semibold" id="smtpStatusBadge" title="Whether the server can actually authenticate with the SMTP server right now - not just whether the env vars are set.">
+							<i class="ti ti-loader me-1"></i> Checking SMTP...
+						</span>
 						<div class="form-check form-switch d-flex align-items-center gap-2 bg-white border rounded-pill px-3 py-2 shadow-sm mb-0">
 							<input class="form-check-input mt-0" type="checkbox" role="switch" id="automationToggle" onchange="toggleAutomation()">
 							<label class="form-check-label fs-13 fw-semibold mb-0" for="automationToggle">Automated Reminders</label>
@@ -328,6 +331,18 @@
 						<div class="col-md-3"><span class="fs-12 text-muted d-block">Sales Rep</span><strong id="detailSalesRep"></strong></div>
 					</div>
 
+					<div class="card border-0 bg-light rounded-3 p-3 mb-3" id="resolvedCard">
+						<div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
+							<div>
+								<h6 class="fw-bold fs-13 mb-1">Manual Resolution</h6>
+								<p class="fs-12 text-muted mb-0">Use this when a payment was actually settled (check received, payment plan agreed, dispute on hold) but Salesforce/Cart.com hasn't caught up yet. Stops automated reminders for this account until reopened.</p>
+								<div id="resolvedInfo" class="fs-12 text-success fw-semibold mt-2" style="display:none;"></div>
+							</div>
+							<button type="button" class="btn btn-sm" id="resolveToggleBtn" onclick="toggleResolved()">Mark Resolved</button>
+						</div>
+						<textarea class="form-control form-control-sm mt-2" id="resolveNoteInput" rows="2" placeholder="Optional note (e.g. 'Paid by check 6/2, awaiting Salesforce sync')" style="display:none;"></textarea>
+					</div>
+
 					<h6 class="fw-bold fs-13 mb-2">Payer Information</h6>
 					<div class="row g-2 mb-3">
 						<div class="col-md-6"><input type="text" class="form-control form-control-sm" id="payerNameInput" placeholder="Payer name"></div>
@@ -382,6 +397,7 @@
 	<script>
 		let PAST_DUE_ACCOUNTS = [];
 		let currentDetailAccountId = null;
+		let currentDetailManuallyResolved = false;
 		let pdPage = 1;
 		let pdPageSize = 50;
 		let pdTotal = 0;
@@ -487,7 +503,7 @@
 				<tr style="cursor:pointer;" onclick="openAccountDetail('${a.id}')">
 					<td><strong>${escapeHtml(a.accountName)}</strong></td>
 					<td>${sourceBadge(a.source)}</td>
-					<td><span class="badge ${stageBadgeClass(a.stage)} fs-11">${escapeHtml(a.stage)}</span></td>
+					<td><span class="badge ${stageBadgeClass(a.stage)} fs-11">${escapeHtml(a.stage)}</span> ${a.manuallyResolved ? '<span class="badge bg-soft-success text-success fs-10 rounded-pill">Resolved</span>' : ''}</td>
 					<td>${a.daysLate}</td>
 					<td>${formatCurrency(a.amountDue)}</td>
 					<td>${escapeHtml(a.payerName || '—')}</td>
@@ -531,6 +547,30 @@
 			}
 		}
 
+		async function loadSmtpStatus() {
+			const badge = document.getElementById('smtpStatusBadge');
+			try {
+				const res = await fetch('/api/v1/lilypad/past-due/smtp-status');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				if (result.verified) {
+					badge.className = 'badge fs-12 rounded-pill fw-semibold bg-soft-success text-success';
+					badge.innerHTML = '<i class="ti ti-circle-check me-1"></i> SMTP Ready';
+				} else if (result.configured) {
+					badge.className = 'badge fs-12 rounded-pill fw-semibold bg-soft-danger text-danger';
+					badge.title = result.error || 'SMTP connection/authentication failed.';
+					badge.innerHTML = '<i class="ti ti-alert-triangle me-1"></i> SMTP Configured, Not Connecting';
+				} else {
+					badge.className = 'badge fs-12 rounded-pill fw-semibold bg-soft-warning text-warning';
+					badge.innerHTML = '<i class="ti ti-plug-connected-x me-1"></i> SMTP Not Configured';
+				}
+			} catch (err) {
+				badge.className = 'badge fs-12 rounded-pill fw-semibold bg-soft-secondary text-secondary';
+				badge.innerHTML = '<i class="ti ti-help-circle me-1"></i> SMTP Status Unknown';
+			}
+		}
+
 		async function loadAutomationStatus() {
 			try {
 				const res = await fetch('/api/v1/lilypad/past-due/automation');
@@ -570,6 +610,26 @@
 				document.getElementById('detailEstimatedDueBadge').style.display = a.dueDateIsEstimated ? '' : 'none';
 				document.getElementById('detailAmount').textContent = formatCurrency(a.amountDue);
 				document.getElementById('detailSalesRep').textContent = a.salesRep || '—';
+
+				currentDetailManuallyResolved = Boolean(a.manuallyResolved);
+				const resolveBtn = document.getElementById('resolveToggleBtn');
+				const resolveNote = document.getElementById('resolveNoteInput');
+				const resolvedInfo = document.getElementById('resolvedInfo');
+				if (currentDetailManuallyResolved) {
+					resolveBtn.textContent = 'Reopen (Resume Reminders)';
+					resolveBtn.className = 'btn btn-sm btn-outline-secondary';
+					resolveNote.style.display = 'none';
+					resolvedInfo.style.display = '';
+					resolvedInfo.textContent = 'Resolved' + (a.manuallyResolvedBy ? ' by ' + a.manuallyResolvedBy : '') +
+						(a.manuallyResolvedAt ? ' on ' + new Date(a.manuallyResolvedAt).toLocaleString() : '') +
+						(a.manuallyResolvedNote ? ' — "' + a.manuallyResolvedNote + '"' : '');
+				} else {
+					resolveBtn.textContent = 'Mark Resolved';
+					resolveBtn.className = 'btn btn-sm btn-outline-success';
+					resolveNote.style.display = '';
+					resolveNote.value = '';
+					resolvedInfo.style.display = 'none';
+				}
 
 				document.getElementById('payerNameInput').value = a.payerName || '';
 				document.getElementById('payerEmailInput').value = a.payerEmail || '';
@@ -618,6 +678,28 @@
 				alert('Payer info saved.');
 			} catch (err) {
 				alert(err.message || 'Unable to save payer info.');
+			}
+		}
+
+		async function toggleResolved() {
+			const nextResolved = !currentDetailManuallyResolved;
+			if (nextResolved && !confirm('Mark this account resolved? Automated and scheduled reminders will stop for it until reopened.')) return;
+
+			try {
+				const res = await fetch('/api/v1/lilypad/past-due/' + currentDetailAccountId + '/resolve', {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						resolved: nextResolved,
+						note: document.getElementById('resolveNoteInput').value
+					})
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadPastDue();
+				openAccountDetail(currentDetailAccountId);
+			} catch (err) {
+				alert(err.message || 'Unable to update resolution status.');
 			}
 		}
 
@@ -693,6 +775,7 @@
 
 			loadPastDue();
 			loadAutomationStatus();
+			loadSmtpStatus();
 		});
 	</script>
 </body>

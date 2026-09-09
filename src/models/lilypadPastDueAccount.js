@@ -104,6 +104,30 @@ const pastDueAccountSchema = new Schema(
     lastSyncAt: {
       type: Date,
       default: Date.now
+    },
+    // Manual override for a payment settled somewhere the upstream
+    // Salesforce/Cart.com sync doesn't see yet (check received, disputed
+    // and on hold, etc). Deliberately not part of either sync service's
+    // $set update, so an hourly resync can never clobber it - it only
+    // goes away when staff clears it, or when the record itself is
+    // deleted because the upstream sync no longer considers it past due.
+    manuallyResolved: {
+      type: Boolean,
+      default: false
+    },
+    manuallyResolvedAt: {
+      type: Date,
+      default: null
+    },
+    manuallyResolvedBy: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    manuallyResolvedNote: {
+      type: String,
+      trim: true,
+      default: ''
     }
   },
   { timestamps: true }
