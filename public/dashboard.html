@@ -449,21 +449,21 @@
 					</div>
 				</div>
 
-				<!-- User's Live Ticket Operations & Task Feed Widget (SOLE MAIN WIDGET) -->
+				<!-- Unified To-Do Widget: Tickets + Tasks (SOLE MAIN WIDGET) -->
 				<div class="row mb-4">
 					<div class="col-12">
 						<div class="card border-0 shadow-sm rounded-3">
 							<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
 								<div class="d-flex align-items-center gap-2">
 									<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">
-										<i class="ti ti-ticket"></i>
+										<i class="ti ti-list-check"></i>
 									</div>
 									<div>
 										<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">
-											Tickets & Live Ops Feed
+											To-Do: Tickets & Tasks
 											<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold"><i class="ti ti-point-filled"></i> Live Sync</span>
 										</h5>
-										<span class="fs-12 text-muted">Real-time assignments, status movements, and ticket operations</span>
+										<span class="fs-12 text-muted" id="dashboardFeedSubtitle">Real-time assignments, status movements, and your personal tasks</span>
 									</div>
 								</div>
 
@@ -477,16 +477,20 @@
 											<button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets('urgent', this)">Urgent & High</button>
 										</li>
 									</ul>
-									<a href="tickets.html" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill shadow-sm" style="font-size: 13px;">
+									<a href="tickets.html" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill" style="font-size: 13px;">
 										<i class="ti ti-layout-kanban fs-14"></i>
 										<span>Ticket Suite</span>
+									</a>
+									<a href="tasks.html" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill shadow-sm" style="font-size: 13px;">
+										<i class="ti ti-checklist fs-14"></i>
+										<span>Task Manager</span>
 									</a>
 								</div>
 							</div>
 
 							<div class="card-body p-3">
 								<div class="row g-3" id="dashboardTicketsListContainer">
-									<!-- Dynamic Live Ticket Feed Cards -->
+									<!-- Dynamic merged Ticket + Task Feed Cards -->
 								</div>
 							</div>
 
@@ -538,7 +542,9 @@
 <script>
     let dashCurrentUserId = null;
     let dashLastTickets = [];
+    let dashLastTasks = [];
     let dashStatusPill = 'all'; // 'all' | 'urgent'
+    const DASH_PRIORITY_RANK = { Urgent: 3, High: 2, Normal: 1, Low: 0 };
 
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
@@ -603,23 +609,63 @@
         }
     }
 
+    /**
+     * Merges Tickets and Tasks into one normalized feed shape so they can
+     * be sorted and rendered together. Tasks only ever come from the
+     * current user's own list (personal by design - see lilypadTask.js),
+     * so they're only merged in when viewing "Me", not a teammate's or
+     * everyone's queue.
+     */
+    function buildMergedFeed() {
+        const ticketItems = dashLastTickets.map(t => ({
+            feedType: 'ticket',
+            id: t._id,
+            uid: t.formattedUid,
+            title: t.title,
+            subtitle: t.description,
+            priority: t.priority,
+            status: t.status,
+            personLabel: (t.assignee && t.assignee.fullname) || 'Unassigned',
+            href: `tickets.html?ticket=${t._id}`
+        }));
+
+        const taskItems = dashLastTasks.map(t => ({
+            feedType: 'task',
+            id: t._id,
+            uid: t.formattedUid,
+            title: t.title,
+            subtitle: t.notes || 'No notes.',
+            priority: t.priority,
+            status: t.status,
+            personLabel: t.dueDate ? ('Due ' + new Date(t.dueDate).toLocaleDateString()) : 'No due date',
+            href: `tasks.html?task=${t._id}`
+        }));
+
+        return ticketItems.concat(taskItems).sort((a, b) => {
+            const rankDiff = (DASH_PRIORITY_RANK[b.priority] || 0) - (DASH_PRIORITY_RANK[a.priority] || 0);
+            if (rankDiff !== 0) return rankDiff;
+            return a.title.localeCompare(b.title);
+        });
+    }
+
     function renderDashboardFeed() {
         const container = document.getElementById('dashboardTicketsListContainer');
         if (!container) return;
 
+        const merged = buildMergedFeed();
         const filtered = dashStatusPill === 'urgent'
-            ? dashLastTickets.filter(t => t.priority === 'Urgent' || t.priority === 'High')
-            : dashLastTickets;
+            ? merged.filter(t => t.priority === 'Urgent' || t.priority === 'High')
+            : merged;
 
         if (!filtered.length) {
             container.innerHTML = `
                 <div class="col-12 text-center py-5">
                     <div class="rounded-circle d-inline-flex p-3 mb-3" style="background:rgba(var(--bs-primary-rgb), 0.1); color:var(--bs-primary);">
-                        <i class="ti ti-ticket-off fs-36"></i>
+                        <i class="ti ti-checklist fs-36"></i>
                     </div>
-                    <h5 class="fw-bold text-dark mb-1">No Active Tickets in Queue</h5>
-                    <p class="text-muted fs-13 mb-3" style="max-width: 480px; margin: 0 auto;">Nothing matches the current filters.</p>
-                    <a href="tickets.html" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm mt-2">
+                    <h5 class="fw-bold text-dark mb-1">Nothing on your plate</h5>
+                    <p class="text-muted fs-13 mb-3" style="max-width: 480px; margin: 0 auto;">No matching tickets or tasks right now.</p>
+                    <a href="tickets.html?action=new" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm mt-2">
                         <i class="ti ti-plus me-1"></i> Create First Ticket
                     </a>
                 </div>
@@ -627,33 +673,36 @@
             return;
         }
 
-        container.innerHTML = filtered.slice(0, 6).map(t => {
-            const priorityClass = t.priority === 'Urgent' ? 'danger' : (t.priority === 'High' ? 'warning' : 'info');
-            const statusClass = t.status === 'To-Do' ? 'success' : (t.status === 'In Progress' ? 'warning' : (t.status === 'Blocked' ? 'danger' : 'success'));
-            const assigneeName = (t.assignee && t.assignee.fullname) || 'Unassigned';
+        container.innerHTML = filtered.slice(0, 9).map(item => {
+            const isTicket = item.feedType === 'ticket';
+            const priorityClass = item.priority === 'Urgent' ? 'danger' : (item.priority === 'High' ? 'warning' : 'info');
+            const statusClass = item.status === 'To-Do' ? 'success' : (item.status === 'In Progress' ? 'warning' : (item.status === 'Blocked' ? 'danger' : 'success'));
+            const typeBadge = isTicket
+                ? '<span class="badge bg-soft-primary text-primary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-ticket me-1"></i>Ticket</span>'
+                : '<span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-checklist me-1"></i>Task</span>';
 
             return `
                 <div class="col-xl-4 col-md-6 d-flex">
                     <div class="card flex-fill border rounded-3 p-3 position-relative shadow-none"
                          style="cursor: pointer; transition: all 0.2s ease; border-color: var(--bs-border-color, #e2e8f0);"
-                         onclick="window.location.href='tickets.html?ticket=${t._id}'"
+                         onclick="window.location.href='${item.href}'"
                          onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--bs-primary)';"
                          onmouseout="this.style.transform='none'; this.style.borderColor='var(--bs-border-color, #e2e8f0)';">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="badge bg-dark text-white fw-bold fs-11 px-2 py-1 rounded-pill">${escapeHtml(t.formattedUid)}</span>
+                            <span class="badge bg-dark text-white fw-bold fs-11 px-2 py-1 rounded-pill">${escapeHtml(item.uid)}</span>
                             <div class="d-flex align-items-center gap-1">
-                                <span class="badge bg-soft-${priorityClass} text-${priorityClass} fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(t.priority)}</span>
-                                <span class="badge bg-soft-${statusClass} text-${statusClass} fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(t.status)}</span>
+                                ${typeBadge}
+                                <span class="badge bg-soft-${priorityClass} text-${priorityClass} fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(item.priority)}</span>
                             </div>
                         </div>
-                        <h6 class="fw-bold fs-13 mb-1 text-dark text-truncate" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</h6>
-                        <p class="text-muted fs-12 mb-2 text-truncate" style="line-height:1.4;">${escapeHtml(t.description)}</p>
+                        <h6 class="fw-bold fs-13 mb-1 text-dark text-truncate" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h6>
+                        <p class="text-muted fs-12 mb-2 text-truncate" style="line-height:1.4;">${escapeHtml(item.subtitle)}</p>
                         <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto fs-12">
                             <span class="text-muted d-flex align-items-center">
-                                <i class="ti ti-user me-1 fs-13 text-primary"></i>
-                                <strong class="text-dark">${escapeHtml(assigneeName)}</strong>
+                                <i class="ti ${isTicket ? 'ti-user' : 'ti-calendar'} me-1 fs-13 text-primary"></i>
+                                <strong class="text-dark">${escapeHtml(item.personLabel)}</strong>
                             </span>
-                            <span class="text-success fw-semibold fs-11 d-flex align-items-center">Open &rarr;</span>
+                            <span class="badge bg-soft-${statusClass} text-${statusClass} fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(item.status)}</span>
                         </div>
                     </div>
                 </div>
@@ -693,6 +742,28 @@
             if (completeEl) completeEl.textContent = c.complete;
 
             dashLastTickets = result.data || [];
+
+            // Tasks are always the logged-in user's own personal list (by
+            // design - see lilypadTask.js), so they only make sense to
+            // merge in while viewing your own queue, not a teammate's or
+            // "Everyone"'s.
+            const isMyOwnView = assignee === dashCurrentUserId;
+            const subtitleEl = document.getElementById('dashboardFeedSubtitle');
+            if (isMyOwnView) {
+                try {
+                    const taskRes = await fetch('/api/v1/lilypad/tasks?view=mine');
+                    const taskResult = await taskRes.json();
+                    dashLastTasks = taskResult.success ? (taskResult.data || []).filter(t => t.status !== 'Done') : [];
+                } catch (taskErr) {
+                    console.error('Unable to load tasks for dashboard:', taskErr);
+                    dashLastTasks = [];
+                }
+                if (subtitleEl) subtitleEl.textContent = 'Real-time assignments, status movements, and your personal tasks';
+            } else {
+                dashLastTasks = [];
+                if (subtitleEl) subtitleEl.textContent = 'Personal tasks are only shown in your own queue - switch the filter above to "Me" to see them.';
+            }
+
             renderDashboardFeed();
         } catch (err) {
             console.error('Unable to load dashboard:', err);
