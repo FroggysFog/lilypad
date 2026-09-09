@@ -180,6 +180,17 @@
 									<span class="text-muted tag-input-hint" id="pfTitlesHint"></span>
 								</div>
 							</div>
+							<div class="row g-3 mt-0" id="pfApolloFields2">
+								<div class="col-md-3">
+									<label class="form-label fs-13 fw-semibold">ZIP Codes <span class="text-muted fw-normal">(optional)</span></label>
+									<input type="text" class="form-control form-control-sm" id="pfZipCodes" placeholder="e.g. 90210, 10001">
+									<span class="text-muted tag-input-hint">Comma-separated 5-digit ZIP codes. Each one expands to every city within the radius below - Apollo itself has no ZIP/radius search.</span>
+								</div>
+								<div class="col-md-2">
+									<label class="form-label fs-13 fw-semibold">Radius (miles)</label>
+									<input type="number" class="form-control form-control-sm" id="pfZipRadius" value="25" min="1" max="100">
+								</div>
+							</div>
 							<div class="d-flex justify-content-end mt-3">
 								<button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm" id="pfSubmitBtn">
 									<i class="ti ti-player-play-filled me-1"></i> Start Deep Run
@@ -383,6 +394,7 @@
 			document.getElementById('pfVerticalWrap').style.display = mode === 'in_house' ? '' : 'none';
 			document.getElementById('pfRefreshFields').style.display = mode === 'refresh' ? '' : 'none';
 			document.getElementById('pfApolloFields').style.display = mode === 'apollo' ? '' : 'none';
+			document.getElementById('pfApolloFields2').style.display = mode === 'apollo' ? '' : 'none';
 		}
 
 		async function loadVerticals() {
@@ -416,6 +428,8 @@
 					payload.targetIndustry = parseTagInput(document.getElementById('pfIndustry').value);
 					payload.targetLocations = parseTagInput(document.getElementById('pfLocations').value);
 					payload.targetTitles = parseTagInput(document.getElementById('pfTitles').value);
+					payload.targetZipCodes = parseTagInput(document.getElementById('pfZipCodes').value);
+					payload.zipRadiusMiles = Number(document.getElementById('pfZipRadius').value) || 25;
 				}
 
 				const res = await fetch('/api/v1/lilypad/leads/prospect', {

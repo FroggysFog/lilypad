@@ -64,6 +64,20 @@ const leadBatchSchema = new Schema(
       type: [String],
       default: []
     },
+    // ZIP codes only make sense for Apollo mode - Apollo's location filters
+    // are city/state/country strings with no native ZIP/radius support, so
+    // these get resolved to "City, State" strings (see zipLookupService.js)
+    // and merged into targetLocations before the search request goes out.
+    targetZipCodes: {
+      type: [String],
+      default: []
+    },
+    zipRadiusMiles: {
+      type: Number,
+      default: 25,
+      min: 1,
+      max: 100
+    },
     targetTitles: {
       type: [String],
       default: []

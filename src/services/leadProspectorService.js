@@ -12,6 +12,7 @@ const LilyPadCustomer = require('../models/lilypadCustomer')
 const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
 const { verifyNonProfit } = require('./proPublicaService')
 const { verifyEmail } = require('./emailVerificationService')
+const { expandZipCodesToLocations } = require('./zipLookupService')
 const winston = require('../logger')
 
 const SECTOR_TITLES = {
@@ -51,13 +52,23 @@ function buildApolloFilters (batch) {
   if (batch.sector === 'non_profit') { keywordTags.add('non-profit'); keywordTags.add('nonprofit') }
   if (batch.sector === 'government') { keywordTags.add('government'); keywordTags.add('public sector') }
 
-  const locations = (batch.targetLocations || []).map((l) => String(l).trim()).filter(Boolean)
+  const locations = new Set((batch.targetLocations || []).map((l) => String(l).trim()).filter(Boolean))
+
+  // Apollo's own location filters only take city/state/country strings -
+  // no ZIP/postal code, no radius search (confirmed against Apollo's API
+  // docs) - so each requested ZIP is expanded into every "City, State"
+  // within zipRadiusMiles on our end first.
+  const { locations: zipLocations, unresolvedZips } = expandZipCodesToLocations(
+    batch.targetZipCodes, batch.zipRadiusMiles
+  )
+  zipLocations.forEach((loc) => locations.add(loc))
 
   return {
     personTitles,
-    personLocations: locations,
-    organizationLocations: locations,
-    keywordTags: Array.from(keywordTags)
+    personLocations: Array.from(locations),
+    organizationLocations: Array.from(locations),
+    keywordTags: Array.from(keywordTags),
+    unresolvedZips
   }
 }
 

@@ -94,6 +94,12 @@ async function processBatch (batchId) {
   })
 
   const filters = buildApolloFilters(batch)
+  if (filters.unresolvedZips && filters.unresolvedZips.length) {
+    winston.warn(`Lead Prospector batch ${batchId}: could not resolve ZIP code(s) ${filters.unresolvedZips.join(', ')} - skipped, search continued with the rest.`)
+    await saveProgress(batch, {
+      statusMessage: `Starting Apollo.io search... (could not resolve ZIP code(s): ${filters.unresolvedZips.join(', ')} - double-check them or try a nearby ZIP)`
+    })
+  }
   const perPage = batch.perPage || DEFAULT_PER_PAGE
   let page = (batch.currentPage || 0) + 1
   let consecutiveEmptyPages = 0

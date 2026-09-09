@@ -7,6 +7,7 @@ const { isApolloConfigured } = require('../services/apolloService')
 const { isExtractionConfigured } = require('../services/prospecting/crawl/pageExtractionService')
 const { isCrawlerSupported } = require('../services/prospecting/crawl/crawlerService')
 const { listAvailableVerticals } = require('../services/prospecting/discovery')
+const { isValidZip } = require('../services/zipLookupService')
 
 const lilypadProspectorController = {}
 
@@ -84,6 +85,21 @@ lilypadProspectorController.prospectLeads = async function (req, res) {
       return res.status(400).json({ success: false, error: 'requestedCount must be a positive integer.' })
     }
 
+    const targetZipCodes = toStringArray(req.body.targetZipCodes)
+    const badZipCodes = targetZipCodes.filter((z) => !isValidZip(z))
+    if (badZipCodes.length) {
+      return res.status(400).json({
+        success: false,
+        error: `Not a valid 5-digit US ZIP code: ${badZipCodes.join(', ')}`
+      })
+    }
+    if (targetZipCodes.length && sourceMode !== 'apollo') {
+      return res.status(400).json({
+        success: false,
+        error: 'ZIP code search is only supported in Apollo mode - the in-house crawler targets a specific vertical\'s directory instead of an arbitrary geography.'
+      })
+    }
+
     const batch = await LilyPadLeadBatch.create({
       createdByUserId: req.user._id,
       createdByName: req.user.fullname || req.user.username || '',
@@ -92,6 +108,8 @@ lilypadProspectorController.prospectLeads = async function (req, res) {
       targetVertical: sourceMode === 'in_house' ? targetVertical : '',
       targetIndustry: toStringArray(req.body.targetIndustry),
       targetLocations: toStringArray(req.body.targetLocations),
+      targetZipCodes,
+      zipRadiusMiles: Math.min(100, Math.max(1, Number(req.body.zipRadiusMiles) || 25)),
       targetTitles: toStringArray(req.body.targetTitles),
       requestedCount,
       perPage: Math.min(100, Math.max(25, Number(req.body.perPage) || 100)),
