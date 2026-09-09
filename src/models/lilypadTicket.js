@@ -117,6 +117,8 @@ const ticketSchema = new Schema({
     path: String,
     size: Number,
     mimeType: String,
+    uploadedBy: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', default: null },
+    uploadedByName: { type: String, default: '' },
     uploadedAt: { type: Date, default: Date.now }
   }],
   workLogs: [{
@@ -124,6 +126,23 @@ const ticketSchema = new Schema({
     userName: { type: String, default: 'Agent' },
     hours: { type: Number, required: true },
     note: { type: String, default: '' },
+    loggedAt: { type: Date, default: Date.now }
+  }],
+  subtasks: [{
+    text: { type: String, required: true, trim: true },
+    done: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+  }],
+  watchers: [{
+    type: Schema.Types.ObjectId, ref: 'lilypad_accounts'
+  }],
+  expenses: [{
+    description: { type: String, required: true, trim: true },
+    amount: { type: Number, required: true },
+    po: { type: String, trim: true, default: '' },
+    vendor: { type: String, trim: true, default: '' },
+    loggedBy: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', default: null },
+    loggedByName: { type: String, default: '' },
     loggedAt: { type: Date, default: Date.now }
   }],
   trackingToken: {

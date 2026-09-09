@@ -3,12 +3,53 @@
  * Handles dynamic intake forms, flexible ticket submissions, and uniform To-Do management.
  */
 
+const fs = require('fs')
+const path = require('path')
+const multer = require('multer')
 const { LilyPadTicket, IntakeForm, LilyPadAccount, LilyPadNotification } = require('../models')
 const xss = require('xss')
 
 const MENTION_REGEX = /@([a-zA-Z0-9_.]+)/g
 
+// Same disk-storage pattern as lilypadMachines.js's media uploads - stored
+// under <UPLOAD_ROOT>/tickets/<ticketId>/ and served by the /uploads
+// static route that machines.js already mounts at the shared
+// /api/v1/lilypad prefix, so no new static route is needed here.
+const UPLOAD_ROOT = process.env.UPLOAD_DIR || '/var/data/uploads'
+const TICKETS_DIR = path.join(UPLOAD_ROOT, 'tickets')
+
+const attachmentStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = path.join(TICKETS_DIR, req.params.id)
+    fs.mkdirSync(dir, { recursive: true })
+    cb(null, dir)
+  },
+  filename: function (req, file, cb) {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9)
+    cb(null, unique + path.extname(file.originalname))
+  }
+})
+
+const attachmentUpload = multer({
+  storage: attachmentStorage,
+  limits: { fileSize: 25 * 1024 * 1024 } // 25MB - ticket attachments, not the machine-manual video uploads
+})
+
 const lilypadTicketsController = {}
+lilypadTicketsController.uploadMiddleware = attachmentUpload.single('file')
+
+function actorName (user) {
+  return user ? (user.fullname || user.username) : 'System'
+}
+
+function pushHistory (ticket, action, user, description) {
+  ticket.history.push({
+    action,
+    by: user ? user._id : null,
+    byName: actorName(user),
+    description
+  })
+}
 
 /**
  * Seed default dynamic intake forms if empty
@@ -379,6 +420,7 @@ lilypadTicketsController.getTicketById = async function (req, res) {
       .populate('assignee', 'fullname email image title')
       .populate('reporter', 'fullname email image')
       .populate('category', 'name icon slug fields')
+      .populate('watchers', 'fullname username email')
 
     if (!ticket) {
       return res.status(404).json({ success: false, error: 'Ticket not found' })
@@ -516,6 +558,440 @@ async function notifyMentionedUsers (body, ticket, author) {
 
   if (notifications.length) {
     await LilyPadNotification.insertMany(notifications)
+  }
+}
+
+/**
+ * PUT /api/v1/lilypad/tickets/:id
+ * Generic edit for fields that aren't already their own dedicated endpoint
+ * (status has its own workflow endpoint, assignee has its own too) -
+ * title, description, priority, dueDate, tags, category.
+ */
+lilypadTicketsController.updateTicket = async function (req, res) {
+  try {
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    const { title, description, priority, dueDate, tags, categoryId } = req.body
+    const changes = []
+
+    if (title !== undefined && title.trim() && title.trim() !== ticket.title) {
+      changes.push('title')
+      ticket.title = xss(title.trim())
+    }
+    if (description !== undefined && description.trim() && description.trim() !== ticket.description) {
+      changes.push('description')
+      ticket.description = xss(description.trim())
+    }
+    if (priority !== undefined && ['Low', 'Normal', 'High', 'Urgent'].includes(priority) && priority !== ticket.priority) {
+      changes.push('priority')
+      ticket.priority = priority
+    }
+    if (dueDate !== undefined) {
+      const nextDue = dueDate ? new Date(dueDate) : null
+      changes.push('due date')
+      ticket.dueDate = nextDue
+    }
+    if (Array.isArray(tags)) {
+      changes.push('tags')
+      ticket.tags = tags.map((t) => xss(String(t).trim())).filter(Boolean)
+    }
+    if (categoryId !== undefined) {
+      const category = categoryId ? await IntakeForm.findById(categoryId) : null
+      changes.push('category')
+      ticket.category = category ? category._id : null
+      ticket.categoryName = category ? category.name : ticket.categoryName
+    }
+
+    if (changes.length) {
+      pushHistory(ticket, 'updated', req.user, `Updated ${changes.join(', ')}`)
+    }
+
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/tickets/:id
+ * Soft delete (the schema's `deleted` flag already exists and is already
+ * respected by getTodoList) - keeps history/comments/attachments intact
+ * for audit purposes instead of destroying them.
+ */
+lilypadTicketsController.deleteTicket = async function (req, res) {
+  try {
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    ticket.deleted = true
+    pushHistory(ticket, 'deleted', req.user, 'Ticket deleted')
+    await ticket.save()
+
+    return res.status(200).json({ success: true, message: 'Ticket deleted.' })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * PUT /api/v1/lilypad/tickets/bulk/status
+ * Loops LilyPadTicket.updateStatus() per id (rather than an updateMany)
+ * so each ticket still gets its own history entry and the pre-save
+ * hook's completedAt handling still fires - both would be skipped by a
+ * raw bulk update.
+ */
+lilypadTicketsController.bulkUpdateStatus = async function (req, res) {
+  try {
+    const { ids, status } = req.body || {}
+    const validStatuses = ['To-Do', 'In Progress', 'Complete', 'Blocked']
+    const idList = Array.isArray(ids) ? ids.filter(Boolean) : []
+
+    if (!idList.length) {
+      return res.status(400).json({ success: false, error: 'ids must be a non-empty array.' })
+    }
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` })
+    }
+
+    const results = await Promise.allSettled(idList.map((id) => LilyPadTicket.updateStatus(id, status, req.user)))
+    const succeeded = results.filter((r) => r.status === 'fulfilled').length
+
+    return res.status(200).json({
+      success: true,
+      message: `Updated ${succeeded} of ${idList.length} ticket(s) to ${status}.`,
+      succeeded,
+      failed: idList.length - succeeded
+    })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/tickets/bulk
+ */
+lilypadTicketsController.bulkDeleteTickets = async function (req, res) {
+  try {
+    const idList = Array.isArray(req.body && req.body.ids) ? req.body.ids.filter(Boolean) : []
+    if (!idList.length) {
+      return res.status(400).json({ success: false, error: 'ids must be a non-empty array.' })
+    }
+
+    const tickets = await LilyPadTicket.find({ _id: { $in: idList } })
+    for (const ticket of tickets) {
+      ticket.deleted = true
+      pushHistory(ticket, 'deleted', req.user, 'Ticket deleted (bulk action)')
+      await ticket.save()
+    }
+
+    return res.status(200).json({ success: true, message: `Deleted ${tickets.length} ticket(s).` })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/tickets/:id/attachments
+ * multer's uploadMiddleware (attachmentUpload.single('file')) runs first
+ * and populates req.file.
+ */
+lilypadTicketsController.uploadAttachment = async function (req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No file uploaded.' })
+    }
+
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    ticket.attachments.push({
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      path: `tickets/${req.params.id}/${req.file.filename}`,
+      size: req.file.size,
+      mimeType: req.file.mimetype,
+      uploadedBy: req.user ? req.user._id : null,
+      uploadedByName: actorName(req.user)
+    })
+    pushHistory(ticket, 'attachment_added', req.user, `Attached file: ${req.file.originalname}`)
+
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/tickets/:id/attachments/:attachmentId
+ */
+lilypadTicketsController.deleteAttachment = async function (req, res) {
+  try {
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    const attachment = ticket.attachments.id(req.params.attachmentId)
+    if (!attachment) {
+      return res.status(404).json({ success: false, error: 'Attachment not found' })
+    }
+
+    const filePath = path.join(UPLOAD_ROOT, attachment.path)
+    fs.unlink(filePath, () => {}) // best-effort - a missing file on disk shouldn't block removing the DB record
+
+    const removedName = attachment.originalName
+    attachment.deleteOne()
+    pushHistory(ticket, 'attachment_removed', req.user, `Removed attachment: ${removedName}`)
+
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/tickets/:id/worklogs
+ */
+lilypadTicketsController.addWorkLog = async function (req, res) {
+  try {
+    const { hours, note } = req.body || {}
+    const parsedHours = Number(hours)
+    if (!Number.isFinite(parsedHours) || parsedHours <= 0) {
+      return res.status(400).json({ success: false, error: 'hours must be a positive number.' })
+    }
+
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    ticket.workLogs.push({
+      user: req.user ? req.user._id : null,
+      userName: actorName(req.user),
+      hours: parsedHours,
+      note: xss(String(note || '').trim())
+    })
+    pushHistory(ticket, 'work_logged', req.user, `Logged ${parsedHours} hour(s)`)
+
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/tickets/:id/worklogs/:workLogId
+ */
+lilypadTicketsController.deleteWorkLog = async function (req, res) {
+  try {
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    const workLog = ticket.workLogs.id(req.params.workLogId)
+    if (!workLog) {
+      return res.status(404).json({ success: false, error: 'Work log entry not found' })
+    }
+
+    workLog.deleteOne()
+    pushHistory(ticket, 'work_log_removed', req.user, 'Removed a work log entry')
+
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/tickets/:id/subtasks
+ */
+lilypadTicketsController.addSubtask = async function (req, res) {
+  try {
+    const text = String((req.body && req.body.text) || '').trim()
+    if (!text) {
+      return res.status(400).json({ success: false, error: 'text is required.' })
+    }
+
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    ticket.subtasks.push({ text: xss(text) })
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * PUT /api/v1/lilypad/tickets/:id/subtasks/:subtaskId
+ */
+lilypadTicketsController.toggleSubtask = async function (req, res) {
+  try {
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    const subtask = ticket.subtasks.id(req.params.subtaskId)
+    if (!subtask) {
+      return res.status(404).json({ success: false, error: 'Subtask not found' })
+    }
+
+    subtask.done = req.body && req.body.done !== undefined ? Boolean(req.body.done) : !subtask.done
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/tickets/:id/subtasks/:subtaskId
+ */
+lilypadTicketsController.deleteSubtask = async function (req, res) {
+  try {
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    const subtask = ticket.subtasks.id(req.params.subtaskId)
+    if (!subtask) {
+      return res.status(404).json({ success: false, error: 'Subtask not found' })
+    }
+
+    subtask.deleteOne()
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/tickets/:id/watchers
+ * Defaults to the logged-in user watching the ticket themselves (the
+ * common case - a "follow this ticket" button) but accepts an explicit
+ * userId so an assignee/admin can add someone else as a watcher too.
+ */
+lilypadTicketsController.addWatcher = async function (req, res) {
+  try {
+    const userId = (req.body && req.body.userId) || (req.user && req.user._id)
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'userId is required.' })
+    }
+
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    if (!ticket.watchers.some((w) => String(w) === String(userId))) {
+      ticket.watchers.push(userId)
+    }
+
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/tickets/:id/watchers/:userId
+ */
+lilypadTicketsController.removeWatcher = async function (req, res) {
+  try {
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    ticket.watchers = ticket.watchers.filter((w) => String(w) !== String(req.params.userId))
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/tickets/:id/expenses
+ */
+lilypadTicketsController.addExpense = async function (req, res) {
+  try {
+    const description = String((req.body && req.body.description) || '').trim()
+    const amount = Number(req.body && req.body.amount)
+    const po = String((req.body && req.body.po) || '').trim()
+    const vendor = String((req.body && req.body.vendor) || '').trim()
+    if (!description) {
+      return res.status(400).json({ success: false, error: 'description is required.' })
+    }
+    if (!Number.isFinite(amount) || amount < 0) {
+      return res.status(400).json({ success: false, error: 'amount must be a non-negative number.' })
+    }
+
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    ticket.expenses.push({
+      description: xss(description),
+      amount,
+      po: xss(po),
+      vendor: xss(vendor),
+      loggedBy: req.user ? req.user._id : null,
+      loggedByName: actorName(req.user)
+    })
+    pushHistory(ticket, 'expense_logged', req.user, `Logged expense: ${description} ($${amount.toFixed(2)})`)
+
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/tickets/:id/expenses/:expenseId
+ */
+lilypadTicketsController.deleteExpense = async function (req, res) {
+  try {
+    const ticket = await LilyPadTicket.findById(req.params.id)
+    if (!ticket) {
+      return res.status(404).json({ success: false, error: 'Ticket not found' })
+    }
+
+    const expense = ticket.expenses.id(req.params.expenseId)
+    if (!expense) {
+      return res.status(404).json({ success: false, error: 'Expense not found' })
+    }
+
+    const removedDescription = expense.description
+    expense.deleteOne()
+    pushHistory(ticket, 'expense_removed', req.user, `Removed expense: ${removedDescription}`)
+
+    const saved = await ticket.save()
+    return res.status(200).json({ success: true, data: saved })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
   }
 }
 

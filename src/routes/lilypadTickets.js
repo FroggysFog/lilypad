@@ -18,10 +18,25 @@ module.exports = function () {
 
   // Authenticated: Uniform To-Do List & Ticket Management
   router.get('/tickets/todo', requireLogin, controllers.lilypadTickets.getTodoList)
+  router.put('/tickets/bulk/status', requireLogin, controllers.lilypadTickets.bulkUpdateStatus)
+  router.delete('/tickets/bulk', requireLogin, controllers.lilypadTickets.bulkDeleteTickets)
   router.get('/tickets/:id', requireLogin, controllers.lilypadTickets.getTicketById)
+  router.put('/tickets/:id', requireLogin, controllers.lilypadTickets.updateTicket)
+  router.delete('/tickets/:id', requireLogin, controllers.lilypadTickets.deleteTicket)
   router.put('/tickets/:id/status', requireLogin, controllers.lilypadTickets.updateStatus)
   router.put('/tickets/:id/assign', requireLogin, controllers.lilypadTickets.assignTicket)
   router.post('/tickets/:id/comments', requireLogin, controllers.lilypadTickets.addComment)
+  router.post('/tickets/:id/attachments', requireLogin, controllers.lilypadTickets.uploadMiddleware, controllers.lilypadTickets.uploadAttachment)
+  router.delete('/tickets/:id/attachments/:attachmentId', requireLogin, controllers.lilypadTickets.deleteAttachment)
+  router.post('/tickets/:id/worklogs', requireLogin, controllers.lilypadTickets.addWorkLog)
+  router.delete('/tickets/:id/worklogs/:workLogId', requireLogin, controllers.lilypadTickets.deleteWorkLog)
+  router.post('/tickets/:id/subtasks', requireLogin, controllers.lilypadTickets.addSubtask)
+  router.put('/tickets/:id/subtasks/:subtaskId', requireLogin, controllers.lilypadTickets.toggleSubtask)
+  router.delete('/tickets/:id/subtasks/:subtaskId', requireLogin, controllers.lilypadTickets.deleteSubtask)
+  router.post('/tickets/:id/watchers', requireLogin, controllers.lilypadTickets.addWatcher)
+  router.delete('/tickets/:id/watchers/:userId', requireLogin, controllers.lilypadTickets.removeWatcher)
+  router.post('/tickets/:id/expenses', requireLogin, controllers.lilypadTickets.addExpense)
+  router.delete('/tickets/:id/expenses/:expenseId', requireLogin, controllers.lilypadTickets.deleteExpense)
 
   // Self-service account
   router.get('/account/me', requireLoginApi, controllers.lilypadUsers.getMe)

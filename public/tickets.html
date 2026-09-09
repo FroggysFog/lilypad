@@ -803,19 +803,35 @@
 						<span id="drawerDueBadge" class="badge bg-light text-dark border px-2 py-1 fs-11">Due in 3 days</span>
 					</div>
 					<div class="d-flex align-items-center gap-2">
+						<button class="btn btn-sm btn-outline-secondary py-1 px-2 fs-12" onclick="toggleDrawerEditMode()" id="drawerEditToggleBtn" title="Edit title, description, or priority">
+							<i class="ti ti-pencil me-1"></i> Edit
+						</button>
 						<button class="btn btn-sm btn-outline-success py-1 px-2 fs-12" onclick="openPromoteToKbModal()" title="Promote ticket solution to Knowledgebase SOP">
 							<i class="ti ti-bulb me-1"></i> Save to KB
 						</button>
 						<a id="drawerPortalLink" href="/client-portal.html" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-2 fs-12" title="Open Customer Magic Link">
 							<i class="ti ti-external-link me-1"></i> Portal Link
 						</a>
+						<button class="btn btn-sm btn-outline-danger py-1 px-2 fs-12" onclick="deleteCurrentTicket()" title="Delete this ticket">
+							<i class="ti ti-trash"></i>
+						</button>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 					</div>
 				</div>
 
 				<div class="modal-body p-4">
-					<h4 id="drawerTitle" class="fw-bold mb-1 text-dark">Ticket Title</h4>
-					<p id="drawerDesc" class="text-muted fs-13 mb-3"></p>
+					<div id="drawerViewMode">
+						<h4 id="drawerTitle" class="fw-bold mb-1 text-dark">Ticket Title</h4>
+						<p id="drawerDesc" class="text-muted fs-13 mb-3"></p>
+					</div>
+					<div id="drawerEditMode" style="display:none;" class="mb-3">
+						<input type="text" id="drawerTitleInput" class="form-control fw-bold mb-2" placeholder="Ticket title">
+						<textarea id="drawerDescInput" class="form-control fs-13 mb-2" rows="3" placeholder="Description"></textarea>
+						<div class="d-flex align-items-center gap-2">
+							<button type="button" class="btn btn-sm btn-primary" onclick="saveDrawerEdits()"><i class="ti ti-device-floppy me-1"></i> Save Changes</button>
+							<button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleDrawerEditMode()">Cancel</button>
+						</div>
+					</div>
 
 					<!-- Navigation Tabs -->
 					<ul class="nav nav-tabs mb-3 fs-13 fw-semibold">
@@ -856,7 +872,12 @@
 								</div>
 								<div class="col-6 col-md-3">
 									<span class="text-muted d-block">Priority</span>
-									<span id="drawerPriority" class="badge priority-high px-2 py-1">High</span>
+									<select id="drawerPrioritySelect" class="form-select form-select-sm mt-1" onchange="updateDrawerPriority(this.value)">
+										<option value="Low">Low</option>
+										<option value="Normal">Normal</option>
+										<option value="High">High</option>
+										<option value="Urgent">Urgent</option>
+									</select>
 								</div>
 								<div class="col-6 col-md-3">
 									<span class="text-muted d-block">Linked Product / Asset</span>
@@ -2151,13 +2172,57 @@
                 assigneeId: t.assignee ? (t.assignee._id || t.assignee) : null,
                 linkedProduct: t.formData && t.formData.linkedProduct,
                 dueDate: t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '',
+                dueDateRaw: t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '',
                 formData: t.formData || {},
-                attachments: t.attachments || [],
+                attachments: (t.attachments || []).map(a => ({
+                    id: a._id,
+                    name: a.originalName,
+                    path: a.path,
+                    sizeBytes: a.size,
+                    uploader: a.uploadedByName || 'Unknown',
+                    uploadedAt: a.uploadedAt ? new Date(a.uploadedAt).toLocaleString() : ''
+                })),
                 history: mapHistory(t.history),
                 comments: mapComments(t.comments),
                 workLogs: t.workLogs || [],
+                subtasks: t.subtasks || [],
+                expenses: t.expenses || [],
+                watchers: (t.watchers || []).map(w => ({
+                    id: (w && w._id) || w,
+                    fullname: (w && w.fullname) || (w && w.username) || 'Unknown user'
+                })),
                 createdAt: t.createdAt
             };
+        }
+
+        // Re-fetches one ticket's full (populated) detail after a mutation
+        // and refreshes both the drawer and its row in the list, so every
+        // drawer action stays in sync with the server instead of trusting
+        // a raw, unpopulated save() response.
+        async function refreshCurrentTicket() {
+            if (!currentActiveTicket) return;
+            const id = currentActiveTicket.id;
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${id}`);
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+
+                const mapped = mapTicket(result.data);
+                currentActiveTicket = mapped;
+                const idx = tickets.findIndex(t => t.id === id);
+                if (idx !== -1) tickets[idx] = mapped;
+
+                renderDrawerTasks(mapped);
+                renderDrawerWatchers(mapped);
+                renderDrawerFiles(mapped);
+                renderDrawerWorkLogs(mapped);
+                renderDrawerExpenses(mapped);
+                renderDrawerAudit(mapped);
+                renderTickets();
+                if (currentView === 'kanban') renderKanban();
+            } catch (err) {
+                console.error('refreshCurrentTicket failed:', err);
+            }
         }
 
         async function loadTickets() {
@@ -2900,22 +2965,47 @@
             updateBulkBar();
         }
 
-        function bulkUpdateStatus(status) {
-            selectedTicketIds.forEach(id => {
-                const t = tickets.find(x => x.id === id);
-                if (t) t.status = status;
-            });
-            triggerNotification('Batch Status Update', `Updated ${selectedTicketIds.size} tickets to ${status}`, 'ti-stack-2');
-            deselectAll();
-            updateKpis();
+        async function bulkUpdateStatus(status) {
+            const ids = Array.from(selectedTicketIds);
+            if (!ids.length) return;
+
+            try {
+                const res = await fetch('/api/v1/lilypad/tickets/bulk/status', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids, status })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+
+                triggerNotification('Batch Status Update', result.message, 'ti-stack-2');
+                deselectAll();
+                await loadTickets();
+            } catch (err) {
+                alert(err.message || 'Unable to bulk-update tickets.');
+            }
         }
 
-        function bulkDelete() {
-            const count = selectedTicketIds.size;
-            tickets = tickets.filter(t => !selectedTicketIds.has(t.id));
-            triggerNotification('Batch Delete', `Deleted ${count} tickets from board`, 'ti-trash');
-            deselectAll();
-            updateKpis();
+        async function bulkDelete() {
+            const ids = Array.from(selectedTicketIds);
+            if (!ids.length) return;
+            if (!confirm(`Delete ${ids.length} ticket(s)? This can't be undone from the UI.`)) return;
+
+            try {
+                const res = await fetch('/api/v1/lilypad/tickets/bulk', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+
+                triggerNotification('Batch Delete', result.message, 'ti-trash');
+                deselectAll();
+                await loadTickets();
+            } catch (err) {
+                alert(err.message || 'Unable to bulk-delete tickets.');
+            }
         }
 
         function exportCsv() {
@@ -3002,19 +3092,25 @@
             document.getElementById('drawerTitle').textContent = ticket.title;
             document.getElementById('drawerDesc').textContent = ticket.description;
             document.getElementById('drawerCategory').textContent = ticket.categoryName;
-            document.getElementById('drawerPriority').textContent = ticket.priority;
-            document.getElementById('drawerPriority').className = `badge priority-${ticket.priority.toLowerCase()} px-2 py-1`;
+            document.getElementById('drawerPrioritySelect').value = ticket.priority;
             document.getElementById('drawerLinkedProduct').innerHTML = `<i class="ti ti-box"></i> ${ticket.linkedProduct || 'General Asset / None'}`;
-            document.getElementById('drawerDueDateInput').value = ticket.dueDate || '';
+            document.getElementById('drawerDueDateInput').value = ticket.dueDateRaw || '';
+            document.getElementById('drawerViewMode').style.display = '';
+            document.getElementById('drawerEditMode').style.display = 'none';
             document.getElementById('drawerReporter').textContent = ticket.reporterName;
             document.getElementById('drawerAssigneeSelect').value = ticket.assigneeName;
 
+            // Import-provenance metadata (e.g. from the Spiceworks migration)
+            // stays in formData for recordkeeping but has no business value
+            // to show on the ticket itself, so it's filtered out of this
+            // generic key/value dump rather than deleted from the data.
+            const HIDDEN_FORM_DATA_KEYS = ['importedFrom', 'spiceworksId'];
             const formFieldsContainer = document.getElementById('drawerFormDataFields');
-            const entries = Object.entries(ticket.formData || {});
+            const entries = Object.entries(ticket.formData || {}).filter(([k]) => !HIDDEN_FORM_DATA_KEYS.includes(k));
             formFieldsContainer.innerHTML = entries.length ? entries.map(([k, v]) => `
                 <div class="col-sm-6 mb-2">
-                    <span class="text-muted d-block text-capitalize">${k.replace(/([A-Z])/g, ' $1')}</span>
-                    <strong class="text-dark">${v}</strong>
+                    <span class="text-muted d-block text-capitalize">${escapeHtml(k.replace(/([A-Z])/g, ' $1'))}</span>
+                    <strong class="text-dark">${escapeHtml(String(v))}</strong>
                 </div>
             `).join('') : '<div class="col-12 text-muted">No custom form data recorded.</div>';
 
@@ -3035,6 +3131,82 @@
         // Backward compatibility
         function openDrawer(id) {
             openTicketModal(id);
+        }
+
+        function toggleDrawerEditMode() {
+            if (!currentActiveTicket) return;
+            const viewMode = document.getElementById('drawerViewMode');
+            const editMode = document.getElementById('drawerEditMode');
+            const entering = editMode.style.display === 'none';
+            if (entering) {
+                document.getElementById('drawerTitleInput').value = currentActiveTicket.title;
+                document.getElementById('drawerDescInput').value = currentActiveTicket.description;
+            }
+            viewMode.style.display = entering ? 'none' : '';
+            editMode.style.display = entering ? '' : 'none';
+        }
+
+        async function saveDrawerEdits() {
+            if (!currentActiveTicket) return;
+            const title = document.getElementById('drawerTitleInput').value.trim();
+            const description = document.getElementById('drawerDescInput').value.trim();
+            if (!title || !description) {
+                alert('Title and description cannot be empty.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+
+                document.getElementById('drawerTitle').textContent = title;
+                document.getElementById('drawerDesc').textContent = description;
+                toggleDrawerEditMode();
+                await refreshCurrentTicket();
+            } catch (err) {
+                alert(err.message || 'Unable to save ticket changes.');
+            }
+        }
+
+        async function updateDrawerPriority(priority) {
+            if (!currentActiveTicket) return;
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ priority })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                await refreshCurrentTicket();
+            } catch (err) {
+                alert(err.message || 'Unable to update priority.');
+            }
+        }
+
+        async function deleteCurrentTicket() {
+            if (!currentActiveTicket) return;
+            if (!confirm(`Delete ${currentActiveTicket.formattedUid}? This can't be undone from the UI.`)) return;
+
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+
+                tickets = tickets.filter(t => t.id !== currentActiveTicket.id);
+                bootstrap.Modal.getInstance(document.getElementById('ticketDetailModal'))?.hide();
+                currentActiveTicket = null;
+                renderTickets();
+                updateKpis();
+                if (currentView === 'kanban') renderKanban();
+            } catch (err) {
+                alert(err.message || 'Unable to delete ticket.');
+            }
         }
 
         function closeDrawer() {
@@ -3098,138 +3270,152 @@
             const progressBar = document.getElementById('drawerTaskProgressBar');
             if (!container) return;
 
-            // Default initial tasks if not set
-            if (!ticket.tasks || !ticket.tasks.length) {
-                ticket.tasks = [
-                    { id: 'tsk_1', text: 'Verify machine specs and serial number match customer records', done: true },
-                    { id: 'tsk_2', text: 'Perform pre-flight visual and safety inspection', done: ticket.status === 'Complete' || ticket.status === 'In Progress' },
-                    { id: 'tsk_3', text: 'Execute diagnostic SOP testing and benchmark checkpoints', done: ticket.status === 'Complete' },
-                    { id: 'tsk_4', text: 'Document resolution notes and verify quality sign-off', done: ticket.status === 'Complete' }
-                ];
-            }
-
-            const total = ticket.tasks.length;
-            const completed = ticket.tasks.filter(t => t.done).length;
+            const subtasks = ticket.subtasks || [];
+            const total = subtasks.length;
+            const completed = subtasks.filter(t => t.done).length;
             const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
             if (countBadge) countBadge.textContent = completed + '/' + total;
             if (percentText) percentText.textContent = pct + '% Complete (' + completed + ' of ' + total + ')';
             if (progressBar) progressBar.style.width = pct + '%';
 
-            container.innerHTML = ticket.tasks.map((task, idx) => {
+            container.innerHTML = subtasks.length ? subtasks.map((task) => {
                 const bgClass = task.done ? 'bg-success-subtle border-success' : 'bg-white';
                 const textClass = task.done ? 'text-decoration-line-through text-muted' : 'fw-medium text-dark';
                 const isChecked = task.done ? 'checked' : '';
                 return '<div class="p-2 rounded-3 border d-flex align-items-center justify-content-between gap-2 ' + bgClass + '">' +
                     '<div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">' +
-                        '<input type="checkbox" class="form-check-input mt-0 flex-shrink-0" id="task_chk_' + task.id + '" ' + isChecked + ' data-task-id="' + task.id + '" onchange="toggleTicketTask(this.dataset.taskId, this.checked)">' +
-                        '<label for="task_chk_' + task.id + '" class="fs-13 mb-0 ' + textClass + '" style="cursor: pointer;">' +
-                            task.text +
+                        '<input type="checkbox" class="form-check-input mt-0 flex-shrink-0" id="task_chk_' + task._id + '" ' + isChecked + ' data-task-id="' + task._id + '" onchange="toggleTicketTask(this.dataset.taskId, this.checked)">' +
+                        '<label for="task_chk_' + task._id + '" class="fs-13 mb-0 ' + textClass + '" style="cursor: pointer;">' +
+                            escapeHtml(task.text) +
                         '</label>' +
                     '</div>' +
-                    '<button type="button" class="btn btn-sm btn-link text-danger p-0 ms-auto" data-task-id="' + task.id + '" onclick="deleteTicketTask(this.dataset.taskId)" title="Delete Task">' +
+                    '<button type="button" class="btn btn-sm btn-link text-danger p-0 ms-auto" data-task-id="' + task._id + '" onclick="deleteTicketTask(this.dataset.taskId)" title="Delete Task">' +
                         '<i class="ti ti-trash fs-14"></i>' +
                     '</button>' +
                 '</div>';
-            }).join('');
+            }).join('') : '<p class="text-muted fs-13">No subtasks yet.</p>';
         }
 
-        function toggleTicketTask(taskId, isDone) {
+        async function toggleTicketTask(taskId, isDone) {
             if (!currentActiveTicket) return;
-            const task = (currentActiveTicket.tasks || []).find(t => t.id === taskId);
-            if (task) {
-                task.done = isDone;
-                currentActiveTicket.history.unshift({
-                    action: isDone ? 'Completed task: ' + task.text : 'Reopened task: ' + task.text,
-                    by: 'Scott Karan',
-                    time: 'Just now'
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/subtasks/${taskId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ done: isDone })
                 });
-                renderDrawerTasks(currentActiveTicket);
-                renderDrawerAudit(currentActiveTicket);
-
-                const notifTitle = isDone ? 'Ticket Task Completed' : 'Ticket Task Reopened';
-                const notifMsg = (isDone ? 'Completed: "' : 'Reopened: "') + task.text + '" on ' + currentActiveTicket.formattedUid;
-                triggerNotification(notifTitle, notifMsg, isDone ? 'ti-checkbox' : 'ti-list-check', currentActiveTicket.id);
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                await refreshCurrentTicket();
+            } catch (err) {
+                alert(err.message || 'Unable to update subtask.');
             }
         }
 
-        function addTicketTask(e) {
+        async function addTicketTask(e) {
             e.preventDefault();
             const input = document.getElementById('newTicketTaskInput');
             const text = input ? input.value.trim() : '';
             if (!text || !currentActiveTicket) return;
 
-            currentActiveTicket.tasks = currentActiveTicket.tasks || [];
-            const newTask = {
-                id: 'tsk_' + Date.now(),
-                text: text,
-                done: false
-            };
-            currentActiveTicket.tasks.push(newTask);
-            currentActiveTicket.history.unshift({
-                action: 'Added new task: ' + text,
-                by: 'Scott Karan',
-                time: 'Just now'
-            });
-
-            input.value = '';
-            renderDrawerTasks(currentActiveTicket);
-            renderDrawerAudit(currentActiveTicket);
-
-            triggerNotification('New Task Added', 'Task "' + text + '" added to ' + currentActiveTicket.formattedUid, 'ti-plus', currentActiveTicket.id);
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/subtasks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                input.value = '';
+                await refreshCurrentTicket();
+            } catch (err) {
+                alert(err.message || 'Unable to add subtask.');
+            }
         }
 
-        function deleteTicketTask(taskId) {
+        async function deleteTicketTask(taskId) {
             if (!currentActiveTicket) return;
-            currentActiveTicket.tasks = (currentActiveTicket.tasks || []).filter(t => t.id !== taskId);
-            renderDrawerTasks(currentActiveTicket);
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/subtasks/${taskId}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                await refreshCurrentTicket();
+            } catch (err) {
+                alert(err.message || 'Unable to delete subtask.');
+            }
         }
 
-        function updateDrawerDueDate(val) {
-            if (currentActiveTicket) {
-                currentActiveTicket.dueDate = val;
-                currentActiveTicket.history.unshift({ action: `Target Due Date updated to ${val}`, by: 'Scott Karan', time: 'Just now' });
-                renderDrawerAudit(currentActiveTicket);
-                renderTickets();
+        async function updateDrawerDueDate(val) {
+            if (!currentActiveTicket) return;
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dueDate: val || null })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                await refreshCurrentTicket();
                 triggerNotification('Due Date Updated', `${currentActiveTicket.formattedUid} due date changed to ${val}`, 'ti-calendar', currentActiveTicket.id);
+            } catch (err) {
+                alert(err.message || 'Unable to update due date.');
             }
         }
 
         function renderDrawerWatchers(ticket) {
             const container = document.getElementById('drawerWatchersContainer');
             const dropdown = document.getElementById('addWatcherDropdownList');
-            const watchers = ticket.watchers || ['Scott Karan'];
+            const watchers = ticket.watchers || [];
 
-            container.innerHTML = watchers.map(w => `
+            container.innerHTML = watchers.length ? watchers.map(w => `
                 <span class="watcher-pill">
-                    <i class="ti ti-user fs-11"></i> ${w}
-                    <button type="button" class="btn btn-link text-muted p-0 ms-1" onclick="removeWatcher('${w}')">&times;</button>
+                    <i class="ti ti-user fs-11"></i> ${escapeHtml(w.fullname)}
+                    <button type="button" class="btn btn-link text-muted p-0 ms-1" onclick="removeWatcher('${w.id}')">&times;</button>
                 </span>
-            `).join('');
+            `).join('') : '<span class="text-muted fs-13">No watchers yet.</span>';
 
-            dropdown.innerHTML = USERS.filter(u => !watchers.includes(u.fullname)).map(u => `
-                <li><a class="dropdown-item" href="javascript:void(0);" onclick="addWatcher('${u.fullname}')">${u.fullname} (${u.role})</a></li>
+            const watcherIds = new Set(watchers.map(w => String(w.id)));
+            dropdown.innerHTML = USERS.filter(u => !watcherIds.has(String(u.id))).map(u => `
+                <li><a class="dropdown-item" href="javascript:void(0);" onclick="addWatcher('${u.id}')">${escapeHtml(u.fullname)} (${escapeHtml(u.role)})</a></li>
             `).join('') || '<li><span class="dropdown-item text-muted">All users are watching</span></li>';
         }
 
-        function addWatcher(name) {
+        async function addWatcher(userId) {
             if (!currentActiveTicket) return;
-            currentActiveTicket.watchers = currentActiveTicket.watchers || [];
-            if (!currentActiveTicket.watchers.includes(name)) {
-                currentActiveTicket.watchers.push(name);
-                currentActiveTicket.history.unshift({ action: `Added ${name} to ticket watchers / CC`, by: 'Scott Karan', time: 'Just now' });
-                renderDrawerWatchers(currentActiveTicket);
-                renderDrawerAudit(currentActiveTicket);
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/watchers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                await refreshCurrentTicket();
+            } catch (err) {
+                alert(err.message || 'Unable to add watcher.');
             }
         }
 
-        function removeWatcher(name) {
+        async function removeWatcher(userId) {
             if (!currentActiveTicket) return;
-            currentActiveTicket.watchers = (currentActiveTicket.watchers || []).filter(w => w !== name);
-            renderDrawerWatchers(currentActiveTicket);
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/watchers/${userId}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                await refreshCurrentTicket();
+            } catch (err) {
+                alert(err.message || 'Unable to remove watcher.');
+            }
         }
 
         // File Attachments & Proofs
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 KB';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
         function renderDrawerFiles(ticket) {
             const container = document.getElementById('drawerFilesList');
             const countEl = document.getElementById('drawerFilesCount');
@@ -3245,17 +3431,17 @@
                 <div class="file-attachment-card">
                     <div class="d-flex align-items-center gap-2">
                         <div class="p-2 rounded bg-white border text-primary fs-18">
-                            <i class="ti ${f.icon || 'ti-file'}"></i>
+                            <i class="ti ti-file"></i>
                         </div>
                         <div>
-                            <strong class="d-block text-dark fs-13 text-truncate" style="max-width: 320px;">${f.name}</strong>
-                            <span class="fs-11 text-muted">${f.size} &middot; Uploaded by ${f.uploader} (${f.uploadedAt})</span>
+                            <strong class="d-block text-dark fs-13 text-truncate" style="max-width: 320px;">${escapeHtml(f.name)}</strong>
+                            <span class="fs-11 text-muted">${formatFileSize(f.sizeBytes)} &middot; Uploaded by ${escapeHtml(f.uploader)} (${f.uploadedAt})</span>
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-1">
-                        <button class="btn btn-sm btn-outline-primary py-1 px-2 fs-12" onclick="downloadMockFile('${f.name}')" title="Download File">
+                        <a class="btn btn-sm btn-outline-primary py-1 px-2 fs-12" href="/api/v1/lilypad/uploads/${f.path}" target="_blank" title="Download File">
                             <i class="ti ti-download"></i>
-                        </button>
+                        </a>
                         <button class="btn btn-sm btn-link text-danger p-1" onclick="deleteDrawerFile('${f.id}')" title="Remove File">
                             <i class="ti ti-trash"></i>
                         </button>
@@ -3264,39 +3450,40 @@
             `).join('');
         }
 
-        function handleFileUpload(e) {
+        async function handleFileUpload(e) {
             if (!currentActiveTicket || !e.target.files.length) return;
             const file = e.target.files[0];
-            const sizeMb = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-            const icon = file.name.endsWith('.pdf') ? 'ti-file-type-pdf' : (file.name.endsWith('.ai') ? 'ti-file-vector' : 'ti-file');
 
-            currentActiveTicket.attachments = currentActiveTicket.attachments || [];
-            currentActiveTicket.attachments.push({
-                id: 'f_' + Date.now(),
-                name: file.name,
-                size: sizeMb === '0.0 MB' ? '450 KB' : sizeMb,
-                uploader: 'Scott Karan',
-                uploadedAt: 'Just now',
-                icon: icon
-            });
+            const formData = new FormData();
+            formData.append('file', file);
 
-            currentActiveTicket.history.unshift({ action: `Uploaded proof / file: ${file.name}`, by: 'Scott Karan', time: 'Just now' });
-            renderDrawerFiles(currentActiveTicket);
-            renderDrawerAudit(currentActiveTicket);
-            renderTickets();
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/attachments`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
 
-            triggerNotification('File Attached', `Uploaded ${file.name} to ${currentActiveTicket.formattedUid}`, 'ti-file-plus', currentActiveTicket.id);
+                await refreshCurrentTicket();
+                triggerNotification('File Attached', `Uploaded ${file.name} to ${currentActiveTicket.formattedUid}`, 'ti-file-plus', currentActiveTicket.id);
+            } catch (err) {
+                alert(err.message || 'Unable to upload file.');
+            } finally {
+                e.target.value = '';
+            }
         }
 
-        function downloadMockFile(filename) {
-            alert(`Downloading ${filename} directly from LilyPad ERP Vault...`);
-        }
-
-        function deleteDrawerFile(fileId) {
+        async function deleteDrawerFile(fileId) {
             if (!currentActiveTicket) return;
-            currentActiveTicket.attachments = (currentActiveTicket.attachments || []).filter(f => f.id !== fileId);
-            renderDrawerFiles(currentActiveTicket);
-            renderTickets();
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/attachments/${fileId}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                await refreshCurrentTicket();
+            } catch (err) {
+                alert(err.message || 'Unable to delete file.');
+            }
         }
 
         function insertMacro(text) {
@@ -3441,32 +3628,51 @@
             list.innerHTML = logs.length ? logs.map(l => `
                 <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                     <div>
-                        <strong class="text-dark">${l.note || 'Work activity'}</strong>
-                        <span class="text-muted d-block fs-11">${l.loggedAt}</span>
+                        <strong class="text-dark">${escapeHtml(l.note || 'Work activity')}</strong>
+                        <span class="text-muted d-block fs-11">${escapeHtml(l.userName || '')} &middot; ${l.loggedAt ? new Date(l.loggedAt).toLocaleString() : ''}</span>
                     </div>
-                    <span class="badge bg-primary fs-12">${l.hours} hrs</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary fs-12">${l.hours} hrs</span>
+                        <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteWorkLog('${l._id}')" title="Remove entry"><i class="ti ti-trash fs-14"></i></button>
+                    </div>
                 </div>
             `).join('') : '<p class="text-muted fs-13">No time logged yet.</p>';
         }
 
-        function logWorkTime(e) {
+        async function logWorkTime(e) {
             e.preventDefault();
             const hours = parseFloat(document.getElementById('workHoursInput').value);
             const note = document.getElementById('workNoteInput').value.trim();
             if (!hours || !currentActiveTicket) return;
 
-            currentActiveTicket.workLogs = currentActiveTicket.workLogs || [];
-            currentActiveTicket.workLogs.push({
-                hours,
-                note: note || 'Technical Review & Operations',
-                loggedAt: 'Just now'
-            });
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/worklogs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hours, note })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
 
-            renderDrawerWorkLogs(currentActiveTicket);
-            document.getElementById('workHoursInput').value = '';
-            document.getElementById('workNoteInput').value = '';
+                document.getElementById('workHoursInput').value = '';
+                document.getElementById('workNoteInput').value = '';
+                await refreshCurrentTicket();
+                triggerNotification('Time Logged', `Logged ${hours} hrs on ${currentActiveTicket.formattedUid}`, 'ti-clock-plus', currentActiveTicket.id);
+            } catch (err) {
+                alert(err.message || 'Unable to log time.');
+            }
+        }
 
-            triggerNotification('Time Logged', `Logged ${hours} hrs on ${currentActiveTicket.formattedUid}`, 'ti-clock-plus', currentActiveTicket.id);
+        async function deleteWorkLog(workLogId) {
+            if (!currentActiveTicket) return;
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/worklogs/${workLogId}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                await refreshCurrentTicket();
+            } catch (err) {
+                alert(err.message || 'Unable to delete work log entry.');
+            }
         }
 
         function renderDrawerExpenses(ticket) {
@@ -3484,41 +3690,56 @@
             list.innerHTML = expenses.map(e => `
                 <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                     <div>
-                        <strong class="text-dark d-block">${e.item}</strong>
-                        <span class="text-muted fs-11">${e.vendor || 'Supplier'} &middot; PO: ${e.po || 'N/A'}</span>
+                        <strong class="text-dark d-block">${escapeHtml(e.description)}</strong>
+                        <span class="text-muted fs-11">${escapeHtml(e.vendor || 'Supplier')} &middot; PO: ${escapeHtml(e.po || 'N/A')}</span>
                     </div>
-                    <span class="badge bg-success fs-12">${Number(e.amount).toFixed(2)}</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-success fs-12">${Number(e.amount).toFixed(2)}</span>
+                        <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteExpense('${e._id}')" title="Remove expense"><i class="ti ti-trash fs-14"></i></button>
+                    </div>
                 </div>
             `).join('');
         }
 
-        function logExpense(e) {
+        async function logExpense(e) {
             e.preventDefault();
-            const item = document.getElementById('expItemInput').value.trim();
+            const description = document.getElementById('expItemInput').value.trim();
             const amount = parseFloat(document.getElementById('expAmountInput').value);
             const po = document.getElementById('expPoInput').value.trim();
             const vendor = document.getElementById('expVendorInput').value.trim();
-            if (!item || !amount || !currentActiveTicket) return;
+            if (!description || !amount || !currentActiveTicket) return;
 
-            currentActiveTicket.expenses = currentActiveTicket.expenses || [];
-            currentActiveTicket.expenses.push({
-                id: 'exp_' + Date.now(),
-                item,
-                amount,
-                po: po || 'PO-AUTO',
-                vendor: vendor || 'Direct Vendor'
-            });
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/expenses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description, amount, po, vendor })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
 
-            currentActiveTicket.history.unshift({ action: `Logged expense: ${item} ($ ${amount.toFixed(2)})`, by: 'Scott Karan', time: 'Just now' });
-            renderDrawerExpenses(currentActiveTicket);
-            renderDrawerAudit(currentActiveTicket);
+                document.getElementById('expItemInput').value = '';
+                document.getElementById('expAmountInput').value = '';
+                document.getElementById('expPoInput').value = '';
+                document.getElementById('expVendorInput').value = '';
 
-            document.getElementById('expItemInput').value = '';
-            document.getElementById('expAmountInput').value = '';
-            document.getElementById('expPoInput').value = '';
-            document.getElementById('expVendorInput').value = '';
+                await refreshCurrentTicket();
+                triggerNotification('Expense Added', `Logged ${amount.toFixed(2)} for ${description}`, 'ti-currency-dollar', currentActiveTicket.id);
+            } catch (err) {
+                alert(err.message || 'Unable to log expense.');
+            }
+        }
 
-            triggerNotification('Expense Added', `Logged ${amount.toFixed(2)} for ${item}`, 'ti-currency-dollar', currentActiveTicket.id);
+        async function deleteExpense(expenseId) {
+            if (!currentActiveTicket) return;
+            try {
+                const res = await fetch(`/api/v1/lilypad/tickets/${currentActiveTicket.id}/expenses/${expenseId}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                await refreshCurrentTicket();
+            } catch (err) {
+                alert(err.message || 'Unable to delete expense.');
+            }
         }
 
         function renderDrawerAudit(ticket) {
