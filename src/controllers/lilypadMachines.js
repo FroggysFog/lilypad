@@ -169,6 +169,56 @@ lilypadMachinesController.createMachine = async function (req, res) {
 }
 
 /**
+ * PUT /api/v1/lilypad/machines/:slug
+ * Edits the machine's own core fields - name/category/imageUrl. The slug
+ * is deliberately left alone even if the name changes, since it's the
+ * stable identifier this page's URL, media file paths, and knowledge-
+ * base.html's links all key off - renaming the machine shouldn't break
+ * any of those.
+ */
+lilypadMachinesController.updateMachine = async function (req, res) {
+  try {
+    const machine = await LilyPadMachine.findOne({ slug: req.params.slug, deleted: false })
+    if (!machine) {
+      return res.status(404).json({ success: false, error: 'Machine not found' })
+    }
+
+    const { name, category, imageUrl } = req.body
+    if (name !== undefined) {
+      if (!name.trim()) return res.status(400).json({ success: false, error: 'Machine name cannot be empty.' })
+      machine.name = xss(name.trim())
+    }
+    if (category !== undefined) machine.category = xss(String(category).trim()) || 'General'
+    if (imageUrl !== undefined) machine.imageUrl = xss(String(imageUrl).trim())
+
+    await machine.save()
+    return res.status(200).json({ success: true, data: machine })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/machines/:slug
+ * Soft delete, matching the `deleted` flag every other machine query in
+ * this controller already filters on.
+ */
+lilypadMachinesController.deleteMachine = async function (req, res) {
+  try {
+    const machine = await LilyPadMachine.findOne({ slug: req.params.slug, deleted: false })
+    if (!machine) {
+      return res.status(404).json({ success: false, error: 'Machine not found' })
+    }
+
+    machine.deleted = true
+    await machine.save()
+    return res.status(200).json({ success: true, message: 'Machine deleted.' })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
  * POST /api/v1/lilypad/machines/:slug/media
  */
 lilypadMachinesController.uploadMedia = async function (req, res) {
@@ -301,6 +351,36 @@ lilypadMachinesController.addIssue = async function (req, res) {
     await machine.save()
 
     return res.status(201).json({ success: true, data: machine })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * PUT /api/v1/lilypad/machines/:slug/issues/:issueId
+ */
+lilypadMachinesController.updateIssue = async function (req, res) {
+  try {
+    const machine = await LilyPadMachine.findOne({ slug: req.params.slug, deleted: false })
+    if (!machine) {
+      return res.status(404).json({ success: false, error: 'Machine not found' })
+    }
+
+    const issue = machine.issues.id(req.params.issueId)
+    if (!issue) {
+      return res.status(404).json({ success: false, error: 'Issue not found' })
+    }
+
+    const { symptom, steps, resolution } = req.body
+    if (symptom !== undefined) {
+      if (!symptom.trim()) return res.status(400).json({ success: false, error: 'Symptom/issue description cannot be empty.' })
+      issue.symptom = xss(symptom.trim())
+    }
+    if (steps !== undefined) issue.steps = Array.isArray(steps) ? steps.map((s) => xss(String(s).trim())) : []
+    if (resolution !== undefined) issue.resolution = xss(String(resolution).trim())
+
+    await machine.save()
+    return res.status(200).json({ success: true, data: machine })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

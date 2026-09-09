@@ -17,10 +17,13 @@ module.exports = function () {
   router.get('/machines/search', machines.searchMachines)
   router.get('/machines/:slug', machines.getMachineBySlug)
   router.post('/machines', requireLogin, machines.createMachine)
+  router.put('/machines/:slug', requireLogin, machines.updateMachine)
+  router.delete('/machines/:slug', requireLogin, machines.deleteMachine)
   router.post('/machines/:slug/media', requireLogin, machines.uploadMiddleware, machines.uploadMedia)
   router.post('/machines/:slug/media/link', requireLogin, machines.addMediaLink)
   router.delete('/machines/:slug/media/:mediaId', requireLogin, machines.deleteMedia)
   router.post('/machines/:slug/issues', requireLogin, machines.addIssue)
+  router.put('/machines/:slug/issues/:issueId', requireLogin, machines.updateIssue)
   router.delete('/machines/:slug/issues/:issueId', requireLogin, machines.deleteIssue)
 
   router.use('/uploads', requireLogin, express.static(path.join(UPLOAD_ROOT)))
