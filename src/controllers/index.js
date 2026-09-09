@@ -14,6 +14,8 @@ const Controllers = {
   lilypadProspector: require('./lilypadProspector'),
   lilypadCustomerIntelligence: require('./lilypadCustomerIntelligence'),
   microsoftTeams: require('./microsoftTeams'),
+  microsoftCalendarAuth: require('./microsoftCalendarAuth'),
+  lilypadCalendar: require('./lilypadCalendar'),
   salesforceAuth: require('./salesforceAuth'),
   salesforceExplorer: require('./salesforceExplorer'),
   cartAuth: require('./cartAuth')

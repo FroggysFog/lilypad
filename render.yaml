@@ -67,6 +67,17 @@ services:
         sync: false
       - key: CART_CALLBACK_URL
         sync: false
+      # Microsoft Calendar sync (calendar.html) - reuses the same Entra
+      # App Registration as the existing Teams integration
+      # (MICROSOFT_TENANT_ID/CLIENT_ID/CLIENT_SECRET, set directly in the
+      # Render dashboard, not tracked here). This needs its own Redirect
+      # URI added to that App Registration in Azure Portal (App
+      # Registrations > this app > Authentication > Add a platform > Web)
+      # plus the Calendars.ReadWrite delegated permission added under
+      # API permissions - Microsoft Graph, since a user can't consent to
+      # a scope the app hasn't declared.
+      - key: MICROSOFT_CALENDAR_REDIRECT_URI
+        sync: false
       - key: REMINDER_CHECK_MINUTES
         value: "5"
       # How often the background job pulls Customers/Orders/Accounts/Opportunities/

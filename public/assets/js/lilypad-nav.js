@@ -25,6 +25,7 @@ const LILYPAD_NAV_SECTIONS = [
     items: [
       { href: 'tickets.html', icon: 'ti-ticket', label: 'Ticket Operations' },
       { href: 'tasks.html', icon: 'ti-list-check', label: 'Task Manager' },
+      { href: 'calendar.html', icon: 'ti-calendar', label: 'Calendar' },
       { href: 'knowledge-base.html', icon: 'ti-book', label: 'Knowledge Base & SOPs' }
     ]
   },

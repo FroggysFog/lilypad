@@ -36,6 +36,17 @@ function mainRoutes(router, controllers) {
   router.get('/api/microsoft-teams/chats/:chatId/messages', requireLoginApi, controllers.microsoftTeams.messages)
   router.post('/api/microsoft-teams/chats/:chatId/messages', requireLoginApi, controllers.microsoftTeams.send)
 
+  // Microsoft Calendar integration (used by calendar.html) - per-user
+  // connection, distinct from the single shared Teams connection above.
+  router.get('/auth/microsoft-calendar/connect', requireLogin, controllers.microsoftCalendarAuth.connect)
+  router.get('/auth/microsoft-calendar/callback', requireLogin, controllers.microsoftCalendarAuth.callback)
+  router.get('/api/v1/lilypad/calendar/microsoft/status', requireLoginApi, controllers.microsoftCalendarAuth.status)
+  router.post('/api/v1/lilypad/calendar/microsoft/disconnect', requireLoginApi, controllers.microsoftCalendarAuth.disconnect)
+  router.get('/api/v1/lilypad/calendar/events', requireLoginApi, controllers.lilypadCalendar.getEvents)
+  router.post('/api/v1/lilypad/calendar/events', requireLoginApi, controllers.lilypadCalendar.createEvent)
+  router.put('/api/v1/lilypad/calendar/events/:id', requireLoginApi, controllers.lilypadCalendar.updateEvent)
+  router.delete('/api/v1/lilypad/calendar/events/:id', requireLoginApi, controllers.lilypadCalendar.deleteEvent)
+
   // Salesforce integration (used by past-due-payments.html)
   router.get('/auth/salesforce/connect', requireLogin, controllers.salesforceAuth.connect)
   router.get('/auth/salesforce/callback', requireLogin, controllers.salesforceAuth.callback)

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Calendar | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description"
+		content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
+	<style>
+		.source-erp-event { background-color: rgba(var(--bs-primary-rgb), 0.15) !important; border-color: var(--bs-primary) !important; color: var(--bs-primary) !important; }
+		.source-erp-task { background-color: rgba(25, 135, 84, 0.15) !important; border-color: #198754 !important; color: #198754 !important; }
+		.source-microsoft { background-color: rgba(13, 110, 253, 0.1) !important; border-color: #0d6efd !important; color: #0d6efd !important; }
+		#calendarEl { min-height: 640px; }
+	</style>
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+				</div>
+
+				<div class="d-flex align-items-center">
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);" class="topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex" alt="user-image">
+							<span class="online text-success"><i class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42" alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0 topbar-user-name">User</p>
+									<span class="d-block fs-13 topbar-user-role">Role</span>
+								</div>
+							</div>
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+							<div class="pt-2 mt-2 border-top">
+								<a href="javascript:void(0);" onclick="doLogout()" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+			<div class="sidebar-logo">
+				<div>
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span class="text-primary">ERP</span></span>
+					</a>
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu"></div>
+			</div>
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<div class="page-wrapper">
+			<div class="content pb-0">
+
+				<!-- Page Header -->
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-3 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark">Calendar</h4>
+						<p class="text-muted fs-13 mb-0">Company events, tasks, and everyone's connected Microsoft calendars in one view.</p>
+					</div>
+					<button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" onclick="openNewEventModal()">
+						<i class="ti ti-plus me-1"></i> New Event
+					</button>
+				</div>
+
+				<!-- Microsoft Connection Banner -->
+				<div class="card border-0 shadow-sm rounded-3 mb-3" id="msConnectionCard">
+					<div class="card-body py-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+						<div class="d-flex align-items-center gap-2">
+							<i class="ti ti-brand-windows fs-18 text-primary"></i>
+							<span class="fs-13" id="msConnectionText">Checking Microsoft connection...</span>
+						</div>
+						<div id="msConnectionActions"></div>
+					</div>
+				</div>
+
+				<!-- Legend -->
+				<div class="d-flex align-items-center gap-3 mb-3 fs-12 text-muted flex-wrap">
+					<span><span class="badge" style="background:rgba(var(--bs-primary-rgb), 0.15); color:var(--bs-primary); border:1px solid var(--bs-primary);">&nbsp;&nbsp;</span> ERP Event</span>
+					<span><span class="badge" style="background:rgba(25,135,84,0.15); color:#198754; border:1px solid #198754;">&nbsp;&nbsp;</span> ERP Task</span>
+					<span><span class="badge" style="background:rgba(13,110,253,0.1); color:#0d6efd; border:1px solid #0d6efd;">&nbsp;&nbsp;</span> Microsoft Calendar</span>
+				</div>
+
+				<div class="card border-0 shadow-sm rounded-3 mb-4">
+					<div class="card-body">
+						<div id="calendarEl"></div>
+					</div>
+				</div>
+
+				<!-- Start Footer -->
+				<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+					<p class="mb-md-0 mb-1">Copyright &copy;
+						<script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.
+					</p>
+				</footer>
+				<!-- End Footer -->
+			</div>
+		</div>
+	</div>
+	<!-- End Wrapper -->
+
+	<!-- Event Detail (read-only) Modal -->
+	<div class="modal fade" id="eventViewModal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title fw-bold" id="viewEventTitle"></h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body fs-13">
+					<div class="mb-2"><i class="ti ti-clock me-1 text-primary"></i><span id="viewEventTime"></span></div>
+					<div class="mb-2" id="viewEventLocationRow"><i class="ti ti-map-pin me-1 text-primary"></i><span id="viewEventLocation"></span></div>
+					<div class="mb-2"><i class="ti ti-user me-1 text-primary"></i><span id="viewEventOwner"></span></div>
+					<p class="text-muted mb-0" id="viewEventDescription"></p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- New / Edit Event Modal -->
+	<div class="modal fade" id="eventFormModal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title fw-bold" id="eventFormTitle">New Event</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<input type="hidden" id="eventFormId">
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Title <span class="text-danger">*</span></label>
+						<input type="text" class="form-control form-control-sm" id="eventFormTitleInput">
+					</div>
+					<div class="row g-2 mb-2">
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">Type</label>
+							<select class="form-select form-select-sm" id="eventFormType">
+								<option value="event">Event</option>
+								<option value="task">Task</option>
+							</select>
+						</div>
+						<div class="col-6 d-flex align-items-end">
+							<div class="form-check">
+								<input type="checkbox" class="form-check-input" id="eventFormAllDay" onchange="toggleAllDayInputs()">
+								<label class="form-check-label fs-13" for="eventFormAllDay">All day</label>
+							</div>
+						</div>
+					</div>
+					<div class="row g-2 mb-2">
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">Start</label>
+							<input type="datetime-local" class="form-control form-control-sm" id="eventFormStart">
+						</div>
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">End</label>
+							<input type="datetime-local" class="form-control form-control-sm" id="eventFormEnd">
+						</div>
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Location</label>
+						<input type="text" class="form-control form-control-sm" id="eventFormLocation">
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Description</label>
+						<textarea class="form-control form-control-sm" id="eventFormDescription" rows="2"></textarea>
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Attendees <span class="text-muted fw-normal">(their connected Microsoft calendar gets this event too)</span></label>
+						<select class="form-select form-select-sm" id="eventFormAttendees" multiple size="4"></select>
+						<span class="text-muted fs-11">Ctrl/Cmd-click to select more than one.</span>
+					</div>
+				</div>
+				<div class="modal-footer d-flex justify-content-between">
+					<button type="button" class="btn btn-outline-danger btn-sm" id="eventFormDeleteBtn" style="display:none;" onclick="deleteCurrentEvent()">Delete</button>
+					<div class="ms-auto d-flex gap-2">
+						<button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+						<button type="button" class="btn btn-primary btn-sm" onclick="submitEventForm()">Save</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<!-- FullCalendar (bundled with the theme, unused elsewhere) -->
+	<script src="assets/plugins/fullcalendar/index.global.min.js"></script>
+	<!-- Main JS -->
+	<script src="assets/js/lilypad-nav.js"></script>
+	<script src="assets/js/script.js"></script>
+
+	<script>
+		let calendar = null;
+		let USERS = [];
+		let currentUserId = null;
+		let currentEditEventId = null;
+
+		function escapeHtml(str) {
+			return String(str == null ? '' : str).replace(/[&<>'"]/g, function(c) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+			});
+		}
+
+		function toLocalInputValue(date) {
+			const d = new Date(date);
+			const offset = d.getTimezoneOffset();
+			return new Date(d.getTime() - offset * 60000).toISOString().slice(0, 16);
+		}
+
+		async function loadMe() {
+			try {
+				const res = await fetch('/api/v1/lilypad/account/me');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				currentUserId = result.data.id;
+				document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
+				document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
+			} catch (err) {
+				console.error('loadMe failed:', err);
+			}
+		}
+
+		async function loadUsers() {
+			try {
+				const res = await fetch('/api/v1/lilypad/users');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				USERS = result.data.map(u => ({ id: u._id, fullname: u.fullname }));
+				document.getElementById('eventFormAttendees').innerHTML = USERS.map(u => `<option value="${u.id}">${escapeHtml(u.fullname)}</option>`).join('');
+			} catch (err) {
+				console.error('loadUsers failed:', err);
+			}
+		}
+
+		async function loadMicrosoftStatus() {
+			const textEl = document.getElementById('msConnectionText');
+			const actionsEl = document.getElementById('msConnectionActions');
+			try {
+				const res = await fetch('/api/v1/lilypad/calendar/microsoft/status');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				const status = result.data;
+
+				if (!status.configured) {
+					textEl.textContent = 'Microsoft Calendar sync is not configured on the server yet.';
+					actionsEl.innerHTML = '';
+				} else if (status.connected) {
+					textEl.innerHTML = `Connected as <strong>${escapeHtml(status.msEmail)}</strong> - your events sync both ways.`;
+					actionsEl.innerHTML = '<button class="btn btn-sm btn-outline-danger" onclick="disconnectMicrosoft()">Disconnect</button>';
+				} else {
+					textEl.textContent = "Your Microsoft calendar isn't connected yet - connect it so your events show up here and vice versa.";
+					actionsEl.innerHTML = '<a href="/auth/microsoft-calendar/connect" class="btn btn-sm btn-primary"><i class="ti ti-brand-windows me-1"></i>Connect Microsoft Calendar</a>';
+				}
+			} catch (err) {
+				textEl.textContent = 'Unable to check Microsoft connection status.';
+				console.error('loadMicrosoftStatus failed:', err);
+			}
+		}
+
+		async function disconnectMicrosoft() {
+			if (!confirm('Disconnect your Microsoft calendar? Existing synced events will stay in Outlook, but new ERP events will stop syncing.')) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/calendar/microsoft/disconnect', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadMicrosoftStatus();
+			} catch (err) {
+				alert(err.message || 'Unable to disconnect.');
+			}
+		}
+
+		async function fetchEvents(fetchInfo, successCallback, failureCallback) {
+			try {
+				const params = new URLSearchParams({ start: fetchInfo.startStr, end: fetchInfo.endStr });
+				const res = await fetch('/api/v1/lilypad/calendar/events?' + params.toString());
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				const events = result.data.map(e => ({
+					id: e.id,
+					title: e.title + (e.ownerName ? ` (${e.ownerName})` : ''),
+					start: e.start,
+					end: e.end,
+					allDay: e.allDay,
+					classNames: [e.source === 'microsoft' ? 'source-microsoft' : (e.itemType === 'task' ? 'source-erp-task' : 'source-erp-event')],
+					extendedProps: e
+				}));
+				successCallback(events);
+			} catch (err) {
+				console.error('fetchEvents failed:', err);
+				failureCallback(err);
+			}
+		}
+
+		function handleDateClick(info) {
+			openNewEventModal(info.dateStr);
+		}
+
+		function handleEventClick(info) {
+			const props = info.event.extendedProps;
+			if (props.source === 'erp' && props.editable) {
+				openEditEventModal(props);
+			} else {
+				openViewEventModal(info.event, props);
+			}
+		}
+
+		function openViewEventModal(fcEvent, props) {
+			document.getElementById('viewEventTitle').textContent = props.title;
+			const start = fcEvent.start ? new Date(fcEvent.start).toLocaleString() : '';
+			const end = fcEvent.end ? new Date(fcEvent.end).toLocaleString() : '';
+			document.getElementById('viewEventTime').textContent = props.allDay ? 'All day' : `${start} - ${end}`;
+			const locRow = document.getElementById('viewEventLocationRow');
+			if (props.location) {
+				locRow.style.display = '';
+				document.getElementById('viewEventLocation').textContent = props.location;
+			} else {
+				locRow.style.display = 'none';
+			}
+			document.getElementById('viewEventOwner').textContent = (props.ownerName || 'Unknown') + (props.source === 'microsoft' ? "'s Microsoft calendar" : '');
+			document.getElementById('viewEventDescription').textContent = props.description || '';
+			bootstrap.Modal.getOrCreateInstance(document.getElementById('eventViewModal')).show();
+		}
+
+		function toggleAllDayInputs() {
+			// datetime-local stays usable either way - all-day just tells the
+			// backend/Microsoft to treat the dates as whole days.
+		}
+
+		function openNewEventModal(dateStr) {
+			currentEditEventId = null;
+			document.getElementById('eventFormTitle').textContent = 'New Event';
+			document.getElementById('eventFormId').value = '';
+			document.getElementById('eventFormTitleInput').value = '';
+			document.getElementById('eventFormType').value = 'event';
+			document.getElementById('eventFormAllDay').checked = false;
+			const base = dateStr ? new Date(dateStr) : new Date();
+			document.getElementById('eventFormStart').value = toLocalInputValue(base);
+			document.getElementById('eventFormEnd').value = toLocalInputValue(new Date(base.getTime() + 3600000));
+			document.getElementById('eventFormLocation').value = '';
+			document.getElementById('eventFormDescription').value = '';
+			Array.from(document.getElementById('eventFormAttendees').options).forEach(o => { o.selected = false; });
+			document.getElementById('eventFormDeleteBtn').style.display = 'none';
+			bootstrap.Modal.getOrCreateInstance(document.getElementById('eventFormModal')).show();
+		}
+
+		function openEditEventModal(props) {
+			currentEditEventId = props.erpId;
+			document.getElementById('eventFormTitle').textContent = 'Edit Event';
+			document.getElementById('eventFormId').value = props.erpId;
+			document.getElementById('eventFormTitleInput').value = props.title;
+			document.getElementById('eventFormType').value = props.itemType || 'event';
+			document.getElementById('eventFormAllDay').checked = Boolean(props.allDay);
+			document.getElementById('eventFormStart').value = toLocalInputValue(props.start);
+			document.getElementById('eventFormEnd').value = toLocalInputValue(props.end);
+			document.getElementById('eventFormLocation').value = props.location || '';
+			document.getElementById('eventFormDescription').value = props.description || '';
+			document.getElementById('eventFormDeleteBtn').style.display = '';
+			bootstrap.Modal.getOrCreateInstance(document.getElementById('eventFormModal')).show();
+		}
+
+		async function submitEventForm() {
+			const title = document.getElementById('eventFormTitleInput').value.trim();
+			if (!title) { alert('Title is required.'); return; }
+
+			const payload = {
+				title,
+				itemType: document.getElementById('eventFormType').value,
+				allDay: document.getElementById('eventFormAllDay').checked,
+				start: new Date(document.getElementById('eventFormStart').value).toISOString(),
+				end: new Date(document.getElementById('eventFormEnd').value).toISOString(),
+				location: document.getElementById('eventFormLocation').value.trim(),
+				description: document.getElementById('eventFormDescription').value.trim(),
+				attendeeIds: Array.from(document.getElementById('eventFormAttendees').selectedOptions).map(o => o.value)
+			};
+
+			try {
+				const isEdit = Boolean(currentEditEventId);
+				const res = await fetch(`/api/v1/lilypad/calendar/events${isEdit ? '/' + currentEditEventId : ''}`, {
+					method: isEdit ? 'PUT' : 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				bootstrap.Modal.getInstance(document.getElementById('eventFormModal'))?.hide();
+				calendar.refetchEvents();
+			} catch (err) {
+				alert(err.message || 'Unable to save event.');
+			}
+		}
+
+		async function deleteCurrentEvent() {
+			if (!currentEditEventId) return;
+			if (!confirm('Delete this event? This also removes it from any synced Microsoft calendars.')) return;
+
+			try {
+				const res = await fetch(`/api/v1/lilypad/calendar/events/${currentEditEventId}`, { method: 'DELETE' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				bootstrap.Modal.getInstance(document.getElementById('eventFormModal'))?.hide();
+				calendar.refetchEvents();
+			} catch (err) {
+				alert(err.message || 'Unable to delete event.');
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			await loadMe();
+			await loadUsers();
+			await loadMicrosoftStatus();
+
+			calendar = new FullCalendar.Calendar(document.getElementById('calendarEl'), {
+				initialView: 'dayGridMonth',
+				headerToolbar: {
+					left: 'prev,next today',
+					center: 'title',
+					right: 'dayGridMonth,timeGridWeek,listWeek'
+				},
+				height: 'auto',
+				events: fetchEvents,
+				dateClick: handleDateClick,
+				eventClick: handleEventClick
+			});
+			calendar.render();
+
+			if (new URLSearchParams(window.location.search).get('microsoft') === 'connected') {
+				await loadMicrosoftStatus();
+			}
+		});
+	</script>
+</body>
+
+</html>
