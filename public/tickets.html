@@ -2084,6 +2084,13 @@
         ];
 
         // Live production tickets store, populated from the real API (see loadTickets())
+        // Import-provenance metadata (e.g. from the Spiceworks migration)
+        // stays in formData for recordkeeping but has no business value to
+        // show on a ticket, so it's filtered out of every generic formData
+        // display - both the list-row metadata pills and the drawer's
+        // Core Attributes section - rather than deleted from the data.
+        const HIDDEN_FORM_DATA_KEYS = ['importedFrom', 'spiceworksId'];
+
         let tickets = [];
         let currentView = 'list';
         let currentUserId = null;
@@ -2819,8 +2826,9 @@
                 const isChecked = selectedTicketIds.has(t.id);
                 
                 const metaSnippets = Object.entries(t.formData || {})
+                    .filter(([k]) => !HIDDEN_FORM_DATA_KEYS.includes(k))
                     .slice(0, 2)
-                    .map(([k, v]) => `<span class="metadata-pill"><strong>${k}:</strong> ${v}</span>`)
+                    .map(([k, v]) => `<span class="metadata-pill"><strong>${escapeHtml(k)}:</strong> ${escapeHtml(String(v))}</span>`)
                     .join('');
 
                 const filesBadge = (t.attachments && t.attachments.length) 
@@ -3100,11 +3108,6 @@
             document.getElementById('drawerReporter').textContent = ticket.reporterName;
             document.getElementById('drawerAssigneeSelect').value = ticket.assigneeName;
 
-            // Import-provenance metadata (e.g. from the Spiceworks migration)
-            // stays in formData for recordkeeping but has no business value
-            // to show on the ticket itself, so it's filtered out of this
-            // generic key/value dump rather than deleted from the data.
-            const HIDDEN_FORM_DATA_KEYS = ['importedFrom', 'spiceworksId'];
             const formFieldsContainer = document.getElementById('drawerFormDataFields');
             const entries = Object.entries(ticket.formData || {}).filter(([k]) => !HIDDEN_FORM_DATA_KEYS.includes(k));
             formFieldsContainer.innerHTML = entries.length ? entries.map(([k, v]) => `
