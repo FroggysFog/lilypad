@@ -477,6 +477,10 @@
 											<button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets('urgent', this)">Urgent & High</button>
 										</li>
 									</ul>
+									<div class="btn-group">
+										<button type="button" class="btn btn-sm btn-outline-secondary active" id="dashViewGridBtn" onclick="setDashboardViewMode('grid')" title="Card view"><i class="ti ti-layout-grid"></i></button>
+										<button type="button" class="btn btn-sm btn-outline-secondary" id="dashViewListBtn" onclick="setDashboardViewMode('list')" title="List view with quick actions"><i class="ti ti-list"></i></button>
+									</div>
 									<a href="tickets.html" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill" style="font-size: 13px;">
 										<i class="ti ti-layout-kanban fs-14"></i>
 										<span>Ticket Suite</span>
@@ -544,7 +548,10 @@
     let dashLastTickets = [];
     let dashLastTasks = [];
     let dashStatusPill = 'all'; // 'all' | 'urgent'
+    let dashViewMode = 'grid'; // 'grid' | 'list'
+    let DASH_USERS = [];
     const DASH_PRIORITY_RANK = { Urgent: 3, High: 2, Normal: 1, Low: 0 };
+    const DASH_COMPLETE_STATUS = { ticket: 'Complete', task: 'Done' };
 
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
@@ -596,11 +603,12 @@
             const res = await fetch('/api/v1/lilypad/users');
             const result = await res.json();
             if (!result.success) return;
-            result.data
-                .filter(u => u._id !== dashCurrentUserId)
+            DASH_USERS = result.data.map(u => ({ id: u._id, fullname: u.fullname }));
+            DASH_USERS
+                .filter(u => u.id !== dashCurrentUserId)
                 .forEach(u => {
                     const opt = document.createElement('option');
-                    opt.value = u._id;
+                    opt.value = u.id;
                     opt.textContent = u.fullname;
                     select.appendChild(opt);
                 });
@@ -625,7 +633,9 @@
             subtitle: t.description,
             priority: t.priority,
             status: t.status,
-            personLabel: (t.assignee && t.assignee.fullname) || 'Unassigned',
+            assigneeId: (t.assignee && t.assignee._id) || '',
+            assigneeName: (t.assignee && t.assignee.fullname) || 'Unassigned',
+            dueDateRaw: t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '',
             href: `tickets.html?ticket=${t._id}`
         }));
 
@@ -637,7 +647,9 @@
             subtitle: t.notes || 'No notes.',
             priority: t.priority,
             status: t.status,
-            personLabel: t.dueDate ? ('Due ' + new Date(t.dueDate).toLocaleDateString()) : 'No due date',
+            assigneeId: (t.owner && t.owner._id) || '',
+            assigneeName: (t.owner && t.owner.fullname) || 'Unknown',
+            dueDateRaw: t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '',
             href: `tasks.html?task=${t._id}`
         }));
 
@@ -646,6 +658,94 @@
             if (rankDiff !== 0) return rankDiff;
             return a.title.localeCompare(b.title);
         });
+    }
+
+    function setDashboardViewMode(mode) {
+        dashViewMode = mode;
+        document.getElementById('dashViewGridBtn').classList.toggle('active', mode === 'grid');
+        document.getElementById('dashViewListBtn').classList.toggle('active', mode === 'list');
+        renderDashboardFeed();
+    }
+
+    /**
+     * Quick actions - the whole point is these happen without leaving the
+     * dashboard or opening the item's own page. Each just calls the same
+     * endpoint the item's own detail view already uses, then reloads the
+     * feed so KPIs/counts stay correct too.
+     */
+    async function dashQuickComplete (feedType, id) {
+        const path = feedType === 'ticket' ? `tickets/${id}/status` : `tasks/${id}/status`;
+        const status = DASH_COMPLETE_STATUS[feedType];
+        try {
+            const res = await fetch(`/api/v1/lilypad/${path}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            const result = await res.json();
+            if (!result.success) throw new Error(result.error);
+            await loadDashboard();
+        } catch (err) {
+            alert(err.message || 'Unable to mark complete.');
+        }
+    }
+
+    async function dashQuickDueDate (feedType, id, dateVal) {
+        const path = feedType === 'ticket' ? `tickets/${id}` : `tasks/${id}`;
+        try {
+            const res = await fetch(`/api/v1/lilypad/${path}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dueDate: dateVal || null })
+            });
+            const result = await res.json();
+            if (!result.success) throw new Error(result.error);
+            await loadDashboard();
+        } catch (err) {
+            alert(err.message || 'Unable to update due date.');
+        }
+    }
+
+    async function dashQuickReassign (feedType, id, userId) {
+        if (!userId) return;
+        const isTicket = feedType === 'ticket';
+        const path = isTicket ? `tickets/${id}/assign` : `tasks/${id}/assign`;
+        const body = isTicket ? { assigneeId: userId } : { userId };
+        try {
+            const res = await fetch(`/api/v1/lilypad/${path}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const result = await res.json();
+            if (!result.success) throw new Error(result.error);
+            await loadDashboard();
+        } catch (err) {
+            alert(err.message || 'Unable to reassign.');
+        }
+    }
+
+    function dashAssigneeSelectOptions (item) {
+        const options = DASH_USERS.map(u =>
+            `<option value="${u.id}" ${String(u.id) === String(item.assigneeId) ? 'selected' : ''}>${escapeHtml(u.fullname)}</option>`
+        ).join('');
+        const unassignedOption = !item.assigneeId ? '<option value="" selected disabled>Unassigned</option>' : '';
+        return unassignedOption + options;
+    }
+
+    function dashEmptyState() {
+        return `
+            <div class="col-12 text-center py-5">
+                <div class="rounded-circle d-inline-flex p-3 mb-3" style="background:rgba(var(--bs-primary-rgb), 0.1); color:var(--bs-primary);">
+                    <i class="ti ti-checklist fs-36"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">Nothing on your plate</h5>
+                <p class="text-muted fs-13 mb-3" style="max-width: 480px; margin: 0 auto;">No matching tickets or tasks right now.</p>
+                <a href="tickets.html?action=new" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm mt-2">
+                    <i class="ti ti-plus me-1"></i> Create First Ticket
+                </a>
+            </div>
+        `;
     }
 
     function renderDashboardFeed() {
@@ -658,21 +758,20 @@
             : merged;
 
         if (!filtered.length) {
-            container.innerHTML = `
-                <div class="col-12 text-center py-5">
-                    <div class="rounded-circle d-inline-flex p-3 mb-3" style="background:rgba(var(--bs-primary-rgb), 0.1); color:var(--bs-primary);">
-                        <i class="ti ti-checklist fs-36"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark mb-1">Nothing on your plate</h5>
-                    <p class="text-muted fs-13 mb-3" style="max-width: 480px; margin: 0 auto;">No matching tickets or tasks right now.</p>
-                    <a href="tickets.html?action=new" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm mt-2">
-                        <i class="ti ti-plus me-1"></i> Create First Ticket
-                    </a>
-                </div>
-            `;
+            container.className = 'row g-3';
+            container.innerHTML = dashEmptyState();
             return;
         }
 
+        if (dashViewMode === 'list') {
+            renderDashboardFeedList(container, filtered);
+        } else {
+            renderDashboardFeedGrid(container, filtered);
+        }
+    }
+
+    function renderDashboardFeedGrid(container, filtered) {
+        container.className = 'row g-3';
         container.innerHTML = filtered.slice(0, 9).map(item => {
             const isTicket = item.feedType === 'ticket';
             const priorityClass = item.priority === 'Urgent' ? 'danger' : (item.priority === 'High' ? 'warning' : 'info');
@@ -680,6 +779,7 @@
             const typeBadge = isTicket
                 ? '<span class="badge bg-soft-primary text-primary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-ticket me-1"></i>Ticket</span>'
                 : '<span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-checklist me-1"></i>Task</span>';
+            const dueLabel = item.dueDateRaw ? new Date(item.dueDateRaw + 'T00:00:00').toLocaleDateString() : 'No due date';
 
             return `
                 <div class="col-xl-4 col-md-6 d-flex">
@@ -697,17 +797,79 @@
                         </div>
                         <h6 class="fw-bold fs-13 mb-1 text-dark text-truncate" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h6>
                         <p class="text-muted fs-12 mb-2 text-truncate" style="line-height:1.4;">${escapeHtml(item.subtitle)}</p>
+                        <div class="d-flex align-items-center gap-2 mb-2 fs-12 text-muted flex-wrap">
+                            <span class="d-flex align-items-center"><i class="ti ti-user me-1 fs-13 text-primary"></i><strong class="text-dark">${escapeHtml(item.assigneeName)}</strong></span>
+                            <span class="d-flex align-items-center"><i class="ti ti-calendar me-1 fs-13 text-primary"></i>${escapeHtml(dueLabel)}</span>
+                        </div>
                         <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto fs-12">
-                            <span class="text-muted d-flex align-items-center">
-                                <i class="ti ${isTicket ? 'ti-user' : 'ti-calendar'} me-1 fs-13 text-primary"></i>
-                                <strong class="text-dark">${escapeHtml(item.personLabel)}</strong>
-                            </span>
                             <span class="badge bg-soft-${statusClass} text-${statusClass} fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(item.status)}</span>
+                            <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 fs-11" onclick="event.stopPropagation(); dashQuickComplete('${item.feedType}', '${item.id}')" title="Mark complete">
+                                <i class="ti ti-check"></i> Complete
+                            </button>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
+    }
+
+    function renderDashboardFeedList(container, filtered) {
+        container.className = '';
+        const rows = filtered.slice(0, 20).map(item => {
+            const isTicket = item.feedType === 'ticket';
+            const priorityClass = item.priority === 'Urgent' ? 'danger' : (item.priority === 'High' ? 'warning' : 'info');
+            const statusClass = item.status === 'To-Do' ? 'success' : (item.status === 'In Progress' ? 'warning' : (item.status === 'Blocked' ? 'danger' : 'success'));
+            const typeBadge = isTicket
+                ? '<span class="badge bg-soft-primary text-primary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-ticket me-1"></i>Ticket</span>'
+                : '<span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-checklist me-1"></i>Task</span>';
+
+            return `
+                <tr>
+                    <td>
+                        <input type="checkbox" class="form-check-input" title="Mark complete" onchange="dashQuickComplete('${item.feedType}', '${item.id}')">
+                    </td>
+                    <td>${typeBadge}</td>
+                    <td><span class="badge bg-dark text-white fs-11">${escapeHtml(item.uid)}</span></td>
+                    <td>
+                        <a href="${item.href}" class="text-dark fw-semibold text-decoration-none fs-13">${escapeHtml(item.title)}</a>
+                    </td>
+                    <td><span class="badge bg-soft-${priorityClass} text-${priorityClass} fs-11">${escapeHtml(item.priority)}</span></td>
+                    <td><span class="badge bg-soft-${statusClass} text-${statusClass} fs-11">${escapeHtml(item.status)}</span></td>
+                    <td>
+                        <select class="form-select form-select-sm" style="min-width:150px;" onchange="dashQuickReassign('${item.feedType}', '${item.id}', this.value)">
+                            ${dashAssigneeSelectOptions(item)}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="date" class="form-control form-control-sm" style="min-width:145px;" value="${item.dueDateRaw}" onchange="dashQuickDueDate('${item.feedType}', '${item.id}', this.value)">
+                    </td>
+                    <td class="text-end">
+                        <a href="${item.href}" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Open"><i class="ti ti-arrow-up-right"></i></a>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="white-space:nowrap;">
+                    <thead class="table-light">
+                        <tr>
+                            <th></th>
+                            <th>Type</th>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Assignee</th>
+                            <th>Due Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
     }
 
     function filterDashboardTickets(pill, btn) {
