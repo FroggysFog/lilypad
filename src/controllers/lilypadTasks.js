@@ -50,7 +50,7 @@ lilypadTasksController.getTasks = async function (req, res) {
  */
 lilypadTasksController.createTask = async function (req, res) {
   try {
-    const { title, notes, priority, dueDate, tags, ownerId, linkedTicketId } = req.body
+    const { title, notes, priority, dueDate, tags, ownerId, linkedTicketId, taggedUserIds } = req.body
 
     if (!title || !title.trim()) {
       return res.status(400).json({ success: false, error: 'Task title is required.' })
@@ -71,6 +71,12 @@ lilypadTasksController.createTask = async function (req, res) {
       if (!linkedTicket) return res.status(400).json({ success: false, error: 'Linked ticket not found.' })
     }
 
+    let taggedUsers = []
+    if (Array.isArray(taggedUserIds) && taggedUserIds.length) {
+      const foundUsers = await LilyPadAccount.find({ _id: { $in: taggedUserIds } })
+      taggedUsers = foundUsers.map((u) => u._id)
+    }
+
     const task = new LilyPadTask({
       title: xss(title.trim()),
       notes: notes ? xss(notes.trim()) : '',
@@ -79,6 +85,7 @@ lilypadTasksController.createTask = async function (req, res) {
       tags: Array.isArray(tags) ? tags.map((t) => xss(String(t).trim())).filter(Boolean) : [],
       owner,
       createdBy: req.user._id,
+      taggedUsers,
       linkedTicket: linkedTicket ? linkedTicket._id : null,
       history: [{
         action: 'created',
@@ -103,6 +110,7 @@ lilypadTasksController.getTaskById = async function (req, res) {
     const task = await LilyPadTask.findOne({ _id: req.params.id, deleted: false })
       .populate('owner', 'fullname email image')
       .populate('createdBy', 'fullname email image')
+      .populate('taggedUsers', 'fullname email image')
       .populate('linkedTicket', 'formattedUid title')
 
     if (!task) {
@@ -183,6 +191,38 @@ lilypadTasksController.assignTask = async function (req, res) {
 
     const updated = await LilyPadTask.assignTask(req.params.id, userId, req.user)
     return res.status(200).json({ success: true, message: 'Task shared.', data: updated })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/tasks/:id/people
+ * Tags an additional person on the task - unlike assign/share, this
+ * doesn't move the task off the owner's list, it just adds the tagged
+ * user's view of "My Tasks" to include it too.
+ */
+lilypadTasksController.tagUser = async function (req, res) {
+  try {
+    const { userId } = req.body
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'userId is required.' })
+    }
+
+    const updated = await LilyPadTask.tagUser(req.params.id, userId, req.user)
+    return res.status(200).json({ success: true, data: updated })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/tasks/:id/people/:userId
+ */
+lilypadTasksController.untagUser = async function (req, res) {
+  try {
+    const updated = await LilyPadTask.untagUser(req.params.id, req.params.userId, req.user)
+    return res.status(200).json({ success: true, data: updated })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

@@ -15,6 +15,8 @@ module.exports = function () {
   router.delete('/tasks/:id', requireLogin, controllers.lilypadTasks.deleteTask)
   router.put('/tasks/:id/status', requireLogin, controllers.lilypadTasks.updateStatus)
   router.put('/tasks/:id/assign', requireLogin, controllers.lilypadTasks.assignTask)
+  router.post('/tasks/:id/people', requireLogin, controllers.lilypadTasks.tagUser)
+  router.delete('/tasks/:id/people/:userId', requireLogin, controllers.lilypadTasks.untagUser)
   router.post('/tasks/:id/comments', requireLogin, controllers.lilypadTasks.addComment)
 
   return router

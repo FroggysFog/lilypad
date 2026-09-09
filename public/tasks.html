@@ -70,6 +70,18 @@
 			margin-right: 4px;
 		}
 
+		.person-pill {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			background: #e2e8f0;
+			color: #334155;
+			padding: 2px 8px;
+			border-radius: 12px;
+			font-size: 11.5px;
+			font-weight: 500;
+		}
+
 		.kanban-board { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 16px; }
 		.kanban-col { flex: 1; min-width: 290px; background: #f1f5f9; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; }
 		.kanban-cards { min-height: 250px; display: flex; flex-direction: column; gap: 12px; }
@@ -337,6 +349,11 @@
 						</select>
 					</div>
 					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Tag Others <span class="text-muted fw-normal">(optional - they'll see it too, without taking ownership)</span></label>
+						<select class="form-select form-select-sm" id="newTaskTagPeople" multiple size="4"></select>
+						<span class="text-muted fs-11">Ctrl/Cmd-click to select more than one.</span>
+					</div>
+					<div class="mb-2">
 						<label class="form-label fs-13 fw-semibold">Link to Ticket <span class="text-muted fw-normal">(optional)</span></label>
 						<input type="text" class="form-control form-control-sm" id="newTaskTicketSearch" placeholder="Search by ticket # or title" oninput="searchTicketsForLink(this.value, 'newTaskTicketResults', 'new')">
 						<div id="newTaskTicketResults" class="list-group mt-1"></div>
@@ -411,9 +428,20 @@
 
 					<div class="card bg-light border-0 rounded-3 p-3 mb-3">
 						<h6 class="fw-bold fs-12 text-uppercase mb-2"><i class="ti ti-share me-1"></i>Share This Task</h6>
+						<p class="fs-12 text-muted mb-2">Moves the task onto someone else's list - they become the owner.</p>
 						<div class="d-flex align-items-center gap-2">
 							<select class="form-select form-select-sm" id="detailTaskShareSelect"></select>
 							<button type="button" class="btn btn-sm btn-primary" onclick="shareCurrentTask()">Share</button>
+						</div>
+					</div>
+
+					<div class="card bg-light border-0 rounded-3 p-3 mb-3">
+						<h6 class="fw-bold fs-12 text-uppercase mb-2"><i class="ti ti-users me-1"></i>Tagged People</h6>
+						<p class="fs-12 text-muted mb-2">Adds visibility for others without moving the task off the owner's list.</p>
+						<div id="detailTaggedPeopleContainer" class="d-flex flex-wrap gap-1 mb-2"></div>
+						<div class="d-flex align-items-center gap-2">
+							<select class="form-select form-select-sm" id="detailTagPersonSelect"></select>
+							<button type="button" class="btn btn-sm btn-outline-primary" onclick="tagCurrentTaskPerson()">Tag</button>
 						</div>
 					</div>
 
@@ -487,6 +515,9 @@
 				const options = USERS.filter(u => u.id !== currentUserId).map(u => `<option value="${u.id}">${escapeHtml(u.fullname)}</option>`).join('');
 				ownerSelect.innerHTML = '<option value="">Just me</option>' + options;
 				shareSelect.innerHTML = options || '<option value="">No other users</option>';
+
+				const newTagSelect = document.getElementById('newTaskTagPeople');
+				newTagSelect.innerHTML = USERS.filter(u => u.id !== currentUserId).map(u => `<option value="${u.id}">${escapeHtml(u.fullname)}</option>`).join('');
 			} catch (err) {
 				console.error('loadUsers failed:', err);
 			}
@@ -504,6 +535,7 @@
 				tags: t.tags || [],
 				owner: t.owner,
 				createdBy: t.createdBy,
+				taggedUsers: t.taggedUsers || [],
 				linkedTicket: t.linkedTicket,
 				comments: t.comments || [],
 				history: t.history || [],
@@ -573,6 +605,7 @@
 				const ticketBadge = t.linkedTicket ? `<span class="badge bg-soft-secondary text-secondary fs-11"><i class="ti ti-link me-1"></i>${escapeHtml(t.linkedTicket.formattedUid)}</span>` : '';
 				const dueBadge = t.dueDate ? `<span class="badge ${isOverdue ? 'bg-danger-subtle text-danger' : 'bg-light text-muted border'} fs-11"><i class="ti ti-calendar me-1"></i>${t.dueDate}</span>` : '';
 				const ownerBadge = currentTaskView === 'assignedByMe' ? `<span class="badge bg-soft-info text-info fs-11"><i class="ti ti-user me-1"></i>${escapeHtml(ownerName)}</span>` : '';
+				const taggedBadge = t.taggedUsers.length ? `<span class="badge bg-light text-muted border fs-11" title="${t.taggedUsers.map(u => escapeHtml(u.fullname)).join(', ')}"><i class="ti ti-users me-1"></i>${t.taggedUsers.length}</span>` : '';
 
 				return `
 					<div class="task-row ${isDone ? 'is-done' : ''} ${isOverdue ? 'is-overdue' : ''}" onclick="openTaskModal('${t.id}')">
@@ -582,7 +615,7 @@
 								<strong class="task-title">${escapeHtml(t.title)}</strong>
 							</div>
 							<div class="d-flex align-items-center gap-2">
-								${dueBadge}${ticketBadge}${ownerBadge}
+								${dueBadge}${ticketBadge}${ownerBadge}${taggedBadge}
 								<span class="badge badge-${t.status.toLowerCase().replace(/\s+/g, '')} fs-11">${t.status}</span>
 							</div>
 						</div>
@@ -640,6 +673,7 @@
 			document.getElementById('newTaskDueDate').value = '';
 			document.getElementById('newTaskTags').value = '';
 			document.getElementById('newTaskOwner').value = '';
+			Array.from(document.getElementById('newTaskTagPeople').options).forEach(o => { o.selected = false; });
 			document.getElementById('newTaskTicketSearch').value = '';
 			document.getElementById('newTaskTicketResults').innerHTML = '';
 			document.getElementById('newTaskLinkedTicketDisplay').textContent = '';
@@ -662,6 +696,7 @@
 						dueDate: document.getElementById('newTaskDueDate').value || null,
 						tags: parseTagInput(document.getElementById('newTaskTags').value),
 						ownerId: document.getElementById('newTaskOwner').value || null,
+						taggedUserIds: Array.from(document.getElementById('newTaskTagPeople').selectedOptions).map(o => o.value),
 						linkedTicketId: newTaskLinkedTicketId
 					})
 				});
@@ -766,6 +801,22 @@
 			document.getElementById('detailTaskOwner').textContent = (t.owner && t.owner.fullname) || 'Unknown';
 			document.getElementById('detailTaskCreatedBy').textContent = (t.createdBy && t.createdBy.fullname) || 'Unknown';
 
+			const taggedContainer = document.getElementById('detailTaggedPeopleContainer');
+			taggedContainer.innerHTML = t.taggedUsers.length
+				? t.taggedUsers.map(u => `
+					<span class="person-pill">
+						<i class="ti ti-user fs-11"></i> ${escapeHtml(u.fullname)}
+						<button type="button" class="btn btn-link text-muted p-0 ms-1" onclick="untagPerson('${u._id}')">&times;</button>
+					</span>
+				`).join('')
+				: '<span class="text-muted fs-13">No one tagged yet.</span>';
+
+			const taggedIds = new Set(t.taggedUsers.map(u => String(u._id)));
+			const tagSelect = document.getElementById('detailTagPersonSelect');
+			const tagOptions = USERS.filter(u => u.id !== currentUserId && !taggedIds.has(String(u.id)) && String((t.owner && t.owner._id) || t.owner) !== String(u.id))
+				.map(u => `<option value="${u.id}">${escapeHtml(u.fullname)}</option>`).join('');
+			tagSelect.innerHTML = tagOptions || '<option value="">Everyone is already tagged</option>';
+
 			const linkedEl = document.getElementById('detailLinkedTicketDisplay');
 			linkedEl.innerHTML = t.linkedTicket
 				? `<span class="badge bg-soft-secondary text-secondary fs-12 me-2"><i class="ti ti-link me-1"></i>${escapeHtml(t.linkedTicket.formattedUid)} - ${escapeHtml(t.linkedTicket.title)}</span><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="unlinkTicketFromCurrentTask()">Unlink</button>`
@@ -852,6 +903,37 @@
 			}
 		}
 
+		async function tagCurrentTaskPerson() {
+			if (!currentDetailTask) return;
+			const userId = document.getElementById('detailTagPersonSelect').value;
+			if (!userId) { alert('Choose someone to tag.'); return; }
+
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}/people`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ userId })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to tag person.');
+			}
+		}
+
+		async function untagPerson(userId) {
+			if (!currentDetailTask) return;
+			try {
+				const res = await fetch(`/api/v1/lilypad/tasks/${currentDetailTask.id}/people/${userId}`, { method: 'DELETE' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await refreshCurrentTask();
+			} catch (err) {
+				alert(err.message || 'Unable to remove tagged person.');
+			}
+		}
+
 		async function deleteCurrentTask() {
 			if (!currentDetailTask) return;
 			if (!confirm(`Delete "${currentDetailTask.title}"?`)) return;
@@ -894,6 +976,27 @@
 			await loadMe();
 			await loadUsers();
 			await loadTasks();
+
+			const targetTask = new URLSearchParams(window.location.search).get('task');
+			if (targetTask) {
+				if (TASKS.some(t => t.id === targetTask)) {
+					openTaskModal(targetTask);
+				} else {
+					// Not in the default "My Tasks" view (e.g. linked from
+					// "Assigned by Me", or already Done) - fetch it directly.
+					try {
+						const res = await fetch(`/api/v1/lilypad/tasks/${targetTask}`);
+						const result = await res.json();
+						if (result.success) {
+							currentDetailTask = mapTask(result.data);
+							renderTaskDetail();
+							bootstrap.Modal.getOrCreateInstance(document.getElementById('taskDetailModal')).show();
+						}
+					} catch (err) {
+						console.error('Unable to open linked task:', err);
+					}
+				}
+			}
 		});
 	</script>
 </body>

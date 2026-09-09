@@ -73,6 +73,14 @@ const taskSchema = new Schema({
     required: true,
     index: true
   },
+  // Additional people tagged on the task, distinct from `owner` - tagging
+  // doesn't move the task off the owner's list the way sharing/assign
+  // does, it just adds more people who also see it under "My Tasks".
+  taggedUsers: [{
+    type: Schema.Types.ObjectId,
+    ref: 'lilypad_accounts',
+    index: true
+  }],
   // Optional cross-reference to a support ticket this task grew out of -
   // tasks and tickets stay separate concepts, this is just a pointer.
   linkedTicket: {
@@ -132,22 +140,25 @@ taskSchema.pre('save', async function (next) {
  * The current user's own list - tasks currently owned by them.
  */
 taskSchema.statics.getMyTasks = function (userId, options = {}) {
-  const query = { deleted: false, owner: userId }
+  const query = { deleted: false, $and: [{ $or: [{ owner: userId }, { taggedUsers: userId }] }] }
 
   if (options.status) query.status = options.status
   if (options.priority) query.priority = options.priority
   if (options.tag) query.tags = options.tag
   if (options.search) {
-    query.$or = [
-      { title: { $regex: options.search, $options: 'i' } },
-      { formattedUid: { $regex: options.search, $options: 'i' } },
-      { notes: { $regex: options.search, $options: 'i' } }
-    ]
+    query.$and.push({
+      $or: [
+        { title: { $regex: options.search, $options: 'i' } },
+        { formattedUid: { $regex: options.search, $options: 'i' } },
+        { notes: { $regex: options.search, $options: 'i' } }
+      ]
+    })
   }
 
   return this.find(query)
     .populate('owner', 'fullname email image')
     .populate('createdBy', 'fullname email image')
+    .populate('taggedUsers', 'fullname email image')
     .populate('linkedTicket', 'formattedUid title')
     .sort({ priority: -1, dueDate: 1, createdAt: -1 })
     .limit(options.limit || 500)
@@ -164,6 +175,7 @@ taskSchema.statics.getAssignedByMe = function (userId, options = {}) {
   return this.find(query)
     .populate('owner', 'fullname email image')
     .populate('createdBy', 'fullname email image')
+    .populate('taggedUsers', 'fullname email image')
     .populate('linkedTicket', 'formattedUid title')
     .sort({ createdAt: -1 })
     .limit(options.limit || 500)
@@ -185,6 +197,35 @@ taskSchema.statics.assignTask = async function (taskId, newOwnerId, performedByU
     description: `Shared with ${newOwner.fullname}`
   })
 
+  return task.save()
+}
+
+taskSchema.statics.tagUser = async function (taskId, userId, performedByUser) {
+  const task = await this.findById(taskId)
+  if (!task) throw new Error('Task not found')
+
+  const LilyPadAccount = mongoose.model('lilypad_accounts')
+  const user = await LilyPadAccount.findById(userId)
+  if (!user) throw new Error('User not found')
+
+  if (!task.taggedUsers.some((id) => id.equals(userId))) {
+    task.taggedUsers.push(userId)
+    task.history.push({
+      action: 'tagged',
+      by: performedByUser ? performedByUser._id : null,
+      byName: performedByUser ? performedByUser.fullname : 'System',
+      description: `Tagged ${user.fullname}`
+    })
+  }
+
+  return task.save()
+}
+
+taskSchema.statics.untagUser = async function (taskId, userId, performedByUser) {
+  const task = await this.findById(taskId)
+  if (!task) throw new Error('Task not found')
+
+  task.taggedUsers = task.taggedUsers.filter((id) => !id.equals(userId))
   return task.save()
 }
 
