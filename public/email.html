@@ -180,6 +180,15 @@
 						<div id="suggestedTasksList" class="card-body p-2"></div>
 					</div>
 
+					<div class="card border-0 shadow-sm rounded-3 mb-3 d-none" id="waitingOnCard">
+						<div class="card-header bg-transparent border-bottom py-2 d-flex align-items-center gap-2">
+							<i class="ti ti-clock-pause text-primary"></i>
+							<h6 class="fw-bold mb-0 fs-14">Waiting On</h6>
+							<span class="badge bg-soft-primary text-primary rounded-pill" id="waitingOnCount">0</span>
+						</div>
+						<div id="waitingOnList" class="card-body p-2"></div>
+					</div>
+
 					<div class="row g-3">
 						<div class="col-lg-5 col-xl-4">
 							<div class="card border-0 shadow-sm rounded-3">
@@ -349,6 +358,7 @@
 					loadGraymailDigest();
 					loadSuggestedTasks();
 					loadSenderCards();
+					loadWaitingOn();
 				} else {
 					textEl.textContent = "Your Microsoft account isn't connected yet - connect it to pull in your inbox.";
 					actionsEl.innerHTML = '<a href="/auth/microsoft-calendar/connect" class="btn btn-sm btn-primary"><i class="ti ti-brand-windows me-1"></i>Connect Microsoft 365</a>';
@@ -440,6 +450,24 @@
 			}
 		}
 
+		function entityBadgeMarkup(link) {
+			const valueLabel = typeof link.snapshotValue === 'number' ? ' | $' + link.snapshotValue.toLocaleString() : '';
+			const statusLabel = link.snapshotStatus ? ' | ' + link.snapshotStatus : '';
+			return `<span class="badge bg-soft-primary text-primary fs-11 px-2 py-1 rounded-pill">${escapeHtml(link.snapshotLabel)}${escapeHtml(statusLabel)}${escapeHtml(valueLabel)}</span>`;
+		}
+
+		async function loadEntityBadges(messageId) {
+			const container = document.getElementById('emailEntityBadges');
+			if (!container) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(messageId) + '/entity-links');
+				const result = await res.json();
+				container.innerHTML = (result.success ? result.data : []).map(entityBadgeMarkup).join('');
+			} catch (err) {
+				console.error('Unable to load entity links:', err);
+			}
+		}
+
 		async function openEmail(id) {
 			emailActiveId = id;
 			currentThreadMessages = [];
@@ -505,6 +533,7 @@
 						<button type="button" class="btn btn-sm btn-outline-danger" id="emailDeleteBtn" title="Delete"><i class="ti ti-trash"></i></button>
 					</div>
 				</div>
+				<div id="emailEntityBadges" class="d-flex flex-wrap gap-1 mb-2"></div>
 				<div id="emailThreadItems">${itemsHtml}</div>
 				<div id="emailInlineReplyBar" style="display:none;" class="border-top pt-3 mt-2">
 					<div class="d-flex align-items-center gap-2 mb-2">
@@ -522,6 +551,7 @@
 			currentThreadMessages.forEach((msg, idx) => {
 				renderMessageBodyInto(reader.querySelector(`[data-thread-body="${idx}"]`), msg);
 			});
+			loadEntityBadges(latest.id);
 
 			reader.querySelectorAll('.thread-item-header').forEach(header => {
 				header.addEventListener('click', () => header.closest('.thread-item').classList.toggle('is-collapsed'));
@@ -673,7 +703,7 @@
 			loadGraymailDigest();
 		});
 
-		document.getElementById('emailRefreshBtn').addEventListener('click', () => { loadEmailList(); loadGraymailDigest(); loadSuggestedTasks(); loadSenderCards(); });
+		document.getElementById('emailRefreshBtn').addEventListener('click', () => { loadEmailList(); loadGraymailDigest(); loadSuggestedTasks(); loadSenderCards(); loadWaitingOn(); });
 		document.getElementById('emailLoadMoreBtn').addEventListener('click', () => {
 			emailSkip += EMAIL_PAGE_SIZE;
 			loadEmailList(false);
@@ -814,6 +844,58 @@
 			const body = document.getElementById('emailReplyBody');
 			body.innerHTML = escapeHtml(draft.draftBody).replace(/\n/g, '<br>');
 			document.getElementById('emailInlineReplyBar').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		}
+
+		// --- Waiting On monitor -----------------------------------------------
+
+		function daysBetween(a, b) {
+			return Math.max(0, Math.round((b - a) / 86400000));
+		}
+
+		function waitingOnRowMarkup(w) {
+			const isOverdue = w.status === 'overdue';
+			const askedDays = daysBetween(new Date(w.createdAt), new Date());
+			return `
+				<div class="d-flex align-items-start justify-content-between gap-2 p-2 border-bottom">
+					<div style="min-width:0;">
+						<div class="fs-13 fw-semibold text-dark text-truncate">
+							${isOverdue ? '<span class="badge bg-soft-primary text-primary fs-10 me-1">Overdue</span>' : ''}${escapeHtml(w.toName || w.toAddress)}
+						</div>
+						<div class="fs-12 text-muted text-truncate">${escapeHtml(w.askSummary)} &middot; asked ${askedDays}d ago</div>
+					</div>
+					<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 flex-shrink-0 waiting-on-dismiss-btn" data-id="${w._id}">Dismiss</button>
+				</div>
+			`;
+		}
+
+		async function loadWaitingOn() {
+			const card = document.getElementById('waitingOnCard');
+			try {
+				const res = await fetch('/api/v1/lilypad/email/waiting-on');
+				const result = await res.json();
+				if (!result.success || !result.data.length) { card.classList.add('d-none'); return; }
+
+				document.getElementById('waitingOnCount').textContent = result.data.length;
+				const list = document.getElementById('waitingOnList');
+				list.innerHTML = result.data.map(waitingOnRowMarkup).join('');
+				list.querySelectorAll('.waiting-on-dismiss-btn').forEach(btn => {
+					btn.addEventListener('click', () => dismissWaitingOn(btn.dataset.id));
+				});
+				card.classList.remove('d-none');
+			} catch (err) {
+				console.error('Unable to load waiting-on list:', err);
+			}
+		}
+
+		async function dismissWaitingOn(id) {
+			try {
+				const res = await fetch('/api/v1/lilypad/email/waiting-on/' + encodeURIComponent(id) + '/dismiss', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadWaitingOn();
+			} catch (err) {
+				alert(err.message || 'Unable to dismiss.');
+			}
 		}
 
 		// --- Compose modal (new messages + editing existing drafts) ---------

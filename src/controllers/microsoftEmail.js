@@ -5,7 +5,9 @@ const microsoftEmailSyncService = require('../services/microsoftEmailSyncService
 const emailInteractionScoringService = require('../services/emailInteractionScoringService')
 const emailTriageExtractionService = require('../services/emailTriageExtractionService')
 const emailSenderRollupService = require('../services/emailSenderRollupService')
-const { LilyPadSuggestedTask, LilyPadTask } = require('../models')
+const emailErpEntityLinkService = require('../services/emailErpEntityLinkService')
+const emailWaitingOnService = require('../services/emailWaitingOnService')
+const { LilyPadSuggestedTask, LilyPadTask, LilyPadAwaitingResponse } = require('../models')
 
 const URGENCY_TO_PRIORITY = { urgent: 'Urgent', high: 'High', normal: 'Normal', low: 'Low' }
 
@@ -367,6 +369,74 @@ controller.addTaskFromBlocker = async function (req, res) {
     const index = parseInt(req.params.index, 10)
     const task = await emailSenderRollupService.addTaskFromBlocker(req.user._id, decodeURIComponent(req.params.address), index)
     return res.status(201).json({ success: true, data: task })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/email/messages/:id/entity-links
+ */
+controller.getEntityLinks = async function (req, res) {
+  try {
+    const data = await emailErpEntityLinkService.getLinksForEmail(req.user._id, req.params.id)
+    return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/link-entities-now
+ */
+controller.triggerEntityLinking = async function (req, res) {
+  try {
+    const result = await emailErpEntityLinkService.runEntityLinkingForOwner(req.user._id)
+    return res.status(200).json({ success: true, data: result })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/email/waiting-on
+ * Overdue first, then longest-waiting - the ones that need attention
+ * most should never be scrolled past.
+ */
+controller.getWaitingOn = async function (req, res) {
+  try {
+    const data = await LilyPadAwaitingResponse.find({ owner: req.user._id, status: { $in: ['waiting', 'overdue'] } })
+      .sort({ status: 1, followUpAfter: 1 })
+      .limit(100)
+    return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/waiting-on/:id/dismiss
+ */
+controller.dismissWaitingOn = async function (req, res) {
+  try {
+    const watcher = await LilyPadAwaitingResponse.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user._id },
+      { $set: { status: 'dismissed' } }
+    )
+    if (!watcher) return res.status(404).json({ success: false, error: 'Watcher not found' })
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/scan-waiting-on-now
+ */
+controller.triggerWaitingOnScan = async function (req, res) {
+  try {
+    const result = await emailWaitingOnService.runWaitingOnPassForOwner(req.user._id)
+    return res.status(200).json({ success: true, data: result })
   } catch (err) {
     return res.status(502).json({ success: false, error: err.message })
   }

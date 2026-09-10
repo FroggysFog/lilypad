@@ -87,6 +87,13 @@ function mainRoutes(router, controllers) {
   router.post('/api/v1/lilypad/email/sender-cards/:address/rollup-now', requireLoginApi, controllers.microsoftEmail.regenerateSenderCard)
   router.post('/api/v1/lilypad/email/sender-cards/:address/blockers/:index/add-task', requireLoginApi, controllers.microsoftEmail.addTaskFromBlocker)
 
+  // Stage 6: ERP entity auto-linking + "Waiting On" monitor.
+  router.get('/api/v1/lilypad/email/messages/:id/entity-links', requireLoginApi, controllers.microsoftEmail.getEntityLinks)
+  router.post('/api/v1/lilypad/email/link-entities-now', requireLoginApi, controllers.microsoftEmail.triggerEntityLinking)
+  router.get('/api/v1/lilypad/email/waiting-on', requireLoginApi, controllers.microsoftEmail.getWaitingOn)
+  router.post('/api/v1/lilypad/email/waiting-on/:id/dismiss', requireLoginApi, controllers.microsoftEmail.dismissWaitingOn)
+  router.post('/api/v1/lilypad/email/scan-waiting-on-now', requireLoginApi, controllers.microsoftEmail.triggerWaitingOnScan)
+
   // Salesforce integration (used by past-due-payments.html)
   router.get('/auth/salesforce/connect', requireLogin, controllers.salesforceAuth.connect)
   router.get('/auth/salesforce/callback', requireLogin, controllers.salesforceAuth.callback)

@@ -65,6 +65,12 @@ function launchServer (db) {
 
       const { startSenderRollupScheduler } = require('./src/services/emailSenderRollupService')
       startSenderRollupScheduler(winston)
+
+      const { startEntityLinkingScheduler } = require('./src/services/emailErpEntityLinkService')
+      startEntityLinkingScheduler(winston)
+
+      const { startWaitingOnScheduler } = require('./src/services/emailWaitingOnService')
+      startWaitingOnScheduler(winston)
     })
   })
 }

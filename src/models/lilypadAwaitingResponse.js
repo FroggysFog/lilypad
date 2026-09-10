@@ -2,9 +2,10 @@
  * LilyPad ERP - Awaiting Response ("Waiting On" monitor)
  * One doc per outbound ask - if an outbound email requested something
  * from someone else, this tracks whether they've replied and flags it
- * once followUpAfter passes without one. Not populated yet as of stage 1
- * (that's build stage 6); exists now so later stages have a stable
- * target schema.
+ * once followUpAfter passes without one. Populated by
+ * emailWaitingOnService.js (stage 6), heuristically (no LLM) - a
+ * pattern match for request-like phrasing in outbound mail, not a
+ * model call.
  */
 
 const mongoose = require('mongoose')

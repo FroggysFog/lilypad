@@ -55,6 +55,12 @@ const emailCacheSchema = new Schema(
       summary: { type: String, default: '' },
       extractedAt: { type: Date, default: null }
     },
+    // Stage 6 processing flags - separate from `triage` since they're
+    // unrelated passes (ERP entity linking runs on inbox+sent+archive;
+    // the "waiting on" outbound-ask scan only on sent) that shouldn't be
+    // coupled to the stage 3/4 triage fields.
+    entityLinksProcessed: { type: Boolean, default: false, index: true },
+    waitingOnProcessed: { type: Boolean, default: false, index: true },
     // Soft-deleted when Graph delta reports a removal, not hard-deleted -
     // keeps a "Recently Deleted" view possible later without re-syncing.
     deleted: { type: Boolean, default: false, index: true }
