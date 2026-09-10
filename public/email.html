@@ -185,6 +185,12 @@
 										</li>
 									</ul>
 								</div>
+								<div id="graymailBanner" class="px-3 py-2 border-bottom fs-12 text-muted d-none align-items-center gap-1" style="cursor:pointer;">
+									<i class="ti ti-shield-off"></i>
+									<span><span id="graymailCount">0</span> quarantined message(s) from unfamiliar senders</span>
+									<i class="ti ti-chevron-down ms-auto" id="graymailChevron"></i>
+								</div>
+								<div id="graymailDigestPane" class="d-none border-bottom" style="max-height:260px; overflow-y:auto; background:#f8fafc;"></div>
 								<div id="emailListPane">
 									<!-- Message rows -->
 								</div>
@@ -281,6 +287,7 @@
 		let currentThreadMessages = [];
 		let replyMode = null; // 'reply' | 'replyAll' | 'forward'
 		let composeDraftId = null;
+		let graymailMessages = [];
 		const EMAIL_PAGE_SIZE = 25;
 
 		function escapeHtml(str) {
@@ -325,6 +332,7 @@
 					actionsEl.innerHTML = '';
 					appEl.style.display = '';
 					loadEmailList();
+					loadGraymailDigest();
 				} else {
 					textEl.textContent = "Your Microsoft account isn't connected yet - connect it to pull in your inbox.";
 					actionsEl.innerHTML = '<a href="/auth/microsoft-calendar/connect" class="btn btn-sm btn-primary"><i class="ti ti-brand-windows me-1"></i>Connect Microsoft 365</a>';
@@ -584,6 +592,54 @@
 			}
 		}
 
+		// --- Graymail digest: quiet, collapsed-by-default, Inbox only -------
+
+		function graymailRowMarkup(msg) {
+			const fromName = (msg.from && (msg.from.name || msg.from.address)) || 'Unknown sender';
+			return `
+				<div class="graymail-row px-3 py-2 border-bottom" data-id="${msg.id}" style="cursor:pointer;">
+					<div class="d-flex align-items-center justify-content-between">
+						<span class="fs-12 fw-semibold text-dark text-truncate">${escapeHtml(fromName)}</span>
+						<span class="fs-11 text-muted flex-shrink-0 ms-2">${escapeHtml(timeAgo(msg.receivedDateTime))}</span>
+					</div>
+					<div class="fs-12 text-muted text-truncate">${escapeHtml(msg.subject)}</div>
+				</div>
+			`;
+		}
+
+		async function loadGraymailDigest() {
+			const banner = document.getElementById('graymailBanner');
+			if (emailCurrentFolder !== 'inbox') { banner.classList.add('d-none'); return; }
+			try {
+				const res = await fetch('/api/v1/lilypad/email/graymail-digest');
+				const result = await res.json();
+				if (!result.success || !result.data.length) { banner.classList.add('d-none'); return; }
+				graymailMessages = result.data;
+				document.getElementById('graymailCount').textContent = graymailMessages.length;
+				banner.classList.remove('d-none');
+				banner.classList.add('d-flex');
+			} catch (err) {
+				console.error('Unable to load graymail digest:', err);
+			}
+		}
+
+		document.getElementById('graymailBanner').addEventListener('click', () => {
+			const pane = document.getElementById('graymailDigestPane');
+			const chevron = document.getElementById('graymailChevron');
+			const expanded = !pane.classList.contains('d-none');
+			if (expanded) {
+				pane.classList.add('d-none');
+				chevron.className = 'ti ti-chevron-down ms-auto';
+				return;
+			}
+			pane.innerHTML = graymailMessages.map(graymailRowMarkup).join('');
+			pane.querySelectorAll('.graymail-row').forEach(row => {
+				row.addEventListener('click', () => openEmail(row.dataset.id));
+			});
+			pane.classList.remove('d-none');
+			chevron.className = 'ti ti-chevron-up ms-auto';
+		});
+
 		document.getElementById('emailFolderTabs').addEventListener('click', (e) => {
 			const btn = e.target.closest('button[data-folder]');
 			if (!btn) return;
@@ -592,10 +648,12 @@
 			emailCurrentFolder = btn.dataset.folder;
 			emailActiveId = null;
 			resetReaderPane();
+			document.getElementById('graymailDigestPane').classList.add('d-none');
 			loadEmailList();
+			loadGraymailDigest();
 		});
 
-		document.getElementById('emailRefreshBtn').addEventListener('click', () => loadEmailList());
+		document.getElementById('emailRefreshBtn').addEventListener('click', () => { loadEmailList(); loadGraymailDigest(); });
 		document.getElementById('emailLoadMoreBtn').addEventListener('click', () => {
 			emailSkip += EMAIL_PAGE_SIZE;
 			loadEmailList(false);

@@ -56,6 +56,9 @@ function launchServer (db) {
 
       const { startEmailSyncScheduler } = require('./src/services/microsoftEmailSyncService')
       startEmailSyncScheduler(winston)
+
+      const { startInteractionScoringScheduler } = require('./src/services/emailInteractionScoringService')
+      startInteractionScoringScheduler(winston)
     })
   })
 }

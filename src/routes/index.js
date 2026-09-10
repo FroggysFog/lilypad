@@ -72,6 +72,10 @@ function mainRoutes(router, controllers) {
   router.post('/api/v1/lilypad/email/sync-webhook', controllers.microsoftEmail.syncWebhook)
   router.post('/api/v1/lilypad/email/sync-now', requireLoginApi, controllers.microsoftEmail.triggerSync)
 
+  // Stage 3: interaction scoring + cold-inbound (graymail) quarantine.
+  router.get('/api/v1/lilypad/email/graymail-digest', requireLoginApi, controllers.microsoftEmail.getGraymailDigest)
+  router.post('/api/v1/lilypad/email/score-now', requireLoginApi, controllers.microsoftEmail.triggerScoring)
+
   // Salesforce integration (used by past-due-payments.html)
   router.get('/auth/salesforce/connect', requireLogin, controllers.salesforceAuth.connect)
   router.get('/auth/salesforce/callback', requireLogin, controllers.salesforceAuth.callback)

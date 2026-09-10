@@ -2,6 +2,7 @@ const multer = require('multer')
 const xss = require('xss')
 const microsoftEmailService = require('../services/microsoftEmailService')
 const microsoftEmailSyncService = require('../services/microsoftEmailSyncService')
+const emailInteractionScoringService = require('../services/emailInteractionScoringService')
 
 // Attachments only ever need to live in memory long enough to
 // base64-encode and hand to Graph - there's no reason to write them to
@@ -215,6 +216,33 @@ controller.syncWebhook = async function (req, res) {
 
   const notifications = (req.body && req.body.value) || []
   microsoftEmailSyncService.handleWebhookNotification(notifications).catch(() => {})
+}
+
+/**
+ * GET /api/v1/lilypad/email/graymail-digest
+ */
+controller.getGraymailDigest = async function (req, res) {
+  try {
+    const data = await microsoftEmailService.getGraymailDigest(req.user._id, { top: 200 })
+    return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/score-now
+ * Manual trigger for the current user's interaction scoring pass - lets
+ * you verify priority/graymail flags update immediately after a sync
+ * instead of waiting on the 30-minute scheduler.
+ */
+controller.triggerScoring = async function (req, res) {
+  try {
+    const result = await emailInteractionScoringService.recomputeScoresForOwner(req.user._id)
+    return res.status(200).json({ success: true, data: result })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
 }
 
 /**

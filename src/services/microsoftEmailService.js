@@ -82,14 +82,32 @@ async function getDraftsLive (ownerId, { top, skip }) {
 
 /**
  * @param {string} folder - 'inbox' | 'sent' | 'archive' | 'drafts'
+ * Inbox excludes cold-inbound (graymail) messages by default once
+ * they've been scored (stage 3) - they're quarantined into the
+ * separate graymail digest instead of cluttering the main list.
  */
 async function getMessages (ownerId, folder, { top = 25, skip = 0 } = {}) {
   const cacheFolder = PUBLIC_TO_CACHE_FOLDER[folder] || 'inbox'
   if (cacheFolder === 'drafts') return getDraftsLive(ownerId, { top, skip })
 
-  const docs = await LilyPadEmailCache.find({ owner: ownerId, folder: cacheFolder, deleted: false })
+  const query = { owner: ownerId, folder: cacheFolder, deleted: false }
+  if (cacheFolder === 'inbox') query['triage.isColdInbound'] = { $ne: true }
+
+  const docs = await LilyPadEmailCache.find(query)
     .sort({ receivedDateTime: -1 })
     .skip(skip)
+    .limit(top)
+  return docs.map(mapCacheDocToSummary)
+}
+
+/**
+ * The quarantined graymail digest - cold-inbound messages, most recent
+ * first, for the frontend to group by sender into a collapsed daily
+ * view rather than showing them inline in the inbox.
+ */
+async function getGraymailDigest (ownerId, { top = 100 } = {}) {
+  const docs = await LilyPadEmailCache.find({ owner: ownerId, folder: 'inbox', deleted: false, 'triage.isColdInbound': true })
+    .sort({ receivedDateTime: -1 })
     .limit(top)
   return docs.map(mapCacheDocToSummary)
 }
@@ -235,6 +253,7 @@ async function moveMessage (ownerId, graphMessageId, destination) {
 
 module.exports = {
   getMessages,
+  getGraymailDigest,
   getMessageById,
   getThread,
   markAsRead,
