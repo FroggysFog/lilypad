@@ -39,6 +39,25 @@
 		.source-erp-task { background-color: rgba(25, 135, 84, 0.15) !important; border-color: #198754 !important; color: #198754 !important; }
 		.source-microsoft { background-color: rgba(13, 110, 253, 0.1) !important; border-color: #0d6efd !important; color: #0d6efd !important; }
 		#calendarEl { min-height: 640px; }
+
+		/* Real Outlook calendars run 5-15+ events/day - FullCalendar's
+		   defaults assume a light calendar and let event bars run past the
+		   day cell's edge instead of truncating. dayMaxEvents (below, in the
+		   JS config) caps how many bars render before it shows "+N more";
+		   this is what makes the ones that DO render behave - fixed height,
+		   ellipsis instead of a hard clip, and enough row height to read. */
+		/* Truncate the title text itself, not the whole event row - FullCalendar's
+		   own layout for dayGrid's compact dot+time+title row must stay intact
+		   (overriding it to display:block here previously stacked those three
+		   pieces vertically instead of inline, tripling each event's height). */
+		.fc-daygrid-event .fc-event-title {
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			min-width: 0;
+		}
+		.fc-daygrid-more-link { font-weight: 600; font-size: 11px; }
+		.fc-col-header-cell-cushion { font-size: 12.5px; }
 	</style>
 </head>
 
@@ -355,9 +374,16 @@
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error);
 
+				// Only append "(owner name)" once more than one person's
+				// calendar is actually merged into this view - on a single
+				// connected calendar it's just noise that pushes every
+				// title closer to getting clipped in a day cell.
+				const distinctOwners = new Set(result.data.map(e => e.ownerName).filter(Boolean));
+				const showOwner = distinctOwners.size > 1;
+
 				const events = result.data.map(e => ({
 					id: e.id,
-					title: e.title + (e.ownerName ? ` (${e.ownerName})` : ''),
+					title: e.title + (showOwner && e.ownerName ? ` (${e.ownerName})` : ''),
 					start: e.start,
 					end: e.end,
 					allDay: e.allDay,
@@ -498,10 +524,19 @@
 					center: 'title',
 					right: 'dayGridMonth,timeGridWeek,listWeek'
 				},
-				height: 'auto',
+				height: 720,
+				dayMaxEvents: 3,
+				moreLinkClick: 'popover',
 				events: fetchEvents,
 				dateClick: handleDateClick,
-				eventClick: handleEventClick
+				eventClick: handleEventClick,
+				eventDidMount: function(info) {
+					// Full title + time as a native tooltip - the day-cell bar
+					// itself stays truncated with an ellipsis (see CSS), but
+					// hovering still gets you the whole thing without opening it.
+					const time = info.event.allDay ? 'All day' : new Date(info.event.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+					info.el.title = `${info.event.title} — ${time}`;
+				}
 			});
 			calendar.render();
 
