@@ -4,6 +4,7 @@ const microsoftEmailService = require('../services/microsoftEmailService')
 const microsoftEmailSyncService = require('../services/microsoftEmailSyncService')
 const emailInteractionScoringService = require('../services/emailInteractionScoringService')
 const emailTriageExtractionService = require('../services/emailTriageExtractionService')
+const emailSenderRollupService = require('../services/emailSenderRollupService')
 const { LilyPadSuggestedTask, LilyPadTask } = require('../models')
 
 const URGENCY_TO_PRIORITY = { urgent: 'Urgent', high: 'High', normal: 'Normal', low: 'Low' }
@@ -329,6 +330,45 @@ controller.dismissSuggestedTask = async function (req, res) {
     return res.status(200).json({ success: true })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/email/sender-cards
+ */
+controller.getSenderCards = async function (req, res) {
+  try {
+    const data = await emailSenderRollupService.getRollupCards(req.user._id)
+    return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/sender-cards/:address/rollup-now
+ * Manual regenerate for one sender - for testing without waiting on
+ * staleness rules or the 30-minute scheduler.
+ */
+controller.regenerateSenderCard = async function (req, res) {
+  try {
+    const rollup = await emailSenderRollupService.generateRollupForSender(req.user._id, decodeURIComponent(req.params.address))
+    return res.status(200).json({ success: true, data: rollup })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/sender-cards/:address/blockers/:index/add-task
+ */
+controller.addTaskFromBlocker = async function (req, res) {
+  try {
+    const index = parseInt(req.params.index, 10)
+    const task = await emailSenderRollupService.addTaskFromBlocker(req.user._id, decodeURIComponent(req.params.address), index)
+    return res.status(201).json({ success: true, data: task })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
   }
 }
 

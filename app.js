@@ -62,6 +62,9 @@ function launchServer (db) {
 
       const { startEmailExtractionScheduler } = require('./src/services/emailTriageExtractionService')
       startEmailExtractionScheduler(winston)
+
+      const { startSenderRollupScheduler } = require('./src/services/emailSenderRollupService')
+      startSenderRollupScheduler(winston)
     })
   })
 }

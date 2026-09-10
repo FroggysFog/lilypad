@@ -29,7 +29,26 @@ const interactionScoreSchema = new Schema(
       kind: { type: String, enum: ['customer', 'salesforce_account', 'vendor', 'lead', 'ticket_submitter', null], default: null },
       refId: { type: Schema.Types.ObjectId, default: null }
     },
-    velocityScore: { type: Number, default: 0 }
+    velocityScore: { type: Number, default: 0 },
+    // Same 0-100 score written onto individual cached messages from this
+    // sender (see emailInteractionScoringService.js) - kept here too so
+    // stage 5's rollup-candidate query doesn't need to re-derive it.
+    priorityScore: { type: Number, default: 0, index: true },
+    // Stage 5: cached sender rollup ("the Adam card") - regenerated when
+    // stale, not on every read, since it's a Sonnet call.
+    rollup: {
+      executiveSummary: { type: String, default: '' },
+      blockers: [{ type: String }],
+      quickReplies: [{ label: String, draftBody: String }],
+      generatedAt: { type: Date, default: null },
+      // A cheap staleness signal: total inbound+outbound message count
+      // with this sender at generation time - if that's changed, there's
+      // new activity worth re-summarizing.
+      basedOnMessageCount: { type: Number, default: 0 },
+      // The most recent inbound message from this sender, graphMessageId -
+      // what a quick-reply or "Add Task" from the card actually targets.
+      mostRecentMessageId: { type: String, default: '' }
+    }
   },
   { timestamps: true }
 )

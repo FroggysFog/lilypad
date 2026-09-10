@@ -166,6 +166,11 @@
 				</div>
 
 				<div id="emailApp" style="display:none;">
+					<div class="d-none mb-3" id="senderCardsSection">
+						<h6 class="fw-bold fs-14 mb-2 d-flex align-items-center gap-2"><i class="ti ti-user-star text-primary"></i> Priority Conversations</h6>
+						<div class="row g-3" id="senderCardsRow"></div>
+					</div>
+
 					<div class="card border-0 shadow-sm rounded-3 mb-3 d-none" id="suggestedTasksCard">
 						<div class="card-header bg-transparent border-bottom py-2 d-flex align-items-center gap-2">
 							<i class="ti ti-bulb text-primary"></i>
@@ -343,6 +348,7 @@
 					loadEmailList();
 					loadGraymailDigest();
 					loadSuggestedTasks();
+					loadSenderCards();
 				} else {
 					textEl.textContent = "Your Microsoft account isn't connected yet - connect it to pull in your inbox.";
 					actionsEl.innerHTML = '<a href="/auth/microsoft-calendar/connect" class="btn btn-sm btn-primary"><i class="ti ti-brand-windows me-1"></i>Connect Microsoft 365</a>';
@@ -667,7 +673,7 @@
 			loadGraymailDigest();
 		});
 
-		document.getElementById('emailRefreshBtn').addEventListener('click', () => { loadEmailList(); loadGraymailDigest(); loadSuggestedTasks(); });
+		document.getElementById('emailRefreshBtn').addEventListener('click', () => { loadEmailList(); loadGraymailDigest(); loadSuggestedTasks(); loadSenderCards(); });
 		document.getElementById('emailLoadMoreBtn').addEventListener('click', () => {
 			emailSkip += EMAIL_PAGE_SIZE;
 			loadEmailList(false);
@@ -725,6 +731,89 @@
 			} catch (err) {
 				alert(err.message || 'Unable to update suggestion.');
 			}
+		}
+
+		// --- Sender rollup cards ("the Adam card") ---------------------------
+
+		let senderCardsByAddress = {};
+
+		function senderCardMarkup(card) {
+			const blockersHtml = (card.blockers || []).map((b, idx) => `
+				<div class="d-flex align-items-start justify-content-between gap-2 fs-12 mb-1">
+					<span class="text-dark">&bull; ${escapeHtml(b)}</span>
+					<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 flex-shrink-0 sender-card-add-task-btn" data-address="${escapeHtml(card.address)}" data-blocker-index="${idx}">+ Task</button>
+				</div>
+			`).join('') || '<p class="fs-12 text-muted mb-0">No open blockers.</p>';
+
+			const quickRepliesHtml = (card.quickReplies || []).map((q, idx) => `
+				<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11 sender-card-quick-reply-btn" data-address="${escapeHtml(card.address)}" data-reply-index="${idx}">${escapeHtml(q.label)}</button>
+			`).join('');
+
+			return `
+				<div class="col-md-6 col-xl-4">
+					<div class="card border-0 shadow-sm rounded-3 h-100">
+						<div class="card-body p-3">
+							<div class="d-flex align-items-center justify-content-between mb-2">
+								<strong class="fs-13 text-dark text-truncate">${escapeHtml(card.displayName)}</strong>
+								<span class="badge bg-soft-primary text-primary rounded-pill fs-10">${card.unreadCount} unread</span>
+							</div>
+							<p class="fs-12 text-muted mb-2">${escapeHtml(card.executiveSummary)}</p>
+							<div class="mb-2">${blockersHtml}</div>
+							<div class="d-flex flex-wrap gap-1">${quickRepliesHtml}</div>
+						</div>
+					</div>
+				</div>
+			`;
+		}
+
+		async function loadSenderCards() {
+			const section = document.getElementById('senderCardsSection');
+			try {
+				const res = await fetch('/api/v1/lilypad/email/sender-cards');
+				const result = await res.json();
+				if (!result.success || !result.data.length) { section.classList.add('d-none'); return; }
+
+				senderCardsByAddress = {};
+				result.data.forEach(c => { senderCardsByAddress[c.address] = c; });
+
+				document.getElementById('senderCardsRow').innerHTML = result.data.map(senderCardMarkup).join('');
+				document.querySelectorAll('.sender-card-add-task-btn').forEach(btn => {
+					btn.addEventListener('click', () => addTaskFromSenderCard(btn.dataset.address, btn.dataset.blockerIndex, btn));
+				});
+				document.querySelectorAll('.sender-card-quick-reply-btn').forEach(btn => {
+					btn.addEventListener('click', () => quickReplyFromSenderCard(btn.dataset.address, btn.dataset.replyIndex));
+				});
+				section.classList.remove('d-none');
+			} catch (err) {
+				console.error('Unable to load sender cards:', err);
+			}
+		}
+
+		async function addTaskFromSenderCard(address, blockerIndex, btn) {
+			btn.disabled = true;
+			try {
+				const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/blockers/' + blockerIndex + '/add-task', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				btn.textContent = 'Added';
+				await loadSuggestedTasks();
+			} catch (err) {
+				btn.disabled = false;
+				alert(err.message || 'Unable to add task.');
+			}
+		}
+
+		async function quickReplyFromSenderCard(address, replyIndex) {
+			const card = senderCardsByAddress[address];
+			if (!card || !card.mostRecentMessageId) return;
+			const draft = card.quickReplies[replyIndex];
+			if (!draft) return;
+
+			await openEmail(card.mostRecentMessageId);
+			startReply('reply');
+			const body = document.getElementById('emailReplyBody');
+			body.innerHTML = escapeHtml(draft.draftBody).replace(/\n/g, '<br>');
+			document.getElementById('emailInlineReplyBar').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 		}
 
 		// --- Compose modal (new messages + editing existing drafts) ---------

@@ -125,6 +125,7 @@ async function recomputeScoresForOwner (ownerId) {
     // payroll - internal senders are never graymail candidates anyway.
     const matchedErpContact = isInternalDomain ? { kind: null, refId: null } : await matchErpContact(address)
     const velocityScore = receivedCount > 0 ? Math.min(1, repliedCount / receivedCount) : (repliedCount > 0 ? 1 : 0)
+    const priorityScore = computePriorityScore({ isInternalDomain, matchedErpContact, repliedCount, velocityScore })
 
     const doc = await LilyPadContactInteractionScore.findOneAndUpdate(
       { owner: ownerId, address },
@@ -138,7 +139,8 @@ async function recomputeScoresForOwner (ownerId) {
           lastInboundAt: (inbound && inbound.lastInboundAt) || null,
           lastOutboundAt: (outbound && outbound.lastOutboundAt) || null,
           matchedErpContact,
-          velocityScore
+          velocityScore,
+          priorityScore
         }
       },
       { upsert: true, new: true }

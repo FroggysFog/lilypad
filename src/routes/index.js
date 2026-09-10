@@ -82,6 +82,11 @@ function mainRoutes(router, controllers) {
   router.post('/api/v1/lilypad/email/suggested-tasks/:id/approve', requireLoginApi, controllers.microsoftEmail.approveSuggestedTask)
   router.post('/api/v1/lilypad/email/suggested-tasks/:id/dismiss', requireLoginApi, controllers.microsoftEmail.dismissSuggestedTask)
 
+  // Stage 5: sender rollup cards ("the Adam card").
+  router.get('/api/v1/lilypad/email/sender-cards', requireLoginApi, controllers.microsoftEmail.getSenderCards)
+  router.post('/api/v1/lilypad/email/sender-cards/:address/rollup-now', requireLoginApi, controllers.microsoftEmail.regenerateSenderCard)
+  router.post('/api/v1/lilypad/email/sender-cards/:address/blockers/:index/add-task', requireLoginApi, controllers.microsoftEmail.addTaskFromBlocker)
+
   // Salesforce integration (used by past-due-payments.html)
   router.get('/auth/salesforce/connect', requireLogin, controllers.salesforceAuth.connect)
   router.get('/auth/salesforce/callback', requireLogin, controllers.salesforceAuth.callback)
