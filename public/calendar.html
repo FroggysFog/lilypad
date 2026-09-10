@@ -491,9 +491,26 @@
 
 				bootstrap.Modal.getInstance(document.getElementById('eventFormModal'))?.hide();
 				calendar.refetchEvents();
+				warnOnMicrosoftSyncFailures(result.data);
 			} catch (err) {
 				alert(err.message || 'Unable to save event.');
 			}
+		}
+
+		/**
+		 * Saving an ERP event succeeds even if pushing it out to Microsoft
+		 * fails for one or more people (see syncEventToMicrosoft in
+		 * lilypadCalendar.js - it's best-effort per attendee so one broken
+		 * token doesn't block the save). That's the right call for the
+		 * save itself, but a silent failure there is invisible otherwise -
+		 * this surfaces exactly what Graph said so it's obvious when
+		 * something to fix (an expired token, a missing scope) turns up.
+		 */
+		function warnOnMicrosoftSyncFailures(event) {
+			const failures = (event && event.msSync || []).filter(s => !s.synced);
+			if (!failures.length) return;
+			const lines = failures.map(f => `- ${f.error || 'Unknown error'}`).join('\n');
+			alert(`Saved, but this event didn't sync to Microsoft for ${failures.length} ${failures.length === 1 ? 'person' : 'people'}:\n${lines}`);
 		}
 
 		async function deleteCurrentEvent() {
