@@ -20,7 +20,8 @@ const Controllers = {
   microsoftEmail: require('./microsoftEmail'),
   salesforceAuth: require('./salesforceAuth'),
   salesforceExplorer: require('./salesforceExplorer'),
-  cartAuth: require('./cartAuth')
+  cartAuth: require('./cartAuth'),
+  lilypadDashboard: require('./lilypadDashboard')
 }
 
 module.exports = Controllers

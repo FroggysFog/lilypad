@@ -2565,7 +2565,6 @@ const cleanDashboardContent = getHeaderForPage('dashboard', 'Main Operations Das
     footerScripts;
 
 fs.writeFileSync(path.join(__dirname, '../public/index.html'), cleanDashboardContent, 'utf8');
-fs.writeFileSync(path.join(__dirname, '../public/dashboard.html'), cleanDashboardContent, 'utf8');
 
 console.log('Successfully generated dedicated admin pages:');
 console.log(' - public/admin-email.html');

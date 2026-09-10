@@ -58,6 +58,12 @@ const accountSchema = new Schema(
       trim: true,
       default: ''
     },
+    dashboardPreferences: {
+      widgets: [{ type: String, trim: true }],
+      kpis: [{ type: String, trim: true }],
+      layoutMode: { type: String, default: 'bento' },
+      customized: { type: Boolean, default: false }
+    },
     deleted: {
       type: Boolean,
       default: false

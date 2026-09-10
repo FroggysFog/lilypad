@@ -394,20 +394,36 @@
 				<!-- Page Header -->
 				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 					<div>
-						<h4 class="mb-1 fw-bold text-dark d-flex align-items-center gap-2">
-							<span>Operations Dashboard</span>
+						<div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+							<h4 class="mb-0 fw-bold text-dark">Operations Command Center</h4>
+							<span class="badge bg-soft-primary text-primary fs-12 rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1 shadow-none" id="dashRoleBadge">
+								<i class="ti ti-user-check"></i> <span id="dashRoleNameText">Personal Workspace</span>
+							</span>
 							<span class="badge bg-soft-success text-success fs-12 rounded-pill fw-semibold"><i class="ti ti-point-filled"></i> Live System</span>
-						</h4>
-						<p class="text-muted fs-13 mb-0">Overview of active support queues, diagnostic activity, and real-time operations.</p>
+						</div>
+						<p class="text-muted fs-13 mb-0" id="dashRoleDescriptionText">Tailored daily action items, diagnostic feeds, and real-time operations.</p>
 					</div>
 					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWorkspaceCustomizer" title="Customize widgets and role layout">
+							<i class="ti ti-adjustments-alt"></i> <span>Customize Workspace</span>
+						</button>
 						<a href="admin-email.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="ti ti-mail-cog me-1"></i> Email Gateway</a>
 						<a href="knowledge-base.html" class="btn btn-outline-success btn-sm rounded-pill px-3"><i class="ti ti-book me-1"></i> Diagnostic SOPs</a>
 						<a href="tickets.html?action=new" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-1"><i class="ti ti-plus"></i><span>New Ticket</span></a>
 					</div>
 				</div>
 
-				<!-- Live KPI Counters Row -->
+				<!-- Live KPI Counters Container (Dynamically rendered based on role/preferences) -->
+				<div class="row g-3 mb-4" id="dashKpiContainer">
+					<!-- Dynamically rendered KPI counters -->
+				</div>
+
+				<!-- Modular Role-Based Widget Canvas Container -->
+				<div class="row g-3 mb-4" id="dashboardWidgetCanvas">
+					<!-- Dynamically rendered widgets based on role and preferences -->
+				</div>
+
+				<!-- Old Section Hidden/Replaced -->
 				<div class="row g-3 mb-4">
 					<div class="col-xl-3 col-sm-6">
 						<div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="cursor:pointer;" onclick="goToFilteredTickets('status', 'To-Do')">
@@ -466,87 +482,7 @@
 					</div>
 				</div>
 
-				<!-- My Day / My Queue: split personal triage board -->
-				<div class="row mb-4 g-3">
-
-					<!-- My Day (left half) -->
-					<div class="col-lg-6">
-						<div class="card border-0 shadow-sm rounded-3 h-100 dash-drop-zone" id="dashMyDayZone" ondragover="dashAllowDrop(event)" ondragenter="dashDragEnter(event, 'dashMyDayZone')" ondragleave="dashDragLeave(event, 'dashMyDayZone')" ondrop="dashDropOnMyDay(event)">
-							<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
-								<div class="d-flex align-items-center gap-2">
-									<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">
-										<i class="ti ti-sun-high"></i>
-									</div>
-									<div>
-										<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">My Day</h5>
-										<span class="fs-12 text-muted">Tasks, events &amp; tickets due today - drag items here from My Queue</span>
-									</div>
-								</div>
-							</div>
-
-							<div class="card-body p-3">
-								<div id="dashMyDayEventsContainer" class="mb-2"></div>
-								<div class="row g-3" id="dashMyDayContainer">
-									<!-- Dynamic: today's Tasks + Tickets -->
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- My Queue (right half) -->
-					<div class="col-lg-6">
-						<div class="card border-0 shadow-sm rounded-3 h-100 dash-drop-zone" id="dashMyQueueZone" ondragover="dashAllowDrop(event)" ondragenter="dashDragEnter(event, 'dashMyQueueZone')" ondragleave="dashDragLeave(event, 'dashMyQueueZone')" ondrop="dashDropOnMyQueue(event)">
-							<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
-								<div class="d-flex align-items-center gap-2">
-									<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">
-										<i class="ti ti-list-check"></i>
-									</div>
-									<div>
-										<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">
-											My Queue
-											<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold"><i class="ti ti-point-filled"></i> Live Sync</span>
-										</h5>
-										<span class="fs-12 text-muted" id="dashboardFeedSubtitle">Everything else - drag an item onto My Day to schedule it for today</span>
-									</div>
-								</div>
-
-								<div class="d-flex align-items-center gap-2 flex-wrap">
-									<select id="dashAssigneeFilter" class="form-select form-select-sm w-auto rounded-pill fs-12 fw-semibold" onchange="loadDashboard()"></select>
-									<ul class="nav nav-pills gap-1" id="dashboardTicketFilterPills">
-										<li class="nav-item">
-											<button class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets('all', this)">All Active</button>
-										</li>
-										<li class="nav-item">
-											<button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets('urgent', this)">Urgent & High</button>
-										</li>
-									</ul>
-									<div class="btn-group">
-										<button type="button" class="btn btn-sm btn-outline-secondary active" id="dashViewGridBtn" onclick="setDashboardViewMode('grid')" title="Card view"><i class="ti ti-layout-grid"></i></button>
-										<button type="button" class="btn btn-sm btn-outline-secondary" id="dashViewListBtn" onclick="setDashboardViewMode('list')" title="List view with quick actions"><i class="ti ti-list"></i></button>
-									</div>
-								</div>
-							</div>
-
-							<div class="card-body p-3">
-								<div class="row g-3" id="dashMyQueueContainer">
-									<!-- Dynamic: backlog Tickets + Tasks -->
-								</div>
-							</div>
-
-							<div class="card-footer bg-light border-top py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
-								<span class="fs-12 text-muted"><i class="ti ti-info-circle me-1"></i>Clicking any ticket opens its operational details and checklist in Ticket Suite.</span>
-								<div class="d-flex align-items-center gap-3">
-									<a href="tickets.html" class="fs-13 fw-semibold text-decoration-none text-primary">Ticket Suite</a>
-									<a href="tasks.html" class="fs-13 fw-semibold text-decoration-none text-primary">Task Manager</a>
-								</div>
-							</div>
-						</div>
-					</div>
-
-				</div>
-
-			</div>
-			<!-- End Content -->
+				<!-- End Content -->
 
 			<!-- Start Footer -->
 			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
@@ -584,6 +520,7 @@
 <script>
     let dashCurrentUserId = null;
     let dashIsAdmin = false;
+    let dashCurrentUserRole = 'user';
     let dashLastTickets = [];
     let dashLastTasks = [];
     let dashLastEventsToday = [];
@@ -594,8 +531,18 @@
     const DASH_PRIORITY_RANK = { Urgent: 3, High: 2, Normal: 1, Low: 0 };
     const DASH_COMPLETE_STATUS = { ticket: 'Complete', task: 'Done' };
 
-    // Same UTC-based date convention buildMergedFeed() already uses for
-    // dueDateRaw, so the two compare cleanly as plain "YYYY-MM-DD" strings.
+    // Workspace & Widget Preferences State
+    let dashPreferences = {
+        role: 'user',
+        roleName: 'Staff Member',
+        customized: false,
+        layoutMode: 'bento',
+        widgets: ['quick-actions', 'my-day', 'my-queue', 'm365-calendar'],
+        kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete']
+    };
+    let dashAvailableWidgets = [];
+    let dashAvailableKpis = [];
+
     function dashTodayStr() {
         return new Date().toISOString().slice(0, 10);
     }
@@ -634,6 +581,7 @@
             const result = await res.json();
             if (!result.success) return;
             dashCurrentUserId = result.data.id;
+            dashCurrentUserRole = result.data.role || 'user';
             dashIsAdmin = result.data.role === 'admin';
             document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
             document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
@@ -665,13 +613,730 @@
         }
     }
 
-    /**
-     * Merges Tickets and Tasks into one normalized feed shape so they can
-     * be sorted and rendered together. Tasks only ever come from the
-     * current user's own list (personal by design - see lilypadTask.js),
-     * so they're only merged in when viewing "Me", not a teammate's or
-     * everyone's queue.
-     */
+    // =========================================================================
+    // WORKSPACE PREFERENCES & MODULAR WIDGET ENGINE
+    // =========================================================================
+
+    async function loadDashboardPreferences() {
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/preferences');
+            const data = await res.json();
+            if (data.success) {
+                dashPreferences = data.preferences;
+                dashAvailableWidgets = data.availableWidgets || [];
+                dashAvailableKpis = data.availableKpis || [];
+            }
+        } catch (err) {
+            console.warn('Using default workspace preferences:', err);
+        }
+
+        renderRoleHeaderInfo();
+        renderKpis();
+        renderWidgetCanvas();
+        populateCustomizerStudio();
+    }
+
+    function renderRoleHeaderInfo() {
+        const badgeEl = document.getElementById('dashRoleNameText');
+        const descEl = document.getElementById('dashRoleDescriptionText');
+        if (badgeEl) badgeEl.textContent = dashPreferences.roleName || 'Personal Workspace';
+        if (descEl) {
+            const roleDescriptions = {
+                support: 'Diagnose machine defects, monitor bench testing, and manage high-priority customer tickets.',
+                sales: 'Track active deals, monitor quote follow-ups, and reach out to lapsed fluid reorders.',
+                warehouse: 'Pack wholesale and e-commerce orders, prepare pallet freight, and manage dock schedules.',
+                finance: 'Monitor past-due customer balances, manage A/R collections, and track invoice payments.',
+                admin: 'Executive command view across all operational departments, ticket velocity, and company vitals.'
+            };
+            const desc = roleDescriptions[dashPreferences.role] || 'Tailored daily action items, diagnostic feeds, and real-time operations.';
+            descEl.textContent = desc;
+        }
+
+        const customizerRoleBadge = document.getElementById('customizerActiveRoleBadge');
+        if (customizerRoleBadge) customizerRoleBadge.textContent = dashPreferences.roleName;
+    }
+
+    function renderKpis() {
+        const container = document.getElementById('dashKpiContainer');
+        if (!container) return;
+
+        const kpisToRender = dashPreferences.kpis || ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'];
+        
+        const kpiTemplates = {
+            'kpi-todo': { label: 'To-Do Queue', icon: 'ti-clock', color: 'primary', id: 'dashKpiTodo', action: () => goToFilteredTickets('status', 'To-Do') },
+            'kpi-in-progress': { label: 'In Progress', icon: 'ti-loader', color: 'primary', id: 'dashKpiInProgress', action: () => goToFilteredTickets('status', 'In Progress') },
+            'kpi-urgent': { label: 'Urgent / High', icon: 'ti-alert-triangle', color: 'danger', id: 'dashKpiUrgent', action: () => goToFilteredTickets('priority', 'urgent-high') },
+            'kpi-complete': { label: 'Completed', icon: 'ti-circle-check', color: 'secondary', id: 'dashKpiComplete', action: () => goToFilteredTickets('status', 'Complete') },
+            'kpi-deals': { label: 'Active Deals ($)', icon: 'ti-currency-dollar', color: 'primary', id: 'dashKpiDeals', action: () => window.location.href = 'opportunities.html' },
+            'kpi-orders-shipping': { label: 'Orders to Ship', icon: 'ti-package', color: 'warning', id: 'dashKpiOrdersShipping', action: () => window.location.href = 'orders.html' },
+            'kpi-past-due-total': { label: 'Past Due A/R ($)', icon: 'ti-report-money', color: 'danger', id: 'dashKpiPastDue', action: () => window.location.href = 'past-due-payments.html' },
+            'kpi-rma-active': { label: 'Active RMAs', icon: 'ti-tool', color: 'warning', id: 'dashKpiRma', action: () => window.location.href = 'tickets.html?category=FX+Machine+Support' }
+        };
+
+        const colClass = kpisToRender.length <= 4 ? 'col-xl-3 col-sm-6' : 'col-xl-2 col-md-4 col-sm-6';
+
+        container.innerHTML = kpisToRender.map(kId => {
+            const kpi = kpiTemplates[kId] || kpiTemplates['kpi-todo'];
+            return '<div class="' + colClass + '">' +
+                '<div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="cursor:pointer;" onclick="(' + kpi.action.toString() + ')()">' +
+                    '<div class="d-flex align-items-center justify-content-between">' +
+                        '<div>' +
+                            '<span class="fs-12 text-muted fw-semibold text-uppercase">' + kpi.label + '</span>' +
+                            '<h3 class="fw-bold mb-0 mt-1 text-' + kpi.color + '" id="' + kpi.id + '">-</h3>' +
+                        '</div>' +
+                        '<div class="rounded-3 p-2 text-white bg-' + kpi.color + ' d-flex align-items-center justify-content-center shadow-sm" style="width:44px; height:44px;">' +
+                            '<i class="ti ' + kpi.icon + ' fs-22"></i>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function renderWidgetCanvas() {
+        const canvas = document.getElementById('dashboardWidgetCanvas');
+        if (!canvas) return;
+
+        const activeWidgets = dashPreferences.widgets || ['quick-actions', 'my-day', 'my-queue'];
+
+        let html = '';
+
+        activeWidgets.forEach(wId => {
+            switch (wId) {
+                case 'company-bulletin':
+                    html += renderCompanyBulletinWidgetHtml();
+                    break;
+                case 'quick-actions':
+                    html += renderQuickActionsWidgetHtml();
+                    break;
+                case 'my-day':
+                    html += renderMyDayWidgetHtml();
+                    break;
+                case 'my-queue':
+                    html += renderMyQueueWidgetHtml();
+                    break;
+                case 'm365-calendar':
+                    html += renderM365CalendarWidgetHtml();
+                    break;
+                case 'rma-bench':
+                    html += renderRmaBenchWidgetHtml();
+                    break;
+                case 'sales-pipeline':
+                    html += renderSalesPipelineWidgetHtml();
+                    break;
+                case 'shipping-dock':
+                    html += renderShippingDockWidgetHtml();
+                    break;
+                case 'past-due-ar':
+                    html += renderPastDueWidgetHtml();
+                    break;
+                case 'lapsed-customers':
+                    html += renderLapsedCustomersWidgetHtml();
+                    break;
+            }
+        });
+
+        canvas.innerHTML = html;
+
+        // Load data for active widgets asynchronously
+        if (activeWidgets.includes('rma-bench')) loadRmaBenchWidgetData();
+        if (activeWidgets.includes('sales-pipeline')) loadSalesPipelineWidgetData();
+        if (activeWidgets.includes('shipping-dock')) loadShippingDockWidgetData();
+        if (activeWidgets.includes('past-due-ar')) loadPastDueWidgetData();
+        if (activeWidgets.includes('lapsed-customers')) loadLapsedCustomersWidgetData();
+        if (activeWidgets.includes('m365-calendar')) loadCalendarWidgetData();
+    }
+
+    // =========================================================================
+    // WIDGET HTML GENERATORS
+    // =========================================================================
+
+    function renderCompanyBulletinWidgetHtml() {
+        return '<div class="col-12">' +
+            '<div class="card border-0 shadow-sm rounded-3 p-3 bg-primary text-white position-relative overflow-hidden">' +
+                '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 position-relative" style="z-index:2;">' +
+                    '<div class="d-flex align-items-center gap-3">' +
+                        '<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center shadow-sm" style="width:42px; height:42px;">' +
+                            '<i class="ti ti-speakerphone fs-22"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fw-bold text-white">Operations Announcement</h5>' +
+                            '<span class="fs-13 text-white-50">Pre-Season Production Surge: Docks prioritize outbound pallet pickups between 1 PM - 4 PM.</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="tickets.html?action=new&category=FX+Machine+Support" class="btn btn-sm btn-light rounded-pill px-3 fw-semibold text-primary shadow-sm">' +
+                        '<i class="ti ti-tool me-1"></i> Log Maintenance' +
+                    '</a>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderQuickActionsWidgetHtml() {
+        let shortcuts = [];
+        const role = dashPreferences.role || 'user';
+
+        if (role === 'sales') {
+            shortcuts = [
+                { label: 'New Quote', href: 'opportunities.html', icon: 'ti-file-plus', color: 'primary' },
+                { label: 'Apollo Lead Search', href: 'prospects.html', icon: 'ti-radar', color: 'info' },
+                { label: 'Customer Accounts', href: 'salesforce-accounts.html', icon: 'ti-building', color: 'dark' },
+                { label: 'Wholesale Catalog', href: 'cart-explorer.html', icon: 'ti-shopping-cart', color: 'success' }
+            ];
+        } else if (role === 'support' || role === 'tech') {
+            shortcuts = [
+                { label: 'Log Diagnostic Ticket', href: 'tickets.html?action=new', icon: 'ti-plus', color: 'primary' },
+                { label: 'Search SOP Playbooks', href: 'knowledge-base.html', icon: 'ti-book', color: 'success' },
+                { label: 'Machine Specs & Video', href: 'machine.html', icon: 'ti-device-tv', color: 'info' },
+                { label: 'RMA Diagnostic Bench', href: 'tickets.html?category=FX+Machine+Support', icon: 'ti-tool', color: 'warning' }
+            ];
+        } else if (role === 'warehouse' || role === 'logistics') {
+            shortcuts = [
+                { label: 'Orders to Pack', href: 'orders.html', icon: 'ti-package', color: 'primary' },
+                { label: 'Cart.com Storefront Feed', href: 'cart-explorer.html', icon: 'ti-shopping-cart', color: 'info' },
+                { label: 'Pallet Freight Dock', href: 'orders.html?status=ready', icon: 'ti-truck', color: 'success' },
+                { label: 'Warehouse Issue Ticket', href: 'tickets.html?action=new&category=Vendor+Purchase+Order', icon: 'ti-alert-circle', color: 'warning' }
+            ];
+        } else if (role === 'finance' || role === 'accounting') {
+            shortcuts = [
+                { label: 'Past-Due Dunning A/R', href: 'past-due-payments.html', icon: 'ti-coin', color: 'danger' },
+                { label: 'Send Statement Link', href: 'past-due-payments.html', icon: 'ti-mail', color: 'primary' },
+                { label: 'Wholesale Orders', href: 'orders.html', icon: 'ti-receipt', color: 'success' },
+                { label: 'Inbound Invoices', href: 'admin-email.html', icon: 'ti-mail-cog', color: 'dark' }
+            ];
+        } else {
+            // Admin / Operations
+            shortcuts = [
+                { label: 'New Ticket', href: 'tickets.html?action=new', icon: 'ti-plus', color: 'primary' },
+                { label: 'Email Gateway', href: 'admin-email.html', icon: 'ti-mail-cog', color: 'dark' },
+                { label: 'Diagnostic SOPs', href: 'knowledge-base.html', icon: 'ti-book', color: 'success' },
+                { label: 'Past-Due A/R', href: 'past-due-payments.html', icon: 'ti-coin', color: 'danger' },
+                { label: 'Apollo Leads', href: 'prospects.html', icon: 'ti-radar', color: 'info' }
+            ];
+        }
+
+        return '<div class="col-12">' +
+            '<div class="card border-0 shadow-sm rounded-3 p-3 bg-light">' +
+                '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+                    '<span class="fs-12 text-muted fw-bold text-uppercase d-flex align-items-center gap-1"><i class="ti ti-bolt text-primary"></i> Fast Actions</span>' +
+                    '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+                        shortcuts.map(s => '<a href="' + s.href + '" class="btn btn-sm btn-white border rounded-pill px-3 shadow-none text-dark d-flex align-items-center gap-1 fs-12 fw-semibold">' +
+                            '<i class="ti ' + s.icon + ' text-' + s.color + '"></i> <span>' + s.label + '</span>' +
+                        '</a>').join('') +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderMyDayWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100 dash-drop-zone" id="dashMyDayZone" ondragover="dashAllowDrop(event)" ondragenter="dashDragEnter(event, \'dashMyDayZone\')" ondragleave="dashDragLeave(event, \'dashMyDayZone\')" ondrop="dashDropOnMyDay(event)">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">' +
+                            '<i class="ti ti-sun-high"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">My Day</h5>' +
+                            '<span class="fs-12 text-muted">Tasks, events &amp; tickets due today</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="card-body p-3">' +
+                    '<div id="dashMyDayEventsContainer" class="mb-2"></div>' +
+                    '<div class="row g-3" id="dashMyDayContainer"></div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderMyQueueWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100 dash-drop-zone" id="dashMyQueueZone" ondragover="dashAllowDrop(event)" ondragenter="dashDragEnter(event, \'dashMyQueueZone\')" ondragleave="dashDragLeave(event, \'dashMyQueueZone\')" ondrop="dashDropOnMyQueue(event)">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">' +
+                            '<i class="ti ti-list-check"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">' +
+                                'My Queue' +
+                                '<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold"><i class="ti ti-point-filled"></i> Live Sync</span>' +
+                            '</h5>' +
+                            '<span class="fs-12 text-muted" id="dashboardFeedSubtitle">Backlog tickets &amp; assigned tasks</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+                        '<select id="dashAssigneeFilter" class="form-select form-select-sm w-auto rounded-pill fs-12 fw-semibold" onchange="loadDashboard()"></select>' +
+                        '<ul class="nav nav-pills gap-1" id="dashboardTicketFilterPills">' +
+                            '<li class="nav-item"><button class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets(\'all\', this)">All</button></li>' +
+                            '<li class="nav-item"><button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets(\'urgent\', this)">Urgent</button></li>' +
+                        '</ul>' +
+                        '<div class="btn-group">' +
+                            '<button type="button" class="btn btn-sm btn-outline-secondary active" id="dashViewGridBtn" onclick="setDashboardViewMode(\'grid\')" title="Card view"><i class="ti ti-layout-grid"></i></button>' +
+                            '<button type="button" class="btn btn-sm btn-outline-secondary" id="dashViewListBtn" onclick="setDashboardViewMode(\'list\')" title="List view"><i class="ti ti-list"></i></button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="card-body p-3">' +
+                    '<div class="row g-3" id="dashMyQueueContainer"></div>' +
+                '</div>' +
+                '<div class="card-footer bg-light border-top py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+                    '<span class="fs-12 text-muted"><i class="ti ti-info-circle me-1"></i>Click any item to view details.</span>' +
+                    '<div class="d-flex align-items-center gap-3">' +
+                        '<a href="tickets.html" class="fs-13 fw-semibold text-decoration-none text-primary">Ticket Suite</a>' +
+                        '<a href="tasks.html" class="fs-13 fw-semibold text-decoration-none text-primary">Task Manager</a>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderM365CalendarWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-calendar fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark">Today\'s Outlook Agenda</h5>' +
+                            '<span class="fs-12 text-muted">Microsoft 365 synchronized schedule</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="calendar.html" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-12">Open Calendar</a>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashCalendarWidgetBody">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading schedule...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderRmaBenchWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-warning d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-tool fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark">Depot Repair &amp; RMA Bench</h5>' +
+                            '<span class="fs-12 text-muted">Machine diagnostics, parts inspection &amp; burn-in</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="tickets.html?category=FX+Machine+Support" class="btn btn-sm btn-outline-warning rounded-pill px-3 fs-12 text-dark">View RMA Board</a>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashRmaWidgetBody">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading RMA tickets...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderSalesPipelineWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-chart-arrows fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark">Active Deals &amp; Opportunities</h5>' +
+                            '<span class="fs-12 text-muted">Salesforce sales pipeline &amp; quotes</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="opportunities.html" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-12">View Pipeline</a>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashSalesPipelineWidgetBody">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading pipeline...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderShippingDockWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-info d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-truck-delivery fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark">Shipping Dock &amp; Orders to Pack</h5>' +
+                            '<span class="fs-12 text-muted">Cart.com &amp; wholesale fulfillment queue</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="orders.html" class="btn btn-sm btn-outline-info rounded-pill px-3 fs-12 text-dark">View All Orders</a>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashShippingWidgetBody">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading fulfillment queue...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderPastDueWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-danger d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-coin fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark">Past-Due A/R Watchlist</h5>' +
+                            '<span class="fs-12 text-muted">Accounts overdue over 30 days</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="past-due-payments.html" class="btn btn-sm btn-outline-danger rounded-pill px-3 fs-12">Open Dunning Hub</a>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashPastDueWidgetBody">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading overdue accounts...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderLapsedCustomersWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-radar fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark">Fluid Replenishment Radar</h5>' +
+                            '<span class="fs-12 text-muted">Accounts overdue for reorder (60+ days)</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="prospects.html" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-12">View Radar</a>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashLapsedWidgetBody">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading customer radar...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    // =========================================================================
+    // ASYNCHRONOUS WIDGET DATA FETCHERS
+    // =========================================================================
+
+    async function loadCalendarWidgetData() {
+        const container = document.getElementById('dashCalendarWidgetBody');
+        if (!container) return;
+        if (!dashLastEventsToday.length) {
+            container.innerHTML = '<div class="text-center py-4 text-muted"><i class="ti ti-calendar-event fs-24 d-block mb-1"></i>No appointments on today\'s calendar.</div>';
+            return;
+        }
+        container.innerHTML = dashLastEventsToday.map(ev => {
+            const time = ev.start ? new Date(ev.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'All Day';
+            return '<div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-light border-start border-3 border-primary">' +
+                '<div>' +
+                    '<strong class="d-block text-dark fs-13">' + escapeHtml(ev.subject || 'Meeting') + '</strong>' +
+                    '<span class="fs-11 text-muted"><i class="ti ti-clock me-1"></i>' + time + '</span>' +
+                '</div>' +
+                '<a href="calendar.html" class="btn btn-sm btn-link text-primary p-0"><i class="ti ti-arrow-right"></i></a>' +
+            '</div>';
+        }).join('');
+    }
+
+    async function loadRmaBenchWidgetData() {
+        const container = document.getElementById('dashRmaWidgetBody');
+        if (!container) return;
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/widgets/rma-bench');
+            const data = await res.json();
+            const tickets = data.tickets || [];
+            if (!tickets.length) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="ti ti-circle-check text-success fs-24 d-block mb-1"></i>RMA bench is clear! No active machine repairs.</div>';
+                return;
+            }
+            container.innerHTML = tickets.map(t => '<div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-light border">' +
+                '<div class="text-truncate me-2">' +
+                    '<div class="d-flex align-items-center gap-1 mb-1">' +
+                        '<span class="badge bg-dark fs-10">' + (t.formattedUid || 'LP') + '</span>' +
+                        '<span class="badge bg-warning text-dark fs-10">' + t.status + '</span>' +
+                    '</div>' +
+                    '<strong class="d-block text-dark fs-12 text-truncate">' + escapeHtml(t.title) + '</strong>' +
+                    '<span class="fs-11 text-muted"><i class="ti ti-box me-1"></i>' + (t.linkedProduct || 'FX Machine') + '</span>' +
+                '</div>' +
+                '<a href="tickets.html?ticket=' + t._id + '" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11">Examine</a>' +
+            '</div>').join('');
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load RMA tickets.</div>';
+        }
+    }
+
+    async function loadSalesPipelineWidgetData() {
+        const container = document.getElementById('dashSalesPipelineWidgetBody');
+        if (!container) return;
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/widgets/sales-pipeline');
+            const data = await res.json();
+            const opps = data.opportunities || [];
+            if (!opps.length) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="ti ti-chart-pie fs-24 d-block mb-1"></i>No active deals in pipeline.</div>';
+                return;
+            }
+            container.innerHTML = opps.map(o => '<div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-light border">' +
+                '<div class="text-truncate me-2">' +
+                    '<strong class="d-block text-dark fs-12 text-truncate">' + escapeHtml(o.name) + '</strong>' +
+                    '<span class="fs-11 text-muted">' + (o.stageName || 'Pipeline') + ' &middot; ' + (o.accountName || 'Direct') + '</span>' +
+                '</div>' +
+                '<div class="text-end">' +
+                    '<span class="badge bg-success fs-11 fw-bold">$' + Number(o.amount || 0).toLocaleString() + '</span>' +
+                '</div>' +
+            '</div>').join('');
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load sales pipeline.</div>';
+        }
+    }
+
+    async function loadShippingDockWidgetData() {
+        const container = document.getElementById('dashShippingWidgetBody');
+        if (!container) return;
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/widgets/shipping-dock');
+            const data = await res.json();
+            const orders = data.orders || [];
+            if (!orders.length) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="ti ti-truck fs-24 d-block mb-1"></i>All packing queues fulfilled!</div>';
+                return;
+            }
+            container.innerHTML = orders.map(o => '<div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-light border">' +
+                '<div class="text-truncate me-2">' +
+                    '<div class="d-flex align-items-center gap-1 mb-1">' +
+                        '<span class="badge bg-primary fs-10">' + (o.orderNumber || o.orderId || 'ORD') + '</span>' +
+                        '<span class="badge bg-soft-info text-info fs-10">' + (o.status || 'Ready') + '</span>' +
+                    '</div>' +
+                    '<strong class="d-block text-dark fs-12 text-truncate">' + escapeHtml(o.customerName || o.billingName || 'Customer') + '</strong>' +
+                '</div>' +
+                '<div class="text-end">' +
+                    '<span class="fs-12 fw-bold text-dark">$' + Number(o.total || o.orderTotal || 0).toFixed(2) + '</span>' +
+                '</div>' +
+            '</div>').join('');
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load shipping queue.</div>';
+        }
+    }
+
+    async function loadPastDueWidgetData() {
+        const container = document.getElementById('dashPastDueWidgetBody');
+        if (!container) return;
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/widgets/past-due-ar');
+            const data = await res.json();
+            const accounts = data.accounts || [];
+            if (!accounts.length) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="ti ti-circle-check text-success fs-24 d-block mb-1"></i>No past-due balances over 30 days!</div>';
+                return;
+            }
+            container.innerHTML = accounts.map(a => '<div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-light border border-danger-subtle">' +
+                '<div class="text-truncate me-2">' +
+                    '<strong class="d-block text-dark fs-12 text-truncate">' + escapeHtml(a.accountName) + '</strong>' +
+                    '<span class="fs-11 text-muted">' + (a.tier || 'Dunning') + ' &middot; ' + (a.invoiceCount || 1) + ' invoices</span>' +
+                '</div>' +
+                '<div class="text-end">' +
+                    '<span class="badge bg-danger fs-11 fw-bold">$' + Number(a.totalOverdue || 0).toLocaleString() + '</span>' +
+                '</div>' +
+            '</div>').join('');
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load A/R accounts.</div>';
+        }
+    }
+
+    async function loadLapsedCustomersWidgetData() {
+        const container = document.getElementById('dashLapsedWidgetBody');
+        if (!container) return;
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/widgets/lapsed-customers');
+            const data = await res.json();
+            const customers = data.customers || [];
+            if (!customers.length) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="ti ti-mood-smile text-success fs-24 d-block mb-1"></i>All fluid accounts actively ordering!</div>';
+                return;
+            }
+            container.innerHTML = customers.map(c => '<div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-light border">' +
+                '<div class="text-truncate me-2">' +
+                    '<strong class="d-block text-dark fs-12 text-truncate">' + escapeHtml(c.companyName || c.primaryName) + '</strong>' +
+                    '<span class="fs-11 text-muted"><i class="ti ti-droplet me-1 text-primary"></i>' + (c.primaryProduct || 'Poseidon Fog') + '</span>' +
+                '</div>' +
+                '<a href="prospects.html" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11">Reorder Prompt</a>' +
+            '</div>').join('');
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load customer radar.</div>';
+        }
+    }
+
+    // =========================================================================
+    // CUSTOMIZER STUDIO (OFFCANVAS) LOGIC
+    // =========================================================================
+
+    function populateCustomizerStudio() {
+        const kpiListEl = document.getElementById('customizerKpiList');
+        const widgetListEl = document.getElementById('customizerWidgetList');
+
+        const activeKpis = dashPreferences.kpis || [];
+        const activeWidgets = dashPreferences.widgets || [];
+
+        // 1. Populate KPI Checkboxes
+        if (kpiListEl) {
+            kpiListEl.innerHTML = dashAvailableKpis.map(k => {
+                const checked = activeKpis.includes(k.id) ? 'checked' : '';
+                return '<label class="form-check d-flex align-items-center justify-content-between p-2 border rounded bg-white mb-0" style="cursor:pointer;">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<i class="ti ' + k.icon + ' text-' + k.color + ' fs-16"></i>' +
+                        '<span class="fs-13 text-dark fw-medium">' + k.label + '</span>' +
+                    '</div>' +
+                    '<input class="form-check-input kpi-toggle-input" type="checkbox" value="' + k.id + '" ' + checked + '>' +
+                '</label>';
+            }).join('');
+        }
+
+        // 2. Populate Widget Toggles with Order Controls
+        if (widgetListEl) {
+            // Sort available widgets so active ones appear first in their saved order
+            const sortedWidgets = [...dashAvailableWidgets].sort((a, b) => {
+                const idxA = activeWidgets.indexOf(a.id);
+                const idxB = activeWidgets.indexOf(b.id);
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                if (idxA !== -1) return -1;
+                if (idxB !== -1) return 1;
+                return 0;
+            });
+
+            widgetListEl.innerHTML = sortedWidgets.map((w, index) => {
+                const checked = activeWidgets.includes(w.id) ? 'checked' : '';
+                return '<div class="p-2 border rounded bg-white widget-customizer-row" data-widget-id="' + w.id + '">' +
+                    '<div class="d-flex align-items-center justify-content-between mb-1">' +
+                        '<div class="d-flex align-items-center gap-2">' +
+                            '<i class="ti ' + w.icon + ' text-primary fs-16"></i>' +
+                            '<strong class="fs-13 text-dark">' + w.title + '</strong>' +
+                        '</div>' +
+                        '<div class="form-check form-switch mb-0">' +
+                            '<input class="form-check-input widget-toggle-input" type="checkbox" value="' + w.id + '" ' + checked + '>' +
+                        '</div>' +
+                    '</div>' +
+                    '<p class="fs-11 text-muted mb-1">' + w.description + '</p>' +
+                    '<div class="d-flex align-items-center justify-content-between pt-1 border-top fs-11 text-muted">' +
+                        '<span class="badge bg-light text-dark border">' + w.category + '</span>' +
+                        '<div class="btn-group btn-group-sm">' +
+                            '<button type="button" class="btn btn-sm btn-link text-dark p-0 me-2" onclick="moveWidgetInCustomizer(\'' + w.id + '\', -1)" title="Move up"><i class="ti ti-arrow-up"></i></button>' +
+                            '<button type="button" class="btn btn-sm btn-link text-dark p-0" onclick="moveWidgetInCustomizer(\'' + w.id + '\', 1)" title="Move down"><i class="ti ti-arrow-down"></i></button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+    }
+
+    function moveWidgetInCustomizer(widgetId, direction) {
+        const widgetListEl = document.getElementById('customizerWidgetList');
+        if (!widgetListEl) return;
+        const rows = Array.from(widgetListEl.querySelectorAll('.widget-customizer-row'));
+        const index = rows.findIndex(r => r.dataset.widgetId === widgetId);
+        if (index === -1) return;
+
+        const targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= rows.length) return;
+
+        if (direction === -1) {
+            widgetListEl.insertBefore(rows[index], rows[targetIndex]);
+        } else {
+            widgetListEl.insertBefore(rows[targetIndex], rows[index]);
+        }
+    }
+
+    async function saveCustomWorkspacePreferences() {
+        const widgetListEl = document.getElementById('customizerWidgetList');
+        const kpiListEl = document.getElementById('customizerKpiList');
+        if (!widgetListEl) return;
+
+        const selectedWidgets = [];
+        widgetListEl.querySelectorAll('.widget-customizer-row').forEach(row => {
+            const toggle = row.querySelector('.widget-toggle-input');
+            if (toggle && toggle.checked) {
+                selectedWidgets.push(row.dataset.widgetId);
+            }
+        });
+
+        const selectedKpis = [];
+        if (kpiListEl) {
+            kpiListEl.querySelectorAll('.kpi-toggle-input:checked').forEach(input => {
+                selectedKpis.push(input.value);
+            });
+        }
+
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/preferences', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    widgets: selectedWidgets,
+                    kpis: selectedKpis,
+                    layoutMode: 'bento'
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                dashPreferences = data.preferences;
+                renderKpis();
+                renderWidgetCanvas();
+                await loadDashboard(); // refresh feeds
+
+                // Close offcanvas
+                const offcanvasEl = document.getElementById('offcanvasWorkspaceCustomizer');
+                if (offcanvasEl && window.bootstrap && bootstrap.Offcanvas) {
+                    const inst = bootstrap.Offcanvas.getInstance(offcanvasEl);
+                    if (inst) inst.hide();
+                }
+
+                if (window.LilypadNotifications) {
+                    LilypadNotifications.addNotification({
+                        title: 'Workspace Saved',
+                        message: 'Personal command center customized successfully.'
+                    });
+                }
+            } else {
+                alert('Error saving workspace: ' + (data.error || 'Server error'));
+            }
+        } catch (err) {
+            alert('Failed to save preferences: ' + err.message);
+        }
+    }
+
+    async function resetToRoleDefaultWorkspace() {
+        if (!confirm('Reset your command center layout back to the standard ' + dashPreferences.roleName + ' defaults?')) return;
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/preferences/reset', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                dashPreferences = data.preferences;
+                renderRoleHeaderInfo();
+                renderKpis();
+                renderWidgetCanvas();
+                populateCustomizerStudio();
+                await loadDashboard();
+
+                const offcanvasEl = document.getElementById('offcanvasWorkspaceCustomizer');
+                if (offcanvasEl && window.bootstrap && bootstrap.Offcanvas) {
+                    const inst = bootstrap.Offcanvas.getInstance(offcanvasEl);
+                    if (inst) inst.hide();
+                }
+            }
+        } catch (err) {
+            alert('Failed to reset workspace: ' + err.message);
+        }
+    }
+
     function buildMergedFeed() {
         const ticketItems = dashLastTickets.map(t => ({
             feedType: 'ticket',
@@ -1140,10 +1805,78 @@
     }
 
     document.addEventListener('DOMContentLoaded', async function () {
+        await loadDashboardPreferences();
         await loadMe();
         await loadAssigneeOptions();
         await loadDashboard();
     });
 </script>
+
+	<!-- Customize My Workspace Offcanvas Studio -->
+	<div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="offcanvasWorkspaceCustomizer" style="width: 440px;" aria-labelledby="offcanvasWorkspaceLabel">
+		<div class="offcanvas-header bg-light border-bottom py-3 px-4">
+			<div class="d-flex align-items-center gap-2">
+				<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">
+					<i class="ti ti-adjustments-alt fs-18"></i>
+				</div>
+				<div>
+					<h5 class="offcanvas-title fw-bold text-dark fs-16 mb-0" id="offcanvasWorkspaceLabel">Customize Workspace</h5>
+					<span class="fs-12 text-muted">Tailor command center cards to your daily role</span>
+				</div>
+			</div>
+			<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+		</div>
+
+		<div class="offcanvas-body p-4" data-simplebar>
+			
+			<!-- Role Preset Info Box -->
+			<div class="card border bg-light rounded-3 p-3 mb-4">
+				<div class="d-flex align-items-center justify-content-between mb-2">
+					<span class="fs-11 text-uppercase text-muted fw-bold">Active Role Template</span>
+					<span class="badge bg-primary text-white fs-11" id="customizerActiveRoleBadge">Operations Leadership</span>
+				</div>
+				<p class="fs-12 text-muted mb-3" id="customizerActiveRoleDesc">Standardized workspace layout configured for your department responsibilities.</p>
+				<button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fs-12 w-100 d-flex align-items-center justify-content-center gap-1" onclick="resetToRoleDefaultWorkspace()">
+					<i class="ti ti-rotate-clockwise"></i> <span>Reset to Role Defaults</span>
+				</button>
+			</div>
+
+			<!-- KPI Metrics Section -->
+			<div class="mb-4">
+				<div class="d-flex align-items-center justify-content-between mb-2">
+					<h6 class="fw-bold fs-13 text-dark mb-0 d-flex align-items-center gap-1">
+						<i class="ti ti-chart-bar text-primary"></i> <span>Top KPI Metrics</span>
+					</h6>
+					<span class="fs-11 text-muted">Select up to 4</span>
+				</div>
+				<div class="d-flex flex-column gap-2" id="customizerKpiList">
+					<!-- Dynamically populated KPI checkboxes -->
+				</div>
+			</div>
+
+			<!-- Active Widgets Manager Section -->
+			<div class="mb-4">
+				<div class="d-flex align-items-center justify-content-between mb-2">
+					<h6 class="fw-bold fs-13 text-dark mb-0 d-flex align-items-center gap-1">
+						<i class="ti ti-layout-grid text-primary"></i> <span>Modular Workspace Cards</span>
+					</h6>
+					<span class="fs-11 text-muted">Toggle &amp; Reorder</span>
+				</div>
+				<p class="fs-12 text-muted mb-2">Enable or disable widgets and use the arrows to prioritize their screen position.</p>
+				<div class="d-flex flex-column gap-2" id="customizerWidgetList">
+					<!-- Dynamically populated Widget toggles with reorder handles -->
+				</div>
+			</div>
+
+		</div>
+
+		<div class="offcanvas-footer border-top p-3 bg-light d-flex align-items-center justify-content-between gap-2">
+			<button type="button" class="btn btn-sm btn-light rounded-pill px-3" data-bs-dismiss="offcanvas">Cancel</button>
+			<button type="button" class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm fw-semibold" onclick="saveCustomWorkspacePreferences()">
+				<i class="ti ti-device-floppy me-1"></i> Save Workspace
+			</button>
+		</div>
+	</div>
+
 </body>
 </html>
