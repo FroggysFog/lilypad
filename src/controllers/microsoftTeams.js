@@ -17,7 +17,12 @@ controller.connect = (req, res) => {
 controller.callback = async (req, res) => {
   try {
     await microsoftTeams.exchangeCode(req.query.code, req.query.state)
-    return res.redirect('/tickets?teams=connected')
+    // Teams chat is now a global panel (see lilypad-teams-chat.js), not
+    // something tied to tickets.html specifically - dashboard.html is a
+    // safer landing page regardless of which page the user connected
+    // from. This was previously missing the .html extension entirely,
+    // which 404'd on Express's static file serving.
+    return res.redirect('/dashboard.html?teams=connected')
   } catch (err) {
     return res.status(400).send(`Microsoft Teams connection failed: ${err.message}`)
   }
