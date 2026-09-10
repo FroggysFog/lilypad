@@ -698,6 +698,7 @@
         const canvas = document.getElementById('dashboardWidgetCanvas');
         if (!canvas) return;
 
+        let renderedCombinedMyDay = false;
         const activeWidgets = dashPreferences.widgets || ['quick-actions', 'my-day', 'my-queue'];
 
         let html = '';
@@ -711,10 +712,11 @@
                     html += renderQuickActionsWidgetHtml();
                     break;
                 case 'my-day':
-                    html += renderMyDayWidgetHtml();
-                    break;
                 case 'my-queue':
-                    html += renderMyQueueWidgetHtml();
+                    if (!renderedCombinedMyDay) {
+                        html += renderCombinedMyDayAndQueueWidgetHtml();
+                        renderedCombinedMyDay = true;
+                    }
                     break;
                 case 'm365-calendar':
                     html += renderM365CalendarWidgetHtml();
@@ -838,61 +840,62 @@
         '</div>';
     }
 
-    function renderMyDayWidgetHtml() {
-        return '<div class="col-lg-6">' +
-            '<div class="card border-0 shadow-sm rounded-3 h-100 dash-drop-zone" id="dashMyDayZone" ondragover="dashAllowDrop(event)" ondragenter="dashDragEnter(event, \'dashMyDayZone\')" ondragleave="dashDragLeave(event, \'dashMyDayZone\')" ondrop="dashDropOnMyDay(event)">' +
-                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">' +
-                    '<div class="d-flex align-items-center gap-2">' +
-                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">' +
-                            '<i class="ti ti-sun-high"></i>' +
-                        '</div>' +
-                        '<div>' +
-                            '<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">My Day</h5>' +
-                            '<span class="fs-12 text-muted">Tasks, events &amp; tickets due today</span>' +
+    function renderCombinedMyDayAndQueueWidgetHtml() {
+        return '<div class="col-12">' +
+            '<div class="card border-0 shadow-sm rounded-3 overflow-hidden">' +
+                '<!-- TOP SECTION: MY DAY -->' +
+                '<div class="dash-drop-zone p-3 border-bottom" id="dashMyDayZone" ondragover="dashAllowDrop(event)" ondragenter="dashDragEnter(event, \'dashMyDayZone\')" ondragleave="dashDragLeave(event, \'dashMyDayZone\')" ondrop="dashDropOnMyDay(event)" style="background: linear-gradient(180deg, rgba(var(--bs-primary-rgb), 0.03) 0%, rgba(255,255,255,1) 100%);">' +
+                    '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">' +
+                        '<div class="d-flex align-items-center gap-2">' +
+                            '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">' +
+                                '<i class="ti ti-sun-high"></i>' +
+                            '</div>' +
+                            '<div>' +
+                                '<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">' +
+                                    'My Day' +
+                                    '<span class="badge bg-soft-primary text-primary fs-11 rounded-pill fw-semibold"><i class="ti ti-target me-1"></i>Today\'s Focus</span>' +
+                                '</h5>' +
+                                '<span class="fs-12 text-muted">Tasks, events &amp; tickets due today &mdash; drag items here from queue below to schedule</span>' +
+                            '</div>' +
                         '</div>' +
                     '</div>' +
-                '</div>' +
-                '<div class="card-body p-3">' +
                     '<div id="dashMyDayEventsContainer" class="mb-2"></div>' +
                     '<div class="row g-3" id="dashMyDayContainer"></div>' +
                 '</div>' +
-            '</div>' +
-        '</div>';
-    }
 
-    function renderMyQueueWidgetHtml() {
-        return '<div class="col-lg-6">' +
-            '<div class="card border-0 shadow-sm rounded-3 h-100 dash-drop-zone" id="dashMyQueueZone" ondragover="dashAllowDrop(event)" ondragenter="dashDragEnter(event, \'dashMyQueueZone\')" ondragleave="dashDragLeave(event, \'dashMyQueueZone\')" ondrop="dashDropOnMyQueue(event)">' +
-                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">' +
-                    '<div class="d-flex align-items-center gap-2">' +
-                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">' +
-                            '<i class="ti ti-list-check"></i>' +
+                '<!-- BOTTOM SECTION: MY QUEUE (DIVIDED UNDER MY DAY) -->' +
+                '<div class="dash-drop-zone p-3" id="dashMyQueueZone" ondragover="dashAllowDrop(event)" ondragenter="dashDragEnter(event, \'dashMyQueueZone\')" ondragleave="dashDragLeave(event, \'dashMyQueueZone\')" ondrop="dashDropOnMyQueue(event)">' +
+                    '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">' +
+                        '<div class="d-flex align-items-center gap-2">' +
+                            '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">' +
+                                '<i class="ti ti-list-check"></i>' +
+                            '</div>' +
+                            '<div>' +
+                                '<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">' +
+                                    'My Queue' +
+                                    '<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold"><i class="ti ti-point-filled"></i> Live Sync</span>' +
+                                '</h5>' +
+                                '<span class="fs-12 text-muted" id="dashboardFeedSubtitle">Everything else - drag an item onto My Day to schedule it for today</span>' +
+                            '</div>' +
                         '</div>' +
-                        '<div>' +
-                            '<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">' +
-                                'My Queue' +
-                                '<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold"><i class="ti ti-point-filled"></i> Live Sync</span>' +
-                            '</h5>' +
-                            '<span class="fs-12 text-muted" id="dashboardFeedSubtitle">Backlog tickets &amp; assigned tasks</span>' +
+                        '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+                            '<select id="dashAssigneeFilter" class="form-select form-select-sm w-auto rounded-pill fs-12 fw-semibold" onchange="loadDashboard()"></select>' +
+                            '<ul class="nav nav-pills gap-1" id="dashboardTicketFilterPills">' +
+                                '<li class="nav-item"><button class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets(\'all\', this)">All</button></li>' +
+                                '<li class="nav-item"><button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets(\'urgent\', this)">Urgent</button></li>' +
+                            '</ul>' +
+                            '<div class="btn-group">' +
+                                '<button type="button" class="btn btn-sm btn-outline-secondary active" id="dashViewGridBtn" onclick="setDashboardViewMode(\'grid\')" title="Card view"><i class="ti ti-layout-grid"></i></button>' +
+                                '<button type="button" class="btn btn-sm btn-outline-secondary" id="dashViewListBtn" onclick="setDashboardViewMode(\'list\')" title="List view"><i class="ti ti-list"></i></button>' +
+                            '</div>' +
                         '</div>' +
                     '</div>' +
-                    '<div class="d-flex align-items-center gap-2 flex-wrap">' +
-                        '<select id="dashAssigneeFilter" class="form-select form-select-sm w-auto rounded-pill fs-12 fw-semibold" onchange="loadDashboard()"></select>' +
-                        '<ul class="nav nav-pills gap-1" id="dashboardTicketFilterPills">' +
-                            '<li class="nav-item"><button class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets(\'all\', this)">All</button></li>' +
-                            '<li class="nav-item"><button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets(\'urgent\', this)">Urgent</button></li>' +
-                        '</ul>' +
-                        '<div class="btn-group">' +
-                            '<button type="button" class="btn btn-sm btn-outline-secondary active" id="dashViewGridBtn" onclick="setDashboardViewMode(\'grid\')" title="Card view"><i class="ti ti-layout-grid"></i></button>' +
-                            '<button type="button" class="btn btn-sm btn-outline-secondary" id="dashViewListBtn" onclick="setDashboardViewMode(\'list\')" title="List view"><i class="ti ti-list"></i></button>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="card-body p-3">' +
                     '<div class="row g-3" id="dashMyQueueContainer"></div>' +
                 '</div>' +
+
+                '<!-- CARD FOOTER -->' +
                 '<div class="card-footer bg-light border-top py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">' +
-                    '<span class="fs-12 text-muted"><i class="ti ti-info-circle me-1"></i>Click any item to view details.</span>' +
+                    '<span class="fs-12 text-muted"><i class="ti ti-info-circle me-1"></i>Click any item to view details. Drag items up or down between My Day and My Queue.</span>' +
                     '<div class="d-flex align-items-center gap-3">' +
                         '<a href="tickets.html" class="fs-13 fw-semibold text-decoration-none text-primary">Ticket Suite</a>' +
                         '<a href="tasks.html" class="fs-13 fw-semibold text-decoration-none text-primary">Task Manager</a>' +
@@ -900,6 +903,14 @@
                 '</div>' +
             '</div>' +
         '</div>';
+    }
+
+    function renderMyDayWidgetHtml() {
+        return renderCombinedMyDayAndQueueWidgetHtml();
+    }
+
+    function renderMyQueueWidgetHtml() {
+        return '';
     }
 
     function renderM365CalendarWidgetHtml() {
@@ -1928,7 +1939,7 @@
                 : '<span></span>';
 
             return `
-                <div class="col-xl-4 col-md-6 d-flex">
+                <div class="col-xl-3 col-lg-4 col-md-6 d-flex">
                     <div class="card flex-fill border rounded-3 p-3 position-relative shadow-none ${draggable ? 'dash-draggable-card' : ''}"
                          ${dragAttrs}
                          style="cursor: pointer; transition: all 0.2s ease; border-color: var(--bs-border-color, #e2e8f0);"
