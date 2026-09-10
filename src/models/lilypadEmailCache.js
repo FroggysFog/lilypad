@@ -40,14 +40,19 @@ const emailCacheSchema = new Schema(
       size: Number
     }],
     importance: { type: String, default: 'normal' },
-    // Written by the extraction pipeline (build stage 4) - kept on the
-    // email doc itself rather than a separate collection, since the
-    // inbox view and the triage queue both render from this collection
-    // and can't afford a second round-trip per row.
+    // isColdInbound/priorityScore are written by the stage 3 scoring
+    // engine; processed/isActionable/urgency/summary by the stage 4 LLM
+    // extraction pipeline - kept on the email doc itself rather than a
+    // separate collection, since the inbox view and the triage queue
+    // both render from this collection and can't afford a second
+    // round-trip per row.
     triage: {
       processed: { type: Boolean, default: false },
       isColdInbound: { type: Boolean, default: false },
       priorityScore: { type: Number, default: 0 },
+      isActionable: { type: Boolean, default: false },
+      urgency: { type: String, enum: ['low', 'normal', 'high', 'urgent'], default: 'normal' },
+      summary: { type: String, default: '' },
       extractedAt: { type: Date, default: null }
     },
     // Soft-deleted when Graph delta reports a removal, not hard-deleted -

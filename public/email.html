@@ -166,6 +166,15 @@
 				</div>
 
 				<div id="emailApp" style="display:none;">
+					<div class="card border-0 shadow-sm rounded-3 mb-3 d-none" id="suggestedTasksCard">
+						<div class="card-header bg-transparent border-bottom py-2 d-flex align-items-center gap-2">
+							<i class="ti ti-bulb text-primary"></i>
+							<h6 class="fw-bold mb-0 fs-14">Suggested Tasks</h6>
+							<span class="badge bg-soft-primary text-primary rounded-pill" id="suggestedTasksCount">0</span>
+						</div>
+						<div id="suggestedTasksList" class="card-body p-2"></div>
+					</div>
+
 					<div class="row g-3">
 						<div class="col-lg-5 col-xl-4">
 							<div class="card border-0 shadow-sm rounded-3">
@@ -333,6 +342,7 @@
 					appEl.style.display = '';
 					loadEmailList();
 					loadGraymailDigest();
+					loadSuggestedTasks();
 				} else {
 					textEl.textContent = "Your Microsoft account isn't connected yet - connect it to pull in your inbox.";
 					actionsEl.innerHTML = '<a href="/auth/microsoft-calendar/connect" class="btn btn-sm btn-primary"><i class="ti ti-brand-windows me-1"></i>Connect Microsoft 365</a>';
@@ -351,10 +361,14 @@
 				: (msg.from && (msg.from.name || msg.from.address)) || 'Unknown sender';
 			const unreadClass = msg.isRead ? '' : 'unread';
 			const activeClass = msg.id === emailActiveId ? 'active' : '';
+			const showUrgent = msg.isActionable && (msg.urgency === 'high' || msg.urgency === 'urgent');
+			const urgencyBadge = showUrgent
+				? `<span class="badge ${msg.urgency === 'urgent' ? 'bg-soft-primary text-primary' : 'bg-soft-warning text-warning'} fs-10 px-2 py-0 rounded-pill ms-1"><i class="ti ti-bulb fs-10"></i></span>`
+				: '';
 			return `
 				<div class="email-row p-3 border-bottom ${unreadClass} ${activeClass}" data-id="${msg.id}">
 					<div class="d-flex align-items-center justify-content-between mb-1">
-						<span class="fs-13 email-subject text-dark text-truncate">${escapeHtml(fromName)}</span>
+						<span class="fs-13 email-subject text-dark text-truncate">${escapeHtml(fromName)}${urgencyBadge}</span>
 						<span class="fs-11 text-muted flex-shrink-0 ms-2">${escapeHtml(timeAgo(msg.receivedDateTime))}</span>
 					</div>
 					<div class="fs-13 email-subject text-dark text-truncate mb-1">${escapeHtml(msg.subject)}</div>
@@ -653,11 +667,65 @@
 			loadGraymailDigest();
 		});
 
-		document.getElementById('emailRefreshBtn').addEventListener('click', () => { loadEmailList(); loadGraymailDigest(); });
+		document.getElementById('emailRefreshBtn').addEventListener('click', () => { loadEmailList(); loadGraymailDigest(); loadSuggestedTasks(); });
 		document.getElementById('emailLoadMoreBtn').addEventListener('click', () => {
 			emailSkip += EMAIL_PAGE_SIZE;
 			loadEmailList(false);
 		});
+
+		// --- Suggested Tasks triage queue ------------------------------------
+
+		function suggestedTaskRowMarkup(t) {
+			const dueLabel = t.suggestedDueDate ? new Date(t.suggestedDueDate).toLocaleDateString() : 'No due date';
+			const sourceSubject = (t.sourceEmail && t.sourceEmail.subject) || t.context || '';
+			return `
+				<div class="d-flex align-items-start justify-content-between gap-2 p-2 border-bottom" data-suggestion-id="${t._id}">
+					<div style="min-width:0;">
+						<div class="fs-13 fw-semibold text-dark text-truncate">${escapeHtml(t.title)}</div>
+						<div class="fs-12 text-muted text-truncate">${escapeHtml(sourceSubject)} &middot; ${escapeHtml(dueLabel)}</div>
+					</div>
+					<div class="d-flex align-items-center gap-1 flex-shrink-0">
+						<button type="button" class="btn btn-sm btn-outline-success py-0 px-2 suggested-approve-btn" title="Approve"><i class="ti ti-check"></i></button>
+						<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 suggested-dismiss-btn" title="Dismiss"><i class="ti ti-x"></i></button>
+					</div>
+				</div>
+			`;
+		}
+
+		async function loadSuggestedTasks() {
+			const card = document.getElementById('suggestedTasksCard');
+			try {
+				const res = await fetch('/api/v1/lilypad/email/suggested-tasks');
+				const result = await res.json();
+				if (!result.success || !result.data.length) { card.classList.add('d-none'); return; }
+
+				document.getElementById('suggestedTasksCount').textContent = result.data.length;
+				const list = document.getElementById('suggestedTasksList');
+				list.innerHTML = result.data.map(suggestedTaskRowMarkup).join('');
+
+				list.querySelectorAll('.suggested-approve-btn').forEach(btn => {
+					btn.addEventListener('click', () => respondToSuggestion(btn.closest('[data-suggestion-id]').dataset.suggestionId, 'approve'));
+				});
+				list.querySelectorAll('.suggested-dismiss-btn').forEach(btn => {
+					btn.addEventListener('click', () => respondToSuggestion(btn.closest('[data-suggestion-id]').dataset.suggestionId, 'dismiss'));
+				});
+
+				card.classList.remove('d-none');
+			} catch (err) {
+				console.error('Unable to load suggested tasks:', err);
+			}
+		}
+
+		async function respondToSuggestion(id, action) {
+			try {
+				const res = await fetch('/api/v1/lilypad/email/suggested-tasks/' + encodeURIComponent(id) + '/' + action, { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadSuggestedTasks();
+			} catch (err) {
+				alert(err.message || 'Unable to update suggestion.');
+			}
+		}
 
 		// --- Compose modal (new messages + editing existing drafts) ---------
 

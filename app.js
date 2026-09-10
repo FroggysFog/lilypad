@@ -59,6 +59,9 @@ function launchServer (db) {
 
       const { startInteractionScoringScheduler } = require('./src/services/emailInteractionScoringService')
       startInteractionScoringScheduler(winston)
+
+      const { startEmailExtractionScheduler } = require('./src/services/emailTriageExtractionService')
+      startEmailExtractionScheduler(winston)
     })
   })
 }

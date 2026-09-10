@@ -46,7 +46,9 @@ function mapCacheDocToSummary (doc) {
     toRecipients: doc.toRecipients || [],
     receivedDateTime: doc.receivedDateTime,
     isRead: Boolean(doc.isRead),
-    hasAttachments: Boolean(doc.hasAttachments)
+    hasAttachments: Boolean(doc.hasAttachments),
+    isActionable: Boolean(doc.triage && doc.triage.isActionable),
+    urgency: (doc.triage && doc.triage.urgency) || 'normal'
   }
 }
 

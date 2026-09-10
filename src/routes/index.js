@@ -76,6 +76,12 @@ function mainRoutes(router, controllers) {
   router.get('/api/v1/lilypad/email/graymail-digest', requireLoginApi, controllers.microsoftEmail.getGraymailDigest)
   router.post('/api/v1/lilypad/email/score-now', requireLoginApi, controllers.microsoftEmail.triggerScoring)
 
+  // Stage 4: per-email LLM triage extraction + Suggested Tasks queue.
+  router.post('/api/v1/lilypad/email/extract-now', requireLoginApi, controllers.microsoftEmail.triggerExtraction)
+  router.get('/api/v1/lilypad/email/suggested-tasks', requireLoginApi, controllers.microsoftEmail.getSuggestedTasks)
+  router.post('/api/v1/lilypad/email/suggested-tasks/:id/approve', requireLoginApi, controllers.microsoftEmail.approveSuggestedTask)
+  router.post('/api/v1/lilypad/email/suggested-tasks/:id/dismiss', requireLoginApi, controllers.microsoftEmail.dismissSuggestedTask)
+
   // Salesforce integration (used by past-due-payments.html)
   router.get('/auth/salesforce/connect', requireLogin, controllers.salesforceAuth.connect)
   router.get('/auth/salesforce/callback', requireLogin, controllers.salesforceAuth.callback)

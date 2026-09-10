@@ -3,6 +3,10 @@ const xss = require('xss')
 const microsoftEmailService = require('../services/microsoftEmailService')
 const microsoftEmailSyncService = require('../services/microsoftEmailSyncService')
 const emailInteractionScoringService = require('../services/emailInteractionScoringService')
+const emailTriageExtractionService = require('../services/emailTriageExtractionService')
+const { LilyPadSuggestedTask, LilyPadTask } = require('../models')
+
+const URGENCY_TO_PRIORITY = { urgent: 'Urgent', high: 'High', normal: 'Normal', low: 'Low' }
 
 // Attachments only ever need to live in memory long enough to
 // base64-encode and hand to Graph - there's no reason to write them to
@@ -242,6 +246,89 @@ controller.triggerScoring = async function (req, res) {
     return res.status(200).json({ success: true, data: result })
   } catch (err) {
     return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/extract-now
+ * Manual trigger for the current user's LLM triage extraction pass -
+ * lets you verify Suggested Tasks show up immediately instead of
+ * waiting on the 20-minute scheduler.
+ */
+controller.triggerExtraction = async function (req, res) {
+  try {
+    const result = await emailTriageExtractionService.runExtractionForOwner(req.user._id)
+    return res.status(200).json({ success: true, data: result })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/email/suggested-tasks
+ */
+controller.getSuggestedTasks = async function (req, res) {
+  try {
+    const data = await LilyPadSuggestedTask.find({ owner: req.user._id, status: 'pending' })
+      .populate('sourceEmail', 'subject from receivedDateTime')
+      .sort({ createdAt: -1 })
+      .limit(100)
+    return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/suggested-tasks/:id/approve
+ * Creates a real lilypad_tasks record the same way any other task is
+ * created (owner = the approving user, so it lands on their own Task
+ * Manager list) rather than adding a second, parallel task-creation
+ * path - this is the one place a suggestion graduates into a real task.
+ */
+controller.approveSuggestedTask = async function (req, res) {
+  try {
+    const suggestion = await LilyPadSuggestedTask.findOne({ _id: req.params.id, owner: req.user._id, status: 'pending' })
+    if (!suggestion) return res.status(404).json({ success: false, error: 'Suggested task not found' })
+
+    const task = await LilyPadTask.create({
+      title: suggestion.title,
+      notes: suggestion.context ? `From email: ${suggestion.context}` : 'Suggested from email triage.',
+      dueDate: suggestion.suggestedDueDate,
+      priority: URGENCY_TO_PRIORITY[suggestion.urgency] || 'Normal',
+      owner: req.user._id,
+      createdBy: req.user._id,
+      history: [{
+        action: 'created',
+        by: req.user._id,
+        byName: req.user.fullname,
+        description: 'Created from an Email Triage suggestion'
+      }]
+    })
+
+    suggestion.status = 'approved'
+    suggestion.createdTaskId = task._id
+    await suggestion.save()
+
+    return res.status(200).json({ success: true, data: { taskId: task._id } })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/suggested-tasks/:id/dismiss
+ */
+controller.dismissSuggestedTask = async function (req, res) {
+  try {
+    const suggestion = await LilyPadSuggestedTask.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user._id, status: 'pending' },
+      { $set: { status: 'dismissed' } }
+    )
+    if (!suggestion) return res.status(404).json({ success: false, error: 'Suggested task not found' })
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
   }
 }
 
