@@ -442,9 +442,9 @@
 							<div class="d-flex align-items-center justify-content-between">
 								<div>
 									<span class="fs-12 text-muted fw-semibold text-uppercase">Urgent / High</span>
-									<h3 class="fw-bold mb-0 mt-1 text-danger" id="dashKpiUrgent">0</h3>
+									<h3 class="fw-bold mb-0 mt-1 text-primary" id="dashKpiUrgent">0</h3>
 								</div>
-								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-danger" style="width:44px; height:44px;">
+								<div class="rounded-3 p-2 text-white d-flex align-items-center justify-content-center bg-primary" style="width:44px; height:44px;">
 									<i class="ti ti-alert-triangle fs-22"></i>
 								</div>
 							</div>
@@ -917,12 +917,29 @@
         container.innerHTML = rows;
     }
 
+    /**
+     * bg-soft-primary/text-primary track the selected accent color (see
+     * badge-todo in tickets.html/tasks.html for the same technique) but
+     * bg-soft-* itself reads a separate --*-transparent variable that the
+     * theme customizer never touches, so it would stay a fixed pale pink
+     * no matter what accent is picked. Skip that class entirely for
+     * 'primary' and paint the soft background straight off
+     * --bs-primary-rgb instead, so Urgent/Blocked genuinely follow theme
+     * changes rather than just their label text.
+     */
+    function dashSoftBadge(colorClass, label, sizeClass) {
+        if (colorClass === 'primary') {
+            return `<span class="badge ${sizeClass} rounded-pill fw-semibold" style="background-color: rgba(var(--bs-primary-rgb), 0.12); color: var(--bs-primary);">${escapeHtml(label)}</span>`;
+        }
+        return `<span class="badge bg-soft-${colorClass} text-${colorClass} ${sizeClass} rounded-pill fw-semibold">${escapeHtml(label)}</span>`;
+    }
+
     function renderDashboardFeedGrid(container, filtered, draggable) {
         container.className = 'row g-3';
         container.innerHTML = filtered.slice(0, 9).map(item => {
             const isTicket = item.feedType === 'ticket';
-            const priorityClass = item.priority === 'Urgent' ? 'danger' : (item.priority === 'High' ? 'warning' : 'info');
-            const statusClass = item.status === 'To-Do' ? 'success' : (item.status === 'In Progress' ? 'warning' : (item.status === 'Blocked' ? 'danger' : 'success'));
+            const priorityClass = item.priority === 'Urgent' ? 'primary' : (item.priority === 'High' ? 'warning' : 'info');
+            const statusClass = item.status === 'To-Do' ? 'success' : (item.status === 'In Progress' ? 'warning' : (item.status === 'Blocked' ? 'primary' : 'success'));
             const typeBadge = isTicket
                 ? '<span class="badge bg-soft-primary text-primary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-ticket me-1"></i>Ticket</span>'
                 : '<span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-checklist me-1"></i>Task</span>';
@@ -947,7 +964,7 @@
                             ${uidBadge}
                             <div class="d-flex align-items-center gap-1">
                                 ${typeBadge}
-                                <span class="badge bg-soft-${priorityClass} text-${priorityClass} fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(item.priority)}</span>
+                                ${dashSoftBadge(priorityClass, item.priority, 'fs-10 px-2 py-1')}
                             </div>
                         </div>
                         <h6 class="fw-bold fs-13 mb-1 text-dark text-truncate" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h6>
@@ -957,7 +974,7 @@
                             <span class="d-flex align-items-center"><i class="ti ti-calendar me-1 fs-13 text-primary"></i>${escapeHtml(dueLabel)}</span>
                         </div>
                         <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto fs-12">
-                            <span class="badge bg-soft-${statusClass} text-${statusClass} fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(item.status)}</span>
+                            ${dashSoftBadge(statusClass, item.status, 'fs-10 px-2 py-1')}
                             <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 fs-11" onclick="event.stopPropagation(); dashQuickComplete('${item.feedType}', '${item.id}')" title="Mark complete">
                                 <i class="ti ti-check"></i> Complete
                             </button>
@@ -972,8 +989,8 @@
         container.className = '';
         const rows = filtered.slice(0, 20).map(item => {
             const isTicket = item.feedType === 'ticket';
-            const priorityClass = item.priority === 'Urgent' ? 'danger' : (item.priority === 'High' ? 'warning' : 'info');
-            const statusClass = item.status === 'To-Do' ? 'success' : (item.status === 'In Progress' ? 'warning' : (item.status === 'Blocked' ? 'danger' : 'success'));
+            const priorityClass = item.priority === 'Urgent' ? 'primary' : (item.priority === 'High' ? 'warning' : 'info');
+            const statusClass = item.status === 'To-Do' ? 'success' : (item.status === 'In Progress' ? 'warning' : (item.status === 'Blocked' ? 'primary' : 'success'));
             const typeBadge = isTicket
                 ? '<span class="badge bg-soft-primary text-primary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-ticket me-1"></i>Ticket</span>'
                 : '<span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-checklist me-1"></i>Task</span>';
@@ -989,8 +1006,8 @@
                     <td>
                         <a href="${item.href}" class="text-dark fw-semibold text-decoration-none fs-13">${escapeHtml(item.title)}</a>
                     </td>
-                    <td><span class="badge bg-soft-${priorityClass} text-${priorityClass} fs-11">${escapeHtml(item.priority)}</span></td>
-                    <td><span class="badge bg-soft-${statusClass} text-${statusClass} fs-11">${escapeHtml(item.status)}</span></td>
+                    <td>${dashSoftBadge(priorityClass, item.priority, 'fs-11')}</td>
+                    <td>${dashSoftBadge(statusClass, item.status, 'fs-11')}</td>
                     <td>
                         <select class="form-select form-select-sm" style="min-width:150px;" onchange="dashQuickReassign('${item.feedType}', '${item.id}', this.value)">
                             ${dashAssigneeSelectOptions(item)}
