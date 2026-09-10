@@ -7,7 +7,7 @@ const emailTriageExtractionService = require('../services/emailTriageExtractionS
 const emailSenderRollupService = require('../services/emailSenderRollupService')
 const emailErpEntityLinkService = require('../services/emailErpEntityLinkService')
 const emailWaitingOnService = require('../services/emailWaitingOnService')
-const { LilyPadSuggestedTask, LilyPadTask, LilyPadAwaitingResponse } = require('../models')
+const { LilyPadSuggestedTask, LilyPadTask, LilyPadAwaitingResponse, LilyPadTicket, LilyPadErpEntityLink, LilyPadEmailCache } = require('../models')
 
 const URGENCY_TO_PRIORITY = { urgent: 'Urgent', high: 'High', normal: 'Normal', low: 'Low' }
 
@@ -362,15 +362,138 @@ controller.regenerateSenderCard = async function (req, res) {
 }
 
 /**
- * POST /api/v1/lilypad/email/sender-cards/:address/blockers/:index/add-task
+ * POST /api/v1/lilypad/email/sender-cards/:address/blockers/add-task   { blockerText }
+ * Matched by exact blocker text rather than an array index - the
+ * frontend only ever sees the already-declined-filtered list, so
+ * positions there don't line up with the stored array once anything's
+ * been declined.
  */
 controller.addTaskFromBlocker = async function (req, res) {
   try {
-    const index = parseInt(req.params.index, 10)
-    const task = await emailSenderRollupService.addTaskFromBlocker(req.user._id, decodeURIComponent(req.params.address), index)
+    const task = await emailSenderRollupService.addTaskFromBlocker(req.user._id, decodeURIComponent(req.params.address), req.body.blockerText)
     return res.status(201).json({ success: true, data: task })
   } catch (err) {
     return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/sender-cards/:address/blockers/decline   { blockerText }
+ */
+controller.declineBlocker = async function (req, res) {
+  try {
+    await emailSenderRollupService.declineBlocker(req.user._id, decodeURIComponent(req.params.address), req.body.blockerText)
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/sender-cards/:address/dismiss
+ */
+controller.dismissSenderCard = async function (req, res) {
+  try {
+    await emailSenderRollupService.dismissCard(req.user._id, decodeURIComponent(req.params.address))
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/email/priority-rules
+ */
+controller.getPriorityRules = async function (req, res) {
+  try {
+    const data = await emailSenderRollupService.listPriorityRules(req.user._id)
+    return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/priority-rules   { type: 'address'|'keyword', value }
+ */
+controller.addPriorityRule = async function (req, res) {
+  try {
+    const rule = await emailSenderRollupService.addPriorityRule(req.user._id, req.body.type, req.body.value)
+    return res.status(201).json({ success: true, data: rule })
+  } catch (err) {
+    return res.status(400).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/email/priority-rules/:id
+ */
+controller.removePriorityRule = async function (req, res) {
+  try {
+    await emailSenderRollupService.removePriorityRule(req.user._id, req.params.id)
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/messages/:id/create-ticket
+ * { title, description, priority, assigneeId }
+ * A lighter path than the full customer-facing intake flow - internal
+ * staff creating a ticket straight from an email don't need a category/
+ * dynamic form, just something that lands in the To-Do queue assignable
+ * to whoever should handle it (e.g. routing a billing question to
+ * Accounting). Auto-links the new ticket back onto the source email so
+ * its badge shows up immediately instead of waiting for the next
+ * entity-linking pass.
+ */
+controller.createTicketFromEmail = async function (req, res) {
+  try {
+    const { title, description, priority, assigneeId } = req.body
+    if (!title || !description) {
+      return res.status(400).json({ success: false, error: 'Title and description are required.' })
+    }
+
+    const ticket = await LilyPadTicket.create({
+      title: xss(String(title).trim()),
+      description: xss(String(description).trim()),
+      priority: ['Low', 'Normal', 'High', 'Urgent'].includes(priority) ? priority : 'Normal',
+      status: 'To-Do',
+      categoryName: 'General',
+      source: 'email',
+      reporter: req.user._id,
+      assignee: assigneeId || null,
+      externalReporter: {
+        name: req.user.fullname || req.user.username,
+        email: req.user.email || '',
+        phone: '',
+        company: ''
+      },
+      history: [{
+        action: 'created',
+        by: req.user._id,
+        byName: req.user.fullname,
+        description: 'Created from an email in the Email module'
+      }]
+    })
+
+    const sourceEmail = await LilyPadEmailCache.findOne({ owner: req.user._id, graphMessageId: req.params.id })
+    if (sourceEmail) {
+      await LilyPadErpEntityLink.create({
+        sourceEmail: sourceEmail._id,
+        entityType: 'ticket',
+        entityId: ticket._id,
+        matchedText: ticket.formattedUid,
+        snapshotLabel: `${ticket.formattedUid}: ${ticket.title}`,
+        snapshotStatus: ticket.status,
+        snapshotValue: null
+      })
+    }
+
+    return res.status(201).json({ success: true, data: ticket })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
   }
 }
 

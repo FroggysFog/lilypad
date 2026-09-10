@@ -1,13 +1,15 @@
 /**
  * LilyPad ERP - Sender Rollup Cards ("the Adam card")
- * AI Email Triage Module, stage 5. Unlike stage 4's per-email Haiku
- * classification (cheap, single-document, mechanical), this is a
- * multi-message synthesis - reading the last several messages exchanged
- * with one high-priority sender and writing an executive summary,
- * blockers, and ready-to-send quick replies. That's a genuinely harder
- * task than "classify this one email," so it runs on Sonnet, and only
- * for senders who've earned a card (see getRollupCandidates), not
- * every contact.
+ * AI Email Triage Module, stage 5 (+ user-curation additions). Unlike
+ * stage 4's per-email Haiku classification (cheap, single-document,
+ * mechanical), this is a multi-message synthesis - reading the last
+ * several messages exchanged with one high-priority sender and writing
+ * an executive summary, blockers, and ready-to-send quick replies.
+ * That's a genuinely harder task than "classify this one email," so it
+ * runs on Sonnet, and only for senders who've earned a card (see
+ * getRollupCandidates) - either automatically (stage 3's scoring) or
+ * because the user explicitly added an address or keyword rule to
+ * always watch for.
  *
  * Cards are cached on LilyPadContactInteractionScore.rollup and
  * regenerated only when stale (see needsRegeneration) - this is a
@@ -21,6 +23,7 @@ const winston = require('../logger')
 const LilyPadEmailCache = require('../models/lilypadEmailCache')
 const LilyPadContactInteractionScore = require('../models/lilypadContactInteractionScore')
 const LilyPadSuggestedTask = require('../models/lilypadSuggestedTask')
+const LilyPadEmailPriorityRule = require('../models/lilypadEmailPriorityRule')
 const microsoftCalendarService = require('./microsoftCalendarService')
 
 const REQUEST_TIMEOUT_MS = 45000
@@ -35,6 +38,8 @@ const ROLLUP_MIN_PRIORITY_SCORE = 40
 const ROLLUP_MIN_UNREAD = 2
 const ROLLUP_RECENT_DAYS = 3
 const ROLLUP_STALE_HOURS = 6
+const KEYWORD_LOOKBACK_DAYS = 30
+const KEYWORD_MATCH_SENDER_LIMIT = 5
 
 function getConfig () {
   return {
@@ -121,6 +126,13 @@ async function getRecentExchange (ownerId, address) {
   return docs.reverse().map((doc) => ({ doc, isMine: doc.folder === 'sentitems' }))
 }
 
+/**
+ * Regeneration always replaces the whole rollup subdocument (see
+ * below), which deliberately wipes declinedBlockers/dismissedAt along
+ * with the stale summary - new activity earns a clean slate rather
+ * than carrying old "not relevant" markings forward onto a
+ * regenerated (and possibly quite different) set of blockers.
+ */
 async function generateRollupForSender (ownerId, address) {
   const config = getConfig()
   if (!config.apiKey) throw new Error('LLM rollup is not configured. Add ANTHROPIC_API_KEY to the environment.')
@@ -152,7 +164,10 @@ async function generateRollupForSender (ownerId, address) {
       : [],
     generatedAt: new Date(),
     basedOnMessageCount: exchange.length,
-    mostRecentMessageId: mostRecentInbound ? mostRecentInbound.doc.graphMessageId : ''
+    mostRecentMessageId: mostRecentInbound ? mostRecentInbound.doc.graphMessageId : '',
+    declinedBlockers: [],
+    dismissedAt: null,
+    dismissedAtMessageCount: null
   }
 
   await LilyPadContactInteractionScore.updateOne({ owner: ownerId, address }, { $set: { rollup } })
@@ -167,37 +182,97 @@ function needsRegeneration (scoreDoc, currentMessageCount) {
   return ageMs > ROLLUP_STALE_HOURS * 60 * 60 * 1000
 }
 
+async function countUnread (ownerId, address) {
+  return LilyPadEmailCache.countDocuments({
+    owner: ownerId,
+    folder: 'inbox',
+    deleted: false,
+    'from.address': address,
+    isRead: false,
+    'triage.isColdInbound': { $ne: true }
+  })
+}
+
+async function getOrCreateScoreDoc (ownerId, address, displayNameHint) {
+  let contact = await LilyPadContactInteractionScore.findOne({ owner: ownerId, address })
+  if (!contact) {
+    contact = await LilyPadContactInteractionScore.create({ owner: ownerId, address, displayName: displayNameHint || '' })
+  }
+  return contact
+}
+
 /**
- * A sender earns a card if they're already priority-scored (internal,
- * ERP-matched, or a decent reply ratio - see emailInteractionScoringService)
- * AND currently has multiple unread messages, or at least one recent
- * one - "multiple unread or recent messages" per the spec, not just any
- * high-priority contact regardless of current activity.
+ * Three ways a sender earns a card:
+ *  1. Automatic - already priority-scored (stage 3) AND currently has
+ *     multiple unread messages, or at least one recent one.
+ *  2. Manual address rule - the user said "always watch this person,"
+ *     so it's included regardless of score or current activity.
+ *  3. Keyword rule - recent inbox messages matching the keyword pull
+ *     their senders in, labeled by the keyword rather than the
+ *     sender's name, since the point is "show me my {keyword} watch,"
+ *     not any one person's relationship history.
+ * A card already dismissed with no new activity since (same total
+ * message count) is filtered out here, before any regeneration work.
  */
 async function getRollupCandidates (ownerId) {
-  const priorityContacts = await LilyPadContactInteractionScore.find({
-    owner: ownerId,
-    priorityScore: { $gte: ROLLUP_MIN_PRIORITY_SCORE }
-  })
-
   const recentCutoff = new Date(Date.now() - ROLLUP_RECENT_DAYS * 24 * 60 * 60 * 1000)
-  const candidates = []
+  const byAddress = new Map()
 
-  for (const contact of priorityContacts) {
-    const unreadCount = await LilyPadEmailCache.countDocuments({
-      owner: ownerId,
-      folder: 'inbox',
-      deleted: false,
-      'from.address': contact.address,
-      isRead: false,
-      'triage.isColdInbound': { $ne: true }
-    })
-
-    const qualifies = unreadCount >= ROLLUP_MIN_UNREAD || (unreadCount >= 1 && contact.lastInboundAt && contact.lastInboundAt >= recentCutoff)
-    if (qualifies) candidates.push({ contact, unreadCount })
+  function considerCandidate (contact, unreadCount, reason, label) {
+    if (byAddress.has(contact.address)) return
+    byAddress.set(contact.address, { contact, unreadCount, reason, label })
   }
 
-  return candidates
+  const priorityContacts = await LilyPadContactInteractionScore.find({ owner: ownerId, priorityScore: { $gte: ROLLUP_MIN_PRIORITY_SCORE } })
+  for (const contact of priorityContacts) {
+    const unreadCount = await countUnread(ownerId, contact.address)
+    const qualifies = unreadCount >= ROLLUP_MIN_UNREAD || (unreadCount >= 1 && contact.lastInboundAt && contact.lastInboundAt >= recentCutoff)
+    if (qualifies) considerCandidate(contact, unreadCount, 'priority', contact.displayName || contact.address)
+  }
+
+  const addressRules = await LilyPadEmailPriorityRule.find({ owner: ownerId, type: 'address' })
+  for (const rule of addressRules) {
+    const contact = await getOrCreateScoreDoc(ownerId, rule.value)
+    const unreadCount = await countUnread(ownerId, rule.value)
+    considerCandidate(contact, unreadCount, 'manual', contact.displayName || rule.value)
+  }
+
+  const keywordRules = await LilyPadEmailPriorityRule.find({ owner: ownerId, type: 'keyword' })
+  if (keywordRules.length) {
+    const keywordCutoff = new Date(Date.now() - KEYWORD_LOOKBACK_DAYS * 24 * 60 * 60 * 1000)
+    for (const rule of keywordRules) {
+      const escaped = rule.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const pattern = new RegExp(escaped, 'i')
+      const matches = await LilyPadEmailCache.find({
+        owner: ownerId,
+        folder: 'inbox',
+        deleted: false,
+        receivedDateTime: { $gte: keywordCutoff },
+        $or: [{ subject: pattern }, { bodyPreview: pattern }]
+      }).sort({ receivedDateTime: -1 }).limit(KEYWORD_MATCH_SENDER_LIMIT * 3) // a few extra since several may share a sender
+
+      const seenAddresses = new Set()
+      for (const email of matches) {
+        if (seenAddresses.size >= KEYWORD_MATCH_SENDER_LIMIT) break
+        const address = email.from && email.from.address
+        if (!address || seenAddresses.has(address)) continue
+        seenAddresses.add(address)
+        const contact = await getOrCreateScoreDoc(ownerId, address, email.from.name)
+        const unreadCount = await countUnread(ownerId, address)
+        considerCandidate(contact, unreadCount, 'keyword', rule.value)
+      }
+    }
+  }
+
+  const result = []
+  for (const { contact, unreadCount, reason, label } of byAddress.values()) {
+    const totalMessageCount = contact.receivedCount + contact.repliedCount
+    const rollup = contact.rollup || {}
+    const isDismissed = rollup.dismissedAt && rollup.dismissedAtMessageCount === totalMessageCount
+    if (isDismissed) continue
+    result.push({ contact, unreadCount, reason, label })
+  }
+  return result
 }
 
 /**
@@ -209,7 +284,7 @@ async function getRollupCards (ownerId) {
   const candidates = await getRollupCandidates(ownerId)
   const cards = []
 
-  for (const { contact, unreadCount } of candidates) {
+  for (const { contact, unreadCount, reason, label } of candidates) {
     const totalMessageCount = contact.receivedCount + contact.repliedCount
     if (isRollupConfigured() && needsRegeneration(contact, totalMessageCount)) {
       try {
@@ -221,12 +296,15 @@ async function getRollupCards (ownerId) {
     }
 
     if (contact.rollup && contact.rollup.generatedAt) {
+      const declined = new Set(contact.rollup.declinedBlockers || [])
       cards.push({
         address: contact.address,
         displayName: contact.displayName || contact.address,
+        label,
+        reason,
         unreadCount,
         executiveSummary: contact.rollup.executiveSummary,
-        blockers: contact.rollup.blockers,
+        blockers: (contact.rollup.blockers || []).filter((b) => !declined.has(b)),
         quickReplies: contact.rollup.quickReplies,
         mostRecentMessageId: contact.rollup.mostRecentMessageId,
         generatedAt: contact.rollup.generatedAt
@@ -241,14 +319,16 @@ async function getRollupCards (ownerId) {
  * "Add Task" from a card's blocker - creates a real suggestion the same
  * way stage 4's extraction pipeline does, rather than a second,
  * parallel task-creation path. Lands in the same Suggested Tasks queue
- * for Approve/Dismiss.
+ * for Approve/Dismiss. Matched by exact blocker text rather than array
+ * index, since the frontend only ever sees the already-declined-filtered
+ * list - its positions don't line up with the stored array once
+ * anything's been declined.
  */
-async function addTaskFromBlocker (ownerId, address, blockerIndex) {
+async function addTaskFromBlocker (ownerId, address, blockerText) {
   const contact = await LilyPadContactInteractionScore.findOne({ owner: ownerId, address })
-  if (!contact || !contact.rollup) throw new Error('No rollup found for this sender.')
-
-  const blockerText = contact.rollup.blockers[blockerIndex]
-  if (!blockerText) throw new Error('Blocker not found.')
+  if (!contact || !contact.rollup || !(contact.rollup.blockers || []).includes(blockerText)) {
+    throw new Error('Blocker not found.')
+  }
 
   const sourceEmail = contact.rollup.mostRecentMessageId
     ? await LilyPadEmailCache.findOne({ owner: ownerId, graphMessageId: contact.rollup.mostRecentMessageId })
@@ -262,6 +342,63 @@ async function addTaskFromBlocker (ownerId, address, blockerIndex) {
     context: `From conversation with ${contact.displayName || contact.address}`,
     status: 'pending'
   })
+}
+
+/**
+ * "Decline" a blocker - marks it not relevant without turning it into a
+ * task. Cleared automatically the next time this sender's rollup
+ * regenerates (see generateRollupForSender), so it's "not relevant
+ * right now," not a permanent hide of that exact sentence forever.
+ */
+async function declineBlocker (ownerId, address, blockerText) {
+  const contact = await LilyPadContactInteractionScore.findOne({ owner: ownerId, address })
+  if (!contact || !contact.rollup || !(contact.rollup.blockers || []).includes(blockerText)) {
+    throw new Error('Blocker not found.')
+  }
+
+  contact.rollup.declinedBlockers = contact.rollup.declinedBlockers || []
+  if (!contact.rollup.declinedBlockers.includes(blockerText)) contact.rollup.declinedBlockers.push(blockerText)
+  contact.markModified('rollup')
+  await contact.save()
+}
+
+/**
+ * Dismiss a card - hides it from the deck until new activity (a
+ * changed total message count) arrives, at which point it naturally
+ * re-qualifies and regenerates with a clean rollup.
+ */
+async function dismissCard (ownerId, address) {
+  const contact = await LilyPadContactInteractionScore.findOne({ owner: ownerId, address })
+  if (!contact) throw new Error('No conversation found for this address.')
+
+  contact.rollup = contact.rollup || {}
+  contact.rollup.dismissedAt = new Date()
+  contact.rollup.dismissedAtMessageCount = contact.receivedCount + contact.repliedCount
+  contact.markModified('rollup')
+  await contact.save()
+}
+
+// --- Manual priority rules ---------------------------------------------
+
+async function listPriorityRules (ownerId) {
+  return LilyPadEmailPriorityRule.find({ owner: ownerId }).sort({ createdAt: -1 })
+}
+
+async function addPriorityRule (ownerId, type, value) {
+  if (!['address', 'keyword'].includes(type)) throw new Error('Invalid rule type.')
+  const cleaned = String(value || '').trim().toLowerCase()
+  if (!cleaned) throw new Error('A value is required.')
+  if (type === 'address' && !cleaned.includes('@')) throw new Error('Enter a valid email address.')
+
+  return LilyPadEmailPriorityRule.findOneAndUpdate(
+    { owner: ownerId, type, value: cleaned },
+    { $setOnInsert: { owner: ownerId, type, value: cleaned } },
+    { upsert: true, new: true }
+  )
+}
+
+async function removePriorityRule (ownerId, ruleId) {
+  await LilyPadEmailPriorityRule.deleteOne({ _id: ruleId, owner: ownerId })
 }
 
 async function runScheduledRollups (winstonLogger) {
@@ -305,6 +442,11 @@ module.exports = {
   getRollupCards,
   generateRollupForSender,
   addTaskFromBlocker,
+  declineBlocker,
+  dismissCard,
+  listPriorityRules,
+  addPriorityRule,
+  removePriorityRule,
   runScheduledRollups,
   startSenderRollupScheduler
 }

@@ -22,6 +22,7 @@ const LilyPadContactInteractionScore = require('./lilypadContactInteractionScore
 const LilyPadSuggestedTask = require('./lilypadSuggestedTask')
 const LilyPadErpEntityLink = require('./lilypadErpEntityLink')
 const LilyPadAwaitingResponse = require('./lilypadAwaitingResponse')
+const LilyPadEmailPriorityRule = require('./lilypadEmailPriorityRule')
 
 module.exports = {
   LilyPadTicket,
@@ -47,5 +48,6 @@ module.exports = {
   LilyPadContactInteractionScore,
   LilyPadSuggestedTask,
   LilyPadErpEntityLink,
-  LilyPadAwaitingResponse
+  LilyPadAwaitingResponse,
+  LilyPadEmailPriorityRule
 }

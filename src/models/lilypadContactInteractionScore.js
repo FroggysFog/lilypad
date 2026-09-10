@@ -47,7 +47,18 @@ const interactionScoreSchema = new Schema(
       basedOnMessageCount: { type: Number, default: 0 },
       // The most recent inbound message from this sender, graphMessageId -
       // what a quick-reply or "Add Task" from the card actually targets.
-      mostRecentMessageId: { type: String, default: '' }
+      mostRecentMessageId: { type: String, default: '' },
+      // Blocker text the user marked "not relevant" - filtered out of
+      // what's shown, cleared whenever a fresh rollup is generated (new
+      // activity deserves a clean slate, not permanently-hidden text
+      // that happens to reappear verbatim).
+      declinedBlockers: [{ type: String }],
+      // Dismissing a card hides it until new activity arrives - checked
+      // against basedOnMessageCount at dismiss time, not a hard
+      // "forever" hide, since the whole point of the deck is surfacing
+      // what's currently unresolved.
+      dismissedAt: { type: Date, default: null },
+      dismissedAtMessageCount: { type: Number, default: null }
     }
   },
   { timestamps: true }

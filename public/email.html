@@ -167,8 +167,28 @@
 
 				<div id="emailApp" style="display:none;">
 					<div class="d-none mb-3" id="senderCardsSection">
-						<h6 class="fw-bold fs-14 mb-2 d-flex align-items-center gap-2"><i class="ti ti-user-star text-primary"></i> Priority Conversations</h6>
-						<div class="row g-3" id="senderCardsRow"></div>
+						<div class="d-flex align-items-center justify-content-between mb-2">
+							<h6 class="fw-bold fs-14 mb-0 d-flex align-items-center gap-2"><i class="ti ti-user-star text-primary"></i> Priority Conversations</h6>
+							<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-12" id="priorityRulesToggleBtn"><i class="ti ti-adjustments me-1"></i>Manage</button>
+						</div>
+
+						<div class="card border-0 shadow-sm rounded-3 mb-2 d-none" id="priorityRulesPanel">
+							<div class="card-body p-3">
+								<p class="fs-12 text-muted mb-2">Always watch a specific email address, or pull in whoever recently emailed about a keyword (e.g. "billing").</p>
+								<div class="d-flex align-items-center gap-2 mb-2">
+									<select id="priorityRuleType" class="form-select form-select-sm" style="max-width:120px;">
+										<option value="address">Email</option>
+										<option value="keyword">Keyword</option>
+									</select>
+									<input type="text" id="priorityRuleValue" class="form-control form-control-sm" placeholder="name@company.com or a keyword">
+									<button type="button" class="btn btn-sm btn-primary flex-shrink-0" id="priorityRuleAddBtn">Add</button>
+								</div>
+								<div id="priorityRulesList" class="d-flex flex-wrap gap-1"></div>
+							</div>
+						</div>
+
+						<div class="row g-2" id="senderCardsRow"></div>
+						<div id="senderCardDetail" class="mt-2"></div>
 					</div>
 
 					<div class="card border-0 shadow-sm rounded-3 mb-3 d-none" id="suggestedTasksCard">
@@ -292,6 +312,49 @@
 		</div>
 	</div>
 
+	<!-- Create Ticket Modal (from an email blocker) -->
+	<div class="modal fade" id="createTicketModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content border-0 shadow-lg">
+				<div class="modal-header py-3 px-4 border-bottom bg-light">
+					<h5 class="modal-title fw-bold mb-0"><i class="ti ti-ticket text-primary me-1"></i> Create Ticket</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body p-4">
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Title</label>
+						<input type="text" id="ticketTitleInput" class="form-control form-control-sm">
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Description</label>
+						<textarea id="ticketDescriptionInput" class="form-control form-control-sm" rows="4"></textarea>
+					</div>
+					<div class="row g-2">
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">Priority</label>
+							<select id="ticketPriorityInput" class="form-select form-select-sm">
+								<option value="Normal" selected>Normal</option>
+								<option value="Low">Low</option>
+								<option value="High">High</option>
+								<option value="Urgent">Urgent</option>
+							</select>
+						</div>
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">Assign To</label>
+							<select id="ticketAssigneeInput" class="form-select form-select-sm">
+								<option value="">Unassigned</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer border-top py-2 px-4">
+					<button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-sm btn-primary px-4" id="createTicketSubmitBtn"><i class="ti ti-check me-1"></i> Create</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<!-- Bootstrap Core JS -->
 	<script src="assets/js/bootstrap.bundle.min.js"></script>
 	<!-- Simplebar JS -->
@@ -357,6 +420,7 @@
 					loadEmailList();
 					loadGraymailDigest();
 					loadSuggestedTasks();
+					loadPriorityRules();
 					loadSenderCards();
 					loadWaitingOn();
 				} else {
@@ -703,7 +767,7 @@
 			loadGraymailDigest();
 		});
 
-		document.getElementById('emailRefreshBtn').addEventListener('click', () => { loadEmailList(); loadGraymailDigest(); loadSuggestedTasks(); loadSenderCards(); loadWaitingOn(); });
+		document.getElementById('emailRefreshBtn').addEventListener('click', () => { loadEmailList(); loadGraymailDigest(); loadSuggestedTasks(); loadPriorityRules(); loadSenderCards(); loadWaitingOn(); });
 		document.getElementById('emailLoadMoreBtn').addEventListener('click', () => {
 			emailSkip += EMAIL_PAGE_SIZE;
 			loadEmailList(false);
@@ -764,65 +828,148 @@
 		}
 
 		// --- Sender rollup cards ("the Adam card") ---------------------------
+		// Collapsed to small chips (roughly a third of the row width each,
+		// per the request) so many priority conversations can sit side by
+		// side without turning into a wall of full-size cards - clicking one
+		// opens the full rollup below, one at a time.
 
 		let senderCardsByAddress = {};
+		let openSenderCardAddress = null;
 
-		function senderCardMarkup(card) {
-			const blockersHtml = (card.blockers || []).map((b, idx) => `
+		function reasonBadgeMarkup(card) {
+			if (card.reason === 'keyword') return '<span class="badge bg-soft-secondary text-secondary fs-10 rounded-pill">keyword</span>';
+			if (card.reason === 'manual') return '<span class="badge bg-soft-secondary text-secondary fs-10 rounded-pill">watched</span>';
+			return '';
+		}
+
+		function senderChipMarkup(card) {
+			const isOpen = card.address === openSenderCardAddress;
+			return `
+				<div class="col-4">
+					<button type="button" class="btn btn-sm w-100 text-start sender-card-chip ${isOpen ? 'btn-primary text-white' : 'btn-light'}" data-address="${escapeHtml(card.address)}" style="overflow:hidden;">
+						<div class="d-flex align-items-center justify-content-between gap-1">
+							<span class="text-truncate fs-12 fw-semibold">${escapeHtml(card.label || card.displayName)}</span>
+							${card.unreadCount ? `<span class="badge ${isOpen ? 'bg-white text-primary' : 'bg-soft-primary text-primary'} rounded-pill fs-10 flex-shrink-0">${card.unreadCount}</span>` : ''}
+						</div>
+					</button>
+				</div>
+			`;
+		}
+
+		function senderCardDetailMarkup(card) {
+			const blockersHtml = (card.blockers || []).map((b) => `
 				<div class="d-flex align-items-start justify-content-between gap-2 fs-12 mb-1">
 					<span class="text-dark">&bull; ${escapeHtml(b)}</span>
-					<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 flex-shrink-0 sender-card-add-task-btn" data-address="${escapeHtml(card.address)}" data-blocker-index="${idx}">+ Task</button>
+					<div class="d-flex align-items-center gap-1 flex-shrink-0">
+						<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 sender-card-add-task-btn" data-blocker="${escapeHtml(b)}">+ Task</button>
+						<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 sender-card-add-ticket-btn" data-blocker="${escapeHtml(b)}" title="Create a ticket"><i class="ti ti-ticket"></i></button>
+						<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 sender-card-decline-btn" data-blocker="${escapeHtml(b)}" title="Not relevant"><i class="ti ti-x"></i></button>
+					</div>
 				</div>
 			`).join('') || '<p class="fs-12 text-muted mb-0">No open blockers.</p>';
 
 			const quickRepliesHtml = (card.quickReplies || []).map((q, idx) => `
-				<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11 sender-card-quick-reply-btn" data-address="${escapeHtml(card.address)}" data-reply-index="${idx}">${escapeHtml(q.label)}</button>
+				<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11 sender-card-quick-reply-btn" data-reply-index="${idx}">${escapeHtml(q.label)}</button>
 			`).join('');
 
 			return `
-				<div class="col-md-6 col-xl-4">
-					<div class="card border-0 shadow-sm rounded-3 h-100">
-						<div class="card-body p-3">
-							<div class="d-flex align-items-center justify-content-between mb-2">
-								<strong class="fs-13 text-dark text-truncate">${escapeHtml(card.displayName)}</strong>
+				<div class="card border-0 shadow-sm rounded-3">
+					<div class="card-body p-3">
+						<div class="d-flex align-items-center justify-content-between mb-2">
+							<div class="d-flex align-items-center gap-2">
+								<strong class="fs-13 text-dark">${escapeHtml(card.displayName)}</strong>
+								${reasonBadgeMarkup(card)}
 								<span class="badge bg-soft-primary text-primary rounded-pill fs-10">${card.unreadCount} unread</span>
 							</div>
-							<p class="fs-12 text-muted mb-2">${escapeHtml(card.executiveSummary)}</p>
-							<div class="mb-2">${blockersHtml}</div>
-							<div class="d-flex flex-wrap gap-1">${quickRepliesHtml}</div>
+							<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11" id="senderCardDismissBtn" title="Dismiss"><i class="ti ti-x"></i> Dismiss</button>
 						</div>
+						<p class="fs-12 text-muted mb-2">${escapeHtml(card.executiveSummary)}</p>
+						<div class="mb-2">${blockersHtml}</div>
+						<div class="d-flex flex-wrap gap-1">${quickRepliesHtml}</div>
 					</div>
 				</div>
 			`;
 		}
 
+		function renderSenderCardDetail() {
+			const container = document.getElementById('senderCardDetail');
+			const card = senderCardsByAddress[openSenderCardAddress];
+			if (!card) { container.innerHTML = ''; return; }
+
+			container.innerHTML = senderCardDetailMarkup(card);
+			document.getElementById('senderCardDismissBtn').addEventListener('click', () => dismissSenderCard(card.address));
+			container.querySelectorAll('.sender-card-add-task-btn').forEach(btn => {
+				btn.addEventListener('click', () => addTaskFromSenderCard(card.address, btn.dataset.blocker, btn));
+			});
+			container.querySelectorAll('.sender-card-add-ticket-btn').forEach(btn => {
+				btn.addEventListener('click', () => openCreateTicketModal(card, btn.dataset.blocker));
+			});
+			container.querySelectorAll('.sender-card-decline-btn').forEach(btn => {
+				btn.addEventListener('click', () => declineBlockerFromCard(card.address, btn.dataset.blocker));
+			});
+			container.querySelectorAll('.sender-card-quick-reply-btn').forEach(btn => {
+				btn.addEventListener('click', () => quickReplyFromSenderCard(card.address, btn.dataset.replyIndex));
+			});
+		}
+
+		function renderSenderChips() {
+			const row = document.getElementById('senderCardsRow');
+			const cards = Object.values(senderCardsByAddress);
+			if (!cards.length) {
+				row.innerHTML = '<div class="col-12"><p class="fs-12 text-muted mb-0">No priority conversations right now - they\'ll show up automatically, or add a watched email/keyword above.</p></div>';
+				return;
+			}
+			row.innerHTML = cards.map(senderChipMarkup).join('');
+			row.querySelectorAll('.sender-card-chip').forEach(btn => {
+				btn.addEventListener('click', () => {
+					openSenderCardAddress = openSenderCardAddress === btn.dataset.address ? null : btn.dataset.address;
+					renderSenderChips();
+					renderSenderCardDetail();
+				});
+			});
+		}
+
 		async function loadSenderCards() {
+			// The section always shows once connected (not just when there
+			// are cards) - it's also where "Manage" (priority rules) lives,
+			// and hiding the whole thing on zero cards would hide the only
+			// way to add a rule in the first place.
 			const section = document.getElementById('senderCardsSection');
+			section.classList.remove('d-none');
 			try {
 				const res = await fetch('/api/v1/lilypad/email/sender-cards');
 				const result = await res.json();
-				if (!result.success || !result.data.length) { section.classList.add('d-none'); return; }
 
 				senderCardsByAddress = {};
-				result.data.forEach(c => { senderCardsByAddress[c.address] = c; });
+				(result.success ? result.data : []).forEach(c => { senderCardsByAddress[c.address] = c; });
+				if (openSenderCardAddress && !senderCardsByAddress[openSenderCardAddress]) openSenderCardAddress = null;
 
-				document.getElementById('senderCardsRow').innerHTML = result.data.map(senderCardMarkup).join('');
-				document.querySelectorAll('.sender-card-add-task-btn').forEach(btn => {
-					btn.addEventListener('click', () => addTaskFromSenderCard(btn.dataset.address, btn.dataset.blockerIndex, btn));
-				});
-				document.querySelectorAll('.sender-card-quick-reply-btn').forEach(btn => {
-					btn.addEventListener('click', () => quickReplyFromSenderCard(btn.dataset.address, btn.dataset.replyIndex));
-				});
-				section.classList.remove('d-none');
+				renderSenderChips();
+				renderSenderCardDetail();
 			} catch (err) {
 				console.error('Unable to load sender cards:', err);
 			}
 		}
 
-		async function addTaskFromSenderCard(address, blockerIndex, btn) {
+		async function dismissSenderCard(address) {
+			try {
+				const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/dismiss', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				openSenderCardAddress = null;
+				await loadSenderCards();
+			} catch (err) {
+				alert(err.message || 'Unable to dismiss.');
+			}
+		}
+
+		async function addTaskFromSenderCard(address, blockerText, btn) {
 			btn.disabled = true;
 			try {
-				const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/blockers/' + blockerIndex + '/add-task', { method: 'POST' });
+				const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/blockers/add-task', {
+					method: 'POST', headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ blockerText })
+				});
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error);
 				btn.textContent = 'Added';
@@ -830,6 +977,20 @@
 			} catch (err) {
 				btn.disabled = false;
 				alert(err.message || 'Unable to add task.');
+			}
+		}
+
+		async function declineBlockerFromCard(address, blockerText) {
+			try {
+				const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/blockers/decline', {
+					method: 'POST', headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ blockerText })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadSenderCards();
+			} catch (err) {
+				alert(err.message || 'Unable to decline.');
 			}
 		}
 
@@ -845,6 +1006,131 @@
 			body.innerHTML = escapeHtml(draft.draftBody).replace(/\n/g, '<br>');
 			document.getElementById('emailInlineReplyBar').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 		}
+
+		// --- Manual priority rules (address/keyword "always watch") ---------
+
+		function priorityRuleChipMarkup(rule) {
+			return `
+				<span class="badge bg-light text-dark border fs-11 px-2 py-1 d-inline-flex align-items-center gap-1">
+					${rule.type === 'keyword' ? '<i class="ti ti-hash fs-10"></i>' : '<i class="ti ti-mail fs-10"></i>'}
+					${escapeHtml(rule.value)}
+					<i class="ti ti-x fs-10 priority-rule-remove-btn" data-id="${rule._id}" style="cursor:pointer;"></i>
+				</span>
+			`;
+		}
+
+		async function loadPriorityRules() {
+			try {
+				const res = await fetch('/api/v1/lilypad/email/priority-rules');
+				const result = await res.json();
+				if (!result.success) return;
+				const list = document.getElementById('priorityRulesList');
+				list.innerHTML = result.data.map(priorityRuleChipMarkup).join('') || '<p class="fs-12 text-muted mb-0">No rules yet.</p>';
+				list.querySelectorAll('.priority-rule-remove-btn').forEach(el => {
+					el.addEventListener('click', () => removePriorityRule(el.dataset.id));
+				});
+			} catch (err) {
+				console.error('Unable to load priority rules:', err);
+			}
+		}
+
+		document.getElementById('priorityRulesToggleBtn').addEventListener('click', () => {
+			document.getElementById('priorityRulesPanel').classList.toggle('d-none');
+		});
+
+		document.getElementById('priorityRuleAddBtn').addEventListener('click', async () => {
+			const type = document.getElementById('priorityRuleType').value;
+			const valueInput = document.getElementById('priorityRuleValue');
+			const value = valueInput.value.trim();
+			if (!value) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/email/priority-rules', {
+					method: 'POST', headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ type, value })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				valueInput.value = '';
+				await loadPriorityRules();
+				document.getElementById('senderCardsSection').classList.remove('d-none');
+				await loadSenderCards();
+			} catch (err) {
+				alert(err.message || 'Unable to add rule.');
+			}
+		});
+
+		async function removePriorityRule(id) {
+			try {
+				const res = await fetch('/api/v1/lilypad/email/priority-rules/' + encodeURIComponent(id), { method: 'DELETE' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadPriorityRules();
+				await loadSenderCards();
+			} catch (err) {
+				alert(err.message || 'Unable to remove rule.');
+			}
+		}
+
+		// --- Create Ticket modal (from a blocker) ----------------------------
+
+		let ticketSourceMessageId = null;
+
+		async function loadTicketAssigneeOptions() {
+			const select = document.getElementById('ticketAssigneeInput');
+			if (select.dataset.loaded) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/users');
+				const result = await res.json();
+				if (!result.success) return;
+				result.data.forEach(u => {
+					const opt = document.createElement('option');
+					opt.value = u._id;
+					opt.textContent = u.fullname;
+					select.appendChild(opt);
+				});
+				select.dataset.loaded = '1';
+			} catch (err) {
+				console.error('Unable to load assignee options:', err);
+			}
+		}
+
+		async function openCreateTicketModal(card, blockerText) {
+			await loadTicketAssigneeOptions();
+			ticketSourceMessageId = card.mostRecentMessageId || null;
+			document.getElementById('ticketTitleInput').value = blockerText.slice(0, 120);
+			document.getElementById('ticketDescriptionInput').value = `${blockerText}\n\nFrom conversation with ${card.displayName}.`;
+			document.getElementById('ticketPriorityInput').value = 'Normal';
+			document.getElementById('ticketAssigneeInput').value = '';
+			bootstrap.Modal.getOrCreateInstance(document.getElementById('createTicketModal')).show();
+		}
+
+		document.getElementById('createTicketSubmitBtn').addEventListener('click', async () => {
+			const title = document.getElementById('ticketTitleInput').value.trim();
+			const description = document.getElementById('ticketDescriptionInput').value.trim();
+			if (!title || !description) { alert('Title and description are required.'); return; }
+			if (!ticketSourceMessageId) { alert('No source email found for this ticket.'); return; }
+
+			const btn = document.getElementById('createTicketSubmitBtn');
+			btn.disabled = true;
+			try {
+				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(ticketSourceMessageId) + '/create-ticket', {
+					method: 'POST', headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						title,
+						description,
+						priority: document.getElementById('ticketPriorityInput').value,
+						assigneeId: document.getElementById('ticketAssigneeInput').value || null
+					})
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				bootstrap.Modal.getInstance(document.getElementById('createTicketModal'))?.hide();
+			} catch (err) {
+				alert(err.message || 'Unable to create ticket.');
+			} finally {
+				btn.disabled = false;
+			}
+		});
 
 		// --- Waiting On monitor -----------------------------------------------
 
