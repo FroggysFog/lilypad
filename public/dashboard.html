@@ -582,6 +582,7 @@
 
 <script>
     let dashCurrentUserId = null;
+    let dashIsAdmin = false;
     let dashLastTickets = [];
     let dashLastTasks = [];
     let dashLastEventsToday = [];
@@ -632,6 +633,7 @@
             const result = await res.json();
             if (!result.success) return;
             dashCurrentUserId = result.data.id;
+            dashIsAdmin = result.data.role === 'admin';
             document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
             document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
             revealAdminNav(result.data.role);
@@ -926,6 +928,12 @@
                 : '<span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-checklist me-1"></i>Task</span>';
             const dueLabel = item.dueDateRaw ? new Date(item.dueDateRaw + 'T00:00:00').toLocaleDateString() : 'No due date';
             const dragAttrs = draggable ? `draggable="true" ondragstart="dashDragStart(event, '${item.feedType}', '${item.id}')"` : '';
+            // The formatted ID (TSK-/LP-) is admin-only troubleshooting
+            // detail - the Task/Ticket pill already tells regular users
+            // what they're looking at.
+            const uidBadge = dashIsAdmin
+                ? `<span class="badge bg-dark text-white fw-bold fs-11 px-2 py-1 rounded-pill" title="Internal reference ID">${escapeHtml(item.uid)}</span>`
+                : '<span></span>';
 
             return `
                 <div class="col-xl-4 col-md-6 d-flex">
@@ -936,7 +944,7 @@
                          onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--bs-primary)';"
                          onmouseout="this.style.transform='none'; this.style.borderColor='var(--bs-border-color, #e2e8f0)';">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="badge bg-dark text-white fw-bold fs-11 px-2 py-1 rounded-pill">${escapeHtml(item.uid)}</span>
+                            ${uidBadge}
                             <div class="d-flex align-items-center gap-1">
                                 ${typeBadge}
                                 <span class="badge bg-soft-${priorityClass} text-${priorityClass} fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(item.priority)}</span>
@@ -977,7 +985,7 @@
                         <input type="checkbox" class="form-check-input" title="Mark complete" onchange="dashQuickComplete('${item.feedType}', '${item.id}')">
                     </td>
                     <td>${typeBadge}</td>
-                    <td><span class="badge bg-dark text-white fs-11">${escapeHtml(item.uid)}</span></td>
+                    ${dashIsAdmin ? `<td><span class="badge bg-dark text-white fs-11" title="Internal reference ID">${escapeHtml(item.uid)}</span></td>` : ''}
                     <td>
                         <a href="${item.href}" class="text-dark fw-semibold text-decoration-none fs-13">${escapeHtml(item.title)}</a>
                     </td>
@@ -1005,7 +1013,7 @@
                         <tr>
                             <th></th>
                             <th>Type</th>
-                            <th>ID</th>
+                            ${dashIsAdmin ? '<th>ID</th>' : ''}
                             <th>Title</th>
                             <th>Priority</th>
                             <th>Status</th>
