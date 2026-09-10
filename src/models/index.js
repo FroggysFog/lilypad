@@ -16,6 +16,12 @@ const LilyPadCartOrder = require('./lilypadCartOrder')
 const LilyPadCalendarEvent = require('./lilypadCalendarEvent')
 const LilyPadMicrosoftAccount = require('./lilypadMicrosoftAccount')
 const LilyPadRolePermission = require('./lilypadRolePermission')
+const LilyPadEmailCache = require('./lilypadEmailCache')
+const LilyPadEmailSyncState = require('./lilypadEmailSyncState')
+const LilyPadContactInteractionScore = require('./lilypadContactInteractionScore')
+const LilyPadSuggestedTask = require('./lilypadSuggestedTask')
+const LilyPadErpEntityLink = require('./lilypadErpEntityLink')
+const LilyPadAwaitingResponse = require('./lilypadAwaitingResponse')
 
 module.exports = {
   LilyPadTicket,
@@ -35,5 +41,11 @@ module.exports = {
   LilyPadCartOrder,
   LilyPadCalendarEvent,
   LilyPadMicrosoftAccount,
-  LilyPadRolePermission
+  LilyPadRolePermission,
+  LilyPadEmailCache,
+  LilyPadEmailSyncState,
+  LilyPadContactInteractionScore,
+  LilyPadSuggestedTask,
+  LilyPadErpEntityLink,
+  LilyPadAwaitingResponse
 }

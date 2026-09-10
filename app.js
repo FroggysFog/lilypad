@@ -53,6 +53,9 @@ function launchServer (db) {
 
       const { startLeadProspectorRecoverySweep } = require('./src/services/leadProspectorScheduler')
       startLeadProspectorRecoverySweep(winston)
+
+      const { startEmailSyncScheduler } = require('./src/services/microsoftEmailSyncService')
+      startEmailSyncScheduler(winston)
     })
   })
 }

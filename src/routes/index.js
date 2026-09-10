@@ -53,6 +53,13 @@ function mainRoutes(router, controllers) {
   router.get('/api/v1/lilypad/email/messages', requireLoginApi, controllers.microsoftEmail.getMessages)
   router.get('/api/v1/lilypad/email/messages/:id', requireLoginApi, controllers.microsoftEmail.getMessageById)
 
+  // AI Email Triage Module, stage 1: local cache + delta sync engine.
+  // The webhook is intentionally NOT behind requireLoginApi - Graph
+  // calls it directly with no session, and is verified per-notification
+  // via clientState instead (see microsoftEmailSyncService.js).
+  router.post('/api/v1/lilypad/email/sync-webhook', controllers.microsoftEmail.syncWebhook)
+  router.post('/api/v1/lilypad/email/sync-now', requireLoginApi, controllers.microsoftEmail.triggerSync)
+
   // Salesforce integration (used by past-due-payments.html)
   router.get('/auth/salesforce/connect', requireLogin, controllers.salesforceAuth.connect)
   router.get('/auth/salesforce/callback', requireLogin, controllers.salesforceAuth.callback)
