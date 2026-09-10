@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Meta Tags -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Email | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="LilyPad ERP - Enterprise Resource Planning and Workflow Suite">
+	<meta name="robots" content="index, follow">
+
+	<!-- Favicon -->
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+
+	<!-- Apple Icon -->
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+
+	<!-- Theme Config Js -->
+	<script src="assets/js/theme-script.js"></script>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+	<!-- Tabler Icon CSS -->
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+
+	<!-- Simplebar CSS -->
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+
+	<!-- Main CSS -->
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+
+	<style>
+		#emailListPane { max-height: 70vh; overflow-y: auto; }
+		.email-row { cursor: pointer; border-left: 3px solid transparent; }
+		.email-row:hover { background: rgba(var(--bs-primary-rgb), 0.05); }
+		.email-row.active { background: rgba(var(--bs-primary-rgb), 0.08); border-left-color: var(--bs-primary); }
+		.email-row.unread .email-subject { font-weight: 700; color: var(--bs-dark, #1e293b); }
+		.email-row .email-preview { color: #94a3b8; }
+		#emailReaderFrame { width: 100%; height: 60vh; border: none; }
+	</style>
+</head>
+
+<body>
+
+	<!-- Begin Wrapper -->
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar">
+						<i class="ti ti-menu-deep fs-24"></i>
+					</a>
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2">
+						<i class="ti ti-arrow-bar-to-right"></i>
+					</button>
+				</div>
+
+				<div class="d-flex align-items-center">
+					<div class="header-item d-none d-sm-flex me-2">
+						<button class="topbar-link btn topbar-link" id="light-dark-mode" type="button">
+							<i class="ti ti-moon fs-16"></i>
+						</button>
+					</div>
+
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);" class="topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex" alt="user-image">
+							<span class="online text-success"><i class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42" alt="Img">
+								<div class="ms-2">
+									<p class="fw-medium text-dark mb-0 topbar-user-name">User</p>
+									<span class="d-block fs-13 topbar-user-role">Role</span>
+								</div>
+							</div>
+							<a href="profile-settings.html" class="dropdown-item">
+								<i class="ti ti-user-circle me-1 align-middle"></i>
+								<span class="align-middle">Profile Settings</span>
+							</a>
+							<div class="pt-2 mt-2 border-top">
+								<a href="javascript:void(0);" onclick="doLogout()" class="dropdown-item text-danger">
+									<i class="ti ti-logout me-1 fs-17 align-middle"></i>
+									<span class="align-middle">Sign Out</span>
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+			<div class="sidebar-logo">
+				<div>
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:30px; height:30px; font-size:15px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span class="text-primary">ERP</span></span>
+					</a>
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:16px;">
+							<i class="ti ti-leaf"></i>
+						</div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn">
+					<i class="ti ti-arrow-bar-to-left"></i>
+				</button>
+				<button class="sidebar-close">
+					<i class="ti ti-x align-middle"></i>
+				</button>
+			</div>
+
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu"></div>
+			</div>
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<div class="page-wrapper">
+			<div class="content pb-0">
+
+				<!-- Page Header -->
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-3 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark">Email</h4>
+						<p class="text-muted fs-13 mb-0">Your connected Outlook inbox, pulled straight into LilyPad.</p>
+					</div>
+					<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="emailRefreshBtn">
+						<i class="ti ti-refresh me-1"></i> Refresh
+					</button>
+				</div>
+
+				<!-- Microsoft Connection Banner -->
+				<div class="card border-0 shadow-sm rounded-3 mb-3" id="msConnectionCard">
+					<div class="card-body py-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+						<div class="d-flex align-items-center gap-2">
+							<i class="ti ti-brand-windows fs-18 text-primary"></i>
+							<span class="fs-13" id="msConnectionText">Checking Microsoft connection...</span>
+						</div>
+						<div id="msConnectionActions"></div>
+					</div>
+				</div>
+
+				<div id="emailApp" style="display:none;">
+					<div class="row g-3">
+						<div class="col-lg-5 col-xl-4">
+							<div class="card border-0 shadow-sm rounded-3">
+								<div class="card-header bg-transparent border-bottom py-2">
+									<ul class="nav nav-pills gap-1" id="emailFolderTabs">
+										<li class="nav-item">
+											<button type="button" class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" data-folder="inbox">Inbox</button>
+										</li>
+										<li class="nav-item">
+											<button type="button" class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" data-folder="sent">Sent</button>
+										</li>
+									</ul>
+								</div>
+								<div id="emailListPane">
+									<!-- Message rows -->
+								</div>
+								<div class="card-footer bg-light border-top py-2 px-3 text-center">
+									<button type="button" class="btn btn-sm btn-outline-secondary" id="emailLoadMoreBtn">Load more</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-lg-7 col-xl-8">
+							<div class="card border-0 shadow-sm rounded-3 h-100">
+								<div class="card-body" id="emailReaderPane">
+									<div class="text-center py-5 text-muted">
+										<i class="ti ti-mail-opened fs-36"></i>
+										<p class="fs-13 mb-0 mt-2">Select a message to read it.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Start Footer -->
+				<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
+					<p class="mb-md-0 mb-1">Copyright &copy;
+						<script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.
+					</p>
+				</footer>
+				<!-- End Footer -->
+			</div>
+		</div>
+	</div>
+	<!-- End Wrapper -->
+
+	<!-- Bootstrap Core JS -->
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<!-- Simplebar JS -->
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<!-- Main JS -->
+	<script src="assets/js/lilypad-nav.js"></script>
+	<script src="assets/js/script.js"></script>
+	<script src="assets/js/lilypad-notifications.js"></script>
+	<script src="assets/js/lilypad-teams-chat.js"></script>
+
+	<script>
+		let emailCurrentFolder = 'inbox';
+		let emailSkip = 0;
+		let emailMessages = [];
+		let emailActiveId = null;
+		const EMAIL_PAGE_SIZE = 25;
+
+		function escapeHtml(str) {
+			if (str === null || str === undefined) return '';
+			return String(str)
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#39;');
+		}
+
+		function timeAgo(iso) {
+			if (!iso) return '';
+			const diffMs = Date.now() - new Date(iso).getTime();
+			const mins = Math.round(diffMs / 60000);
+			if (mins < 1) return 'just now';
+			if (mins < 60) return mins + 'm ago';
+			const hours = Math.round(mins / 60);
+			if (hours < 24) return hours + 'h ago';
+			const days = Math.round(hours / 24);
+			if (days < 7) return days + 'd ago';
+			return new Date(iso).toLocaleDateString();
+		}
+
+		async function loadMicrosoftStatus() {
+			const textEl = document.getElementById('msConnectionText');
+			const actionsEl = document.getElementById('msConnectionActions');
+			const appEl = document.getElementById('emailApp');
+			try {
+				const res = await fetch('/api/v1/lilypad/calendar/microsoft/status');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				const status = result.data;
+
+				if (!status.configured) {
+					textEl.textContent = 'Microsoft 365 sync is not configured on the server yet.';
+					actionsEl.innerHTML = '';
+					appEl.style.display = 'none';
+				} else if (status.connected) {
+					textEl.innerHTML = `Connected as <strong>${escapeHtml(status.msEmail)}</strong>`;
+					actionsEl.innerHTML = '';
+					appEl.style.display = '';
+					loadEmailList();
+				} else {
+					textEl.textContent = "Your Microsoft account isn't connected yet - connect it to pull in your inbox.";
+					actionsEl.innerHTML = '<a href="/auth/microsoft-calendar/connect" class="btn btn-sm btn-primary"><i class="ti ti-brand-windows me-1"></i>Connect Microsoft 365</a>';
+					appEl.style.display = 'none';
+				}
+			} catch (err) {
+				textEl.textContent = 'Unable to check Microsoft connection status.';
+				console.error('loadMicrosoftStatus failed:', err);
+			}
+		}
+
+		function emailRowMarkup(msg) {
+			const fromName = (msg.from && (msg.from.name || msg.from.address)) || 'Unknown sender';
+			const unreadClass = msg.isRead ? '' : 'unread';
+			const activeClass = msg.id === emailActiveId ? 'active' : '';
+			return `
+				<div class="email-row p-3 border-bottom ${unreadClass} ${activeClass}" data-id="${msg.id}">
+					<div class="d-flex align-items-center justify-content-between mb-1">
+						<span class="fs-13 email-subject text-dark text-truncate">${escapeHtml(fromName)}</span>
+						<span class="fs-11 text-muted flex-shrink-0 ms-2">${escapeHtml(timeAgo(msg.receivedDateTime))}</span>
+					</div>
+					<div class="fs-13 email-subject text-dark text-truncate mb-1">${escapeHtml(msg.subject)}</div>
+					<div class="fs-12 email-preview text-truncate">${escapeHtml(msg.bodyPreview)}</div>
+				</div>
+			`;
+		}
+
+		function renderEmailList(append) {
+			const pane = document.getElementById('emailListPane');
+			const html = emailMessages.map(emailRowMarkup).join('') || '<div class="text-center text-muted fs-13 py-4">No messages here.</div>';
+			pane.innerHTML = html;
+			pane.querySelectorAll('.email-row').forEach(row => {
+				row.addEventListener('click', () => openEmail(row.dataset.id));
+			});
+		}
+
+		async function loadEmailList(reset = true) {
+			if (reset) { emailSkip = 0; emailMessages = []; }
+			const pane = document.getElementById('emailListPane');
+			pane.innerHTML = '<div class="text-center text-muted fs-13 py-4"><span class="spinner-border spinner-border-sm me-1"></span> Loading...</div>';
+			try {
+				const params = new URLSearchParams({ folder: emailCurrentFolder, skip: emailSkip });
+				const res = await fetch('/api/v1/lilypad/email/messages?' + params.toString());
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				emailMessages = reset ? result.data : emailMessages.concat(result.data);
+				document.getElementById('emailLoadMoreBtn').style.display = result.data.length < EMAIL_PAGE_SIZE ? 'none' : '';
+				renderEmailList();
+			} catch (err) {
+				pane.innerHTML = '<div class="text-center text-danger fs-13 py-4">' + escapeHtml(err.message) + '</div>';
+			}
+		}
+
+		async function openEmail(id) {
+			emailActiveId = id;
+			renderEmailList();
+			const reader = document.getElementById('emailReaderPane');
+			reader.innerHTML = '<div class="text-center text-muted py-5"><span class="spinner-border spinner-border-sm me-1"></span> Loading message...</div>';
+			try {
+				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(id));
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				const msg = result.data;
+				const fromLine = (msg.from && (msg.from.name ? `${msg.from.name} &lt;${escapeHtml(msg.from.address)}&gt;` : escapeHtml(msg.from.address))) || 'Unknown sender';
+				const toLine = (msg.toRecipients || []).map(r => r.name || r.address).join(', ');
+
+				reader.innerHTML = `
+					<h5 class="fw-bold mb-2">${escapeHtml(msg.subject)}</h5>
+					<div class="fs-13 text-muted mb-1"><strong class="text-dark">From:</strong> ${fromLine}</div>
+					<div class="fs-13 text-muted mb-2"><strong class="text-dark">To:</strong> ${escapeHtml(toLine)}</div>
+					<div class="fs-12 text-muted mb-3 pb-3 border-bottom">${escapeHtml(new Date(msg.receivedDateTime).toLocaleString())}</div>
+					<div id="emailReaderBodyWrap"></div>
+				`;
+
+				const wrap = document.getElementById('emailReaderBodyWrap');
+				if (msg.bodyHtml) {
+					const iframe = document.createElement('iframe');
+					iframe.id = 'emailReaderFrame';
+					iframe.setAttribute('sandbox', ''); // no scripts, no same-origin - fully inert
+					wrap.appendChild(iframe);
+					iframe.srcdoc = msg.bodyHtml;
+				} else {
+					wrap.innerHTML = '<pre class="fs-13" style="white-space:pre-wrap; font-family:inherit;">' + escapeHtml(msg.bodyText || '') + '</pre>';
+				}
+
+				// Mark read locally without a full reload of the list.
+				const m = emailMessages.find(x => x.id === id);
+				if (m) m.isRead = true;
+			} catch (err) {
+				reader.innerHTML = '<div class="text-danger fs-13">' + escapeHtml(err.message) + '</div>';
+			}
+		}
+
+		document.getElementById('emailFolderTabs').addEventListener('click', (e) => {
+			const btn = e.target.closest('button[data-folder]');
+			if (!btn) return;
+			document.querySelectorAll('#emailFolderTabs .nav-link').forEach(b => b.classList.remove('active'));
+			btn.classList.add('active');
+			emailCurrentFolder = btn.dataset.folder;
+			emailActiveId = null;
+			document.getElementById('emailReaderPane').innerHTML = '<div class="text-center py-5 text-muted"><i class="ti ti-mail-opened fs-36"></i><p class="fs-13 mb-0 mt-2">Select a message to read it.</p></div>';
+			loadEmailList();
+		});
+
+		document.getElementById('emailRefreshBtn').addEventListener('click', () => loadEmailList());
+		document.getElementById('emailLoadMoreBtn').addEventListener('click', () => {
+			emailSkip += EMAIL_PAGE_SIZE;
+			loadEmailList(false);
+		});
+
+		async function loadMe() {
+			try {
+				const res = await fetch('/api/v1/lilypad/account/me');
+				const result = await res.json();
+				if (!result.success) return;
+				document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
+				document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
+			} catch (err) {
+				console.error('Unable to load current user:', err);
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', async function () {
+			await loadMe();
+			await loadMicrosoftStatus();
+		});
+	</script>
+</body>
+
+</html>

@@ -17,7 +17,7 @@ const LilyPadMicrosoftAccount = require('../models/lilypadMicrosoftAccount')
 
 const AUTHORITY = 'https://login.microsoftonline.com'
 const GRAPH = 'https://graph.microsoft.com/v1.0'
-const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite']
+const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read']
 
 function getConfig () {
   return {
@@ -221,5 +221,9 @@ module.exports = {
   getEventsForUser,
   createEventForUser,
   updateEventForUser,
-  deleteEventForUser
+  deleteEventForUser,
+  // Shared per-user Graph token plumbing - reused by microsoftEmailService
+  // so mail doesn't need its own OAuth connect flow or token storage; it's
+  // the same Microsoft 365 connection, just a different Graph endpoint.
+  graphRequestForUser
 }

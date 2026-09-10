@@ -47,6 +47,12 @@ function mainRoutes(router, controllers) {
   router.put('/api/v1/lilypad/calendar/events/:id', requireLoginApi, controllers.lilypadCalendar.updateEvent)
   router.delete('/api/v1/lilypad/calendar/events/:id', requireLoginApi, controllers.lilypadCalendar.deleteEvent)
 
+  // Microsoft Email (Outlook) - reuses the same per-user Microsoft 365
+  // connection as the Calendar integration above (same connect/status
+  // endpoints), just a different Graph resource (Mail.Read).
+  router.get('/api/v1/lilypad/email/messages', requireLoginApi, controllers.microsoftEmail.getMessages)
+  router.get('/api/v1/lilypad/email/messages/:id', requireLoginApi, controllers.microsoftEmail.getMessageById)
+
   // Salesforce integration (used by past-due-payments.html)
   router.get('/auth/salesforce/connect', requireLogin, controllers.salesforceAuth.connect)
   router.get('/auth/salesforce/callback', requireLogin, controllers.salesforceAuth.callback)

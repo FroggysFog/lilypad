@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>Teams Chat | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="noindex, nofollow">
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+	<link rel="stylesheet" href="assets/css/style.css">
+	<style>
+		html, body { height: 100%; }
+		body { display: flex; flex-direction: column; background: #fff; }
+	</style>
+</head>
+
+<body class="p-3">
+	<div class="d-flex align-items-center justify-content-between mb-2">
+		<h6 class="fw-bold mb-0 d-flex align-items-center gap-2"><i class="ti ti-brand-teams text-primary"></i> Teams Chat</h6>
+		<span class="fs-12 text-muted" id="popStatus">Checking connection...</span>
+	</div>
+
+	<div id="popDisconnected" class="text-center py-4">
+		<i class="ti ti-brand-teams fs-36 text-primary"></i>
+		<h6 class="fw-bold mt-2">Connect Microsoft Teams</h6>
+		<p class="text-muted fs-13">Connect the shared Microsoft account to view and send Teams chat messages.</p>
+		<a class="btn btn-primary btn-sm" href="/auth/microsoft/connect" target="_blank"><i class="ti ti-plug-connected me-1"></i> Connect Teams</a>
+	</div>
+
+	<div id="popConnected" class="d-flex flex-column flex-fill" style="display:none; min-height:0;">
+		<select id="popChatSelect" class="form-select form-select-sm mb-2"></select>
+		<div id="popMessages" class="border rounded-2 p-2 mb-2 flex-fill" style="overflow-y:auto; background:#f8fafc; min-height:0;"></div>
+		<form id="popSendForm" class="input-group">
+			<input id="popMessageInput" class="form-control" placeholder="Write a Teams message..." autocomplete="off" required>
+			<button class="btn btn-primary" type="submit"><i class="ti ti-send"></i><span class="visually-hidden">Send message</span></button>
+		</form>
+	</div>
+
+	<script>
+		function escapeHtml(value) {
+			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+			});
+		}
+
+		var initialChatId = new URLSearchParams(window.location.search).get('chatId') || '';
+
+		async function checkStatus() {
+			var statusEl = document.getElementById('popStatus');
+			try {
+				var res = await fetch('/api/microsoft-teams/status');
+				var result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to check Teams status');
+				var connected = result.data.connected;
+				document.getElementById('popDisconnected').style.display = connected ? 'none' : 'block';
+				document.getElementById('popConnected').style.display = connected ? 'flex' : 'none';
+				statusEl.textContent = connected ? 'Connected' : 'Not connected';
+				if (connected) loadChats();
+			} catch (err) {
+				statusEl.textContent = err.message;
+			}
+		}
+
+		async function loadChats() {
+			var select = document.getElementById('popChatSelect');
+			try {
+				var res = await fetch('/api/microsoft-teams/chats');
+				var result = await res.json();
+				if (!res.ok || !result.success) throw new Error(result.error || 'Unable to load Teams chats');
+				select.innerHTML = result.data.map(function (chat) {
+					return '<option value="' + chat.id + '">' + escapeHtml(chat.topic || chat.chatType || 'Teams conversation') + '</option>';
+				}).join('');
+				var startId = (initialChatId && result.data.some(function (c) { return c.id === initialChatId; })) ? initialChatId : (result.data[0] && result.data[0].id);
+				if (startId) {
+					select.value = startId;
+					await loadMessages(startId);
+				} else {
+					document.getElementById('popMessages').innerHTML = '<p class="text-muted fs-13 mb-0">No Teams conversations found.</p>';
+				}
+			} catch (err) {
+				document.getElementById('popMessages').innerHTML = '<p class="text-danger fs-13 mb-0">' + escapeHtml(err.message) + '</p>';
+			}
+		}
+
+		async function loadMessages(chatId) {
+			if (!chatId) return;
+			var container = document.getElementById('popMessages');
+			try {
+				var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(chatId) + '/messages');
+				var result = await res.json();
+				if (!res.ok || !result.success) throw new Error(result.error || 'Unable to load Teams messages');
+				container.innerHTML = result.data.map(function (message) {
+					var from = (message.from && message.from.user && message.from.user.displayName) || 'Teams user';
+					var body = (message.body && message.body.content) || '';
+					return '<div class="mb-3"><strong class="fs-12">' + escapeHtml(from) + '</strong><div class="fs-13 mt-1">' + escapeHtml(body) + '</div></div>';
+				}).join('') || '<p class="text-muted fs-13 mb-0">No messages in this conversation.</p>';
+				container.scrollTop = container.scrollHeight;
+			} catch (err) {
+				container.innerHTML = '<p class="text-danger fs-13 mb-0">' + escapeHtml(err.message) + '</p>';
+			}
+		}
+
+		document.getElementById('popChatSelect').addEventListener('change', function (e) { loadMessages(e.target.value); });
+
+		document.getElementById('popSendForm').addEventListener('submit', async function (event) {
+			event.preventDefault();
+			var chatId = document.getElementById('popChatSelect').value;
+			var input = document.getElementById('popMessageInput');
+			var content = input.value.trim();
+			if (!chatId || !content) return;
+			try {
+				var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(chatId) + '/messages', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ content: content })
+				});
+				var result = await res.json();
+				if (!res.ok || !result.success) throw new Error(result.error || 'Unable to send Teams message');
+				input.value = '';
+				loadMessages(chatId);
+			} catch (err) {
+				alert(err.message);
+			}
+		});
+
+		checkStatus();
+	</script>
+</body>
+
+</html>

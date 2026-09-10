@@ -17,6 +17,7 @@ const Controllers = {
   microsoftTeams: require('./microsoftTeams'),
   microsoftCalendarAuth: require('./microsoftCalendarAuth'),
   lilypadCalendar: require('./lilypadCalendar'),
+  microsoftEmail: require('./microsoftEmail'),
   salesforceAuth: require('./salesforceAuth'),
   salesforceExplorer: require('./salesforceExplorer'),
   cartAuth: require('./cartAuth')
