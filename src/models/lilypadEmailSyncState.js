@@ -15,7 +15,7 @@ const COLLECTION = 'lilypad_email_sync_state'
 const syncStateSchema = new Schema(
   {
     owner: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', required: true },
-    folder: { type: String, enum: ['inbox', 'sentitems'], required: true },
+    folder: { type: String, enum: ['inbox', 'sentitems', 'archive'], required: true },
     deltaLink: { type: String, default: '' },
     lastSyncedAt: { type: Date, default: null },
     lastSyncError: { type: String, default: '' },

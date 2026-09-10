@@ -52,6 +52,18 @@ function mainRoutes(router, controllers) {
   // endpoints), just a different Graph resource (Mail.Read).
   router.get('/api/v1/lilypad/email/messages', requireLoginApi, controllers.microsoftEmail.getMessages)
   router.get('/api/v1/lilypad/email/messages/:id', requireLoginApi, controllers.microsoftEmail.getMessageById)
+  router.get('/api/v1/lilypad/email/messages/:id/thread', requireLoginApi, controllers.microsoftEmail.getThread)
+  router.post('/api/v1/lilypad/email/messages/:id/reply', requireLoginApi, controllers.microsoftEmail.reply)
+  router.post('/api/v1/lilypad/email/messages/:id/forward', requireLoginApi, controllers.microsoftEmail.forward)
+  router.post('/api/v1/lilypad/email/messages/:id/move', requireLoginApi, controllers.microsoftEmail.moveMessage)
+  router.delete('/api/v1/lilypad/email/messages/:id', requireLoginApi, controllers.microsoftEmail.deleteMessage)
+
+  // Stage 2: compose/drafts - AI Email Triage Module.
+  router.post('/api/v1/lilypad/email/drafts', requireLoginApi, controllers.microsoftEmail.createDraft)
+  router.patch('/api/v1/lilypad/email/drafts/:id', requireLoginApi, controllers.microsoftEmail.updateDraft)
+  router.delete('/api/v1/lilypad/email/drafts/:id', requireLoginApi, controllers.microsoftEmail.discardDraft)
+  router.post('/api/v1/lilypad/email/drafts/:id/attachments', requireLoginApi, controllers.microsoftEmail.attachmentUploadMiddleware, controllers.microsoftEmail.addAttachment)
+  router.post('/api/v1/lilypad/email/drafts/:id/send', requireLoginApi, controllers.microsoftEmail.sendDraft)
 
   // AI Email Triage Module, stage 1: local cache + delta sync engine.
   // The webhook is intentionally NOT behind requireLoginApi - Graph

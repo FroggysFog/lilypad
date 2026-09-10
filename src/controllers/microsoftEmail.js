@@ -1,14 +1,27 @@
+const multer = require('multer')
+const xss = require('xss')
 const microsoftEmailService = require('../services/microsoftEmailService')
 const microsoftEmailSyncService = require('../services/microsoftEmailSyncService')
 
+// Attachments only ever need to live in memory long enough to
+// base64-encode and hand to Graph - there's no reason to write them to
+// our own disk first (Graph/Outlook is the permanent store here, unlike
+// ticket attachments which LilyPad itself hosts).
+const attachmentUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
+
 const controller = {}
+const VALID_FOLDERS = ['inbox', 'sent', 'archive', 'drafts']
+
+function cleanHtml (html) {
+  return xss(String(html || ''))
+}
 
 /**
- * GET /api/v1/lilypad/email/messages?folder=inbox|sent&skip=0
+ * GET /api/v1/lilypad/email/messages?folder=inbox|sent|archive|drafts&skip=0
  */
 controller.getMessages = async function (req, res) {
   try {
-    const folder = req.query.folder === 'sent' ? 'sent' : 'inbox'
+    const folder = VALID_FOLDERS.includes(req.query.folder) ? req.query.folder : 'inbox'
     const skip = parseInt(req.query.skip, 10) || 0
     const data = await microsoftEmailService.getMessages(req.user._id, folder, { top: 25, skip })
     return res.status(200).json({ success: true, data })
@@ -27,6 +40,154 @@ controller.getMessageById = async function (req, res) {
     const data = await microsoftEmailService.getMessageById(req.user._id, req.params.id)
     microsoftEmailService.markAsRead(req.user._id, req.params.id).catch(() => {})
     return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/email/messages/:id/thread
+ */
+controller.getThread = async function (req, res) {
+  try {
+    const message = await microsoftEmailService.getMessageById(req.user._id, req.params.id)
+    const data = await microsoftEmailService.getThread(req.user._id, message.conversationId)
+    return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/drafts
+ */
+controller.createDraft = async function (req, res) {
+  try {
+    const { subject, bodyHtml, toRecipients, ccRecipients } = req.body
+    const id = await microsoftEmailService.createDraft(req.user._id, {
+      subject: subject ? String(subject).trim() : '',
+      bodyHtml: cleanHtml(bodyHtml),
+      toRecipients,
+      ccRecipients
+    })
+    return res.status(201).json({ success: true, data: { id } })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * PATCH /api/v1/lilypad/email/drafts/:id
+ * Auto-save target - the composer debounces keystrokes into this.
+ */
+controller.updateDraft = async function (req, res) {
+  try {
+    const { subject, bodyHtml, toRecipients, ccRecipients } = req.body
+    await microsoftEmailService.updateDraft(req.user._id, req.params.id, {
+      subject: subject !== undefined ? String(subject).trim() : undefined,
+      bodyHtml: bodyHtml !== undefined ? cleanHtml(bodyHtml) : undefined,
+      toRecipients,
+      ccRecipients
+    })
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/email/drafts/:id
+ */
+controller.discardDraft = async function (req, res) {
+  try {
+    await microsoftEmailService.discardDraft(req.user._id, req.params.id)
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/drafts/:id/attachments
+ * attachmentUploadMiddleware (attachmentUpload.single('file')) runs
+ * first and populates req.file.
+ */
+controller.attachmentUploadMiddleware = attachmentUpload.single('file')
+
+controller.addAttachment = async function (req, res) {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: 'No file uploaded.' })
+    await microsoftEmailService.addAttachmentToDraft(req.user._id, req.params.id, req.file)
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(err.statusCode || 502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/drafts/:id/send
+ */
+controller.sendDraft = async function (req, res) {
+  try {
+    await microsoftEmailService.sendDraft(req.user._id, req.params.id)
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/messages/:id/reply    { comment, replyAll? }
+ */
+controller.reply = async function (req, res) {
+  try {
+    await microsoftEmailService.replyToMessage(req.user._id, req.params.id, {
+      comment: cleanHtml(req.body.comment),
+      replyAll: Boolean(req.body.replyAll)
+    })
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/messages/:id/forward   { comment, toRecipients }
+ */
+controller.forward = async function (req, res) {
+  try {
+    if (!Array.isArray(req.body.toRecipients) || !req.body.toRecipients.length) {
+      return res.status(400).json({ success: false, error: 'At least one recipient is required.' })
+    }
+    await microsoftEmailService.forwardMessage(req.user._id, req.params.id, {
+      comment: cleanHtml(req.body.comment),
+      toRecipients: req.body.toRecipients
+    })
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * DELETE /api/v1/lilypad/email/messages/:id
+ */
+controller.deleteMessage = async function (req, res) {
+  try {
+    await microsoftEmailService.deleteMessage(req.user._id, req.params.id)
+    return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/messages/:id/move   { destination: 'archive'|'inbox' }
+ */
+controller.moveMessage = async function (req, res) {
+  try {
+    await microsoftEmailService.moveMessage(req.user._id, req.params.id, req.body.destination)
+    return res.status(200).json({ success: true })
   } catch (err) {
     return res.status(502).json({ success: false, error: err.message })
   }

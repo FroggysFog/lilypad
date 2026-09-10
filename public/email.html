@@ -40,7 +40,14 @@
 		.email-row.active { background: rgba(var(--bs-primary-rgb), 0.08); border-left-color: var(--bs-primary); }
 		.email-row.unread .email-subject { font-weight: 700; color: var(--bs-dark, #1e293b); }
 		.email-row .email-preview { color: #94a3b8; }
-		#emailReaderFrame { width: 100%; height: 60vh; border: none; }
+		.thread-body-frame { width: 100%; height: 320px; border: none; }
+		.thread-item.is-collapsed .thread-body { display: none; }
+		.thread-item-header { cursor: pointer; background: #f8fafc; }
+		.rich-editor { min-height: 140px; max-height: 320px; overflow-y: auto; }
+		.rich-editor:empty::before { content: attr(data-placeholder); color: #94a3b8; }
+		.rte-toolbar button { border: none; background: none; padding: 4px 8px; border-radius: 4px; }
+		.rte-toolbar button:hover { background: #e9ecef; }
+		#emailReplyBody:empty::before { content: attr(data-placeholder); color: #94a3b8; }
 	</style>
 </head>
 
@@ -137,9 +144,14 @@
 						<h4 class="mb-1 fw-bold text-dark">Email</h4>
 						<p class="text-muted fs-13 mb-0">Your connected Outlook inbox, pulled straight into LilyPad.</p>
 					</div>
-					<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="emailRefreshBtn">
-						<i class="ti ti-refresh me-1"></i> Refresh
-					</button>
+					<div class="d-flex align-items-center gap-2">
+						<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="emailRefreshBtn">
+							<i class="ti ti-refresh me-1"></i> Refresh
+						</button>
+						<button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" id="emailComposeBtn">
+							<i class="ti ti-edit me-1"></i> Compose
+						</button>
+					</div>
 				</div>
 
 				<!-- Microsoft Connection Banner -->
@@ -164,6 +176,12 @@
 										</li>
 										<li class="nav-item">
 											<button type="button" class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" data-folder="sent">Sent</button>
+										</li>
+										<li class="nav-item">
+											<button type="button" class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" data-folder="drafts">Drafts</button>
+										</li>
+										<li class="nav-item">
+											<button type="button" class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" data-folder="archive">Archive</button>
 										</li>
 									</ul>
 								</div>
@@ -201,6 +219,50 @@
 	</div>
 	<!-- End Wrapper -->
 
+	<!-- Compose Modal -->
+	<div class="modal fade" id="composeModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-lg modal-dialog-centered">
+			<div class="modal-content border-0 shadow-lg">
+				<div class="modal-header py-3 px-4 border-bottom bg-light">
+					<h5 class="modal-title fw-bold mb-0"><i class="ti ti-edit text-primary me-1"></i> New Message</h5>
+					<button type="button" class="btn-close" id="composeCloseBtn"></button>
+				</div>
+				<div class="modal-body p-4">
+					<div class="mb-2">
+						<input type="text" id="composeTo" class="form-control form-control-sm" placeholder="To: name@company.com, another@company.com" list="erpUserEmails">
+					</div>
+					<div class="mb-2">
+						<input type="text" id="composeCc" class="form-control form-control-sm" placeholder="Cc (optional)" list="erpUserEmails">
+					</div>
+					<datalist id="erpUserEmails"></datalist>
+					<div class="mb-2">
+						<input type="text" id="composeSubject" class="form-control form-control-sm" placeholder="Subject">
+					</div>
+					<div class="rte-toolbar border rounded-top bg-light px-2 py-1 d-flex align-items-center gap-1">
+						<button type="button" data-cmd="bold" title="Bold"><i class="ti ti-bold"></i></button>
+						<button type="button" data-cmd="italic" title="Italic"><i class="ti ti-italic"></i></button>
+						<button type="button" data-cmd="underline" title="Underline"><i class="ti ti-underline"></i></button>
+						<span class="vr mx-1"></span>
+						<button type="button" data-cmd="insertUnorderedList" title="Bullet list"><i class="ti ti-list"></i></button>
+						<button type="button" data-cmd="insertOrderedList" title="Numbered list"><i class="ti ti-list-numbers"></i></button>
+						<span class="vr mx-1"></span>
+						<button type="button" id="composeLinkBtn" title="Insert link"><i class="ti ti-link"></i></button>
+					</div>
+					<div id="composeBody" class="rich-editor form-control border-top-0 rounded-top-0" contenteditable="true" data-placeholder="Write your message..."></div>
+					<div class="mt-2">
+						<input type="file" id="composeAttachmentInput" class="form-control form-control-sm" multiple>
+						<div id="composeAttachmentList" class="fs-12 text-muted mt-1"></div>
+					</div>
+					<div class="fs-11 text-muted mt-2" id="composeSaveStatus">&nbsp;</div>
+				</div>
+				<div class="modal-footer border-top py-2 px-4">
+					<button type="button" class="btn btn-sm btn-outline-danger me-auto" id="composeDiscardBtn"><i class="ti ti-trash me-1"></i> Discard</button>
+					<button type="button" class="btn btn-sm btn-primary px-4" id="composeSendBtn"><i class="ti ti-send me-1"></i> Send</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<!-- Bootstrap Core JS -->
 	<script src="assets/js/bootstrap.bundle.min.js"></script>
 	<!-- Simplebar JS -->
@@ -216,6 +278,9 @@
 		let emailSkip = 0;
 		let emailMessages = [];
 		let emailActiveId = null;
+		let currentThreadMessages = [];
+		let replyMode = null; // 'reply' | 'replyAll' | 'forward'
+		let composeDraftId = null;
 		const EMAIL_PAGE_SIZE = 25;
 
 		function escapeHtml(str) {
@@ -272,7 +337,10 @@
 		}
 
 		function emailRowMarkup(msg) {
-			const fromName = (msg.from && (msg.from.name || msg.from.address)) || 'Unknown sender';
+			const isDraft = emailCurrentFolder === 'drafts';
+			const fromName = isDraft
+				? 'To: ' + ((msg.toRecipients || []).map(r => r.name || r.address).join(', ') || '(no recipient yet)')
+				: (msg.from && (msg.from.name || msg.from.address)) || 'Unknown sender';
 			const unreadClass = msg.isRead ? '' : 'unread';
 			const activeClass = msg.id === emailActiveId ? 'active' : '';
 			return `
@@ -287,12 +355,15 @@
 			`;
 		}
 
-		function renderEmailList(append) {
+		function renderEmailList() {
 			const pane = document.getElementById('emailListPane');
 			const html = emailMessages.map(emailRowMarkup).join('') || '<div class="text-center text-muted fs-13 py-4">No messages here.</div>';
 			pane.innerHTML = html;
 			pane.querySelectorAll('.email-row').forEach(row => {
-				row.addEventListener('click', () => openEmail(row.dataset.id));
+				row.addEventListener('click', () => {
+					if (emailCurrentFolder === 'drafts') openComposeModal({ draftId: row.dataset.id });
+					else openEmail(row.dataset.id);
+				});
 			});
 		}
 
@@ -313,43 +384,203 @@
 			}
 		}
 
+		function resetReaderPane() {
+			document.getElementById('emailReaderPane').innerHTML = '<div class="text-center py-5 text-muted"><i class="ti ti-mail-opened fs-36"></i><p class="fs-13 mb-0 mt-2">Select a message to read it.</p></div>';
+		}
+
+		function removeFromListAndReset(id) {
+			emailMessages = emailMessages.filter(m => m.id !== id);
+			renderEmailList();
+			resetReaderPane();
+		}
+
+		// --- Reading pane: full conversation thread, not just one message ---
+
+		function renderMessageBodyInto(container, msg) {
+			if (msg.bodyHtml) {
+				const iframe = document.createElement('iframe');
+				iframe.className = 'thread-body-frame';
+				iframe.setAttribute('sandbox', ''); // no scripts, no same-origin - fully inert
+				container.appendChild(iframe);
+				iframe.srcdoc = msg.bodyHtml;
+			} else {
+				const pre = document.createElement('pre');
+				pre.className = 'fs-13 mb-0';
+				pre.style.cssText = 'white-space:pre-wrap; font-family:inherit;';
+				pre.textContent = msg.bodyText || '';
+				container.appendChild(pre);
+			}
+		}
+
 		async function openEmail(id) {
 			emailActiveId = id;
+			currentThreadMessages = [];
+			replyMode = null;
 			renderEmailList();
 			const reader = document.getElementById('emailReaderPane');
 			reader.innerHTML = '<div class="text-center text-muted py-5"><span class="spinner-border spinner-border-sm me-1"></span> Loading message...</div>';
 			try {
-				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(id));
+				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(id) + '/thread');
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error);
-				const msg = result.data;
-				const fromLine = (msg.from && (msg.from.name ? `${msg.from.name} &lt;${escapeHtml(msg.from.address)}&gt;` : escapeHtml(msg.from.address))) || 'Unknown sender';
-				const toLine = (msg.toRecipients || []).map(r => r.name || r.address).join(', ');
 
-				reader.innerHTML = `
-					<h5 class="fw-bold mb-2">${escapeHtml(msg.subject)}</h5>
-					<div class="fs-13 text-muted mb-1"><strong class="text-dark">From:</strong> ${fromLine}</div>
-					<div class="fs-13 text-muted mb-2"><strong class="text-dark">To:</strong> ${escapeHtml(toLine)}</div>
-					<div class="fs-12 text-muted mb-3 pb-3 border-bottom">${escapeHtml(new Date(msg.receivedDateTime).toLocaleString())}</div>
-					<div id="emailReaderBodyWrap"></div>
-				`;
-
-				const wrap = document.getElementById('emailReaderBodyWrap');
-				if (msg.bodyHtml) {
-					const iframe = document.createElement('iframe');
-					iframe.id = 'emailReaderFrame';
-					iframe.setAttribute('sandbox', ''); // no scripts, no same-origin - fully inert
-					wrap.appendChild(iframe);
-					iframe.srcdoc = msg.bodyHtml;
+				if (result.data.length) {
+					currentThreadMessages = result.data;
 				} else {
-					wrap.innerHTML = '<pre class="fs-13" style="white-space:pre-wrap; font-family:inherit;">' + escapeHtml(msg.bodyText || '') + '</pre>';
+					// No conversationId match found (rare - very old mail
+					// without one, or a live-fetched message not yet synced) -
+					// fall back to just the single message.
+					const soloRes = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(id));
+					const soloResult = await soloRes.json();
+					if (!soloResult.success) throw new Error(soloResult.error);
+					currentThreadMessages = [soloResult.data];
 				}
+				renderThread();
 
-				// Mark read locally without a full reload of the list.
 				const m = emailMessages.find(x => x.id === id);
 				if (m) m.isRead = true;
 			} catch (err) {
 				reader.innerHTML = '<div class="text-danger fs-13">' + escapeHtml(err.message) + '</div>';
+			}
+		}
+
+		function renderThread() {
+			const reader = document.getElementById('emailReaderPane');
+			const latest = currentThreadMessages[currentThreadMessages.length - 1];
+			const isArchiveFolder = emailCurrentFolder === 'archive';
+
+			const itemsHtml = currentThreadMessages.map((msg, idx) => {
+				const isLast = idx === currentThreadMessages.length - 1;
+				const fromLabel = (msg.from && (msg.from.name || msg.from.address)) || 'You';
+				return `
+					<div class="thread-item border rounded-3 mb-2 ${isLast ? '' : 'is-collapsed'}" data-thread-idx="${idx}">
+						<div class="thread-item-header p-2 px-3 d-flex align-items-center justify-content-between rounded-3">
+							<div class="d-flex align-items-center gap-2" style="min-width:0;">
+								<strong class="fs-13 text-truncate">${escapeHtml(fromLabel)}</strong>
+								<span class="fs-11 text-muted flex-shrink-0">${escapeHtml(msg.receivedDateTime ? new Date(msg.receivedDateTime).toLocaleString() : '')}</span>
+							</div>
+							<i class="ti ti-chevron-down"></i>
+						</div>
+						<div class="thread-body p-3" data-thread-body="${idx}"></div>
+					</div>
+				`;
+			}).join('');
+
+			reader.innerHTML = `
+				<div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom flex-wrap gap-2">
+					<h5 class="fw-bold mb-0">${escapeHtml(latest.subject)}</h5>
+					<div class="d-flex align-items-center gap-1">
+						<button type="button" class="btn btn-sm btn-outline-primary" id="emailReplyBtn"><i class="ti ti-arrow-back-up me-1"></i>Reply</button>
+						<button type="button" class="btn btn-sm btn-outline-primary" id="emailReplyAllBtn"><i class="ti ti-arrow-back-up-double me-1"></i>Reply All</button>
+						<button type="button" class="btn btn-sm btn-outline-secondary" id="emailForwardBtn"><i class="ti ti-arrow-forward-up me-1"></i>Forward</button>
+						${isArchiveFolder ? '' : '<button type="button" class="btn btn-sm btn-outline-secondary" id="emailArchiveBtn" title="Archive"><i class="ti ti-archive"></i></button>'}
+						<button type="button" class="btn btn-sm btn-outline-danger" id="emailDeleteBtn" title="Delete"><i class="ti ti-trash"></i></button>
+					</div>
+				</div>
+				<div id="emailThreadItems">${itemsHtml}</div>
+				<div id="emailInlineReplyBar" style="display:none;" class="border-top pt-3 mt-2">
+					<div class="d-flex align-items-center gap-2 mb-2">
+						<span class="badge bg-soft-primary text-primary" id="emailReplyModeLabel">Reply</span>
+						<input type="text" id="emailForwardTo" class="form-control form-control-sm" placeholder="To: name@company.com, ..." style="display:none; max-width:360px;" list="erpUserEmails">
+					</div>
+					<div id="emailReplyBody" class="rich-editor form-control" contenteditable="true" data-placeholder="Write a reply..."></div>
+					<div class="d-flex justify-content-end gap-2 mt-2">
+						<button type="button" class="btn btn-sm btn-light" id="emailReplyCancelBtn">Cancel</button>
+						<button type="button" class="btn btn-sm btn-primary" id="emailReplySendBtn"><i class="ti ti-send me-1"></i> Send</button>
+					</div>
+				</div>
+			`;
+
+			currentThreadMessages.forEach((msg, idx) => {
+				renderMessageBodyInto(reader.querySelector(`[data-thread-body="${idx}"]`), msg);
+			});
+
+			reader.querySelectorAll('.thread-item-header').forEach(header => {
+				header.addEventListener('click', () => header.closest('.thread-item').classList.toggle('is-collapsed'));
+			});
+
+			document.getElementById('emailReplyBtn').addEventListener('click', () => startReply('reply'));
+			document.getElementById('emailReplyAllBtn').addEventListener('click', () => startReply('replyAll'));
+			document.getElementById('emailForwardBtn').addEventListener('click', () => startReply('forward'));
+			document.getElementById('emailReplyCancelBtn').addEventListener('click', () => { document.getElementById('emailInlineReplyBar').style.display = 'none'; });
+			document.getElementById('emailReplySendBtn').addEventListener('click', sendInlineReply);
+			const archiveBtn = document.getElementById('emailArchiveBtn');
+			if (archiveBtn) archiveBtn.addEventListener('click', archiveCurrentEmail);
+			document.getElementById('emailDeleteBtn').addEventListener('click', deleteCurrentEmail);
+		}
+
+		function startReply(mode) {
+			replyMode = mode;
+			const bar = document.getElementById('emailInlineReplyBar');
+			const label = document.getElementById('emailReplyModeLabel');
+			const toInput = document.getElementById('emailForwardTo');
+			const body = document.getElementById('emailReplyBody');
+			label.textContent = mode === 'reply' ? 'Reply' : mode === 'replyAll' ? 'Reply All' : 'Forward';
+			toInput.style.display = mode === 'forward' ? '' : 'none';
+			toInput.value = '';
+			body.innerHTML = '';
+			bar.style.display = '';
+			body.focus();
+		}
+
+		async function sendInlineReply() {
+			const latest = currentThreadMessages[currentThreadMessages.length - 1];
+			const body = document.getElementById('emailReplyBody');
+			const comment = body.innerHTML.trim();
+			if (!comment) return;
+			const sendBtn = document.getElementById('emailReplySendBtn');
+			sendBtn.disabled = true;
+			try {
+				if (replyMode === 'forward') {
+					const toRecipients = document.getElementById('emailForwardTo').value.split(',').map(s => s.trim()).filter(Boolean);
+					if (!toRecipients.length) { alert('Add at least one recipient to forward to.'); sendBtn.disabled = false; return; }
+					const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id) + '/forward', {
+						method: 'POST', headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ comment, toRecipients })
+					});
+					const result = await res.json();
+					if (!result.success) throw new Error(result.error);
+				} else {
+					const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id) + '/reply', {
+						method: 'POST', headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ comment, replyAll: replyMode === 'replyAll' })
+					});
+					const result = await res.json();
+					if (!result.success) throw new Error(result.error);
+				}
+				await loadEmailList();
+				await openEmail(latest.id);
+			} catch (err) {
+				alert(err.message || 'Unable to send.');
+				sendBtn.disabled = false;
+			}
+		}
+
+		async function archiveCurrentEmail() {
+			const latest = currentThreadMessages[currentThreadMessages.length - 1];
+			try {
+				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id) + '/move', {
+					method: 'POST', headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ destination: 'archive' })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				removeFromListAndReset(latest.id);
+			} catch (err) {
+				alert(err.message || 'Unable to archive.');
+			}
+		}
+
+		async function deleteCurrentEmail() {
+			const latest = currentThreadMessages[currentThreadMessages.length - 1];
+			if (!confirm('Delete this message?')) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id), { method: 'DELETE' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				removeFromListAndReset(latest.id);
+			} catch (err) {
+				alert(err.message || 'Unable to delete.');
 			}
 		}
 
@@ -360,7 +591,7 @@
 			btn.classList.add('active');
 			emailCurrentFolder = btn.dataset.folder;
 			emailActiveId = null;
-			document.getElementById('emailReaderPane').innerHTML = '<div class="text-center py-5 text-muted"><i class="ti ti-mail-opened fs-36"></i><p class="fs-13 mb-0 mt-2">Select a message to read it.</p></div>';
+			resetReaderPane();
 			loadEmailList();
 		});
 
@@ -369,6 +600,184 @@
 			emailSkip += EMAIL_PAGE_SIZE;
 			loadEmailList(false);
 		});
+
+		// --- Compose modal (new messages + editing existing drafts) ---------
+
+		function execCmd(cmd) {
+			document.execCommand(cmd, false, null);
+		}
+
+		document.querySelectorAll('.rte-toolbar [data-cmd]').forEach(btn => {
+			btn.addEventListener('mousedown', (e) => e.preventDefault()); // keep the editor's text selection intact
+			btn.addEventListener('click', () => execCmd(btn.dataset.cmd));
+		});
+		document.getElementById('composeLinkBtn').addEventListener('mousedown', (e) => e.preventDefault());
+		document.getElementById('composeLinkBtn').addEventListener('click', () => {
+			const url = prompt('Link URL:');
+			if (url) document.execCommand('createLink', false, url);
+		});
+
+		function resetComposeForm() {
+			composeDraftId = null;
+			document.getElementById('composeTo').value = '';
+			document.getElementById('composeCc').value = '';
+			document.getElementById('composeSubject').value = '';
+			document.getElementById('composeBody').innerHTML = '';
+			document.getElementById('composeAttachmentInput').value = '';
+			document.getElementById('composeAttachmentList').innerHTML = '';
+			document.getElementById('composeSaveStatus').innerHTML = '&nbsp;';
+		}
+
+		async function openComposeModal (opts = {}) {
+			resetComposeForm();
+			if (opts.draftId) {
+				composeDraftId = opts.draftId;
+				document.getElementById('composeSaveStatus').textContent = 'Loading draft...';
+				try {
+					const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(opts.draftId));
+					const result = await res.json();
+					if (!result.success) throw new Error(result.error);
+					const msg = result.data;
+					document.getElementById('composeTo').value = (msg.toRecipients || []).map(r => r.address).join(', ');
+					document.getElementById('composeSubject').value = msg.subject === '(No subject)' ? '' : msg.subject;
+					document.getElementById('composeBody').innerHTML = msg.bodyHtml || '';
+					document.getElementById('composeSaveStatus').innerHTML = '&nbsp;';
+				} catch (err) {
+					document.getElementById('composeSaveStatus').textContent = err.message;
+				}
+			}
+			bootstrap.Modal.getOrCreateInstance(document.getElementById('composeModal')).show();
+		}
+
+		function currentComposeFields() {
+			return {
+				subject: document.getElementById('composeSubject').value.trim(),
+				bodyHtml: document.getElementById('composeBody').innerHTML,
+				toRecipients: document.getElementById('composeTo').value.split(',').map(s => s.trim()).filter(Boolean),
+				ccRecipients: document.getElementById('composeCc').value.split(',').map(s => s.trim()).filter(Boolean)
+			};
+		}
+
+		async function ensureDraftExists() {
+			if (composeDraftId) return composeDraftId;
+			const res = await fetch('/api/v1/lilypad/email/drafts', {
+				method: 'POST', headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(currentComposeFields())
+			});
+			const result = await res.json();
+			if (!result.success) throw new Error(result.error);
+			composeDraftId = result.data.id;
+			return composeDraftId;
+		}
+
+		async function autoSaveDraft() {
+			const fields = currentComposeFields();
+			const hasContent = fields.subject || fields.bodyHtml.replace(/<[^>]+>/g, '').trim() || fields.toRecipients.length;
+			if (!hasContent) return;
+			const statusEl = document.getElementById('composeSaveStatus');
+			try {
+				statusEl.textContent = 'Saving...';
+				if (!composeDraftId) {
+					await ensureDraftExists();
+				} else {
+					const res = await fetch('/api/v1/lilypad/email/drafts/' + encodeURIComponent(composeDraftId), {
+						method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(fields)
+					});
+					const result = await res.json();
+					if (!result.success) throw new Error(result.error);
+				}
+				statusEl.textContent = 'Saved as draft ' + new Date().toLocaleTimeString();
+			} catch (err) {
+				statusEl.textContent = 'Unable to save draft: ' + err.message;
+			}
+		}
+
+		let composeAutoSaveTimer = null;
+		['composeTo', 'composeCc', 'composeSubject'].forEach(id => {
+			document.getElementById(id).addEventListener('input', () => {
+				clearTimeout(composeAutoSaveTimer);
+				composeAutoSaveTimer = setTimeout(autoSaveDraft, 2000);
+			});
+		});
+		document.getElementById('composeBody').addEventListener('input', () => {
+			clearTimeout(composeAutoSaveTimer);
+			composeAutoSaveTimer = setTimeout(autoSaveDraft, 2000);
+		});
+
+		document.getElementById('composeAttachmentInput').addEventListener('change', async (e) => {
+			const files = Array.from(e.target.files || []);
+			if (!files.length) return;
+			const listEl = document.getElementById('composeAttachmentList');
+			try {
+				const draftId = await ensureDraftExists();
+				for (const file of files) {
+					listEl.innerHTML += `<div>Uploading ${escapeHtml(file.name)}...</div>`;
+					const formData = new FormData();
+					formData.append('file', file);
+					const res = await fetch('/api/v1/lilypad/email/drafts/' + encodeURIComponent(draftId) + '/attachments', {
+						method: 'POST', body: formData
+					});
+					const result = await res.json();
+					if (!result.success) throw new Error(result.error);
+				}
+				listEl.innerHTML = files.map(f => `<div><i class="ti ti-paperclip me-1"></i>${escapeHtml(f.name)}</div>`).join('');
+			} catch (err) {
+				listEl.innerHTML += `<div class="text-danger">${escapeHtml(err.message)}</div>`;
+			}
+		});
+
+		document.getElementById('emailComposeBtn').addEventListener('click', () => openComposeModal());
+
+		document.getElementById('composeSendBtn').addEventListener('click', async () => {
+			const fields = currentComposeFields();
+			if (!fields.toRecipients.length) { alert('Add at least one recipient.'); return; }
+			const btn = document.getElementById('composeSendBtn');
+			btn.disabled = true;
+			try {
+				const draftId = await ensureDraftExists();
+				await fetch('/api/v1/lilypad/email/drafts/' + encodeURIComponent(draftId), {
+					method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(fields)
+				});
+				const res = await fetch('/api/v1/lilypad/email/drafts/' + encodeURIComponent(draftId) + '/send', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				bootstrap.Modal.getInstance(document.getElementById('composeModal'))?.hide();
+				if (emailCurrentFolder === 'sent' || emailCurrentFolder === 'drafts') loadEmailList();
+			} catch (err) {
+				alert(err.message || 'Unable to send.');
+			} finally {
+				btn.disabled = false;
+			}
+		});
+
+		async function closeComposeDiscarding() {
+			if (composeDraftId) {
+				try { await fetch('/api/v1/lilypad/email/drafts/' + encodeURIComponent(composeDraftId), { method: 'DELETE' }); } catch (err) {}
+			}
+			bootstrap.Modal.getInstance(document.getElementById('composeModal'))?.hide();
+			if (emailCurrentFolder === 'drafts') loadEmailList();
+		}
+
+		document.getElementById('composeDiscardBtn').addEventListener('click', closeComposeDiscarding);
+		document.getElementById('composeCloseBtn').addEventListener('click', () => {
+			// The X just closes (keeping the draft, like Outlook's own
+			// "close and save" behavior) - Discard is the explicit delete.
+			bootstrap.Modal.getInstance(document.getElementById('composeModal'))?.hide();
+			if (emailCurrentFolder === 'drafts') loadEmailList();
+		});
+
+		async function loadErpUserEmails() {
+			try {
+				const res = await fetch('/api/v1/lilypad/users');
+				const result = await res.json();
+				if (!result.success) return;
+				document.getElementById('erpUserEmails').innerHTML = result.data.map(u => `<option value="${escapeHtml(u.email)}">${escapeHtml(u.fullname)}</option>`).join('');
+			} catch (err) {
+				console.error('Unable to load ERP user directory:', err);
+			}
+		}
 
 		async function loadMe() {
 			try {
@@ -384,6 +793,7 @@
 
 		document.addEventListener('DOMContentLoaded', async function () {
 			await loadMe();
+			await loadErpUserEmails();
 			await loadMicrosoftStatus();
 		});
 	</script>
