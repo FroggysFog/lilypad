@@ -137,9 +137,29 @@ async function graphRequest (method, path, data) {
   return response.data
 }
 
+/**
+ * Untitled 1:1/group chats have no `topic` - Graph leaves it to the
+ * client to build a name from the other members, the way Teams itself
+ * shows "Caitlin and David" or "Caitlin, +2" instead of a blank title.
+ */
+function computeChatDisplayName (chat) {
+  if (chat.topic) return chat.topic
+
+  const others = (chat.members || [])
+    .filter((m) => m.userId !== meId)
+    .map((m) => m.displayName)
+    .filter(Boolean)
+
+  if (!others.length) return chat.chatType === 'oneOnOne' ? 'Direct message' : 'Group chat'
+  if (others.length <= 2) return others.join(' and ')
+  return `${others[0]}, +${others.length - 1}`
+}
+
 async function getChats () {
   const result = await graphRequest('get', '/me/chats?$expand=members&$top=50')
-  return result.value || []
+  const chats = result.value || []
+  chats.forEach((chat) => { chat.displayName = computeChatDisplayName(chat) })
+  return chats
 }
 
 /**

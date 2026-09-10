@@ -13,37 +13,50 @@
 	<style>
 		html, body { height: 100%; }
 		body { display: flex; flex-direction: column; background: #fff; }
+		.lp-teams-chat-row:hover { background: #f3f2f1; }
 	</style>
 </head>
 
-<body class="p-3">
-	<div class="d-flex align-items-center justify-content-between mb-2">
-		<h6 class="fw-bold mb-0 d-flex align-items-center gap-2"><i class="ti ti-brand-teams text-primary"></i> Teams Chat</h6>
-		<span class="fs-12 text-muted" id="popStatus">Checking connection...</span>
+<body class="p-0 d-flex flex-column">
+	<div class="d-flex align-items-center border-bottom p-2 gap-2">
+		<button type="button" class="btn btn-sm btn-light" id="popBackBtn" style="display:none;" title="Back to chats"><i class="ti ti-arrow-left"></i></button>
+		<div class="flex-fill" style="min-width:0;">
+			<h6 class="fw-bold mb-0 d-flex align-items-center gap-2"><i class="ti ti-brand-teams text-primary"></i> <span id="popHeaderTitle">Chat</span></h6>
+			<span class="fs-11 text-muted" id="popStatus">Checking connection...</span>
+		</div>
 	</div>
 
-	<div id="popDisconnected" class="text-center py-4">
+	<div id="popDisconnected" class="text-center py-4 px-3">
 		<i class="ti ti-brand-teams fs-36 text-primary"></i>
 		<h6 class="fw-bold mt-2">Connect Microsoft Teams</h6>
 		<p class="text-muted fs-13">Connect the shared Microsoft account to view and send Teams chat messages.</p>
 		<a class="btn btn-primary btn-sm" href="/auth/microsoft/connect" target="_blank"><i class="ti ti-plug-connected me-1"></i> Connect Teams</a>
 	</div>
 
-	<div id="popConnected" class="d-flex flex-column flex-fill" style="display:none; min-height:0;">
-		<select id="popChatSelect" class="form-select form-select-sm mb-2"></select>
-		<div id="popMessages" class="rounded-2 p-2 mb-2 flex-fill" style="overflow-y:auto; background:#f8fafc; min-height:0;"></div>
+	<div id="popListView" class="flex-fill d-flex flex-column" style="display:none; min-height:0;">
+		<div class="px-2 pt-2">
+			<button type="button" class="btn btn-sm btn-light w-100 mb-1" id="popRefreshBtn"><i class="ti ti-refresh me-1"></i> Refresh</button>
+		</div>
+		<div id="popChatList" class="flex-fill px-1" style="overflow-y:auto;"></div>
+	</div>
+
+	<div id="popConversationView" class="flex-fill d-flex flex-column p-3" style="display:none; min-height:0;">
+		<div id="popMessages" class="flex-fill mb-2" style="overflow-y:auto; min-height:0;"></div>
 		<form id="popSendForm" class="input-group">
-			<input id="popMessageInput" class="form-control" placeholder="Write a Teams message..." autocomplete="off" required>
+			<input id="popMessageInput" class="form-control" placeholder="Type a message..." autocomplete="off" required>
 			<button class="btn btn-primary" type="submit"><i class="ti ti-send"></i><span class="visually-hidden">Send message</span></button>
 		</form>
 	</div>
 
 	<script>
 		var meId = null;
+		var currentChats = [];
 		var currentChatId = null;
 		var currentNextLink = null;
 		var loadedMessages = [];
 		var initialChatId = new URLSearchParams(window.location.search).get('chatId') || '';
+
+		var PERSONA_COLORS = ['#c239b3', '#7160e8', '#5b5fc7', '#0078d4', '#038387', '#498205', '#986f0b', '#c93b1d', '#8764b8'];
 
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -70,45 +83,82 @@
 			return String(name || '?').trim().split(/\s+/).slice(0, 2).map(function (p) { return p[0]; }).join('').toUpperCase();
 		}
 
+		function colorForName(name) {
+			var str = String(name || '');
+			var hash = 0;
+			for (var i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) | 0;
+			return PERSONA_COLORS[Math.abs(hash) % PERSONA_COLORS.length];
+		}
+
+		function avatarHtml(name, size) {
+			var px = size || 32;
+			return '<div class="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:' + px + 'px; height:' + px + 'px; font-size:' + Math.round(px * 0.4) + 'px; font-weight:600; background:' + colorForName(name) + ';">' + escapeHtml(initialsFor(name)) + '</div>';
+		}
+
 		function formatTime(iso) {
 			return iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
 		}
 
-		function messageBubbleHtml(message) {
-			if (message.messageType && message.messageType !== 'message') return '';
-			var text = messageBodyToText(message.body && message.body.content);
-			if (!text) return '';
+		function normalizeMessages(messages) {
+			return messages.map(function (m) {
+				if (m.messageType && m.messageType !== 'message') return null;
+				var text = messageBodyToText(m.body && m.body.content);
+				if (!text) return null;
+				var senderId = (m.from && m.from.user && m.from.user.id) || (m.from && m.from.application && m.from.application.id) || 'unknown';
+				var senderName = (m.from && m.from.user && m.from.user.displayName) || (m.from && m.from.application && m.from.application.displayName) || 'Teams user';
+				return {
+					isMine: Boolean(meId) && senderId === meId,
+					senderId: senderId,
+					senderName: senderName,
+					text: text,
+					time: formatTime(m.createdDateTime)
+				};
+			}).filter(Boolean);
+		}
 
-			var isMine = Boolean(meId) && message.from && message.from.user && message.from.user.id === meId;
-			var senderName = (message.from && message.from.user && message.from.user.displayName) ||
-				(message.from && message.from.application && message.from.application.displayName) || 'Teams user';
-			var time = formatTime(message.createdDateTime);
-			var bodyHtml = escapeHtml(text).replace(/\n/g, '<br>');
+		function groupMessages(normalized) {
+			var groups = [];
+			normalized.forEach(function (m) {
+				var last = groups[groups.length - 1];
+				if (last && last.senderId === m.senderId) {
+					last.items.push({ text: m.text, time: m.time });
+				} else {
+					groups.push({ senderId: m.senderId, senderName: m.senderName, isMine: m.isMine, items: [{ text: m.text, time: m.time }] });
+				}
+			});
+			return groups;
+		}
 
-			if (isMine) {
+		function groupHtml(group) {
+			var bg = group.isMine ? 'rgba(var(--bs-primary-rgb), 0.14)' : '#f3f2f1';
+			var bubbles = group.items.map(function (item, idx) {
+				var bodyHtml = escapeHtml(item.text).replace(/\n/g, '<br>');
+				var isLast = idx === group.items.length - 1;
 				return (
-					'<div class="d-flex justify-content-end mb-2">' +
-						'<div style="max-width:80%;">' +
-							'<div class="fs-11 text-muted text-end mb-1">' + escapeHtml(time) + '</div>' +
-							'<div class="p-2 px-3 rounded-3 text-white" style="background:var(--bs-primary); font-size:13px; word-break:break-word;">' + bodyHtml + '</div>' +
-						'</div>' +
-					'</div>'
+					'<div class="p-2 px-3 rounded-3 mb-1 d-inline-block" style="background:' + bg + '; font-size:13px; word-break:break-word; max-width:100%;">' + bodyHtml + '</div>' +
+					(isLast ? '<div class="fs-10 text-muted' + (group.isMine ? ' text-end' : '') + '">' + escapeHtml(item.time) + '</div>' : '')
 				);
+			}).join('');
+
+			if (group.isMine) {
+				return '<div class="d-flex flex-column align-items-end mb-2">' + bubbles + '</div>';
 			}
 
 			return (
 				'<div class="d-flex align-items-start gap-2 mb-2">' +
-					'<div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:28px; height:28px; font-size:11px; font-weight:600;">' + escapeHtml(initialsFor(senderName)) + '</div>' +
-					'<div style="max-width:80%; min-width:0;">' +
-						'<div class="fs-11 text-muted mb-1"><strong class="text-dark">' + escapeHtml(senderName) + '</strong> ' + escapeHtml(time) + '</div>' +
-						'<div class="p-2 px-3 rounded-3" style="background:#e9ecef; font-size:13px; word-break:break-word;">' + bodyHtml + '</div>' +
+					avatarHtml(group.senderName, 28) +
+					'<div class="d-flex flex-column align-items-start" style="max-width:78%; min-width:0;">' +
+						'<div class="fs-11 fw-semibold text-dark mb-1">' + escapeHtml(group.senderName) + '</div>' +
+						bubbles +
 					'</div>' +
 				'</div>'
 			);
 		}
 
 		function renderMessagesHtml(messages) {
-			return messages.map(messageBubbleHtml).filter(Boolean).join('') || '<p class="text-muted fs-13 mb-0 text-center">No messages in this conversation.</p>';
+			var groups = groupMessages(normalizeMessages(messages));
+			if (!groups.length) return '<p class="text-muted fs-13 mb-0 text-center">No messages in this conversation.</p>';
+			return groups.map(groupHtml).join('');
 		}
 
 		function loadOlderButtonHtml() {
@@ -124,6 +174,58 @@
 			return container;
 		}
 
+		function chatListItemHtml(chat) {
+			var name = chat.displayName || 'Teams conversation';
+			var preview = chat.lastMessagePreview ? messageBodyToText(chat.lastMessagePreview.body && chat.lastMessagePreview.body.content) : '';
+			var time = chat.lastMessagePreview ? formatTime(chat.lastMessagePreview.createdDateTime) : '';
+			return (
+				'<div class="d-flex align-items-center gap-2 p-2 lp-teams-chat-row" data-chat-id="' + escapeHtml(chat.id) + '" style="cursor:pointer; border-radius:8px;">' +
+					avatarHtml(name, 38) +
+					'<div class="flex-fill" style="min-width:0;">' +
+						'<div class="d-flex align-items-center justify-content-between">' +
+							'<span class="fs-13 fw-semibold text-dark text-truncate">' + escapeHtml(name) + '</span>' +
+							(time ? '<span class="fs-10 text-muted flex-shrink-0 ms-1">' + escapeHtml(time) + '</span>' : '') +
+						'</div>' +
+						(preview ? '<div class="fs-12 text-muted text-truncate">' + escapeHtml(preview) + '</div>' : '') +
+					'</div>' +
+				'</div>'
+			);
+		}
+
+		function renderChatList() {
+			var container = document.getElementById('popChatList');
+			if (!currentChats.length) {
+				container.innerHTML = '<p class="text-muted fs-13 mb-0 text-center p-3">No Teams conversations found.</p>';
+				return;
+			}
+			container.innerHTML = currentChats.map(chatListItemHtml).join('');
+			container.querySelectorAll('.lp-teams-chat-row').forEach(function (row) {
+				row.addEventListener('click', function () { openConversation(row.dataset.chatId); });
+			});
+		}
+
+		function showListView() {
+			currentChatId = null;
+			document.getElementById('popListView').style.display = 'flex';
+			document.getElementById('popConversationView').style.display = 'none';
+			document.getElementById('popHeaderTitle').textContent = 'Chat';
+			document.getElementById('popBackBtn').style.display = 'none';
+		}
+
+		function showConversationView(chatName) {
+			document.getElementById('popListView').style.display = 'none';
+			document.getElementById('popConversationView').style.display = 'flex';
+			document.getElementById('popHeaderTitle').textContent = chatName;
+			document.getElementById('popBackBtn').style.display = '';
+		}
+
+		async function openConversation(chatId) {
+			var chat = currentChats.filter(function (c) { return c.id === chatId; })[0];
+			var name = (chat && chat.displayName) || 'Teams conversation';
+			showConversationView(name);
+			await loadMessages(chatId);
+		}
+
 		async function checkStatus() {
 			var statusEl = document.getElementById('popStatus');
 			try {
@@ -133,32 +235,32 @@
 				var connected = result.data.connected;
 				meId = result.data.meId || null;
 				document.getElementById('popDisconnected').style.display = connected ? 'none' : 'block';
-				document.getElementById('popConnected').style.display = connected ? 'flex' : 'none';
-				statusEl.textContent = connected ? 'Connected' : 'Not connected';
-				if (connected) loadChats();
+				if (connected) {
+					showListView();
+					statusEl.textContent = 'Connected';
+					await loadChats();
+				} else {
+					document.getElementById('popListView').style.display = 'none';
+					document.getElementById('popConversationView').style.display = 'none';
+					statusEl.textContent = 'Not connected';
+				}
 			} catch (err) {
 				statusEl.textContent = err.message;
 			}
 		}
 
 		async function loadChats() {
-			var select = document.getElementById('popChatSelect');
 			try {
 				var res = await fetch('/api/microsoft-teams/chats');
 				var result = await res.json();
 				if (!res.ok || !result.success) throw new Error(result.error || 'Unable to load Teams chats');
-				select.innerHTML = result.data.map(function (chat) {
-					return '<option value="' + chat.id + '">' + escapeHtml(chat.topic || chat.chatType || 'Teams conversation') + '</option>';
-				}).join('');
-				var startId = (initialChatId && result.data.some(function (c) { return c.id === initialChatId; })) ? initialChatId : (result.data[0] && result.data[0].id);
-				if (startId) {
-					select.value = startId;
-					await loadMessages(startId);
-				} else {
-					document.getElementById('popMessages').innerHTML = '<p class="text-muted fs-13 mb-0">No Teams conversations found.</p>';
+				currentChats = result.data;
+				renderChatList();
+				if (initialChatId && currentChats.some(function (c) { return c.id === initialChatId; })) {
+					await openConversation(initialChatId);
 				}
 			} catch (err) {
-				document.getElementById('popMessages').innerHTML = '<p class="text-danger fs-13 mb-0">' + escapeHtml(err.message) + '</p>';
+				document.getElementById('popChatList').innerHTML = '<p class="text-danger fs-13 mb-0 p-2">' + escapeHtml(err.message) + '</p>';
 			}
 		}
 
@@ -168,6 +270,7 @@
 			currentNextLink = null;
 			loadedMessages = [];
 			var container = document.getElementById('popMessages');
+			container.innerHTML = '<p class="text-muted fs-13 text-center">Loading...</p>';
 			try {
 				var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(chatId) + '/messages');
 				var result = await res.json();
@@ -202,16 +305,16 @@
 			}
 		}
 
-		document.getElementById('popChatSelect').addEventListener('change', function (e) { loadMessages(e.target.value); });
+		document.getElementById('popBackBtn').addEventListener('click', showListView);
+		document.getElementById('popRefreshBtn').addEventListener('click', loadChats);
 
 		document.getElementById('popSendForm').addEventListener('submit', async function (event) {
 			event.preventDefault();
-			var chatId = document.getElementById('popChatSelect').value;
 			var input = document.getElementById('popMessageInput');
 			var content = input.value.trim();
-			if (!chatId || !content) return;
+			if (!currentChatId || !content) return;
 			try {
-				var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(chatId) + '/messages', {
+				var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(currentChatId) + '/messages', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ content: content })
@@ -219,7 +322,7 @@
 				var result = await res.json();
 				if (!res.ok || !result.success) throw new Error(result.error || 'Unable to send Teams message');
 				input.value = '';
-				loadMessages(chatId);
+				loadMessages(currentChatId);
 			} catch (err) {
 				alert(err.message);
 			}
