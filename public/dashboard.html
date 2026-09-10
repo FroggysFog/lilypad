@@ -44,6 +44,23 @@
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="assets/plugins/flatpickr/flatpickr.min.css">
 
+    <style>
+        .dash-drop-zone.dash-drag-over {
+            outline: 2px dashed var(--bs-primary);
+            outline-offset: -4px;
+            background: rgba(var(--bs-primary-rgb), 0.04);
+        }
+        .dash-draggable-card {
+            cursor: grab;
+        }
+        .dash-draggable-card:active {
+            cursor: grabbing;
+        }
+        .dash-event-row {
+            border-left: 3px solid var(--bs-info);
+        }
+    </style>
+
 </head>
 
 <body>
@@ -449,10 +466,36 @@
 					</div>
 				</div>
 
-				<!-- Unified To-Do Widget: Tickets + Tasks (SOLE MAIN WIDGET) -->
-				<div class="row mb-4">
-					<div class="col-12">
-						<div class="card border-0 shadow-sm rounded-3">
+				<!-- My Day / My Queue: split personal triage board -->
+				<div class="row mb-4 g-3">
+
+					<!-- My Day (left half) -->
+					<div class="col-lg-6">
+						<div class="card border-0 shadow-sm rounded-3 h-100 dash-drop-zone" id="dashMyDayZone" ondragover="dashAllowDrop(event)" ondragenter="dashDragEnter(event, 'dashMyDayZone')" ondragleave="dashDragLeave(event, 'dashMyDayZone')" ondrop="dashDropOnMyDay(event)">
+							<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
+								<div class="d-flex align-items-center gap-2">
+									<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">
+										<i class="ti ti-sun-high"></i>
+									</div>
+									<div>
+										<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">My Day</h5>
+										<span class="fs-12 text-muted">Tasks, events &amp; tickets due today - drag items here from My Queue</span>
+									</div>
+								</div>
+							</div>
+
+							<div class="card-body p-3">
+								<div id="dashMyDayEventsContainer" class="mb-2"></div>
+								<div class="row g-3" id="dashMyDayContainer">
+									<!-- Dynamic: today's Tasks + Tickets -->
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- My Queue (right half) -->
+					<div class="col-lg-6">
+						<div class="card border-0 shadow-sm rounded-3 h-100 dash-drop-zone" id="dashMyQueueZone" ondragover="dashAllowDrop(event)" ondragenter="dashDragEnter(event, 'dashMyQueueZone')" ondragleave="dashDragLeave(event, 'dashMyQueueZone')" ondrop="dashDropOnMyQueue(event)">
 							<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
 								<div class="d-flex align-items-center gap-2">
 									<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px; font-size:16px;">
@@ -460,10 +503,10 @@
 									</div>
 									<div>
 										<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">
-											To-Do: Tickets & Tasks
+											My Queue
 											<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold"><i class="ti ti-point-filled"></i> Live Sync</span>
 										</h5>
-										<span class="fs-12 text-muted" id="dashboardFeedSubtitle">Real-time assignments, status movements, and your personal tasks</span>
+										<span class="fs-12 text-muted" id="dashboardFeedSubtitle">Everything else - drag an item onto My Day to schedule it for today</span>
 									</div>
 								</div>
 
@@ -481,31 +524,25 @@
 										<button type="button" class="btn btn-sm btn-outline-secondary active" id="dashViewGridBtn" onclick="setDashboardViewMode('grid')" title="Card view"><i class="ti ti-layout-grid"></i></button>
 										<button type="button" class="btn btn-sm btn-outline-secondary" id="dashViewListBtn" onclick="setDashboardViewMode('list')" title="List view with quick actions"><i class="ti ti-list"></i></button>
 									</div>
-									<a href="tickets.html" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill" style="font-size: 13px;">
-										<i class="ti ti-layout-kanban fs-14"></i>
-										<span>Ticket Suite</span>
-									</a>
-									<a href="tasks.html" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill shadow-sm" style="font-size: 13px;">
-										<i class="ti ti-checklist fs-14"></i>
-										<span>Task Manager</span>
-									</a>
 								</div>
 							</div>
 
 							<div class="card-body p-3">
-								<div class="row g-3" id="dashboardTicketsListContainer">
-									<!-- Dynamic merged Ticket + Task Feed Cards -->
+								<div class="row g-3" id="dashMyQueueContainer">
+									<!-- Dynamic: backlog Tickets + Tasks -->
 								</div>
 							</div>
 
 							<div class="card-footer bg-light border-top py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
 								<span class="fs-12 text-muted"><i class="ti ti-info-circle me-1"></i>Clicking any ticket opens its operational details and checklist in Ticket Suite.</span>
-								<a href="tickets.html" class="fs-13 fw-semibold text-decoration-none text-primary">
-									View All in Ticket Suite &rarr;
-								</a>
+								<div class="d-flex align-items-center gap-3">
+									<a href="tickets.html" class="fs-13 fw-semibold text-decoration-none text-primary">Ticket Suite</a>
+									<a href="tasks.html" class="fs-13 fw-semibold text-decoration-none text-primary">Task Manager</a>
+								</div>
 							</div>
 						</div>
 					</div>
+
 				</div>
 
 			</div>
@@ -547,11 +584,19 @@
     let dashCurrentUserId = null;
     let dashLastTickets = [];
     let dashLastTasks = [];
+    let dashLastEventsToday = [];
+    let dashIsMyOwnView = true;
     let dashStatusPill = 'all'; // 'all' | 'urgent'
     let dashViewMode = 'grid'; // 'grid' | 'list'
     let DASH_USERS = [];
     const DASH_PRIORITY_RANK = { Urgent: 3, High: 2, Normal: 1, Low: 0 };
     const DASH_COMPLETE_STATUS = { ticket: 'Complete', task: 'Done' };
+
+    // Same UTC-based date convention buildMergedFeed() already uses for
+    // dueDateRaw, so the two compare cleanly as plain "YYYY-MM-DD" strings.
+    function dashTodayStr() {
+        return new Date().toISOString().slice(0, 10);
+    }
 
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
@@ -668,6 +713,59 @@
     }
 
     /**
+     * Drag-and-drop between My Day and My Queue. Only Tasks/Tickets are
+     * draggable (calendar events aren't - the user only asked to move
+     * "tasks that are pending... or tickets" between the two panels).
+     * Moving an item just rewrites its dueDate via the same endpoint the
+     * date-picker quick action already uses - today's date to schedule it,
+     * null to send it back to the backlog.
+     */
+    function dashDragStart(ev, feedType, id) {
+        ev.dataTransfer.setData('text/plain', JSON.stringify({ feedType, id }));
+        ev.dataTransfer.effectAllowed = 'move';
+    }
+
+    function dashAllowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function dashDragEnter(ev, zoneId) {
+        ev.preventDefault();
+        document.getElementById(zoneId)?.classList.add('dash-drag-over');
+    }
+
+    function dashDragLeave(ev, zoneId) {
+        if (ev.currentTarget.contains(ev.relatedTarget)) return;
+        document.getElementById(zoneId)?.classList.remove('dash-drag-over');
+    }
+
+    function dashReadDragPayload(ev) {
+        document.getElementById('dashMyDayZone')?.classList.remove('dash-drag-over');
+        document.getElementById('dashMyQueueZone')?.classList.remove('dash-drag-over');
+        const raw = ev.dataTransfer.getData('text/plain');
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch (err) {
+            return null;
+        }
+    }
+
+    async function dashDropOnMyDay(ev) {
+        ev.preventDefault();
+        const payload = dashReadDragPayload(ev);
+        if (!payload) return;
+        await dashQuickDueDate(payload.feedType, payload.id, dashTodayStr());
+    }
+
+    async function dashDropOnMyQueue(ev) {
+        ev.preventDefault();
+        const payload = dashReadDragPayload(ev);
+        if (!payload) return;
+        await dashQuickDueDate(payload.feedType, payload.id, '');
+    }
+
+    /**
      * Quick actions - the whole point is these happen without leaving the
      * dashboard or opening the item's own page. Each just calls the same
      * endpoint the item's own detail view already uses, then reloads the
@@ -733,44 +831,91 @@
         return unassignedOption + options;
     }
 
-    function dashEmptyState() {
+    function dashEmptyState(message) {
         return `
             <div class="col-12 text-center py-5">
                 <div class="rounded-circle d-inline-flex p-3 mb-3" style="background:rgba(var(--bs-primary-rgb), 0.1); color:var(--bs-primary);">
                     <i class="ti ti-checklist fs-36"></i>
                 </div>
-                <h5 class="fw-bold text-dark mb-1">Nothing on your plate</h5>
-                <p class="text-muted fs-13 mb-3" style="max-width: 480px; margin: 0 auto;">No matching tickets or tasks right now.</p>
-                <a href="tickets.html?action=new" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm mt-2">
-                    <i class="ti ti-plus me-1"></i> Create First Ticket
-                </a>
+                <h5 class="fw-bold text-dark mb-1">Nothing here</h5>
+                <p class="text-muted fs-13 mb-0" style="max-width: 480px; margin: 0 auto;">${escapeHtml(message || 'No matching tickets or tasks right now.')}</p>
             </div>
         `;
     }
 
+    /**
+     * Renders both halves of the board. My Day is always the logged-in
+     * user's own items due today (drag targets go straight to their own
+     * plate, so it stays scoped to "me" regardless of the Queue's assignee
+     * filter). My Queue reflects whichever assignee is selected; only when
+     * that's "Me" does it exclude what's already sitting in My Day, so an
+     * item never appears in both panels at once.
+     */
     function renderDashboardFeed() {
-        const container = document.getElementById('dashboardTicketsListContainer');
-        if (!container) return;
+        const myDayContainer = document.getElementById('dashMyDayContainer');
+        const queueContainer = document.getElementById('dashMyQueueContainer');
+        if (!myDayContainer || !queueContainer) return;
 
+        const todayStr = dashTodayStr();
         const merged = buildMergedFeed();
-        const filtered = dashStatusPill === 'urgent'
+        const pillFiltered = dashStatusPill === 'urgent'
             ? merged.filter(t => t.priority === 'Urgent' || t.priority === 'High')
             : merged;
 
-        if (!filtered.length) {
-            container.className = 'row g-3';
-            container.innerHTML = dashEmptyState();
-            return;
-        }
+        renderMyDayEvents();
 
-        if (dashViewMode === 'list') {
-            renderDashboardFeedList(container, filtered);
+        if (dashIsMyOwnView) {
+            const myDayItems = pillFiltered.filter(t => t.dueDateRaw === todayStr);
+            const queueItems = pillFiltered.filter(t => t.dueDateRaw !== todayStr);
+            renderFeedInto(myDayContainer, myDayItems, 'Nothing due today - drag a task or ticket in from My Queue.', true);
+            renderFeedInto(queueContainer, queueItems, 'No matching tickets or tasks right now.', true);
         } else {
-            renderDashboardFeedGrid(container, filtered);
+            myDayContainer.className = 'row g-3';
+            myDayContainer.innerHTML = dashEmptyState('My Day only shows your own items - switch the filter to "Me" to see it.');
+            renderFeedInto(queueContainer, pillFiltered, 'No matching tickets or tasks right now.', false);
         }
     }
 
-    function renderDashboardFeedGrid(container, filtered) {
+    function renderFeedInto(container, items, emptyMessage, draggable) {
+        if (!items.length) {
+            container.className = 'row g-3';
+            container.innerHTML = dashEmptyState(emptyMessage);
+            return;
+        }
+        if (dashViewMode === 'list') {
+            renderDashboardFeedList(container, items, draggable);
+        } else {
+            renderDashboardFeedGrid(container, items, draggable);
+        }
+    }
+
+    function renderMyDayEvents() {
+        const container = document.getElementById('dashMyDayEventsContainer');
+        if (!container) return;
+        if (!dashIsMyOwnView || !dashLastEventsToday.length) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const rows = dashLastEventsToday
+            .slice()
+            .sort((a, b) => new Date(a.start) - new Date(b.start))
+            .map(ev => {
+                const timeLabel = ev.allDay ? 'All day' : new Date(ev.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                return `
+                    <div class="d-flex align-items-center gap-2 dash-event-row rounded-2 px-2 py-2 mb-2 bg-light-subtle" style="cursor:pointer;" onclick="window.location.href='calendar.html'">
+                        <i class="ti ti-calendar-event fs-16 text-info"></i>
+                        <span class="badge bg-soft-info text-info fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(timeLabel)}</span>
+                        <span class="fw-semibold fs-13 text-dark text-truncate">${escapeHtml(ev.title)}</span>
+                        ${ev.location ? `<span class="fs-12 text-muted text-truncate">- ${escapeHtml(ev.location)}</span>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+        container.innerHTML = rows;
+    }
+
+    function renderDashboardFeedGrid(container, filtered, draggable) {
         container.className = 'row g-3';
         container.innerHTML = filtered.slice(0, 9).map(item => {
             const isTicket = item.feedType === 'ticket';
@@ -780,10 +925,12 @@
                 ? '<span class="badge bg-soft-primary text-primary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-ticket me-1"></i>Ticket</span>'
                 : '<span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-checklist me-1"></i>Task</span>';
             const dueLabel = item.dueDateRaw ? new Date(item.dueDateRaw + 'T00:00:00').toLocaleDateString() : 'No due date';
+            const dragAttrs = draggable ? `draggable="true" ondragstart="dashDragStart(event, '${item.feedType}', '${item.id}')"` : '';
 
             return `
                 <div class="col-xl-4 col-md-6 d-flex">
-                    <div class="card flex-fill border rounded-3 p-3 position-relative shadow-none"
+                    <div class="card flex-fill border rounded-3 p-3 position-relative shadow-none ${draggable ? 'dash-draggable-card' : ''}"
+                         ${dragAttrs}
                          style="cursor: pointer; transition: all 0.2s ease; border-color: var(--bs-border-color, #e2e8f0);"
                          onclick="window.location.href='${item.href}'"
                          onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--bs-primary)';"
@@ -813,7 +960,7 @@
         }).join('');
     }
 
-    function renderDashboardFeedList(container, filtered) {
+    function renderDashboardFeedList(container, filtered, draggable) {
         container.className = '';
         const rows = filtered.slice(0, 20).map(item => {
             const isTicket = item.feedType === 'ticket';
@@ -822,9 +969,10 @@
             const typeBadge = isTicket
                 ? '<span class="badge bg-soft-primary text-primary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-ticket me-1"></i>Ticket</span>'
                 : '<span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-checklist me-1"></i>Task</span>';
+            const dragAttrs = draggable ? `draggable="true" ondragstart="dashDragStart(event, '${item.feedType}', '${item.id}')"` : '';
 
             return `
-                <tr>
+                <tr class="${draggable ? 'dash-draggable-card' : ''}" ${dragAttrs}>
                     <td>
                         <input type="checkbox" class="form-check-input" title="Mark complete" onchange="dashQuickComplete('${item.feedType}', '${item.id}')">
                     </td>
@@ -909,9 +1057,9 @@
             // design - see lilypadTask.js), so they only make sense to
             // merge in while viewing your own queue, not a teammate's or
             // "Everyone"'s.
-            const isMyOwnView = assignee === dashCurrentUserId;
+            dashIsMyOwnView = assignee === dashCurrentUserId;
             const subtitleEl = document.getElementById('dashboardFeedSubtitle');
-            if (isMyOwnView) {
+            if (dashIsMyOwnView) {
                 try {
                     const taskRes = await fetch('/api/v1/lilypad/tasks?view=mine');
                     const taskResult = await taskRes.json();
@@ -920,15 +1068,48 @@
                     console.error('Unable to load tasks for dashboard:', taskErr);
                     dashLastTasks = [];
                 }
-                if (subtitleEl) subtitleEl.textContent = 'Real-time assignments, status movements, and your personal tasks';
+                await loadTodaysEvents();
+                if (subtitleEl) subtitleEl.textContent = 'Everything else - drag an item onto My Day to schedule it for today';
             } else {
                 dashLastTasks = [];
-                if (subtitleEl) subtitleEl.textContent = 'Personal tasks are only shown in your own queue - switch the filter above to "Me" to see them.';
+                dashLastEventsToday = [];
+                if (subtitleEl) subtitleEl.textContent = 'Personal tasks and events are only shown in your own queue - switch the filter above to "Me" to see them.';
             }
 
             renderDashboardFeed();
         } catch (err) {
             console.error('Unable to load dashboard:', err);
+        }
+    }
+
+    /**
+     * Calendar events happening today that involve the current user (they
+     * created it or were invited), excluding items whose itemType is
+     * 'task' - those already surface as real Task Manager tasks via the
+     * backend's calendar-task auto-link, so showing them here too would
+     * double them up.
+     */
+    async function loadTodaysEvents() {
+        try {
+            const start = new Date();
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(start.getTime() + 86400000);
+
+            const params = new URLSearchParams({ start: start.toISOString(), end: end.toISOString() });
+            const res = await fetch('/api/v1/lilypad/calendar/events?' + params.toString());
+            const result = await res.json();
+            if (!result.success) { dashLastEventsToday = []; return; }
+
+            dashLastEventsToday = (result.data || []).filter(ev => {
+                if (ev.itemType === 'task') return false;
+                const isMine = ev.source === 'erp'
+                    ? (ev.creatorId === dashCurrentUserId || (ev.attendeeIds || []).includes(dashCurrentUserId))
+                    : ev.ownerId === dashCurrentUserId;
+                return isMine;
+            });
+        } catch (err) {
+            console.error('Unable to load today\'s events for dashboard:', err);
+            dashLastEventsToday = [];
         }
     }
 

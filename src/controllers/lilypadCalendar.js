@@ -6,11 +6,51 @@
  * see lilypadCalendarEvent.js's msSync field for why).
  */
 
-const { LilyPadCalendarEvent, LilyPadAccount } = require('../models')
+const { LilyPadCalendarEvent, LilyPadAccount, LilyPadTask } = require('../models')
 const microsoftCalendarService = require('../services/microsoftCalendarService')
 const xss = require('xss')
 
 const controller = {}
+
+/**
+ * A calendar item marked as a "task" (not a plain event) is expected to
+ * also show up in the real Task Manager, not just sit on the calendar -
+ * so it needs an actual lilypad_tasks record, not just the itemType
+ * label. Creates one the first time an event becomes a task; on later
+ * edits, keeps that task's title/due date in sync with the event
+ * instead of creating a second one.
+ */
+async function syncLinkedTask (event, performedByUser) {
+  if (event.itemType !== 'task') return
+
+  if (event.linkedTask) {
+    const existing = await LilyPadTask.findOne({ _id: event.linkedTask, deleted: false })
+    if (existing) {
+      existing.title = event.title
+      existing.dueDate = event.start
+      await existing.save()
+      return
+    }
+  }
+
+  const task = await LilyPadTask.create({
+    title: event.title,
+    notes: event.description || '',
+    dueDate: event.start,
+    owner: event.createdBy,
+    createdBy: event.createdBy,
+    taggedUsers: event.attendees,
+    history: [{
+      action: 'created',
+      by: performedByUser ? performedByUser._id : null,
+      byName: performedByUser ? performedByUser.fullname : 'System',
+      description: 'Created from a Calendar task'
+    }]
+  })
+
+  event.linkedTask = task._id
+  await event.save()
+}
 
 /**
  * Pushes one saved ERP event out to every distinct connected user among
@@ -67,7 +107,9 @@ controller.getEvents = async function (req, res) {
       allDay: e.allDay,
       itemType: e.itemType,
       ownerName: (e.createdBy && e.createdBy.fullname) || 'Unknown',
+      creatorId: String((e.createdBy && e.createdBy._id) || e.createdBy),
       attendeeNames: (e.attendees || []).map((a) => a.fullname),
+      attendeeIds: (e.attendees || []).map((a) => String(a._id)),
       linkedTask: e.linkedTask,
       linkedTicket: e.linkedTicket,
       editable: String(e.createdBy._id || e.createdBy) === String(req.user._id)
@@ -98,6 +140,7 @@ controller.getEvents = async function (req, res) {
           allDay: msEvent.allDay,
           itemType: 'event',
           ownerName: nameByUserId.get(String(userId)) || 'Unknown',
+          ownerId: String(userId),
           editable: false
         })
       })
@@ -144,6 +187,7 @@ controller.createEvent = async function (req, res) {
     })
 
     await event.save()
+    await syncLinkedTask(event, req.user)
     await syncEventToMicrosoft(event)
 
     return res.status(201).json({ success: true, message: 'Event created.', data: event })
@@ -164,19 +208,21 @@ controller.updateEvent = async function (req, res) {
       return res.status(404).json({ success: false, error: 'Event not found' })
     }
 
-    const { title, description, location, start, end, allDay, attendeeIds } = req.body
+    const { title, description, location, start, end, allDay, itemType, attendeeIds } = req.body
     if (title !== undefined) event.title = xss(String(title).trim())
     if (description !== undefined) event.description = xss(String(description).trim())
     if (location !== undefined) event.location = xss(String(location).trim())
     if (start !== undefined) event.start = new Date(start)
     if (end !== undefined) event.end = new Date(end)
     if (allDay !== undefined) event.allDay = Boolean(allDay)
+    if (itemType !== undefined) event.itemType = itemType === 'task' ? 'task' : 'event'
     if (Array.isArray(attendeeIds)) {
       const found = await LilyPadAccount.find({ _id: { $in: attendeeIds } })
       event.attendees = found.map((a) => a._id)
     }
 
     await event.save()
+    await syncLinkedTask(event, req.user)
 
     // Re-push to Microsoft: update existing synced copies, create new
     // ones for newly-added attendees who are connected.
