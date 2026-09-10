@@ -43,7 +43,8 @@ controller.chats = async (req, res) => {
 
 controller.messages = async (req, res) => {
   try {
-    return res.json({ success: true, data: await microsoftTeams.getMessages(req.params.chatId) })
+    const nextLink = req.query.nextLink ? decodeURIComponent(req.query.nextLink) : null
+    return res.json({ success: true, data: await microsoftTeams.getMessages(req.params.chatId, { nextLink }) })
   } catch (err) {
     return res.status(502).json({ success: false, error: err.message })
   }

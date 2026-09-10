@@ -16,11 +16,106 @@
   'use strict'
 
   var currentChats = []
+  var meId = null
+  var currentChatId = null
+  var currentNextLink = null
+  var loadedMessages = []
 
   function escapeHtml (value) {
     return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]
     })
+  }
+
+  /**
+   * Graph message bodies are HTML ('<p>hi &nbsp;there</p>') - Teams
+   * itself renders that; a plain chat bubble shouldn't. Converts block
+   * breaks to newlines, strips the remaining tags, then decodes entities
+   * via a detached <textarea> (its content model is RCDATA, so this
+   * decodes &nbsp;/&amp;/etc. without ever parsing or executing any
+   * markup) - the result is later passed through escapeHtml() before it
+   * ever reaches real page HTML, so nothing here renders untrusted markup.
+   */
+  function messageBodyToText (html) {
+    var withBreaks = String(html || '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<\/div>/gi, '\n')
+      .replace(/<li[^>]*>/gi, '- ')
+      .replace(/<\/li>/gi, '\n')
+    var stripped = withBreaks.replace(/<[^>]+>/g, '')
+    var ta = document.createElement('textarea')
+    ta.innerHTML = stripped
+    return ta.value.trim()
+  }
+
+  function initialsFor (name) {
+    return String(name || '?').trim().split(/\s+/).slice(0, 2).map(function (p) { return p[0] }).join('').toUpperCase()
+  }
+
+  function formatTime (iso) {
+    return iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''
+  }
+
+  /**
+   * Returns '' for messages with nothing worth showing (system events -
+   * "X added Y to the chat" - come back from Graph as an unexpanded
+   * <systemEventMessage/> placeholder with no real text, and reactions/
+   * edits can leave an empty body) so the caller can filter them out
+   * entirely rather than rendering a blank bubble.
+   */
+  function messageBubbleHtml (message) {
+    if (message.messageType && message.messageType !== 'message') return ''
+    var text = messageBodyToText(message.body && message.body.content)
+    if (!text) return ''
+
+    var isMine = Boolean(meId) && message.from && message.from.user && message.from.user.id === meId
+    var senderName = (message.from && message.from.user && message.from.user.displayName) ||
+      (message.from && message.from.application && message.from.application.displayName) || 'Teams user'
+    var time = formatTime(message.createdDateTime)
+    var bodyHtml = escapeHtml(text).replace(/\n/g, '<br>')
+
+    if (isMine) {
+      return (
+        '<div class="d-flex justify-content-end mb-2">' +
+          '<div style="max-width:80%;">' +
+            '<div class="fs-11 text-muted text-end mb-1">' + escapeHtml(time) + '</div>' +
+            '<div class="p-2 px-3 rounded-3 text-white" style="background:var(--bs-primary); font-size:13px; word-break:break-word;">' + bodyHtml + '</div>' +
+          '</div>' +
+        '</div>'
+      )
+    }
+
+    return (
+      '<div class="d-flex align-items-start gap-2 mb-2">' +
+        '<div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:28px; height:28px; font-size:11px; font-weight:600;">' + escapeHtml(initialsFor(senderName)) + '</div>' +
+        '<div style="max-width:80%; min-width:0;">' +
+          '<div class="fs-11 text-muted mb-1"><strong class="text-dark">' + escapeHtml(senderName) + '</strong> ' + escapeHtml(time) + '</div>' +
+          '<div class="p-2 px-3 rounded-3" style="background:#e9ecef; font-size:13px; word-break:break-word;">' + bodyHtml + '</div>' +
+        '</div>' +
+      '</div>'
+    )
+  }
+
+  function renderMessagesHtml (messages) {
+    return messages.map(messageBubbleHtml).filter(Boolean).join('') || '<p class="text-muted fs-13 mb-0 text-center">No messages in this conversation.</p>'
+  }
+
+  function loadOlderButtonHtml () {
+    if (!currentNextLink) return ''
+    return '<div class="text-center mb-2"><button type="button" class="btn btn-sm btn-outline-secondary" id="lpTeamsLoadOlderBtn">Load older messages</button></div>'
+  }
+
+  function wireLoadOlderButton (container) {
+    var btn = container.querySelector('#lpTeamsLoadOlderBtn')
+    if (btn) btn.addEventListener('click', loadOlderMessages)
+  }
+
+  function renderMessagesPane () {
+    var container = document.getElementById('lpTeamsMessages')
+    container.innerHTML = loadOlderButtonHtml() + renderMessagesHtml(loadedMessages)
+    wireLoadOlderButton(container)
+    return container
   }
 
   function panelMarkup () {
@@ -48,7 +143,7 @@
               '<select id="lpTeamsChatSelect" class="form-select form-select-sm"></select>' +
               '<button type="button" class="btn btn-sm btn-outline-secondary" id="lpTeamsRefreshBtn" title="Refresh chats"><i class="ti ti-refresh"></i></button>' +
             '</div>' +
-            '<div id="lpTeamsMessages" class="border rounded-2 p-2 mb-2 flex-fill" style="overflow-y:auto; background:#f8fafc; min-height:0;"></div>' +
+            '<div id="lpTeamsMessages" class="rounded-2 p-2 mb-2 flex-fill" style="overflow-y:auto; background:#f8fafc; min-height:0;"></div>' +
             '<form id="lpTeamsSendForm" class="input-group">' +
               '<input id="lpTeamsMessageInput" class="form-control" placeholder="Write a Teams message..." autocomplete="off" required>' +
               '<button class="btn btn-primary" type="submit"><i class="ti ti-send"></i><span class="visually-hidden">Send message</span></button>' +
@@ -76,7 +171,14 @@
   function popOut () {
     var chatId = document.getElementById('lpTeamsChatSelect').value
     var url = 'chat-popout.html' + (chatId ? '?chatId=' + encodeURIComponent(chatId) : '')
-    window.open(url, 'lilypadTeamsChatPopout', 'width=420,height=640,resizable=yes,scrollbars=yes')
+    var popup = window.open(url, 'lilypadTeamsChatPopout', 'width=420,height=640,resizable=yes,scrollbars=yes')
+    // Popping out moves the conversation into its own window - closing
+    // the embedded panel avoids showing (and having to keep in sync) the
+    // same conversation in two places at once.
+    if (popup) {
+      var el = document.getElementById('lilypadTeamsChatPanel')
+      window.bootstrap.Offcanvas.getOrCreateInstance(el).hide()
+    }
   }
 
   async function checkStatus () {
@@ -86,6 +188,7 @@
       var result = await res.json()
       if (!result.success) throw new Error(result.error || 'Unable to check Teams status')
       var connected = result.data.connected
+      meId = result.data.meId || null
       document.getElementById('lpTeamsDisconnected').style.display = connected ? 'none' : 'block'
       document.getElementById('lpTeamsConnected').style.display = connected ? 'flex' : 'none'
       statusEl.textContent = connected
@@ -116,19 +219,43 @@
 
   async function loadMessages (chatId) {
     if (!chatId) return
+    currentChatId = chatId
+    currentNextLink = null
+    loadedMessages = []
     var container = document.getElementById('lpTeamsMessages')
     try {
       var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(chatId) + '/messages')
       var result = await res.json()
       if (!res.ok || !result.success) throw new Error(result.error || 'Unable to load Teams messages')
-      container.innerHTML = result.data.map(function (message) {
-        var from = (message.from && message.from.user && message.from.user.displayName) || 'Teams user'
-        var body = (message.body && message.body.content) || ''
-        return '<div class="mb-3"><strong class="fs-12">' + escapeHtml(from) + '</strong><div class="fs-13 mt-1">' + escapeHtml(body) + '</div></div>'
-      }).join('') || '<p class="text-muted fs-13 mb-0">No messages in this conversation.</p>'
+      currentNextLink = result.data.nextLink
+      loadedMessages = result.data.messages
+      renderMessagesPane()
       container.scrollTop = container.scrollHeight
     } catch (err) {
       container.innerHTML = '<p class="text-danger fs-13 mb-0">' + escapeHtml(err.message) + '</p>'
+    }
+  }
+
+  async function loadOlderMessages () {
+    if (!currentChatId || !currentNextLink) return
+    var container = document.getElementById('lpTeamsMessages')
+    var btn = document.getElementById('lpTeamsLoadOlderBtn')
+    if (btn) { btn.disabled = true; btn.textContent = 'Loading...' }
+    try {
+      var params = new URLSearchParams({ nextLink: currentNextLink })
+      var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(currentChatId) + '/messages?' + params.toString())
+      var result = await res.json()
+      if (!res.ok || !result.success) throw new Error(result.error || 'Unable to load older messages')
+      currentNextLink = result.data.nextLink
+      loadedMessages = result.data.messages.concat(loadedMessages)
+      var previousHeight = container.scrollHeight
+      renderMessagesPane()
+      // Keep the view anchored on what was already visible instead of
+      // jumping to the top of the newly-prepended history.
+      container.scrollTop = container.scrollHeight - previousHeight
+    } catch (err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Load older messages' }
+      alert(err.message)
     }
   }
 
@@ -199,6 +326,7 @@
 
   // The one deliberate global: lets a page's own markup (e.g. tickets.html's
   // "Teams Chat" header button) open the same panel via a plain onclick,
-  // without needing its own copy of any of the logic above.
+  // and lets a popped-out chat window (chat-popout.html) call back into
+  // its opener to reopen this panel when the popup window closes.
   window.lilypadOpenTeamsChat = openPanel
 })()

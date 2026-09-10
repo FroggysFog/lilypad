@@ -31,7 +31,7 @@
 
 	<div id="popConnected" class="d-flex flex-column flex-fill" style="display:none; min-height:0;">
 		<select id="popChatSelect" class="form-select form-select-sm mb-2"></select>
-		<div id="popMessages" class="border rounded-2 p-2 mb-2 flex-fill" style="overflow-y:auto; background:#f8fafc; min-height:0;"></div>
+		<div id="popMessages" class="rounded-2 p-2 mb-2 flex-fill" style="overflow-y:auto; background:#f8fafc; min-height:0;"></div>
 		<form id="popSendForm" class="input-group">
 			<input id="popMessageInput" class="form-control" placeholder="Write a Teams message..." autocomplete="off" required>
 			<button class="btn btn-primary" type="submit"><i class="ti ti-send"></i><span class="visually-hidden">Send message</span></button>
@@ -39,13 +39,90 @@
 	</div>
 
 	<script>
+		var meId = null;
+		var currentChatId = null;
+		var currentNextLink = null;
+		var loadedMessages = [];
+		var initialChatId = new URLSearchParams(window.location.search).get('chatId') || '';
+
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
 				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
 			});
 		}
 
-		var initialChatId = new URLSearchParams(window.location.search).get('chatId') || '';
+		// See lilypad-teams-chat.js for why this exists (HTML message
+		// bodies need converting to plain text, not escaping-and-showing).
+		function messageBodyToText(html) {
+			var withBreaks = String(html || '')
+				.replace(/<br\s*\/?>/gi, '\n')
+				.replace(/<\/p>/gi, '\n')
+				.replace(/<\/div>/gi, '\n')
+				.replace(/<li[^>]*>/gi, '- ')
+				.replace(/<\/li>/gi, '\n');
+			var stripped = withBreaks.replace(/<[^>]+>/g, '');
+			var ta = document.createElement('textarea');
+			ta.innerHTML = stripped;
+			return ta.value.trim();
+		}
+
+		function initialsFor(name) {
+			return String(name || '?').trim().split(/\s+/).slice(0, 2).map(function (p) { return p[0]; }).join('').toUpperCase();
+		}
+
+		function formatTime(iso) {
+			return iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+		}
+
+		function messageBubbleHtml(message) {
+			if (message.messageType && message.messageType !== 'message') return '';
+			var text = messageBodyToText(message.body && message.body.content);
+			if (!text) return '';
+
+			var isMine = Boolean(meId) && message.from && message.from.user && message.from.user.id === meId;
+			var senderName = (message.from && message.from.user && message.from.user.displayName) ||
+				(message.from && message.from.application && message.from.application.displayName) || 'Teams user';
+			var time = formatTime(message.createdDateTime);
+			var bodyHtml = escapeHtml(text).replace(/\n/g, '<br>');
+
+			if (isMine) {
+				return (
+					'<div class="d-flex justify-content-end mb-2">' +
+						'<div style="max-width:80%;">' +
+							'<div class="fs-11 text-muted text-end mb-1">' + escapeHtml(time) + '</div>' +
+							'<div class="p-2 px-3 rounded-3 text-white" style="background:var(--bs-primary); font-size:13px; word-break:break-word;">' + bodyHtml + '</div>' +
+						'</div>' +
+					'</div>'
+				);
+			}
+
+			return (
+				'<div class="d-flex align-items-start gap-2 mb-2">' +
+					'<div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:28px; height:28px; font-size:11px; font-weight:600;">' + escapeHtml(initialsFor(senderName)) + '</div>' +
+					'<div style="max-width:80%; min-width:0;">' +
+						'<div class="fs-11 text-muted mb-1"><strong class="text-dark">' + escapeHtml(senderName) + '</strong> ' + escapeHtml(time) + '</div>' +
+						'<div class="p-2 px-3 rounded-3" style="background:#e9ecef; font-size:13px; word-break:break-word;">' + bodyHtml + '</div>' +
+					'</div>' +
+				'</div>'
+			);
+		}
+
+		function renderMessagesHtml(messages) {
+			return messages.map(messageBubbleHtml).filter(Boolean).join('') || '<p class="text-muted fs-13 mb-0 text-center">No messages in this conversation.</p>';
+		}
+
+		function loadOlderButtonHtml() {
+			if (!currentNextLink) return '';
+			return '<div class="text-center mb-2"><button type="button" class="btn btn-sm btn-outline-secondary" id="popLoadOlderBtn">Load older messages</button></div>';
+		}
+
+		function renderMessagesPane() {
+			var container = document.getElementById('popMessages');
+			container.innerHTML = loadOlderButtonHtml() + renderMessagesHtml(loadedMessages);
+			var btn = container.querySelector('#popLoadOlderBtn');
+			if (btn) btn.addEventListener('click', loadOlderMessages);
+			return container;
+		}
 
 		async function checkStatus() {
 			var statusEl = document.getElementById('popStatus');
@@ -54,6 +131,7 @@
 				var result = await res.json();
 				if (!result.success) throw new Error(result.error || 'Unable to check Teams status');
 				var connected = result.data.connected;
+				meId = result.data.meId || null;
 				document.getElementById('popDisconnected').style.display = connected ? 'none' : 'block';
 				document.getElementById('popConnected').style.display = connected ? 'flex' : 'none';
 				statusEl.textContent = connected ? 'Connected' : 'Not connected';
@@ -86,19 +164,41 @@
 
 		async function loadMessages(chatId) {
 			if (!chatId) return;
+			currentChatId = chatId;
+			currentNextLink = null;
+			loadedMessages = [];
 			var container = document.getElementById('popMessages');
 			try {
 				var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(chatId) + '/messages');
 				var result = await res.json();
 				if (!res.ok || !result.success) throw new Error(result.error || 'Unable to load Teams messages');
-				container.innerHTML = result.data.map(function (message) {
-					var from = (message.from && message.from.user && message.from.user.displayName) || 'Teams user';
-					var body = (message.body && message.body.content) || '';
-					return '<div class="mb-3"><strong class="fs-12">' + escapeHtml(from) + '</strong><div class="fs-13 mt-1">' + escapeHtml(body) + '</div></div>';
-				}).join('') || '<p class="text-muted fs-13 mb-0">No messages in this conversation.</p>';
+				currentNextLink = result.data.nextLink;
+				loadedMessages = result.data.messages;
+				renderMessagesPane();
 				container.scrollTop = container.scrollHeight;
 			} catch (err) {
 				container.innerHTML = '<p class="text-danger fs-13 mb-0">' + escapeHtml(err.message) + '</p>';
+			}
+		}
+
+		async function loadOlderMessages() {
+			if (!currentChatId || !currentNextLink) return;
+			var container = document.getElementById('popMessages');
+			var btn = document.getElementById('popLoadOlderBtn');
+			if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+			try {
+				var params = new URLSearchParams({ nextLink: currentNextLink });
+				var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(currentChatId) + '/messages?' + params.toString());
+				var result = await res.json();
+				if (!res.ok || !result.success) throw new Error(result.error || 'Unable to load older messages');
+				currentNextLink = result.data.nextLink;
+				loadedMessages = result.data.messages.concat(loadedMessages);
+				var previousHeight = container.scrollHeight;
+				renderMessagesPane();
+				container.scrollTop = container.scrollHeight - previousHeight;
+			} catch (err) {
+				if (btn) { btn.disabled = false; btn.textContent = 'Load older messages'; }
+				alert(err.message);
 			}
 		}
 
@@ -122,6 +222,20 @@
 				loadMessages(chatId);
 			} catch (err) {
 				alert(err.message);
+			}
+		});
+
+		// This window only exists because someone clicked "pop out" on the
+		// embedded panel, which closes itself at that moment (see popOut()
+		// in lilypad-teams-chat.js) - closing this window should bring that
+		// panel back rather than leaving the conversation just gone.
+		window.addEventListener('beforeunload', function () {
+			try {
+				if (window.opener && !window.opener.closed && window.opener.lilypadOpenTeamsChat) {
+					window.opener.lilypadOpenTeamsChat();
+				}
+			} catch (err) {
+				// Cross-origin or already-gone opener - nothing to do.
 			}
 		});
 

@@ -4,11 +4,17 @@ const crypto = require('crypto')
 const AUTHORITY = 'https://login.microsoftonline.com'
 const GRAPH = 'https://graph.microsoft.com/v1.0'
 const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Chat.ReadWrite', 'ChannelMessage.Read.All', 'ChannelMessage.Send']
+const PAGE_SIZE = 30
 
 let accessToken = null
 let refreshToken = null
 let tokenExpiresAt = 0
 let oauthState = null
+// Whoever's Microsoft identity this shared connection is signed in as -
+// needed so the chat UI can tell "my" messages apart from everyone
+// else's for bubble alignment (see lilypadTeamsChat.js).
+let meId = null
+let meName = null
 
 function getConfig () {
   return {
@@ -30,7 +36,9 @@ function getStatus () {
     configured: isConfigured(),
     connected: Boolean(accessToken || refreshToken),
     redirectUri: config.redirectUri,
-    scopes: SCOPES
+    scopes: SCOPES,
+    meId,
+    meName
   }
 }
 
@@ -71,6 +79,18 @@ async function exchangeCode (code, state) {
 
   setTokens(response.data)
   oauthState = null
+
+  try {
+    const me = await graphRequest('get', '/me?$select=id,displayName')
+    meId = me.id
+    meName = me.displayName
+  } catch (err) {
+    // Non-fatal - the connection still works, just without "is this my
+    // own message" bubble styling until this succeeds (e.g. on a later
+    // call once the token is usable).
+    meId = null
+    meName = null
+  }
 }
 
 function setTokens (tokens) {
@@ -100,11 +120,17 @@ async function ensureAccessToken () {
   return accessToken
 }
 
+/**
+ * `path` may be a relative Graph path ('/chats/...') or a full absolute
+ * URL - the latter is how paginated results continue (Graph hands back
+ * a ready-to-call '@odata.nextLink' rather than a skip token to splice
+ * in yourself).
+ */
 async function graphRequest (method, path, data) {
   const token = await ensureAccessToken()
   const response = await axios({
     method,
-    url: `${GRAPH}${path}`,
+    url: path.startsWith('http') ? path : `${GRAPH}${path}`,
     data,
     headers: { Authorization: `Bearer ${token}` }
   })
@@ -116,10 +142,27 @@ async function getChats () {
   return result.value || []
 }
 
-async function getMessages (chatId) {
+/**
+ * Chat history, newest page first by default. Pass the `nextLink` from
+ * a previous call's result to page further back in history - each page
+ * is reversed to chronological order before returning, so the caller
+ * can just prepend a page's `messages` above what it already has.
+ */
+async function getMessages (chatId, options = {}) {
   if (!chatId) throw new Error('Chat ID is required')
-  const result = await graphRequest('get', `/chats/${encodeURIComponent(chatId)}/messages?$top=50`)
-  return (result.value || []).reverse()
+  // nextLink comes back to us from the client (it round-trips through
+  // the "load older" button) - it must be validated as an actual Graph
+  // URL before use, or a forged value could make the server attach its
+  // Bearer token to a request against an attacker-controlled host.
+  if (options.nextLink && !options.nextLink.startsWith(GRAPH + '/')) {
+    throw new Error('Invalid pagination link')
+  }
+  const url = options.nextLink || `/chats/${encodeURIComponent(chatId)}/messages?$top=${PAGE_SIZE}`
+  const result = await graphRequest('get', url)
+  return {
+    messages: (result.value || []).reverse(),
+    nextLink: result['@odata.nextLink'] || null
+  }
 }
 
 async function sendMessage (chatId, content) {
@@ -133,6 +176,8 @@ function disconnect () {
   accessToken = null
   refreshToken = null
   tokenExpiresAt = 0
+  meId = null
+  meName = null
 }
 
 module.exports = {
