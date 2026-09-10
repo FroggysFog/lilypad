@@ -31,6 +31,7 @@
             document.documentElement.style.setProperty('--bs-primary', hex);
             document.documentElement.style.setProperty('--primary', hex);
             document.documentElement.style.setProperty('--bs-primary-rgb', rgb);
+            document.documentElement.style.setProperty('--primary-rgb', rgb);
         }
     }
 

@@ -59,6 +59,29 @@
         .dash-event-row {
             border-left: 3px solid var(--bs-info);
         }
+        .bg-primary {
+            background-color: var(--bs-primary, var(--primary)) !important;
+            background: var(--bs-primary, var(--primary)) !important;
+        }
+        .btn-primary {
+            background-color: var(--bs-primary, var(--primary)) !important;
+            border-color: var(--bs-primary, var(--primary)) !important;
+        }
+        .btn-outline-primary {
+            border-color: var(--bs-primary, var(--primary)) !important;
+            color: var(--bs-primary, var(--primary)) !important;
+        }
+        .btn-outline-primary:hover {
+            background-color: var(--bs-primary, var(--primary)) !important;
+            border-color: var(--bs-primary, var(--primary)) !important;
+            color: #ffffff !important;
+        }
+        .text-primary {
+            color: var(--bs-primary, var(--primary)) !important;
+        }
+        .border-primary {
+            border-color: var(--bs-primary, var(--primary)) !important;
+        }
     </style>
 
 </head>
@@ -841,6 +864,7 @@
     }
 
     function renderCombinedMyDayAndQueueWidgetHtml() {
+        const isGrid = dashViewMode === 'grid';
         return '<div class="col-12">' +
             '<div class="card border-0 shadow-sm rounded-3 overflow-hidden">' +
                 '<!-- TOP SECTION: MY DAY -->' +
@@ -856,6 +880,13 @@
                                     '<span class="badge bg-soft-primary text-primary fs-11 rounded-pill fw-semibold"><i class="ti ti-target me-1"></i>Today\'s Focus</span>' +
                                 '</h5>' +
                                 '<span class="fs-12 text-muted">Tasks, events &amp; tickets due today &mdash; drag items here from queue below to schedule</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<!-- MOVED TO TOP: LIST / CARD VIEW TOGGLE -->' +
+                        '<div class="d-flex align-items-center gap-2">' +
+                            '<div class="btn-group shadow-sm">' +
+                                '<button type="button" class="btn btn-sm ' + (isGrid ? 'btn-primary text-white active' : 'btn-outline-secondary') + '" id="dashViewGridBtn" onclick="setDashboardViewMode(\'grid\')" title="Card view"><i class="ti ti-layout-grid me-1"></i>Cards</button>' +
+                                '<button type="button" class="btn btn-sm ' + (!isGrid ? 'btn-primary text-white active' : 'btn-outline-secondary') + '" id="dashViewListBtn" onclick="setDashboardViewMode(\'list\')" title="List view"><i class="ti ti-list me-1"></i>List</button>' +
                             '</div>' +
                         '</div>' +
                     '</div>' +
@@ -884,10 +915,6 @@
                                 '<li class="nav-item"><button class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets(\'all\', this)">All</button></li>' +
                                 '<li class="nav-item"><button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets(\'urgent\', this)">Urgent</button></li>' +
                             '</ul>' +
-                            '<div class="btn-group">' +
-                                '<button type="button" class="btn btn-sm btn-outline-secondary active" id="dashViewGridBtn" onclick="setDashboardViewMode(\'grid\')" title="Card view"><i class="ti ti-layout-grid"></i></button>' +
-                                '<button type="button" class="btn btn-sm btn-outline-secondary" id="dashViewListBtn" onclick="setDashboardViewMode(\'list\')" title="List view"><i class="ti ti-list"></i></button>' +
-                            '</div>' +
                         '</div>' +
                     '</div>' +
                     '<div class="row g-3" id="dashMyQueueContainer"></div>' +
@@ -1695,8 +1722,28 @@
 
     function setDashboardViewMode(mode) {
         dashViewMode = mode;
-        document.getElementById('dashViewGridBtn').classList.toggle('active', mode === 'grid');
-        document.getElementById('dashViewListBtn').classList.toggle('active', mode === 'list');
+        const gridBtn = document.getElementById('dashViewGridBtn');
+        const listBtn = document.getElementById('dashViewListBtn');
+        if (gridBtn) {
+            gridBtn.classList.toggle('active', mode === 'grid');
+            if (mode === 'grid') {
+                gridBtn.classList.add('btn-primary', 'text-white');
+                gridBtn.classList.remove('btn-outline-secondary');
+            } else {
+                gridBtn.classList.remove('btn-primary', 'text-white');
+                gridBtn.classList.add('btn-outline-secondary');
+            }
+        }
+        if (listBtn) {
+            listBtn.classList.toggle('active', mode === 'list');
+            if (mode === 'list') {
+                listBtn.classList.add('btn-primary', 'text-white');
+                listBtn.classList.remove('btn-outline-secondary');
+            } else {
+                listBtn.classList.remove('btn-primary', 'text-white');
+                listBtn.classList.add('btn-outline-secondary');
+            }
+        }
         renderDashboardFeed();
     }
 
@@ -2125,6 +2172,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            const tc = JSON.parse(localStorage.getItem('__THEME_CONFIG__') || '{}');
+            const col = tc.customColor || (tc.color && tc.color.color) || document.documentElement.getAttribute('data-color') || 'emerald';
+            if (window.applyThemeColorAccent) window.applyThemeColorAccent(col);
+        } catch(e) {}
         await loadDashboardPreferences();
         await loadMe();
         await loadAssigneeOptions();

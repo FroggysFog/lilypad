@@ -106,7 +106,7 @@ Author URL: https://themeforest.net/user/dreamstechnologies
   --heading-color: #1F2020;
   --border-color: #E2E8F0;
   --body-color: #707070;
-  --primary-rgb: 228, 31, 7;
+  --primary-rgb: 13, 110, 253;
   --secondary-rgb: 255, 162, 1;
   --success-rgb: 26, 190, 23;
   --info-rgb: 47, 128, 237;
@@ -6145,9 +6145,7 @@ Author URL: https://themeforest.net/user/dreamstechnologies
 
 [data-color=primary] {
   --primary: #0d6efd;
-  --primary-rgb: 228,
-  31,
-  7;
+  --primary-rgb: 13, 110, 253;
 }
 
 [data-color=secondary] {
