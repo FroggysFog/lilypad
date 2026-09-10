@@ -667,6 +667,7 @@
             'kpi-in-progress': { label: 'In Progress', icon: 'ti-loader', color: 'primary', id: 'dashKpiInProgress', action: () => goToFilteredTickets('status', 'In Progress') },
             'kpi-urgent': { label: 'Urgent / High', icon: 'ti-alert-triangle', color: 'danger', id: 'dashKpiUrgent', action: () => goToFilteredTickets('priority', 'urgent-high') },
             'kpi-complete': { label: 'Completed', icon: 'ti-circle-check', color: 'secondary', id: 'dashKpiComplete', action: () => goToFilteredTickets('status', 'Complete') },
+            'kpi-suggested-tasks': { label: 'Email AI Tasks', icon: 'ti-bulb', color: 'warning', id: 'dashKpiSuggestedTasks', action: () => window.location.href = 'email.html' },
             'kpi-deals': { label: 'Active Deals ($)', icon: 'ti-currency-dollar', color: 'primary', id: 'dashKpiDeals', action: () => window.location.href = 'opportunities.html' },
             'kpi-orders-shipping': { label: 'Orders to Ship', icon: 'ti-package', color: 'warning', id: 'dashKpiOrdersShipping', action: () => window.location.href = 'orders.html' },
             'kpi-past-due-total': { label: 'Past Due A/R ($)', icon: 'ti-report-money', color: 'danger', id: 'dashKpiPastDue', action: () => window.location.href = 'past-due-payments.html' },
@@ -733,6 +734,12 @@
                 case 'lapsed-customers':
                     html += renderLapsedCustomersWidgetHtml();
                     break;
+                case 'priority-conversations':
+                    html += renderPriorityConversationsWidgetHtml();
+                    break;
+                case 'suggested-tasks':
+                    html += renderSuggestedTasksWidgetHtml();
+                    break;
             }
         });
 
@@ -745,6 +752,8 @@
         if (activeWidgets.includes('past-due-ar')) loadPastDueWidgetData();
         if (activeWidgets.includes('lapsed-customers')) loadLapsedCustomersWidgetData();
         if (activeWidgets.includes('m365-calendar')) loadCalendarWidgetData();
+        if (activeWidgets.includes('priority-conversations')) loadPriorityConversationsWidgetData();
+        if (activeWidgets.includes('suggested-tasks')) loadSuggestedTasksWidgetData();
     }
 
     // =========================================================================
@@ -1025,6 +1034,59 @@
         '</div>';
     }
 
+    let dashSenderCardsByAddress = {};
+    let dashOpenSenderCardAddress = null;
+
+    function renderPriorityConversationsWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-user-star fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">' +
+                                'Priority Conversations' +
+                                '<span class="badge bg-soft-primary text-primary fs-11 rounded-pill fw-semibold" id="dashPriorityCardsCountBadge">0</span>' +
+                            '</h5>' +
+                            '<span class="fs-12 text-muted">Key sender rollups &amp; actionable blockers</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="email.html" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-12">Open Inbox</a>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashPriorityConversationsBody">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading conversations...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderSuggestedTasksWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-warning d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-bulb fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark d-flex align-items-center gap-2">' +
+                                'Suggested Tasks' +
+                                '<span class="badge bg-soft-warning text-warning fs-11 rounded-pill fw-semibold" id="dashSuggestedTasksBadge">0</span>' +
+                            '</h5>' +
+                            '<span class="fs-12 text-muted">AI-extracted action items from incoming emails</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="email.html" class="btn btn-sm btn-outline-warning rounded-pill px-3 fs-12 text-dark">Email Suite</a>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashSuggestedTasksBody" style="max-height:420px; overflow-y:auto;">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading suggestions...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
     // =========================================================================
     // ASYNCHRONOUS WIDGET DATA FETCHERS
     // =========================================================================
@@ -1173,6 +1235,253 @@
             '</div>').join('');
         } catch (err) {
             container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load customer radar.</div>';
+        }
+    }
+
+    async function loadPriorityConversationsWidgetData() {
+        const container = document.getElementById('dashPriorityConversationsBody');
+        const badge = document.getElementById('dashPriorityCardsCountBadge');
+        if (!container) return;
+
+        try {
+            const res = await fetch('/api/v1/lilypad/email/sender-cards');
+            const json = await res.json();
+            const cards = (json && json.success && Array.isArray(json.data)) ? json.data : [];
+
+            if (badge) badge.textContent = cards.length;
+
+            if (!cards.length) {
+                container.innerHTML = '<div class="text-center py-4 text-muted">' +
+                    '<i class="ti ti-mail-check fs-28 text-success d-block mb-2"></i>' +
+                    '<strong class="d-block text-dark fs-14">No Active Priority Threads</strong>' +
+                    '<span class="fs-12">Urgent email conversations and key sender rollups will appear here.</span>' +
+                '</div>';
+                return;
+            }
+
+            dashSenderCardsByAddress = {};
+            cards.forEach(c => { dashSenderCardsByAddress[c.address] = c; });
+
+            if (!dashOpenSenderCardAddress || !dashSenderCardsByAddress[dashOpenSenderCardAddress]) {
+                dashOpenSenderCardAddress = cards[0].address;
+            }
+
+            renderPriorityConversationsDeck(cards);
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-muted fs-12">' +
+                '<i class="ti ti-mail-off fs-20 d-block mb-1 text-warning"></i>Connect Microsoft 365 on the Email page to track priority threads.' +
+            '</div>';
+        }
+    }
+
+    function renderPriorityConversationsDeck(cards) {
+        const container = document.getElementById('dashPriorityConversationsBody');
+        if (!container) return;
+
+        const chipsHtml = '<div class="d-flex flex-wrap gap-1 mb-3">' +
+            cards.map(c => {
+                const isOpen = c.address === dashOpenSenderCardAddress;
+                return '<button type="button" class="btn btn-sm ' + (isOpen ? 'btn-primary text-white shadow-sm' : 'btn-light border text-dark') + ' rounded-pill px-3 py-1 fs-12 fw-semibold d-flex align-items-center gap-2" onclick="selectPrioritySenderCard(\'' + escapeHtml(c.address) + '\')">' +
+                    '<span class="text-truncate" style="max-width:140px;">' + escapeHtml(c.label || c.displayName) + '</span>' +
+                    (c.unreadCount ? '<span class="badge ' + (isOpen ? 'bg-white text-primary' : 'bg-primary text-white') + ' rounded-pill fs-10">' + c.unreadCount + '</span>' : '') +
+                '</button>';
+            }).join('') +
+        '</div>';
+
+        const activeCard = dashSenderCardsByAddress[dashOpenSenderCardAddress] || cards[0];
+        if (!activeCard) {
+            container.innerHTML = chipsHtml;
+            return;
+        }
+
+        const reasonBadge = activeCard.reason === 'keyword' 
+            ? '<span class="badge bg-soft-info text-info fs-10 rounded-pill">keyword match</span>'
+            : (activeCard.reason === 'manual' ? '<span class="badge bg-soft-warning text-warning fs-10 rounded-pill">watched</span>' : '');
+
+        const blockers = activeCard.blockers || [];
+        const blockersHtml = blockers.length ? '<div class="mb-3">' +
+            '<span class="fs-11 fw-bold text-uppercase text-muted d-block mb-2"><i class="ti ti-alert-circle text-danger me-1"></i>Open Action Items / Blockers</span>' +
+            blockers.map(b => {
+                const safeBlocker = escapeHtml(b).replace(/'/g, "\\'");
+                return '<div class="d-flex align-items-start justify-content-between gap-2 p-2 mb-1 rounded bg-light border">' +
+                    '<span class="fs-12 text-dark">&bull; ' + escapeHtml(b) + '</span>' +
+                    '<div class="d-flex align-items-center gap-1 flex-shrink-0">' +
+                        '<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11" onclick="addBlockerAsTask(\'' + escapeHtml(activeCard.address) + '\', \'' + safeBlocker + '\')" title="Turn into task">+ Task</button>' +
+                        '<a href="tickets.html?action=new&title=' + encodeURIComponent(b) + '" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11" title="Log Ticket"><i class="ti ti-ticket"></i></a>' +
+                        '<button type="button" class="btn btn-sm btn-link text-muted p-0 px-1" onclick="declineBlockerItem(\'' + escapeHtml(activeCard.address) + '\', \'' + safeBlocker + '\')" title="Decline"><i class="ti ti-x"></i></button>' +
+                    '</div>' +
+                '</div>';
+            }).join('') +
+        '</div>' : '<div class="text-muted fs-12 mb-3"><i class="ti ti-circle-check text-success me-1"></i>No unresolved blockers in this thread.</div>';
+
+        const quickReplies = activeCard.quickReplies || [];
+        const quickRepliesHtml = quickReplies.length ? '<div class="d-flex flex-wrap gap-1 align-items-center pt-2 border-top">' +
+            '<span class="fs-11 text-muted me-1"><i class="ti ti-sparkles text-primary"></i> Quick Responses:</span>' +
+            quickReplies.map(q => {
+                return '<a href="email.html?to=' + encodeURIComponent(activeCard.address) + '" class="btn btn-sm btn-white border rounded-pill py-0 px-2 fs-11 text-primary shadow-none">' + escapeHtml(q.label) + '</a>';
+            }).join('') +
+        '</div>' : '';
+
+        const cardDetailHtml = '<div class="p-3 border rounded-3 bg-white shadow-sm">' +
+            '<div class="d-flex align-items-center justify-content-between mb-2">' +
+                '<div class="d-flex align-items-center gap-2">' +
+                    '<strong class="fs-13 text-dark">' + escapeHtml(activeCard.displayName) + '</strong>' +
+                    reasonBadge +
+                    (activeCard.unreadCount ? '<span class="badge bg-soft-primary text-primary rounded-pill fs-10">' + activeCard.unreadCount + ' unread</span>' : '') +
+                '</div>' +
+                '<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11" onclick="dismissPrioritySenderCard(\'' + escapeHtml(activeCard.address) + '\')"><i class="ti ti-x me-1"></i>Dismiss</button>' +
+            '</div>' +
+            '<p class="fs-12 text-muted mb-3 lh-sm">' + escapeHtml(activeCard.executiveSummary || 'No recent summary.') + '</p>' +
+            blockersHtml +
+            quickRepliesHtml +
+        '</div>';
+
+        container.innerHTML = chipsHtml + cardDetailHtml;
+    }
+
+    function selectPrioritySenderCard(address) {
+        dashOpenSenderCardAddress = address;
+        const cards = Object.values(dashSenderCardsByAddress);
+        renderPriorityConversationsDeck(cards);
+    }
+
+    async function addBlockerAsTask(address, blockerText) {
+        try {
+            const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/blockers/add-task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ blockerText })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+
+            if (window.LilypadNotifications) {
+                LilypadNotifications.addNotification({
+                    title: 'Action Item Captured',
+                    message: 'Added to Suggested Tasks queue.'
+                });
+            }
+
+            await loadSuggestedTasksWidgetData();
+            await loadPriorityConversationsWidgetData();
+            await loadDashboard();
+        } catch (err) {
+            alert('Unable to capture task: ' + err.message);
+        }
+    }
+
+    async function declineBlockerItem(address, blockerText) {
+        try {
+            const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/blockers/decline', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ blockerText })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+            await loadPriorityConversationsWidgetData();
+        } catch (err) {
+            alert('Unable to decline blocker: ' + err.message);
+        }
+    }
+
+    async function dismissPrioritySenderCard(address) {
+        try {
+            const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/dismiss', {
+                method: 'POST'
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+            dashOpenSenderCardAddress = null;
+            await loadPriorityConversationsWidgetData();
+        } catch (err) {
+            alert('Unable to dismiss card: ' + err.message);
+        }
+    }
+
+    async function loadSuggestedTasksWidgetData() {
+        const container = document.getElementById('dashSuggestedTasksBody');
+        const badge = document.getElementById('dashSuggestedTasksBadge');
+        const kpiCountEl = document.getElementById('dashKpiSuggestedTasks');
+        if (!container) return;
+
+        try {
+            const res = await fetch('/api/v1/lilypad/email/suggested-tasks');
+            const json = await res.json();
+            const suggestions = (json && json.success && Array.isArray(json.data)) ? json.data : [];
+
+            if (badge) badge.textContent = suggestions.length;
+            if (kpiCountEl) kpiCountEl.textContent = suggestions.length;
+
+            if (!suggestions.length) {
+                container.innerHTML = '<div class="text-center py-4 text-muted">' +
+                    '<i class="ti ti-circle-check fs-28 text-success d-block mb-2"></i>' +
+                    '<strong class="d-block text-dark fs-14">All Caught Up!</strong>' +
+                    '<span class="fs-12">No pending AI task suggestions waiting for approval.</span>' +
+                '</div>';
+                return;
+            }
+
+            container.innerHTML = suggestions.map(t => {
+                const dueLabel = t.suggestedDueDate ? new Date(t.suggestedDueDate).toLocaleDateString() : 'No due date';
+                const sourceSubject = (t.sourceEmail && t.sourceEmail.subject) || t.context || 'Email Conversation';
+                return '<div class="d-flex align-items-start justify-content-between gap-2 p-2 mb-2 rounded bg-light border" data-suggestion-id="' + t._id + '">' +
+                    '<div class="text-truncate me-2">' +
+                        '<strong class="d-block text-dark fs-13 text-truncate">' + escapeHtml(t.title) + '</strong>' +
+                        '<div class="fs-11 text-muted text-truncate mt-1">' +
+                            '<i class="ti ti-mail me-1 text-primary"></i>' + escapeHtml(sourceSubject) + ' &middot; <i class="ti ti-calendar me-1"></i>' + escapeHtml(dueLabel) +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="d-flex align-items-center gap-1 flex-shrink-0">' +
+                        '<button type="button" class="btn btn-sm btn-success rounded-pill px-2 py-0 fs-11 fw-semibold d-flex align-items-center gap-1" onclick="approveSuggestedTaskItem(\'' + t._id + '\')" title="Approve & Convert to Task">' +
+                            '<i class="ti ti-check"></i> Approve' +
+                        '</button>' +
+                        '<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0 fs-11" onclick="dismissSuggestedTaskItem(\'' + t._id + '\')" title="Dismiss">' +
+                            '<i class="ti ti-x"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-muted fs-12">' +
+                '<i class="ti ti-mail-off fs-20 d-block mb-1 text-warning"></i>Connect Microsoft 365 on the Email page to triage suggestions.' +
+            '</div>';
+        }
+    }
+
+    async function approveSuggestedTaskItem(id) {
+        try {
+            const res = await fetch('/api/v1/lilypad/email/suggested-tasks/' + encodeURIComponent(id) + '/approve', {
+                method: 'POST'
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+
+            if (window.LilypadNotifications) {
+                LilypadNotifications.addNotification({
+                    title: 'Task Approved',
+                    message: 'Created new task in your Command Center queue.'
+                });
+            }
+
+            await loadSuggestedTasksWidgetData();
+            await loadDashboard();
+        } catch (err) {
+            alert('Unable to approve task: ' + err.message);
+        }
+    }
+
+    async function dismissSuggestedTaskItem(id) {
+        try {
+            const res = await fetch('/api/v1/lilypad/email/suggested-tasks/' + encodeURIComponent(id) + '/dismiss', {
+                method: 'POST'
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+
+            await loadSuggestedTasksWidgetData();
+        } catch (err) {
+            alert('Unable to dismiss suggestion: ' + err.message);
         }
     }
 

@@ -79,6 +79,24 @@ const ALL_WIDGETS = [
     allowedRoles: ['admin', 'finance', 'accounting', 'operations']
   },
   {
+    id: 'priority-conversations',
+    title: 'Priority Conversations',
+    description: 'AI email sender cards, rollup summaries, open blockers, and quick responses',
+    category: 'Communications',
+    icon: 'ti-user-star',
+    defaultWidth: 6,
+    allowedRoles: ['*']
+  },
+  {
+    id: 'suggested-tasks',
+    title: 'Suggested Email Tasks',
+    description: 'AI-extracted action items from incoming emails awaiting triage & approval',
+    category: 'Productivity',
+    icon: 'ti-bulb',
+    defaultWidth: 6,
+    allowedRoles: ['*']
+  },
+  {
     id: 'quick-actions',
     title: 'Quick Launch Hub',
     description: 'Role-tailored shortcut buttons for fast daily execution',
@@ -103,6 +121,7 @@ const ALL_KPIS = [
   { id: 'kpi-in-progress', label: 'In Progress', icon: 'ti-loader', color: 'primary', allowedRoles: ['*'] },
   { id: 'kpi-urgent', label: 'Urgent / High', icon: 'ti-alert-triangle', color: 'danger', allowedRoles: ['*'] },
   { id: 'kpi-complete', label: 'Completed', icon: 'ti-circle-check', color: 'secondary', allowedRoles: ['*'] },
+  { id: 'kpi-suggested-tasks', label: 'Email AI Tasks', icon: 'ti-bulb', color: 'warning', allowedRoles: ['*'] },
   { id: 'kpi-deals', label: 'Active Deals ($)', icon: 'ti-currency-dollar', color: 'primary', allowedRoles: ['admin', 'sales', 'operations'] },
   { id: 'kpi-orders-shipping', label: 'Orders to Ship', icon: 'ti-package', color: 'warning', allowedRoles: ['admin', 'warehouse', 'logistics', 'operations'] },
   { id: 'kpi-past-due-total', label: 'Past Due A/R ($)', icon: 'ti-report-money', color: 'danger', allowedRoles: ['admin', 'finance', 'accounting', 'operations'] },
@@ -114,13 +133,13 @@ const ROLE_PRESETS = {
   support: {
     roleName: 'Support & Machine Technician',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-rma-active'],
-    widgets: ['quick-actions', 'my-day', 'my-queue', 'rma-bench', 'm365-calendar'],
+    widgets: ['quick-actions', 'my-day', 'my-queue', 'priority-conversations', 'suggested-tasks', 'rma-bench', 'm365-calendar'],
     layoutMode: 'bento'
   },
   tech: {
     roleName: 'Support & Machine Technician',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-rma-active'],
-    widgets: ['quick-actions', 'my-day', 'my-queue', 'rma-bench', 'm365-calendar'],
+    widgets: ['quick-actions', 'my-day', 'my-queue', 'priority-conversations', 'suggested-tasks', 'rma-bench', 'm365-calendar'],
     layoutMode: 'bento'
   },
 
@@ -128,7 +147,7 @@ const ROLE_PRESETS = {
   sales: {
     roleName: 'Sales & Account Executive',
     kpis: ['kpi-deals', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['quick-actions', 'my-day', 'sales-pipeline', 'lapsed-customers', 'm365-calendar'],
+    widgets: ['quick-actions', 'my-day', 'my-queue', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'lapsed-customers', 'm365-calendar'],
     layoutMode: 'bento'
   },
 
@@ -136,13 +155,13 @@ const ROLE_PRESETS = {
   warehouse: {
     roleName: 'Warehouse & Logistics Operations',
     kpis: ['kpi-orders-shipping', 'kpi-todo', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['quick-actions', 'shipping-dock', 'my-day', 'my-queue', 'company-bulletin'],
+    widgets: ['quick-actions', 'shipping-dock', 'my-day', 'my-queue', 'priority-conversations', 'suggested-tasks', 'company-bulletin', 'm365-calendar'],
     layoutMode: 'bento'
   },
   logistics: {
     roleName: 'Warehouse & Logistics Operations',
     kpis: ['kpi-orders-shipping', 'kpi-todo', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['quick-actions', 'shipping-dock', 'my-day', 'my-queue', 'company-bulletin'],
+    widgets: ['quick-actions', 'shipping-dock', 'my-day', 'my-queue', 'priority-conversations', 'suggested-tasks', 'company-bulletin', 'm365-calendar'],
     layoutMode: 'bento'
   },
 
@@ -150,13 +169,13 @@ const ROLE_PRESETS = {
   finance: {
     roleName: 'Finance & Accounts Receivable',
     kpis: ['kpi-past-due-total', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['quick-actions', 'past-due-ar', 'my-day', 'my-queue', 'company-bulletin'],
+    widgets: ['quick-actions', 'past-due-ar', 'my-day', 'my-queue', 'priority-conversations', 'suggested-tasks', 'company-bulletin', 'm365-calendar'],
     layoutMode: 'bento'
   },
   accounting: {
     roleName: 'Finance & Accounts Receivable',
     kpis: ['kpi-past-due-total', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['quick-actions', 'past-due-ar', 'my-day', 'my-queue', 'company-bulletin'],
+    widgets: ['quick-actions', 'past-due-ar', 'my-day', 'my-queue', 'priority-conversations', 'suggested-tasks', 'company-bulletin', 'm365-calendar'],
     layoutMode: 'bento'
   },
 
@@ -164,13 +183,13 @@ const ROLE_PRESETS = {
   admin: {
     roleName: 'Operations Leadership & Admin',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'my-queue', 'sales-pipeline', 'past-due-ar', 'shipping-dock', 'rma-bench'],
+    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'my-queue', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'past-due-ar', 'shipping-dock', 'rma-bench', 'm365-calendar'],
     layoutMode: 'bento'
   },
   operations: {
     roleName: 'Operations Leadership & Admin',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'my-queue', 'sales-pipeline', 'past-due-ar', 'shipping-dock', 'rma-bench'],
+    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'my-queue', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'past-due-ar', 'shipping-dock', 'rma-bench', 'm365-calendar'],
     layoutMode: 'bento'
   },
 
@@ -178,7 +197,7 @@ const ROLE_PRESETS = {
   user: {
     roleName: 'Staff Member',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['quick-actions', 'my-day', 'my-queue', 'm365-calendar', 'company-bulletin'],
+    widgets: ['quick-actions', 'my-day', 'my-queue', 'priority-conversations', 'suggested-tasks', 'm365-calendar', 'company-bulletin'],
     layoutMode: 'bento'
   }
 }
@@ -227,6 +246,15 @@ async function getPreferencesForAccount(account) {
 
   if (prefs.customized && Array.isArray(prefs.widgets) && prefs.widgets.length > 0) {
     const filteredWidgets = prefs.widgets.filter(wId => allowedWidgets.includes(wId))
+    
+    // Ensure priority-conversations and suggested-tasks are available on the dashboard for everyone
+    if (!filteredWidgets.includes('priority-conversations') && allowedWidgets.includes('priority-conversations')) {
+      filteredWidgets.push('priority-conversations')
+    }
+    if (!filteredWidgets.includes('suggested-tasks') && allowedWidgets.includes('suggested-tasks')) {
+      filteredWidgets.push('suggested-tasks')
+    }
+
     const filteredKpis = Array.isArray(prefs.kpis) && prefs.kpis.length > 0 
       ? prefs.kpis.filter(kId => allowedKpis.includes(kId))
       : preset.kpis
