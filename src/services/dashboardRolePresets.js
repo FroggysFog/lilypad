@@ -1,9 +1,17 @@
 /**
  * LilyPad ERP - Dashboard Role Presets & Preferences Service
  * Provides role-tailored workspace layouts and modular widget registries.
+ *
+ * ROLE_PRESETS below is a fallback, not the source of truth - an admin
+ * can override which widgets/KPIs a role's Command Center shows from
+ * admin-roles.html (see lilypadRolePermission.js's allowedWidgets/
+ * allowedKpis), which is checked first. ROLE_PRESETS only still applies
+ * to a role nobody has explicitly configured there yet, so existing
+ * accounts keep their current dashboard the moment this feature ships.
  */
 
 const LilyPadAccount = require('../models/lilypadAccount')
+const LilyPadRolePermission = require('../models/lilypadRolePermission')
 
 const ALL_WIDGETS = [
   {
@@ -194,7 +202,7 @@ function normalizeRoleKey(role) {
   return ROLE_PRESETS[clean] ? clean : 'user'
 }
 
-function getPresetForRole(role) {
+function getLegacyPresetForRole(role) {
   const key = normalizeRoleKey(role)
   return ROLE_PRESETS[key] || ROLE_PRESETS.user
 }
@@ -206,23 +214,90 @@ function isWidgetAllowedForRole(widget, role) {
   return widget.allowedRoles.some(r => r === normRole || r === role)
 }
 
-function getAvailableWidgetsForRole(role) {
+function getAvailableWidgetsForRoleLegacy(role) {
   return ALL_WIDGETS.filter(w => isWidgetAllowedForRole(w, role))
 }
 
-function getAvailableKpisForRole(role) {
+function getAvailableKpisForRoleLegacy(role) {
   const normRole = normalizeRoleKey(role)
   if (normRole === 'admin') return ALL_KPIS
   return ALL_KPIS.filter(k => !k.allowedRoles || k.allowedRoles.includes('*') || k.allowedRoles.includes(normRole))
+}
+
+// Deliberately the literal role string only, not normalizeRoleKey's
+// bucket - "operations"/"exec"/"lead" all normalize into the same
+// legacy fallback bucket as admin (full access when nobody's
+// configured them), but unlike literal admin, they're still meant to
+// be restrictable once an admin actually saves an override for them.
+function isAdminRole(role) {
+  return String(role || '').trim().toLowerCase() === 'admin'
+}
+
+/**
+ * The admin-saved override doc for this role, keyed by the account's raw
+ * role string (same key admin-roles.html already uses for allowedPages) -
+ * not the normalizeRoleKey bucket the *legacy* preset below falls back
+ * to, so a custom role (e.g. "marketing", defined straight from admin-
+ * roles.html) can get its own dashboard config without needing a code
+ * change to teach normalizeRoleKey a new bucket.
+ */
+async function getRoleOverride(role) {
+  if (!role || isAdminRole(role)) return null
+  return LilyPadRolePermission.findOne({ role: String(role).trim().toLowerCase() })
+}
+
+/**
+ * Ceiling AND default in one - once an admin has saved a widget/KPI
+ * list for a role, that list is both everything the role's Command
+ * Center shows out of the box and everything "Customize Workspace" can
+ * add back. A role nobody's configured yet still gets the older
+ * hand-curated ROLE_PRESETS/allowedRoles behavior unchanged.
+ */
+async function getAvailableWidgetsForRole(role) {
+  if (isAdminRole(role)) return ALL_WIDGETS
+
+  const override = await getRoleOverride(role)
+  if (override && Array.isArray(override.allowedWidgets)) {
+    const idSet = new Set(override.allowedWidgets)
+    return ALL_WIDGETS.filter(w => idSet.has(w.id))
+  }
+  return getAvailableWidgetsForRoleLegacy(role)
+}
+
+async function getAvailableKpisForRole(role) {
+  if (isAdminRole(role)) return ALL_KPIS
+
+  const override = await getRoleOverride(role)
+  if (override && Array.isArray(override.allowedKpis)) {
+    const idSet = new Set(override.allowedKpis)
+    return ALL_KPIS.filter(k => idSet.has(k.id))
+  }
+  return getAvailableKpisForRoleLegacy(role)
+}
+
+async function getPresetForRole(role) {
+  const legacy = getLegacyPresetForRole(role)
+  if (isAdminRole(role)) return legacy
+
+  const override = await getRoleOverride(role)
+  if (override && (Array.isArray(override.allowedWidgets) || Array.isArray(override.allowedKpis))) {
+    return {
+      roleName: legacy.roleName,
+      widgets: Array.isArray(override.allowedWidgets) ? override.allowedWidgets : legacy.widgets,
+      kpis: Array.isArray(override.allowedKpis) ? override.allowedKpis : legacy.kpis,
+      layoutMode: legacy.layoutMode || 'bento'
+    }
+  }
+  return legacy
 }
 
 async function getPreferencesForAccount(account) {
   if (!account) return getPresetForRole('user')
 
   const role = account.role || 'user'
-  const preset = getPresetForRole(role)
-  const allowedWidgets = getAvailableWidgetsForRole(role).map(w => w.id)
-  const allowedKpis = getAvailableKpisForRole(role).map(k => k.id)
+  const preset = await getPresetForRole(role)
+  const allowedWidgets = (await getAvailableWidgetsForRole(role)).map(w => w.id)
+  const allowedKpis = (await getAvailableKpisForRole(role)).map(k => k.id)
 
   const prefs = account.dashboardPreferences || {}
 
@@ -262,8 +337,8 @@ async function getPreferencesForAccount(account) {
 }
 
 async function savePreferencesForAccount(accountId, preferences, userRole) {
-  const allowedWidgets = getAvailableWidgetsForRole(userRole).map(w => w.id)
-  const allowedKpis = getAvailableKpisForRole(userRole).map(k => k.id)
+  const allowedWidgets = (await getAvailableWidgetsForRole(userRole)).map(w => w.id)
+  const allowedKpis = (await getAvailableKpisForRole(userRole)).map(k => k.id)
 
   const sanitizedWidgets = (Array.isArray(preferences.widgets) ? preferences.widgets : [])
     .filter(wId => allowedWidgets.includes(wId))
@@ -284,7 +359,7 @@ async function savePreferencesForAccount(accountId, preferences, userRole) {
 }
 
 async function resetPreferencesForAccount(accountId, userRole) {
-  const preset = getPresetForRole(userRole)
+  const preset = await getPresetForRole(userRole)
   const update = {
     dashboardPreferences: {
       widgets: preset.widgets,
@@ -302,9 +377,10 @@ module.exports = {
   ROLE_PRESETS,
   normalizeRoleKey,
   getPresetForRole,
+  getRoleOverride,
   getAvailableWidgetsForRole,
   getAvailableKpisForRole,
   getPreferencesForAccount,
   savePreferencesForAccount,
   resetPreferencesForAccount
-};
+}

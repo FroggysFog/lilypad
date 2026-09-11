@@ -126,7 +126,7 @@
 				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
 					<div>
 						<h4 class="mb-1 fw-bold text-dark">Roles & Permissions</h4>
-						<p class="text-muted fs-13 mb-0">Choose which pages each role can see. Admins always see everything.</p>
+						<p class="text-muted fs-13 mb-0">Choose which pages each role can see and which Command Center widgets/KPIs their dashboard shows. Admins always see everything.</p>
 					</div>
 				</div>
 
@@ -179,6 +179,8 @@
 
 	<script>
 		let CATALOG = [];
+		let WIDGET_CATALOG = [];
+		let KPI_CATALOG = [];
 		let ROLES = [];
 
 		function escapeHtml(str) {
@@ -208,6 +210,8 @@
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error);
 				CATALOG = result.data.catalog;
+				WIDGET_CATALOG = result.data.widgetCatalog || [];
+				KPI_CATALOG = result.data.kpiCatalog || [];
 				ROLES = result.data.roles;
 				renderPreviewSelect();
 				renderRoles();
@@ -242,6 +246,27 @@
 					</div>
 				`).join('');
 
+				const allowedWidgetSet = new Set(roleData.allowedWidgets || []);
+				const widgetsHtml = WIDGET_CATALOG.map((widget, wIdx) => `
+					<div class="col-md-4 mb-2">
+						<div class="form-check">
+							<input type="checkbox" class="form-check-input role-widget-checkbox" id="role${roleIdx}_w${wIdx}" value="${escapeHtml(widget.id)}" data-role="${escapeHtml(roleData.role)}" ${allowedWidgetSet.has(widget.id) ? 'checked' : ''}>
+							<label class="form-check-label fs-13" for="role${roleIdx}_w${wIdx}">${escapeHtml(widget.title)}</label>
+						</div>
+						<div class="fs-11 text-muted ps-4">${escapeHtml(widget.description)}</div>
+					</div>
+				`).join('');
+
+				const allowedKpiSet = new Set(roleData.allowedKpis || []);
+				const kpisHtml = KPI_CATALOG.map((kpi, kIdx) => `
+					<div class="col-md-3 mb-1">
+						<div class="form-check">
+							<input type="checkbox" class="form-check-input role-kpi-checkbox" id="role${roleIdx}_k${kIdx}" value="${escapeHtml(kpi.id)}" data-role="${escapeHtml(roleData.role)}" ${allowedKpiSet.has(kpi.id) ? 'checked' : ''}>
+							<label class="form-check-label fs-13" for="role${roleIdx}_k${kIdx}">${escapeHtml(kpi.label)}</label>
+						</div>
+					</div>
+				`).join('');
+
 				return `
 					<div class="card border-0 shadow-sm rounded-3 mb-3">
 						<div class="card-header bg-transparent border-bottom py-3 d-flex align-items-center justify-content-between">
@@ -249,7 +274,13 @@
 							<button type="button" class="btn btn-sm btn-primary" onclick="saveRolePermissions('${escapeHtml(roleData.role)}')">Save</button>
 						</div>
 						<div class="card-body">
+							<h6 class="fs-12 text-uppercase text-muted fw-semibold mb-2">Pages</h6>
 							<div class="row">${groupsHtml}</div>
+							<hr class="my-3">
+							<h6 class="fs-12 text-uppercase text-muted fw-semibold mb-2"><i class="ti ti-layout-dashboard me-1"></i>Command Center Widgets</h6>
+							<div class="row mb-2">${widgetsHtml}</div>
+							<h6 class="fs-12 text-uppercase text-muted fw-semibold mb-2 mt-2"><i class="ti ti-chart-bar me-1"></i>KPI Cards</h6>
+							<div class="row">${kpisHtml}</div>
 						</div>
 					</div>
 				`;
@@ -263,21 +294,26 @@
 			if (role === 'admin') { alert('"admin" already has full access by default.'); return; }
 			if (ROLES.some(r => r.role === role)) { alert('That role already exists.'); return; }
 
-			ROLES.push({ role, allowedPages: [], inUse: false });
+			ROLES.push({ role, allowedPages: [], allowedWidgets: [], allowedKpis: [], inUse: false });
 			input.value = '';
 			renderPreviewSelect();
 			renderRoles();
 		}
 
 		async function saveRolePermissions(role) {
-			const checkboxes = document.querySelectorAll(`.role-page-checkbox[data-role="${CSS.escape(role)}"]`);
-			const allowedPages = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
+			const pageCheckboxes = document.querySelectorAll(`.role-page-checkbox[data-role="${CSS.escape(role)}"]`);
+			const widgetCheckboxes = document.querySelectorAll(`.role-widget-checkbox[data-role="${CSS.escape(role)}"]`);
+			const kpiCheckboxes = document.querySelectorAll(`.role-kpi-checkbox[data-role="${CSS.escape(role)}"]`);
+
+			const allowedPages = Array.from(pageCheckboxes).filter(c => c.checked).map(c => c.value);
+			const allowedWidgets = Array.from(widgetCheckboxes).filter(c => c.checked).map(c => c.value);
+			const allowedKpis = Array.from(kpiCheckboxes).filter(c => c.checked).map(c => c.value);
 
 			try {
 				const res = await fetch(`/api/v1/lilypad/role-permissions/${encodeURIComponent(role)}`, {
 					method: 'PUT',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ allowedPages })
+					body: JSON.stringify({ allowedPages, allowedWidgets, allowedKpis })
 				});
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error);

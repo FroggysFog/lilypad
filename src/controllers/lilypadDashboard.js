@@ -18,6 +18,13 @@ const lilypadDashboardController = {}
 /**
  * GET /api/v1/lilypad/dashboard/preferences
  * Returns the active user's layout preferences, plus all available widgets & KPIs for their role.
+ *
+ * An admin using "Preview As" (see lilypadRolePermissions.js/
+ * pageAccessGate.js for the same pattern applied to page nav) sees that
+ * role's own default Command Center layout here, not their real admin
+ * account's personal widget customization - previewing is meant to show
+ * what the role sees, and an admin's own dashboardPreferences almost
+ * certainly isn't that.
  */
 lilypadDashboardController.getPreferences = async function (req, res) {
   try {
@@ -26,9 +33,28 @@ lilypadDashboardController.getPreferences = async function (req, res) {
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
-    const preferences = await dashboardRolePresets.getPreferencesForAccount(user)
-    const availableWidgets = dashboardRolePresets.getAvailableWidgetsForRole(user.role)
-    const availableKpis = dashboardRolePresets.getAvailableKpisForRole(user.role)
+    const previewRole = user.role === 'admin' ? req.session.previewRole : null
+    const effectiveRole = previewRole || user.role
+
+    let preferences
+    if (previewRole) {
+      const preset = await dashboardRolePresets.getPresetForRole(effectiveRole)
+      const allowedWidgetIds = (await dashboardRolePresets.getAvailableWidgetsForRole(effectiveRole)).map(w => w.id)
+      const allowedKpiIds = (await dashboardRolePresets.getAvailableKpisForRole(effectiveRole)).map(k => k.id)
+      preferences = {
+        role: effectiveRole,
+        roleName: preset.roleName,
+        customized: false,
+        layoutMode: preset.layoutMode || 'bento',
+        widgets: preset.widgets.filter((id) => allowedWidgetIds.includes(id)),
+        kpis: preset.kpis.filter((id) => allowedKpiIds.includes(id))
+      }
+    } else {
+      preferences = await dashboardRolePresets.getPreferencesForAccount(user)
+    }
+
+    const availableWidgets = await dashboardRolePresets.getAvailableWidgetsForRole(effectiveRole)
+    const availableKpis = await dashboardRolePresets.getAvailableKpisForRole(effectiveRole)
 
     return res.json({
       success: true,
