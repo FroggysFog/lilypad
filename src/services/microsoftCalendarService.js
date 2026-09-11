@@ -1,15 +1,26 @@
 /**
- * LilyPad ERP - Per-User Microsoft Calendar Sync
+ * LilyPad ERP - Per-User Microsoft 365 Connection (Calendar + Mail)
+ * Despite the filename, this is the one per-user Microsoft 365
+ * connection backing BOTH calendar.html and email.html (and everything
+ * in between - graphRequestForUser is reused by
+ * microsoftEmailService.js, microsoftEmailSyncService.js, and the whole
+ * AI Email Triage Module) - one Microsoft identity per LilyPad user,
+ * several Graph features, not a separate OAuth flow per feature.
  * Separate from services/microsoftTeams.js (a single shared, in-memory
- * connection) - this is one connection per LilyPad user, persisted to
- * Mongo (lilypadMicrosoftAccount.js), so the server can read/write any
- * connected person's calendar at any time regardless of who's currently
- * browsing. Reuses the same MICROSOFT_TENANT_ID/CLIENT_ID/CLIENT_SECRET
- * app registration as Teams, but needs its own redirect URI registered
- * in Azure (a second "Redirect URI" entry on the same App Registration)
- * and its own delegated scope (Calendars.ReadWrite) added there, since
- * an app's requested scopes must already exist on the registration
- * before a user can consent to them at OAuth time.
+ * connection, used only by the Teams chat panel) - this one is
+ * per-user and persisted to Mongo (lilypadMicrosoftAccount.js), so the
+ * server can act on any connected person's calendar/mail at any time
+ * regardless of who's currently browsing.
+ *
+ * Reuses the same MICROSOFT_TENANT_ID/CLIENT_ID/CLIENT_SECRET app
+ * registration as Teams, but needs its own redirect URI registered in
+ * Azure (a second "Redirect URI" entry on the same App Registration)
+ * and every scope below added there as a Delegated permission with
+ * admin consent, since an app's requested scopes must already exist on
+ * the registration before a user can consent to them at OAuth time -
+ * adding a new scope here always means also adding it in Azure AND
+ * having every already-connected user reconnect (a refresh token only
+ * ever carries the scopes it was originally issued with).
  */
 
 const axios = require('axios')
@@ -17,7 +28,15 @@ const LilyPadMicrosoftAccount = require('../models/lilypadMicrosoftAccount')
 
 const AUTHORITY = 'https://login.microsoftonline.com'
 const GRAPH = 'https://graph.microsoft.com/v1.0'
-const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read']
+// Mail.ReadWrite/Mail.Send were added to the Azure app registration and
+// admin-consented for the full mailbox client (compose/reply/forward/
+// send/delete/move), but were never actually added to this array - the
+// authorization URL only ever requested Mail.Read, so every write
+// action has been failing with an insufficient-scope error from Graph
+// even after the Azure-side permission was granted. Requesting the
+// scope here is what actually matters; Azure only makes it available
+// to consent to.
+const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read', 'Mail.ReadWrite', 'Mail.Send']
 
 function getConfig () {
   return {
