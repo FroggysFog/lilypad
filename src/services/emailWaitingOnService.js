@@ -45,14 +45,25 @@ function looksLikeRequest (text) {
  * the first recipient (the common case of a direct ask to one person;
  * a broadcast to many recipients is much less likely to be "waiting on
  * a specific person" in the way this feature means).
+ *
+ * Bounded to mail sent on or after the account's connectedAt - the
+ * initial sync backfills a user's actual Sent Items history (which can
+ * run back years), and this query had no lower bound at all before,
+ * so a brand new connection would otherwise create "awaiting reply"
+ * watchers for asks sent long before anyone was using LilyPad to track
+ * them.
  */
 async function scanOutboundForOwner (ownerId) {
-  const emails = await LilyPadEmailCache.find({
+  const status = await microsoftCalendarService.getStatus(ownerId)
+  const query = {
     owner: ownerId,
     folder: 'sentitems',
     deleted: false,
     waitingOnProcessed: false
-  }).sort({ receivedDateTime: 1 }).limit(BATCH_SIZE_PER_OWNER)
+  }
+  if (status.connectedAt) query.receivedDateTime = { $gte: status.connectedAt }
+
+  const emails = await LilyPadEmailCache.find(query).sort({ receivedDateTime: 1 }).limit(BATCH_SIZE_PER_OWNER)
 
   let created = 0
   for (const email of emails) {

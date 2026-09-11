@@ -205,12 +205,29 @@ function startEntityLinkingScheduler (winston) {
 async function getLinksForEmail (ownerId, graphMessageId) {
   const email = await LilyPadEmailCache.findOne({ owner: ownerId, graphMessageId })
   if (!email) return []
-  return LilyPadErpEntityLink.find({ sourceEmail: email._id })
+  return LilyPadErpEntityLink.find({ sourceEmail: email._id, dismissed: { $ne: true } })
+}
+
+/**
+ * Verified through the link's own sourceEmail rather than trusting
+ * linkId alone - an entity link has no owner field of its own (it's
+ * only reachable via its sourceEmail), so this is what stops one user
+ * from dismissing a link on another user's email by guessing its id.
+ */
+async function dismissLink (ownerId, linkId) {
+  const link = await LilyPadErpEntityLink.findById(linkId)
+  if (!link) return
+  const email = await LilyPadEmailCache.findOne({ _id: link.sourceEmail, owner: ownerId })
+  if (!email) return // not this user's email - silently no-op
+
+  link.dismissed = true
+  await link.save()
 }
 
 module.exports = {
   runEntityLinkingForOwner,
   runScheduledEntityLinking,
   startEntityLinkingScheduler,
-  getLinksForEmail
+  getLinksForEmail,
+  dismissLink
 }

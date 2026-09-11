@@ -24,7 +24,12 @@ const erpEntityLinkSchema = new Schema(
     // click-through rather than kept continuously live.
     snapshotLabel: { type: String, default: '' },
     snapshotStatus: { type: String, default: '' },
-    snapshotValue: { type: Number, default: null }
+    snapshotValue: { type: Number, default: null },
+    // User-dismissed badges stay dismissed rather than reappearing next
+    // time the email's reopened - runEntityLinkingForOwner only ever
+    // creates links that don't already exist for a message (see its
+    // upsert logic), so it never resurrects one a user already rejected.
+    dismissed: { type: Boolean, default: false }
   },
   { timestamps: true }
 )

@@ -587,7 +587,10 @@
 		function entityBadgeMarkup(link) {
 			const valueLabel = typeof link.snapshotValue === 'number' ? ' | $' + link.snapshotValue.toLocaleString() : '';
 			const statusLabel = link.snapshotStatus ? ' | ' + link.snapshotStatus : '';
-			return `<span class="badge bg-soft-primary text-primary fs-11 px-2 py-1 rounded-pill">${escapeHtml(link.snapshotLabel)}${escapeHtml(statusLabel)}${escapeHtml(valueLabel)}</span>`;
+			return `<span class="badge bg-soft-primary text-primary fs-11 d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill">
+				${escapeHtml(link.snapshotLabel)}${escapeHtml(statusLabel)}${escapeHtml(valueLabel)}
+				<i class="ti ti-x" style="cursor:pointer;" data-dismiss-link="${escapeHtml(link._id)}" title="Dismiss"></i>
+			</span>`;
 		}
 
 		async function loadEntityBadges(messageId) {
@@ -597,8 +600,24 @@
 				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(messageId) + '/entity-links');
 				const result = await res.json();
 				container.innerHTML = (result.success ? result.data : []).map(entityBadgeMarkup).join('');
+				container.querySelectorAll('[data-dismiss-link]').forEach(el => {
+					el.addEventListener('click', () => dismissEntityBadge(el.getAttribute('data-dismiss-link'), el.closest('.badge')));
+				});
 			} catch (err) {
 				console.error('Unable to load entity links:', err);
+			}
+		}
+
+		async function dismissEntityBadge(linkId, badgeEl) {
+			if (badgeEl) badgeEl.style.opacity = '0.4';
+			try {
+				const res = await fetch('/api/v1/lilypad/email/entity-links/' + encodeURIComponent(linkId) + '/dismiss', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				if (badgeEl) badgeEl.remove();
+			} catch (err) {
+				if (badgeEl) badgeEl.style.opacity = '';
+				alert(err.message || 'Unable to dismiss.');
 			}
 		}
 
@@ -672,9 +691,19 @@
 				<div id="emailEntityBadges" class="d-flex flex-wrap gap-1 mb-2"></div>
 				<div id="emailQuickSummary" class="alert alert-soft-primary py-2 px-3 mb-2 fs-13 d-flex align-items-start gap-2" style="display:none;">
 					<i class="ti ti-sparkles mt-1 flex-shrink-0"></i>
-					<div class="flex-grow-1">
-						<div class="fw-semibold">Quick Summary</div>
-						<div id="emailQuickSummaryText" class="text-muted"></div>
+					<div class="flex-grow-1" style="min-width:0;">
+						<div class="d-flex align-items-center justify-content-between gap-2">
+							<div class="fw-semibold">Quick Summary</div>
+							<div class="d-flex align-items-center gap-1 flex-shrink-0">
+								<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" id="summaryReplyBtn" title="Reply"><i class="ti ti-arrow-back-up"></i></button>
+								<button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" id="summaryDeleteBtn" title="${isRestorableFolder ? 'Delete permanently' : 'Delete'}"><i class="ti ti-trash"></i></button>
+							</div>
+						</div>
+						<div id="emailQuickSummaryText" class="text-muted mb-2"></div>
+						<form id="quickResponseForm" class="d-flex gap-2">
+							<input type="text" id="quickResponseInput" class="form-control form-control-sm" placeholder="Quick response...">
+							<button type="submit" class="btn btn-sm btn-primary flex-shrink-0" title="Send"><i class="ti ti-send"></i></button>
+						</form>
 					</div>
 				</div>
 				<div id="emailThreadItems">${itemsHtml}</div>
@@ -717,6 +746,9 @@
 			const restoreBtn = document.getElementById('emailRestoreBtn');
 			if (restoreBtn) restoreBtn.addEventListener('click', restoreCurrentEmail);
 			document.getElementById('emailDeleteBtn').addEventListener('click', deleteCurrentEmail);
+			document.getElementById('summaryReplyBtn').addEventListener('click', () => startReply('reply'));
+			document.getElementById('summaryDeleteBtn').addEventListener('click', deleteCurrentEmail);
+			document.getElementById('quickResponseForm').addEventListener('submit', sendQuickResponse);
 		}
 
 		async function loadQuickSummary(latest) {
@@ -724,23 +756,54 @@
 			const text = document.getElementById('emailQuickSummaryText');
 			if (!box || !text) return;
 
+			// Box (and its Reply/Delete/quick-response controls) stays visible
+			// regardless of whether a summary is available - those controls
+			// are useful on every email, not just ones the AI has summarized.
+			box.style.display = '';
+
 			if (latest.triageSummary) {
 				text.textContent = latest.triageSummary;
-				box.style.display = '';
 				return;
 			}
 
-			box.style.display = '';
 			text.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Summarizing...';
 			try {
 				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id) + '/summarize-now', { method: 'POST' });
 				const result = await res.json();
 				if (!result.success || !result.data || !result.data.summary) throw new Error((result.error) || 'No summary available.');
-				if (emailActiveId !== latest.id && currentThreadMessages[currentThreadMessages.length - 1].id !== latest.id) return;
+				if (currentThreadMessages[currentThreadMessages.length - 1].id !== latest.id) return;
 				text.textContent = result.data.summary;
 				latest.triageSummary = result.data.summary;
 			} catch (err) {
-				box.style.display = 'none';
+				text.textContent = 'No summary available for this email.';
+			}
+		}
+
+		async function sendQuickResponse(evt) {
+			evt.preventDefault();
+			const input = document.getElementById('quickResponseInput');
+			const content = input.value.trim();
+			if (!content) return;
+
+			const latest = currentThreadMessages[currentThreadMessages.length - 1];
+			const sendBtn = evt.target.querySelector('button[type="submit"]');
+			sendBtn.disabled = true;
+			try {
+				const formData = new FormData();
+				formData.append('comment', escapeHtml(content).replace(/\n/g, '<br>'));
+				formData.append('replyAll', 'false');
+				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id) + '/reply', {
+					method: 'POST', body: formData
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				input.value = '';
+				await loadEmailList();
+				await openEmail(latest.id);
+			} catch (err) {
+				alert(err.message || 'Unable to send.');
+			} finally {
+				sendBtn.disabled = false;
 			}
 		}
 

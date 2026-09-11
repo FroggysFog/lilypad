@@ -90,9 +90,32 @@ const SYSTEM_PROMPT = 'You are the triage engine for an internal operations ERP\
   'actually present in the text - do not infer tasks the sender didn\'t ask for. If nothing is ' +
   'actionable, return an empty tasks array and is_actionable: false.'
 
+/**
+ * Cuts a reply's HTML at the start of the quoted prior message, if any -
+ * Outlook's own reply/forward template wraps quoted history in a
+ * `divRplyFwdMsg` div, and other clients (Gmail, Apple Mail, etc.) that
+ * a message might have arrived from typically use a `<blockquote>`.
+ * Without this, every message in a back-and-forth thread carries the
+ * entire conversation history beneath it, so triaging each new message
+ * "rediscovers" the same commitments from earlier in the thread and
+ * extracts a fresh, slightly differently-worded suggested task for the
+ * same ask every time someone replies - exactly the duplicate-task
+ * pattern this was written to fix.
+ */
+function stripQuotedHistory (html) {
+  if (!html) return html
+  const markers = [/id=["']divRplyFwdMsg["']/i, /<blockquote/i]
+  let cutIndex = html.length
+  for (const marker of markers) {
+    const match = html.match(marker)
+    if (match && match.index < cutIndex) cutIndex = match.index
+  }
+  return html.slice(0, cutIndex)
+}
+
 function bodyToPlainText (email) {
   if (email.bodyHtml) {
-    return htmlToText(email.bodyHtml, { wordwrap: false, selectors: [{ selector: 'a', options: { ignoreHref: true } }] }).slice(0, MAX_BODY_CHARS)
+    return htmlToText(stripQuotedHistory(email.bodyHtml), { wordwrap: false, selectors: [{ selector: 'a', options: { ignoreHref: true } }] }).slice(0, MAX_BODY_CHARS)
   }
   return String(email.bodyPreview || '').slice(0, MAX_BODY_CHARS)
 }
@@ -200,11 +223,21 @@ async function createSuggestedTasksFor (ownerId, email, tasks) {
  * for one owner, oldest-first within the lookback window - skips
  * cold-inbound (graymail) messages entirely, since there's no value in
  * spending a model call classifying something already quarantined.
+ *
+ * Never looks earlier than the account's own connectedAt - the initial
+ * sync backfills a user's actual mailbox history (which can run back
+ * years), and without this floor a brand new connection would surface
+ * suggested tasks pulled from mail nobody's used LilyPad to act on. The
+ * 14-day LOOKBACK_DAYS window still applies on top of it, so this only
+ * ever narrows the window further, never widens it.
  */
 async function runExtractionForOwner (ownerId) {
   if (!isExtractionConfigured()) return { skipped: true, reason: 'ANTHROPIC_API_KEY not configured' }
 
-  const since = new Date(Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000)
+  const lookbackFloor = new Date(Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000)
+  const status = await microsoftCalendarService.getStatus(ownerId)
+  const since = status.connectedAt && status.connectedAt > lookbackFloor ? status.connectedAt : lookbackFloor
+
   const emails = await LilyPadEmailCache.find({
     owner: ownerId,
     folder: 'inbox',

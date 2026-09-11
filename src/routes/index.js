@@ -83,6 +83,7 @@ function mainRoutes(router, controllers) {
   router.get('/api/v1/lilypad/email/suggested-tasks', requireLoginApi, controllers.microsoftEmail.getSuggestedTasks)
   router.post('/api/v1/lilypad/email/suggested-tasks/:id/approve', requireLoginApi, controllers.microsoftEmail.approveSuggestedTask)
   router.post('/api/v1/lilypad/email/suggested-tasks/:id/dismiss', requireLoginApi, controllers.microsoftEmail.dismissSuggestedTask)
+  router.post('/api/v1/lilypad/email/suggested-tasks/bulk-dismiss', requireLoginApi, controllers.microsoftEmail.bulkDismissSuggestedTasks)
 
   // Stage 5: sender rollup cards ("the Adam card").
   router.get('/api/v1/lilypad/email/sender-cards', requireLoginApi, controllers.microsoftEmail.getSenderCards)
@@ -98,6 +99,7 @@ function mainRoutes(router, controllers) {
 
   // Stage 6: ERP entity auto-linking + "Waiting On" monitor.
   router.get('/api/v1/lilypad/email/messages/:id/entity-links', requireLoginApi, controllers.microsoftEmail.getEntityLinks)
+  router.post('/api/v1/lilypad/email/entity-links/:id/dismiss', requireLoginApi, controllers.microsoftEmail.dismissEntityLink)
   router.post('/api/v1/lilypad/email/messages/:id/create-ticket', requireLoginApi, controllers.microsoftEmail.createTicketFromEmail)
   router.post('/api/v1/lilypad/email/link-entities-now', requireLoginApi, controllers.microsoftEmail.triggerEntityLinking)
   router.get('/api/v1/lilypad/email/waiting-on', requireLoginApi, controllers.microsoftEmail.getWaitingOn)

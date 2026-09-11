@@ -347,7 +347,7 @@ controller.triggerExtraction = async function (req, res) {
 controller.getSuggestedTasks = async function (req, res) {
   try {
     const data = await LilyPadSuggestedTask.find({ owner: req.user._id, status: 'pending' })
-      .populate('sourceEmail', 'subject from receivedDateTime')
+      .populate('sourceEmail', 'subject from receivedDateTime graphMessageId')
       .sort({ createdAt: -1 })
       .limit(100)
     return res.status(200).json({ success: true, data })
@@ -404,6 +404,27 @@ controller.dismissSuggestedTask = async function (req, res) {
     )
     if (!suggestion) return res.status(404).json({ success: false, error: 'Suggested task not found' })
     return res.status(200).json({ success: true })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/suggested-tasks/bulk-dismiss
+ * body: { ids: [...] } - lets a user clear out a batch of suggestions
+ * (e.g. a run of near-duplicate tasks off one thread) in one action
+ * instead of dismissing them one at a time.
+ */
+controller.bulkDismissSuggestedTasks = async function (req, res) {
+  try {
+    const ids = Array.isArray(req.body.ids) ? req.body.ids : []
+    if (!ids.length) return res.status(400).json({ success: false, error: 'ids must be a non-empty array' })
+
+    const result = await LilyPadSuggestedTask.updateMany(
+      { _id: { $in: ids }, owner: req.user._id, status: 'pending' },
+      { $set: { status: 'dismissed' } }
+    )
+    return res.status(200).json({ success: true, data: { dismissed: result.modifiedCount } })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }
@@ -578,6 +599,18 @@ controller.getEntityLinks = async function (req, res) {
   try {
     const data = await emailErpEntityLinkService.getLinksForEmail(req.user._id, req.params.id)
     return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/email/entity-links/:id/dismiss
+ */
+controller.dismissEntityLink = async function (req, res) {
+  try {
+    await emailErpEntityLinkService.dismissLink(req.user._id, req.params.id)
+    return res.status(200).json({ success: true })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

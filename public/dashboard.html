@@ -1333,11 +1333,15 @@
         }
     }
 
+    let selectedSuggestedTaskIds = new Set();
+
     async function loadSuggestedTasksWidgetData() {
         const container = document.getElementById('dashSuggestedTasksBody');
         const badge = document.getElementById('dashSuggestedTasksBadge');
         const kpiCountEl = document.getElementById('dashKpiSuggestedTasks');
         if (!container) return;
+
+        selectedSuggestedTaskIds = new Set();
 
         try {
             const res = await fetch('/api/v1/lilypad/email/suggested-tasks');
@@ -1356,14 +1360,27 @@
                 return;
             }
 
-            container.innerHTML = suggestions.map(t => {
+            const bulkBarHtml = '<div class="d-flex align-items-center justify-content-between gap-2 mb-2 pb-2 border-bottom">' +
+                '<div class="form-check mb-0">' +
+                    '<input type="checkbox" class="form-check-input" id="dashSuggestedTasksSelectAll" onchange="toggleAllSuggestedTasks(this.checked)">' +
+                    '<label class="form-check-label fs-12 text-muted" for="dashSuggestedTasksSelectAll">Select all</label>' +
+                '</div>' +
+                '<button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0 fs-11" id="dashSuggestedTasksBulkDismissBtn" onclick="bulkDismissSelectedSuggestedTasks()" disabled>' +
+                    '<i class="ti ti-x me-1"></i>Dismiss Selected (<span id="dashSuggestedTasksSelectedCount">0</span>)' +
+                '</button>' +
+            '</div>';
+
+            const itemsHtml = suggestions.map(t => {
                 const dueLabel = t.suggestedDueDate ? new Date(t.suggestedDueDate).toLocaleDateString() : 'No due date';
                 const sourceSubject = (t.sourceEmail && t.sourceEmail.subject) || t.context || 'Email Conversation';
                 return '<div class="d-flex align-items-start justify-content-between gap-2 p-2 mb-2 rounded bg-light border" data-suggestion-id="' + t._id + '">' +
-                    '<div class="text-truncate me-2">' +
-                        '<strong class="d-block text-dark fs-13 text-truncate">' + escapeHtml(t.title) + '</strong>' +
-                        '<div class="fs-11 text-muted text-truncate mt-1">' +
-                            '<i class="ti ti-mail me-1 text-primary"></i>' + escapeHtml(sourceSubject) + ' &middot; <i class="ti ti-calendar me-1"></i>' + escapeHtml(dueLabel) +
+                    '<div class="d-flex align-items-start gap-2 text-truncate me-2">' +
+                        '<input type="checkbox" class="form-check-input mt-1 flex-shrink-0 suggested-task-checkbox" data-suggestion-id="' + t._id + '" onchange="toggleSuggestedTaskSelection(\'' + t._id + '\', this.checked)">' +
+                        '<div class="text-truncate">' +
+                            '<strong class="d-block text-dark fs-13 text-truncate">' + escapeHtml(t.title) + '</strong>' +
+                            '<div class="fs-11 text-muted text-truncate mt-1">' +
+                                '<i class="ti ti-mail me-1 text-primary"></i>' + escapeHtml(sourceSubject) + ' &middot; <i class="ti ti-calendar me-1"></i>' + escapeHtml(dueLabel) +
+                            '</div>' +
                         '</div>' +
                     '</div>' +
                     '<div class="d-flex align-items-center gap-1 flex-shrink-0">' +
@@ -1376,10 +1393,59 @@
                     '</div>' +
                 '</div>';
             }).join('');
+
+            container.innerHTML = bulkBarHtml + itemsHtml;
         } catch (err) {
             container.innerHTML = '<div class="text-center py-3 text-muted fs-12">' +
                 '<i class="ti ti-mail-off fs-20 d-block mb-1 text-warning"></i>Connect Microsoft 365 on the Email page to triage suggestions.' +
             '</div>';
+        }
+    }
+
+    function toggleSuggestedTaskSelection(id, checked) {
+        if (checked) selectedSuggestedTaskIds.add(id);
+        else selectedSuggestedTaskIds.delete(id);
+
+        const countEl = document.getElementById('dashSuggestedTasksSelectedCount');
+        const bulkBtn = document.getElementById('dashSuggestedTasksBulkDismissBtn');
+        if (countEl) countEl.textContent = selectedSuggestedTaskIds.size;
+        if (bulkBtn) bulkBtn.disabled = selectedSuggestedTaskIds.size === 0;
+
+        const selectAll = document.getElementById('dashSuggestedTasksSelectAll');
+        const allBoxes = document.querySelectorAll('.suggested-task-checkbox');
+        if (selectAll) selectAll.checked = allBoxes.length > 0 && selectedSuggestedTaskIds.size === allBoxes.length;
+    }
+
+    function toggleAllSuggestedTasks(checked) {
+        document.querySelectorAll('.suggested-task-checkbox').forEach(box => {
+            box.checked = checked;
+            if (checked) selectedSuggestedTaskIds.add(box.getAttribute('data-suggestion-id'));
+        });
+        if (!checked) selectedSuggestedTaskIds.clear();
+
+        const countEl = document.getElementById('dashSuggestedTasksSelectedCount');
+        const bulkBtn = document.getElementById('dashSuggestedTasksBulkDismissBtn');
+        if (countEl) countEl.textContent = selectedSuggestedTaskIds.size;
+        if (bulkBtn) bulkBtn.disabled = selectedSuggestedTaskIds.size === 0;
+    }
+
+    async function bulkDismissSelectedSuggestedTasks() {
+        const ids = Array.from(selectedSuggestedTaskIds);
+        if (!ids.length) return;
+        if (!confirm('Dismiss ' + ids.length + ' selected suggestion' + (ids.length === 1 ? '' : 's') + '?')) return;
+
+        try {
+            const res = await fetch('/api/v1/lilypad/email/suggested-tasks/bulk-dismiss', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+
+            await loadSuggestedTasksWidgetData();
+        } catch (err) {
+            alert('Unable to dismiss selected suggestions: ' + err.message);
         }
     }
 
