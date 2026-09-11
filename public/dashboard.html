@@ -560,7 +560,7 @@
         roleName: 'Staff Member',
         customized: false,
         layoutMode: 'bento',
-        widgets: ['quick-actions', 'my-day', 'my-queue', 'm365-calendar'],
+        widgets: ['quick-actions', 'my-day', 'my-queue'],
         kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete']
     };
     let dashAvailableWidgets = [];
@@ -741,9 +741,6 @@
                         renderedCombinedMyDay = true;
                     }
                     break;
-                case 'm365-calendar':
-                    html += renderM365CalendarWidgetHtml();
-                    break;
                 case 'rma-bench':
                     html += renderRmaBenchWidgetHtml();
                     break;
@@ -776,7 +773,6 @@
         if (activeWidgets.includes('shipping-dock')) loadShippingDockWidgetData();
         if (activeWidgets.includes('past-due-ar')) loadPastDueWidgetData();
         if (activeWidgets.includes('lapsed-customers')) loadLapsedCustomersWidgetData();
-        if (activeWidgets.includes('m365-calendar')) loadCalendarWidgetData();
         if (activeWidgets.includes('priority-conversations')) loadPriorityConversationsWidgetData();
         if (activeWidgets.includes('suggested-tasks')) loadSuggestedTasksWidgetData();
     }
@@ -938,28 +934,6 @@
 
     function renderMyQueueWidgetHtml() {
         return '';
-    }
-
-    function renderM365CalendarWidgetHtml() {
-        return '<div class="col-lg-6">' +
-            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
-                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
-                    '<div class="d-flex align-items-center gap-2">' +
-                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
-                            '<i class="ti ti-calendar fs-18"></i>' +
-                        '</div>' +
-                        '<div>' +
-                            '<h5 class="mb-0 fs-16 fw-bold text-dark">Today\'s Outlook Agenda</h5>' +
-                            '<span class="fs-12 text-muted">Microsoft 365 synchronized schedule</span>' +
-                        '</div>' +
-                    '</div>' +
-                    '<a href="calendar.html" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-12">Open Calendar</a>' +
-                '</div>' +
-                '<div class="card-body p-3" id="dashCalendarWidgetBody">' +
-                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading schedule...</div>' +
-                '</div>' +
-            '</div>' +
-        '</div>';
     }
 
     function renderRmaBenchWidgetHtml() {
@@ -1128,25 +1102,6 @@
     // =========================================================================
     // ASYNCHRONOUS WIDGET DATA FETCHERS
     // =========================================================================
-
-    async function loadCalendarWidgetData() {
-        const container = document.getElementById('dashCalendarWidgetBody');
-        if (!container) return;
-        if (!dashLastEventsToday.length) {
-            container.innerHTML = '<div class="text-center py-4 text-muted"><i class="ti ti-calendar-event fs-24 d-block mb-1"></i>No appointments on today\'s calendar.</div>';
-            return;
-        }
-        container.innerHTML = dashLastEventsToday.map(ev => {
-            const time = ev.start ? new Date(ev.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'All Day';
-            return '<div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-light border-start border-3 border-primary">' +
-                '<div>' +
-                    '<strong class="d-block text-dark fs-13">' + escapeHtml(ev.subject || 'Meeting') + '</strong>' +
-                    '<span class="fs-11 text-muted"><i class="ti ti-clock me-1"></i>' + time + '</span>' +
-                '</div>' +
-                '<a href="calendar.html" class="btn btn-sm btn-link text-primary p-0"><i class="ti ti-arrow-right"></i></a>' +
-            '</div>';
-        }).join('');
-    }
 
     async function loadRmaBenchWidgetData() {
         const container = document.getElementById('dashRmaWidgetBody');

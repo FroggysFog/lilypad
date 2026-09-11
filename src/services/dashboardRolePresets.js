@@ -16,15 +16,6 @@ const ALL_WIDGETS = [
     allowedRoles: ['*']
   },
   {
-    id: 'm365-calendar',
-    title: 'Today Agenda & Meetings',
-    description: 'Live sync with your Microsoft 365 Outlook Calendar',
-    category: 'Productivity',
-    icon: 'ti-calendar',
-    defaultWidth: 6,
-    allowedRoles: ['*']
-  },
-  {
     id: 'rma-bench',
     title: 'Depot Repair & RMA Diagnostics',
     description: 'Machine diagnostic queue, burn-in tests, and bench repair status',
@@ -124,13 +115,13 @@ const ROLE_PRESETS = {
   support: {
     roleName: 'Support & Machine Technician',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-rma-active'],
-    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'rma-bench', 'm365-calendar'],
+    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'rma-bench'],
     layoutMode: 'bento'
   },
   tech: {
     roleName: 'Support & Machine Technician',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-rma-active'],
-    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'rma-bench', 'm365-calendar'],
+    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'rma-bench'],
     layoutMode: 'bento'
   },
 
@@ -138,7 +129,7 @@ const ROLE_PRESETS = {
   sales: {
     roleName: 'Sales & Account Executive',
     kpis: ['kpi-deals', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'lapsed-customers', 'm365-calendar'],
+    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'lapsed-customers'],
     layoutMode: 'bento'
   },
 
@@ -146,13 +137,13 @@ const ROLE_PRESETS = {
   warehouse: {
     roleName: 'Warehouse & Logistics Operations',
     kpis: ['kpi-orders-shipping', 'kpi-todo', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['quick-actions', 'shipping-dock', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin', 'm365-calendar'],
+    widgets: ['quick-actions', 'shipping-dock', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
     layoutMode: 'bento'
   },
   logistics: {
     roleName: 'Warehouse & Logistics Operations',
     kpis: ['kpi-orders-shipping', 'kpi-todo', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['quick-actions', 'shipping-dock', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin', 'm365-calendar'],
+    widgets: ['quick-actions', 'shipping-dock', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
     layoutMode: 'bento'
   },
 
@@ -160,13 +151,13 @@ const ROLE_PRESETS = {
   finance: {
     roleName: 'Finance & Accounts Receivable',
     kpis: ['kpi-past-due-total', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['quick-actions', 'past-due-ar', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin', 'm365-calendar'],
+    widgets: ['quick-actions', 'past-due-ar', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
     layoutMode: 'bento'
   },
   accounting: {
     roleName: 'Finance & Accounts Receivable',
     kpis: ['kpi-past-due-total', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['quick-actions', 'past-due-ar', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin', 'm365-calendar'],
+    widgets: ['quick-actions', 'past-due-ar', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
     layoutMode: 'bento'
   },
 
@@ -174,13 +165,13 @@ const ROLE_PRESETS = {
   admin: {
     roleName: 'Operations Leadership & Admin',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'past-due-ar', 'shipping-dock', 'rma-bench', 'm365-calendar'],
+    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'past-due-ar', 'shipping-dock', 'rma-bench'],
     layoutMode: 'bento'
   },
   operations: {
     roleName: 'Operations Leadership & Admin',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'past-due-ar', 'shipping-dock', 'rma-bench', 'm365-calendar'],
+    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'past-due-ar', 'shipping-dock', 'rma-bench'],
     layoutMode: 'bento'
   },
 
@@ -188,7 +179,7 @@ const ROLE_PRESETS = {
   user: {
     roleName: 'Staff Member',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'm365-calendar', 'company-bulletin'],
+    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
     layoutMode: 'bento'
   }
 }
