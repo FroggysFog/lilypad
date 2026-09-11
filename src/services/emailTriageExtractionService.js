@@ -33,6 +33,11 @@ const DEFAULT_MODEL = 'claude-haiku-4-5'
 const BATCH_SIZE_PER_OWNER = 20
 const LOOKBACK_DAYS = 14
 const MIN_TASK_CONFIDENCE = 0.5
+// A long planning email can list many small steps toward one broader
+// initiative - without a cap, the model listing every line item turns
+// one email into a wall of suggestions instead of the handful of
+// actually-actionable asks a triage queue is meant to surface.
+const MAX_TASKS_PER_EMAIL = 3
 
 function getConfig () {
   return {
@@ -68,7 +73,8 @@ const TRIAGE_TOOL = {
       one_line_summary: { type: 'string', description: 'One sentence, max ~140 characters, summarizing what this email is about.' },
       tasks: {
         type: 'array',
-        description: 'Explicit commitments, requests, or deadlines actually present in the text - do not invent tasks the sender did not ask for. Empty array if none.',
+        maxItems: MAX_TASKS_PER_EMAIL,
+        description: `Explicit commitments, requests, or deadlines actually present in the text - do not invent tasks the sender did not ask for. When an email lays out many small steps that are really one broader initiative (e.g. a numbered project plan), combine them into ONE task capturing the overall ask - only list separate tasks when they are genuinely independent (different people responsible, different deadlines, unrelated topics). At most ${MAX_TASKS_PER_EMAIL} tasks - pick the most important/actionable ones if there would otherwise be more. Empty array if none.`,
         items: {
           type: 'object',
           required: ['title', 'confidence'],
@@ -87,8 +93,11 @@ const SYSTEM_PROMPT = 'You are the triage engine for an internal operations ERP\
   'You read one email at a time and emit a structured classification via the emit_triage tool. ' +
   'You never see the recipient\'s other emails or the ERP database - your job is narrow: does this ' +
   'email need action, how urgent is it, and what commitments does it contain. Extract only commitments ' +
-  'actually present in the text - do not infer tasks the sender didn\'t ask for. If nothing is ' +
-  'actionable, return an empty tasks array and is_actionable: false.'
+  'actually present in the text - do not infer tasks the sender didn\'t ask for. A detailed planning ' +
+  'email with many small steps toward one goal is one task ("coordinate the account consolidation ' +
+  'project"), not one task per step - only break commitments into separate tasks when they are ' +
+  'genuinely independent asks. If nothing is actionable, return an empty tasks array and ' +
+  'is_actionable: false.'
 
 /**
  * Cuts a reply's HTML at the start of the quoted prior message, if any -
@@ -152,11 +161,18 @@ async function extractTriageForEmail (email) {
       return { is_actionable: false, urgency: 'normal', one_line_summary: '', tasks: [] }
     }
     const result = toolUse.input || {}
+    // maxItems on the tool schema is a strong hint, not a guarantee -
+    // this is the actual backstop against an email producing more than
+    // MAX_TASKS_PER_EMAIL suggestions, keeping whichever the model was
+    // most confident about if it still returns extras.
+    const tasks = Array.isArray(result.tasks) ? result.tasks : []
+    tasks.sort((a, b) => (b.confidence || 0) - (a.confidence || 0))
+
     return {
       is_actionable: Boolean(result.is_actionable),
       urgency: ['low', 'normal', 'high', 'urgent'].includes(result.urgency) ? result.urgency : 'normal',
       one_line_summary: String(result.one_line_summary || '').slice(0, 200),
-      tasks: Array.isArray(result.tasks) ? result.tasks : []
+      tasks: tasks.slice(0, MAX_TASKS_PER_EMAIL)
     }
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) throw new Error('LLM extraction failed: invalid ANTHROPIC_API_KEY.')
