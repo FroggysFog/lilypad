@@ -61,6 +61,21 @@ controller.getMessageById = async function (req, res) {
 }
 
 /**
+ * POST /api/v1/lilypad/email/messages/:id/summarize-now
+ * On-demand triage/summary for one message, bypassing the batch
+ * scheduler's graymail skip and per-run cap - used by the reader pane
+ * when a message doesn't already have a triage summary cached.
+ */
+controller.summarizeEmailNow = async function (req, res) {
+  try {
+    const triage = await emailTriageExtractionService.summarizeEmailNow(req.user._id, req.params.id)
+    return res.status(200).json({ success: true, data: triage })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
  * GET /api/v1/lilypad/email/messages/:id/thread
  */
 controller.getThread = async function (req, res) {
@@ -152,35 +167,50 @@ controller.sendDraft = async function (req, res) {
 }
 
 /**
- * POST /api/v1/lilypad/email/messages/:id/reply    { comment, replyAll? }
+ * multipart/form-data (not JSON) on both reply and forward now, purely
+ * so file attachments can ride along in the same request - a plain
+ * text-only reply/forward still works fine through this, multer just
+ * puts the non-file fields on req.body as strings instead of their
+ * native JSON types.
+ */
+controller.replyAttachmentMiddleware = attachmentUpload.array('attachments', 5)
+controller.forwardAttachmentMiddleware = attachmentUpload.array('attachments', 5)
+
+/**
+ * POST /api/v1/lilypad/email/messages/:id/reply    (form fields: comment, replyAll?, attachments[])
  */
 controller.reply = async function (req, res) {
   try {
     await microsoftEmailService.replyToMessage(req.user._id, req.params.id, {
       comment: cleanHtml(req.body.comment),
-      replyAll: Boolean(req.body.replyAll)
+      replyAll: req.body.replyAll === 'true',
+      attachments: req.files || []
     })
     return res.status(200).json({ success: true })
   } catch (err) {
-    return res.status(502).json({ success: false, error: err.message })
+    return res.status(err.statusCode || 502).json({ success: false, error: err.message })
   }
 }
 
 /**
- * POST /api/v1/lilypad/email/messages/:id/forward   { comment, toRecipients }
+ * POST /api/v1/lilypad/email/messages/:id/forward   (form fields: comment, toRecipients (JSON array string), attachments[])
  */
 controller.forward = async function (req, res) {
   try {
-    if (!Array.isArray(req.body.toRecipients) || !req.body.toRecipients.length) {
+    let toRecipients = []
+    try { toRecipients = JSON.parse(req.body.toRecipients || '[]') } catch (parseErr) { toRecipients = [] }
+
+    if (!Array.isArray(toRecipients) || !toRecipients.length) {
       return res.status(400).json({ success: false, error: 'At least one recipient is required.' })
     }
     await microsoftEmailService.forwardMessage(req.user._id, req.params.id, {
       comment: cleanHtml(req.body.comment),
-      toRecipients: req.body.toRecipients
+      toRecipients,
+      attachments: req.files || []
     })
     return res.status(200).json({ success: true })
   } catch (err) {
-    return res.status(502).json({ success: false, error: err.message })
+    return res.status(err.statusCode || 502).json({ success: false, error: err.message })
   }
 }
 

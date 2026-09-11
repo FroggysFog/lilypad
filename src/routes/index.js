@@ -53,8 +53,9 @@ function mainRoutes(router, controllers) {
   router.get('/api/v1/lilypad/email/messages', requireLoginApi, controllers.microsoftEmail.getMessages)
   router.get('/api/v1/lilypad/email/messages/:id', requireLoginApi, controllers.microsoftEmail.getMessageById)
   router.get('/api/v1/lilypad/email/messages/:id/thread', requireLoginApi, controllers.microsoftEmail.getThread)
-  router.post('/api/v1/lilypad/email/messages/:id/reply', requireLoginApi, controllers.microsoftEmail.reply)
-  router.post('/api/v1/lilypad/email/messages/:id/forward', requireLoginApi, controllers.microsoftEmail.forward)
+  router.post('/api/v1/lilypad/email/messages/:id/summarize-now', requireLoginApi, controllers.microsoftEmail.summarizeEmailNow)
+  router.post('/api/v1/lilypad/email/messages/:id/reply', requireLoginApi, controllers.microsoftEmail.replyAttachmentMiddleware, controllers.microsoftEmail.reply)
+  router.post('/api/v1/lilypad/email/messages/:id/forward', requireLoginApi, controllers.microsoftEmail.forwardAttachmentMiddleware, controllers.microsoftEmail.forward)
   router.post('/api/v1/lilypad/email/messages/:id/move', requireLoginApi, controllers.microsoftEmail.moveMessage)
   router.delete('/api/v1/lilypad/email/messages/:id', requireLoginApi, controllers.microsoftEmail.deleteMessage)
 

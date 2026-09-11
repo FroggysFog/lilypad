@@ -40,7 +40,7 @@
 		.email-row.active { background: rgba(var(--bs-primary-rgb), 0.08); border-left-color: var(--bs-primary); }
 		.email-row.unread .email-subject { font-weight: 700; color: var(--bs-dark, #1e293b); }
 		.email-row .email-preview { color: #94a3b8; }
-		.thread-body-frame { width: 100%; height: 320px; border: none; }
+		.thread-body-frame { width: 100%; height: 60vh; min-height: 420px; border: none; }
 		.thread-item.is-collapsed .thread-body { display: none; }
 		.thread-item-header { cursor: pointer; background: #f8fafc; }
 		.rich-editor { min-height: 140px; max-height: 320px; overflow-y: auto; }
@@ -441,6 +441,7 @@
 		let emailActiveId = null;
 		let currentThreadMessages = [];
 		let replyMode = null; // 'reply' | 'replyAll' | 'forward'
+		let replyAttachments = [];
 		let composeDraftId = null;
 		let graymailMessages = [];
 		const EMAIL_PAGE_SIZE = 25;
@@ -669,6 +670,13 @@
 					</div>
 				</div>
 				<div id="emailEntityBadges" class="d-flex flex-wrap gap-1 mb-2"></div>
+				<div id="emailQuickSummary" class="alert alert-soft-primary py-2 px-3 mb-2 fs-13 d-flex align-items-start gap-2" style="display:none;">
+					<i class="ti ti-sparkles mt-1 flex-shrink-0"></i>
+					<div class="flex-grow-1">
+						<div class="fw-semibold">Quick Summary</div>
+						<div id="emailQuickSummaryText" class="text-muted"></div>
+					</div>
+				</div>
 				<div id="emailThreadItems">${itemsHtml}</div>
 				<div id="emailInlineReplyBar" style="display:none;" class="border-top pt-3 mt-2">
 					<div class="d-flex align-items-center gap-2 mb-2">
@@ -676,6 +684,11 @@
 						<input type="text" id="emailForwardTo" class="form-control form-control-sm" placeholder="To: name@company.com, ..." style="display:none; max-width:360px;" list="erpUserEmails">
 					</div>
 					<div id="emailReplyBody" class="rich-editor form-control" contenteditable="true" data-placeholder="Write a reply..."></div>
+					<div class="d-flex align-items-center flex-wrap gap-2 mt-2">
+						<label for="emailReplyAttachmentInput" class="btn btn-sm btn-outline-secondary mb-0"><i class="ti ti-paperclip me-1"></i>Attach</label>
+						<input type="file" id="emailReplyAttachmentInput" multiple style="display:none;">
+						<div id="emailReplyAttachmentList" class="d-flex flex-wrap gap-1"></div>
+					</div>
 					<div class="d-flex justify-content-end gap-2 mt-2">
 						<button type="button" class="btn btn-sm btn-light" id="emailReplyCancelBtn">Cancel</button>
 						<button type="button" class="btn btn-sm btn-primary" id="emailReplySendBtn"><i class="ti ti-send me-1"></i> Send</button>
@@ -687,6 +700,7 @@
 				renderMessageBodyInto(reader.querySelector(`[data-thread-body="${idx}"]`), msg);
 			});
 			loadEntityBadges(latest.id);
+			loadQuickSummary(latest);
 
 			reader.querySelectorAll('.thread-item-header').forEach(header => {
 				header.addEventListener('click', () => header.closest('.thread-item').classList.toggle('is-collapsed'));
@@ -697,11 +711,60 @@
 			document.getElementById('emailForwardBtn').addEventListener('click', () => startReply('forward'));
 			document.getElementById('emailReplyCancelBtn').addEventListener('click', () => { document.getElementById('emailInlineReplyBar').style.display = 'none'; });
 			document.getElementById('emailReplySendBtn').addEventListener('click', sendInlineReply);
+			document.getElementById('emailReplyAttachmentInput').addEventListener('change', onReplyAttachmentsChosen);
 			const archiveBtn = document.getElementById('emailArchiveBtn');
 			if (archiveBtn) archiveBtn.addEventListener('click', archiveCurrentEmail);
 			const restoreBtn = document.getElementById('emailRestoreBtn');
 			if (restoreBtn) restoreBtn.addEventListener('click', restoreCurrentEmail);
 			document.getElementById('emailDeleteBtn').addEventListener('click', deleteCurrentEmail);
+		}
+
+		async function loadQuickSummary(latest) {
+			const box = document.getElementById('emailQuickSummary');
+			const text = document.getElementById('emailQuickSummaryText');
+			if (!box || !text) return;
+
+			if (latest.triageSummary) {
+				text.textContent = latest.triageSummary;
+				box.style.display = '';
+				return;
+			}
+
+			box.style.display = '';
+			text.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Summarizing...';
+			try {
+				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id) + '/summarize-now', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success || !result.data || !result.data.summary) throw new Error((result.error) || 'No summary available.');
+				if (emailActiveId !== latest.id && currentThreadMessages[currentThreadMessages.length - 1].id !== latest.id) return;
+				text.textContent = result.data.summary;
+				latest.triageSummary = result.data.summary;
+			} catch (err) {
+				box.style.display = 'none';
+			}
+		}
+
+		function renderReplyAttachmentList() {
+			const list = document.getElementById('emailReplyAttachmentList');
+			if (!list) return;
+			list.innerHTML = replyAttachments.map((file, idx) => `
+				<span class="badge bg-soft-secondary text-secondary fs-11 d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill">
+					${escapeHtml(file.name)}
+					<i class="ti ti-x" style="cursor:pointer;" data-remove-attachment="${idx}"></i>
+				</span>
+			`).join('');
+			list.querySelectorAll('[data-remove-attachment]').forEach(el => {
+				el.addEventListener('click', () => {
+					replyAttachments.splice(Number(el.getAttribute('data-remove-attachment')), 1);
+					renderReplyAttachmentList();
+				});
+			});
+		}
+
+		function onReplyAttachmentsChosen(evt) {
+			replyAttachments = replyAttachments.concat(Array.from(evt.target.files || []));
+			evt.target.value = '';
+			renderReplyAttachmentList();
 		}
 
 		function startReply(mode) {
@@ -714,6 +777,8 @@
 			toInput.style.display = mode === 'forward' ? '' : 'none';
 			toInput.value = '';
 			body.innerHTML = '';
+			replyAttachments = [];
+			renderReplyAttachmentList();
 			bar.style.display = '';
 			body.focus();
 		}
@@ -726,23 +791,28 @@
 			const sendBtn = document.getElementById('emailReplySendBtn');
 			sendBtn.disabled = true;
 			try {
+				const formData = new FormData();
+				formData.append('comment', comment);
+				replyAttachments.forEach(file => formData.append('attachments', file));
+
 				if (replyMode === 'forward') {
 					const toRecipients = document.getElementById('emailForwardTo').value.split(',').map(s => s.trim()).filter(Boolean);
 					if (!toRecipients.length) { alert('Add at least one recipient to forward to.'); sendBtn.disabled = false; return; }
+					formData.append('toRecipients', JSON.stringify(toRecipients));
 					const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id) + '/forward', {
-						method: 'POST', headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ comment, toRecipients })
+						method: 'POST', body: formData
 					});
 					const result = await res.json();
 					if (!result.success) throw new Error(result.error);
 				} else {
+					formData.append('replyAll', replyMode === 'replyAll' ? 'true' : 'false');
 					const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id) + '/reply', {
-						method: 'POST', headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ comment, replyAll: replyMode === 'replyAll' })
+						method: 'POST', body: formData
 					});
 					const result = await res.json();
 					if (!result.success) throw new Error(result.error);
 				}
+				replyAttachments = [];
 				await loadEmailList();
 				await openEmail(latest.id);
 			} catch (err) {

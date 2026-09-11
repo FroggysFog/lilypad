@@ -143,6 +143,42 @@ async function extractTriageForEmail (email) {
   }
 }
 
+/**
+ * Runs extraction for one email and persists the result - shared by the
+ * batch runner below and the on-demand "summarize this one email now"
+ * path (used when a user opens a message the batch hasn't reached yet,
+ * e.g. anything quarantined as graymail, which the batch deliberately
+ * skips).
+ */
+async function extractAndPersistTriageForEmail (ownerId, email) {
+  const triage = await extractTriageForEmail(email)
+  email.triage.processed = true
+  email.triage.isActionable = triage.is_actionable
+  email.triage.urgency = triage.urgency
+  email.triage.summary = triage.one_line_summary
+  email.triage.extractedAt = new Date()
+  await email.save()
+
+  if (triage.is_actionable && triage.tasks.length) {
+    await createSuggestedTasksFor(ownerId, email, triage.tasks)
+  }
+  return email.triage
+}
+
+/**
+ * On-demand summarize for a single email, regardless of its
+ * isColdInbound/processed state - the batch runner intentionally skips
+ * graymail and caps itself at BATCH_SIZE_PER_OWNER per run, but a user
+ * opening one specific message (including a quarantined one) wants a
+ * summary right now, not whenever the next scheduled pass gets to it.
+ */
+async function summarizeEmailNow (ownerId, graphMessageId) {
+  if (!isExtractionConfigured()) throw new Error('LLM extraction is not configured. Add ANTHROPIC_API_KEY to the environment.')
+  const email = await LilyPadEmailCache.findOne({ owner: ownerId, graphMessageId, deleted: false })
+  if (!email) throw new Error('Email not found.')
+  return extractAndPersistTriageForEmail(ownerId, email)
+}
+
 async function createSuggestedTasksFor (ownerId, email, tasks) {
   const qualifying = tasks.filter((t) => t && t.title && (t.confidence == null || t.confidence >= MIN_TASK_CONFIDENCE))
   if (!qualifying.length) return
@@ -182,17 +218,7 @@ async function runExtractionForOwner (ownerId) {
   let failed = 0
   for (const email of emails) {
     try {
-      const triage = await extractTriageForEmail(email)
-      email.triage.processed = true
-      email.triage.isActionable = triage.is_actionable
-      email.triage.urgency = triage.urgency
-      email.triage.summary = triage.one_line_summary
-      email.triage.extractedAt = new Date()
-      await email.save()
-
-      if (triage.is_actionable && triage.tasks.length) {
-        await createSuggestedTasksFor(ownerId, email, triage.tasks)
-      }
+      await extractAndPersistTriageForEmail(ownerId, email)
       processed++
     } catch (err) {
       failed++
@@ -242,6 +268,7 @@ function startEmailExtractionScheduler (winstonLogger) {
 module.exports = {
   isExtractionConfigured,
   runExtractionForOwner,
+  summarizeEmailNow,
   runScheduledExtraction,
   startEmailExtractionScheduler
 }

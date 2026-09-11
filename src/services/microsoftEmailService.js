@@ -69,7 +69,8 @@ function mapCacheDocToDetail (doc) {
     ...mapCacheDocToSummary(doc),
     ccRecipients: doc.ccRecipients || [],
     bodyHtml: doc.bodyHtml || null,
-    bodyText: null
+    bodyText: null,
+    triageSummary: (doc.triage && doc.triage.summary) || ''
   }
 }
 
@@ -274,17 +275,57 @@ async function sendDraft (ownerId, graphMessageId) {
 
 // --- Reply / forward -----------------------------------------------------
 
-async function replyToMessage (ownerId, graphMessageId, { comment, replyAll }) {
-  const action = replyAll ? 'replyAll' : 'reply'
-  await microsoftCalendarService.graphRequestForUser(ownerId, 'post', `/me/messages/${encodeURIComponent(graphMessageId)}/${action}`, { comment: comment || '' })
+/**
+ * Graph's one-shot /reply, /replyAll, /forward actions are simplest and
+ * are what these functions use when there's nothing to attach - but
+ * none of them accept attachments in the same call. Attaching a file
+ * means falling back to the createReply/createReplyAll/createForward
+ * actions instead, which draft the reply (already pre-filled with the
+ * quoted original, exactly like the one-shot actions produce) without
+ * sending it, so a file can be added to that draft before sending it
+ * for real via a normal send call.
+ */
+async function prependCommentToDraftBody (ownerId, draft, comment) {
+  if (!comment) return
+  const existingBody = (draft.body && draft.body.content) || ''
+  await microsoftCalendarService.graphRequestForUser(ownerId, 'patch', `/me/messages/${encodeURIComponent(draft.id)}`, {
+    body: { contentType: 'HTML', content: `${comment}${existingBody}` }
+  })
+}
+
+async function sendDraftWithAttachments (ownerId, draft, comment, attachments) {
+  await prependCommentToDraftBody(ownerId, draft, comment)
+  for (const file of attachments) {
+    await addAttachmentToDraft(ownerId, draft.id, file)
+  }
+  await microsoftCalendarService.graphRequestForUser(ownerId, 'post', `/me/messages/${encodeURIComponent(draft.id)}/send`)
+}
+
+async function replyToMessage (ownerId, graphMessageId, { comment, replyAll, attachments = [] }) {
+  if (!attachments.length) {
+    const action = replyAll ? 'replyAll' : 'reply'
+    await microsoftCalendarService.graphRequestForUser(ownerId, 'post', `/me/messages/${encodeURIComponent(graphMessageId)}/${action}`, { comment: comment || '' })
+  } else {
+    const action = replyAll ? 'createReplyAll' : 'createReply'
+    const draft = await microsoftCalendarService.graphRequestForUser(ownerId, 'post', `/me/messages/${encodeURIComponent(graphMessageId)}/${action}`, {})
+    await sendDraftWithAttachments(ownerId, draft, comment, attachments)
+  }
   await resyncFolders(ownerId, ['inbox', 'sentitems'])
 }
 
-async function forwardMessage (ownerId, graphMessageId, { comment, toRecipients }) {
-  await microsoftCalendarService.graphRequestForUser(ownerId, 'post', `/me/messages/${encodeURIComponent(graphMessageId)}/forward`, {
-    comment: comment || '',
-    toRecipients: toGraphRecipients(toRecipients)
-  })
+async function forwardMessage (ownerId, graphMessageId, { comment, toRecipients, attachments = [] }) {
+  if (!attachments.length) {
+    await microsoftCalendarService.graphRequestForUser(ownerId, 'post', `/me/messages/${encodeURIComponent(graphMessageId)}/forward`, {
+      comment: comment || '',
+      toRecipients: toGraphRecipients(toRecipients)
+    })
+  } else {
+    const draft = await microsoftCalendarService.graphRequestForUser(ownerId, 'post', `/me/messages/${encodeURIComponent(graphMessageId)}/createForward`, {})
+    await microsoftCalendarService.graphRequestForUser(ownerId, 'patch', `/me/messages/${encodeURIComponent(draft.id)}`, {
+      toRecipients: toGraphRecipients(toRecipients)
+    })
+    await sendDraftWithAttachments(ownerId, draft, comment, attachments)
+  }
   await resyncFolders(ownerId, ['inbox', 'sentitems'])
 }
 
