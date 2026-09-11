@@ -45,6 +45,9 @@ function launchServer (db) {
     ws.listen(function () {
       winston.info('LilyPad ERP Ready')
 
+      const { ensureDefaultAdmin } = require('./src/services/adminBootstrapService')
+      ensureDefaultAdmin()
+
       const { startReminderScheduler } = require('./src/services/reminderEmailService')
       startReminderScheduler(winston)
 
