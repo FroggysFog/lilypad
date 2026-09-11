@@ -7,15 +7,22 @@ const emailTriageExtractionService = require('../services/emailTriageExtractionS
 const emailSenderRollupService = require('../services/emailSenderRollupService')
 const emailErpEntityLinkService = require('../services/emailErpEntityLinkService')
 const emailWaitingOnService = require('../services/emailWaitingOnService')
+const microsoftContactsService = require('../services/microsoftContactsService')
+const microsoftMailboxSettingsService = require('../services/microsoftMailboxSettingsService')
 const { LilyPadSuggestedTask, LilyPadTask, LilyPadAwaitingResponse, LilyPadTicket, LilyPadErpEntityLink, LilyPadEmailCache } = require('../models')
 
 const URGENCY_TO_PRIORITY = { urgent: 'Urgent', high: 'High', normal: 'Normal', low: 'Low' }
 
-// Attachments only ever need to live in memory long enough to
-// base64-encode and hand to Graph - there's no reason to write them to
-// our own disk first (Graph/Outlook is the permanent store here, unlike
-// ticket attachments which LilyPad itself hosts).
-const attachmentUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
+// Attachments only ever need to live in memory long enough to hand to
+// Graph (small ones base64-encoded directly, larger ones streamed in
+// chunks to a resumable upload session - see
+// microsoftEmailService.js's addAttachmentToDraft) - there's no reason
+// to write them to our own disk first (Graph/Outlook is the permanent
+// store here, unlike ticket attachments which LilyPad itself hosts).
+// 20MB matches that service's own ceiling; multer's limit just needs
+// to be at or above it so a legitimately-sized file isn't rejected
+// before the size-based small-vs-large branch ever runs.
+const attachmentUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } })
 
 const controller = {}
 const VALID_FOLDERS = ['inbox', 'sent', 'archive', 'drafts', 'deleted', 'junk']
@@ -198,6 +205,43 @@ controller.moveMessage = async function (req, res) {
     return res.status(200).json({ success: true })
   } catch (err) {
     return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/contacts/outlook?search=...
+ */
+controller.getOutlookContacts = async function (req, res) {
+  try {
+    const data = await microsoftContactsService.getContacts(req.user._id, { search: req.query.search, top: 50 })
+    return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/email/automatic-replies
+ */
+controller.getAutomaticReplies = async function (req, res) {
+  try {
+    const data = await microsoftMailboxSettingsService.getAutomaticReplies(req.user._id)
+    return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * PUT /api/v1/lilypad/email/automatic-replies
+ * { status, externalAudience, internalReplyMessage, externalReplyMessage, scheduledStartDateTime?, scheduledEndDateTime? }
+ */
+controller.setAutomaticReplies = async function (req, res) {
+  try {
+    const data = await microsoftMailboxSettingsService.setAutomaticReplies(req.user._id, req.body)
+    return res.status(200).json({ success: true, data })
+  } catch (err) {
+    return res.status(400).json({ success: false, error: err.message })
   }
 }
 

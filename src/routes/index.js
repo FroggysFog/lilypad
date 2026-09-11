@@ -102,6 +102,14 @@ function mainRoutes(router, controllers) {
   router.post('/api/v1/lilypad/email/waiting-on/:id/dismiss', requireLoginApi, controllers.microsoftEmail.dismissWaitingOn)
   router.post('/api/v1/lilypad/email/scan-waiting-on-now', requireLoginApi, controllers.microsoftEmail.triggerWaitingOnScan)
 
+  // Outlook Contacts (read-only, personal contact list - distinct from
+  // the ERP's own customer/staff directories).
+  router.get('/api/v1/lilypad/contacts/outlook', requireLoginApi, controllers.microsoftEmail.getOutlookContacts)
+
+  // Out of Office / automatic replies.
+  router.get('/api/v1/lilypad/email/automatic-replies', requireLoginApi, controllers.microsoftEmail.getAutomaticReplies)
+  router.put('/api/v1/lilypad/email/automatic-replies', requireLoginApi, controllers.microsoftEmail.setAutomaticReplies)
+
   // Salesforce integration (used by past-due-payments.html)
   router.get('/auth/salesforce/connect', requireLogin, controllers.salesforceAuth.connect)
   router.get('/auth/salesforce/callback', requireLogin, controllers.salesforceAuth.callback)

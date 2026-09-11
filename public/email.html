@@ -145,6 +145,12 @@
 						<p class="text-muted fs-13 mb-0">Your connected Outlook inbox, pulled straight into LilyPad.</p>
 					</div>
 					<div class="d-flex align-items-center gap-2">
+						<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="emailOooBtn">
+							<i class="ti ti-beach me-1"></i> Out of Office
+						</button>
+						<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="emailContactsBtn">
+							<i class="ti ti-address-book me-1"></i> Contacts
+						</button>
 						<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="emailRefreshBtn">
 							<i class="ti ti-refresh me-1"></i> Refresh
 						</button>
@@ -356,6 +362,63 @@
 				<div class="modal-footer border-top py-2 px-4">
 					<button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
 					<button type="button" class="btn btn-sm btn-primary px-4" id="createTicketSubmitBtn"><i class="ti ti-check me-1"></i> Create</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Outlook Contacts Offcanvas -->
+	<div class="offcanvas offcanvas-end" tabindex="-1" id="contactsOffcanvas" style="width:380px;">
+		<div class="offcanvas-header border-bottom">
+			<h5 class="offcanvas-title fw-bold d-flex align-items-center gap-2"><i class="ti ti-address-book text-primary"></i> Outlook Contacts</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+		</div>
+		<div class="offcanvas-body p-3 d-flex flex-column">
+			<input type="text" id="contactsSearchInput" class="form-control form-control-sm mb-2" placeholder="Search contacts...">
+			<div id="contactsList" class="flex-fill" style="overflow-y:auto;"></div>
+		</div>
+	</div>
+
+	<!-- Out of Office Modal -->
+	<div class="modal fade" id="oooModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content border-0 shadow-lg">
+				<div class="modal-header py-3 px-4 border-bottom bg-light">
+					<h5 class="modal-title fw-bold mb-0"><i class="ti ti-beach text-primary me-1"></i> Out of Office</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body p-4">
+					<div class="mb-3">
+						<label class="form-label fs-13 fw-semibold">Status</label>
+						<select id="oooStatus" class="form-select form-select-sm">
+							<option value="disabled">Off</option>
+							<option value="alwaysEnabled">On until I turn it off</option>
+							<option value="scheduled">Scheduled</option>
+						</select>
+					</div>
+					<div class="row g-2 mb-3" id="oooScheduleRow" style="display:none;">
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">Start</label>
+							<input type="datetime-local" id="oooStart" class="form-control form-control-sm">
+						</div>
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">End</label>
+							<input type="datetime-local" id="oooEnd" class="form-control form-control-sm">
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label fs-13 fw-semibold">Message to coworkers (internal)</label>
+						<textarea id="oooInternalMessage" class="form-control form-control-sm" rows="3"></textarea>
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Message to everyone else (external)</label>
+						<textarea id="oooExternalMessage" class="form-control form-control-sm" rows="3"></textarea>
+					</div>
+					<div class="fs-11 text-muted" id="oooSaveStatus">&nbsp;</div>
+				</div>
+				<div class="modal-footer border-top py-2 px-4">
+					<button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-sm btn-primary px-4" id="oooSaveBtn"><i class="ti ti-check me-1"></i> Save</button>
 				</div>
 			</div>
 		</div>
@@ -1212,6 +1275,107 @@
 				alert(err.message || 'Unable to dismiss.');
 			}
 		}
+
+		// --- Outlook Contacts ------------------------------------------------
+
+		function contactRowMarkup(c) {
+			return `
+				<div class="d-flex align-items-center justify-content-between gap-2 p-2 border-bottom">
+					<div style="min-width:0;">
+						<div class="fs-13 fw-semibold text-dark text-truncate">${escapeHtml(c.displayName || c.email || 'Unnamed contact')}</div>
+						<div class="fs-12 text-muted text-truncate">${escapeHtml(c.email || '')}</div>
+						${c.companyName ? `<div class="fs-11 text-muted text-truncate">${escapeHtml(c.jobTitle ? c.jobTitle + ' at ' : '')}${escapeHtml(c.companyName)}</div>` : ''}
+					</div>
+					<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11 flex-shrink-0 contact-compose-btn" data-email="${escapeHtml(c.email)}" data-name="${escapeHtml(c.displayName)}" ${c.email ? '' : 'disabled'}><i class="ti ti-mail"></i></button>
+				</div>
+			`;
+		}
+
+		async function loadOutlookContacts(search) {
+			const list = document.getElementById('contactsList');
+			list.innerHTML = '<div class="text-center text-muted fs-13 py-4"><span class="spinner-border spinner-border-sm me-1"></span> Loading...</div>';
+			try {
+				const params = new URLSearchParams();
+				if (search) params.set('search', search);
+				const res = await fetch('/api/v1/lilypad/contacts/outlook?' + params.toString());
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				list.innerHTML = result.data.map(contactRowMarkup).join('') || '<p class="fs-13 text-muted text-center py-4">No contacts found.</p>';
+				list.querySelectorAll('.contact-compose-btn').forEach(btn => {
+					btn.addEventListener('click', () => {
+						bootstrap.Offcanvas.getInstance(document.getElementById('contactsOffcanvas'))?.hide();
+						openComposeModal();
+						document.getElementById('composeTo').value = btn.dataset.email;
+					});
+				});
+			} catch (err) {
+				list.innerHTML = '<p class="fs-13 text-danger text-center py-4">' + escapeHtml(err.message) + '</p>';
+			}
+		}
+
+		let contactsSearchTimer = null;
+		document.getElementById('contactsSearchInput').addEventListener('input', (e) => {
+			clearTimeout(contactsSearchTimer);
+			const value = e.target.value.trim();
+			contactsSearchTimer = setTimeout(() => loadOutlookContacts(value), 400);
+		});
+
+		document.getElementById('emailContactsBtn').addEventListener('click', () => {
+			document.getElementById('contactsSearchInput').value = '';
+			bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('contactsOffcanvas')).show();
+			loadOutlookContacts();
+		});
+
+		// --- Out of Office -----------------------------------------------------
+
+		document.getElementById('oooStatus').addEventListener('change', (e) => {
+			document.getElementById('oooScheduleRow').style.display = e.target.value === 'scheduled' ? '' : 'none';
+		});
+
+		document.getElementById('emailOooBtn').addEventListener('click', async () => {
+			bootstrap.Modal.getOrCreateInstance(document.getElementById('oooModal')).show();
+			document.getElementById('oooSaveStatus').innerHTML = '&nbsp;';
+			try {
+				const res = await fetch('/api/v1/lilypad/email/automatic-replies');
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				const s = result.data;
+				document.getElementById('oooStatus').value = s.status;
+				document.getElementById('oooScheduleRow').style.display = s.status === 'scheduled' ? '' : 'none';
+				document.getElementById('oooStart').value = s.scheduledStartDateTime ? s.scheduledStartDateTime.slice(0, 16) : '';
+				document.getElementById('oooEnd').value = s.scheduledEndDateTime ? s.scheduledEndDateTime.slice(0, 16) : '';
+				document.getElementById('oooInternalMessage').value = s.internalReplyMessage || '';
+				document.getElementById('oooExternalMessage').value = s.externalReplyMessage || '';
+			} catch (err) {
+				document.getElementById('oooSaveStatus').textContent = err.message;
+			}
+		});
+
+		document.getElementById('oooSaveBtn').addEventListener('click', async () => {
+			const btn = document.getElementById('oooSaveBtn');
+			const statusEl = document.getElementById('oooSaveStatus');
+			btn.disabled = true;
+			try {
+				const res = await fetch('/api/v1/lilypad/email/automatic-replies', {
+					method: 'PUT', headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						status: document.getElementById('oooStatus').value,
+						externalAudience: 'all',
+						internalReplyMessage: document.getElementById('oooInternalMessage').value,
+						externalReplyMessage: document.getElementById('oooExternalMessage').value,
+						scheduledStartDateTime: document.getElementById('oooStart').value || null,
+						scheduledEndDateTime: document.getElementById('oooEnd').value || null
+					})
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				statusEl.textContent = 'Saved.';
+			} catch (err) {
+				statusEl.textContent = err.message;
+			} finally {
+				btn.disabled = false;
+			}
+		});
 
 		// --- Compose modal (new messages + editing existing drafts) ---------
 

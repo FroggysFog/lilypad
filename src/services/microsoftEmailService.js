@@ -16,12 +16,24 @@
  * immediately instead of waiting on the 15-minute fallback scheduler.
  */
 
+const axios = require('axios')
 const microsoftCalendarService = require('./microsoftCalendarService')
 const microsoftEmailSyncService = require('./microsoftEmailSyncService')
 const LilyPadEmailCache = require('../models/lilypadEmailCache')
 
 const PUBLIC_TO_CACHE_FOLDER = { inbox: 'inbox', sent: 'sentitems', archive: 'archive', drafts: 'drafts', deleted: 'deleteditems', junk: 'junkemail' }
-const MAX_INLINE_ATTACHMENT_BYTES = 3 * 1024 * 1024 // Graph's direct-attach limit; bigger files need a resumable upload session, not built yet.
+const MAX_INLINE_ATTACHMENT_BYTES = 3 * 1024 * 1024 // Graph's hard cutoff for a direct base64 attachment - above this, a resumable upload session is required regardless of our own ceiling below.
+// Graph itself allows up to 150MB per message attachment via upload
+// session, but this app runs on a 512MB dyno (see render.yaml's note
+// on the in-house crawler for the same constraint) - holding a much
+// bigger file in server memory at once, even transiently, is a real
+// risk. 20MB comfortably covers normal PDFs/images/decks without
+// getting near that ceiling.
+const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024
+// Graph requires each fragment's size to be a multiple of 320 KiB
+// (except the final one) - this is 12 * 327680, comfortably under
+// Graph's recommended 4-5MB-per-fragment guidance.
+const UPLOAD_CHUNK_SIZE = 12 * 327680
 
 function mapGraphRecipient (r) {
   const ea = (r && r.emailAddress) || r || {}
@@ -188,17 +200,61 @@ async function discardDraft (ownerId, graphMessageId) {
 }
 
 async function addAttachmentToDraft (ownerId, graphMessageId, file) {
-  if (file.size > MAX_INLINE_ATTACHMENT_BYTES) {
-    const err = new Error(`"${file.originalname}" is larger than 3MB - large attachments aren't supported yet.`)
+  if (file.size > MAX_ATTACHMENT_BYTES) {
+    const err = new Error(`"${file.originalname}" is larger than ${Math.round(MAX_ATTACHMENT_BYTES / (1024 * 1024))}MB - not supported yet.`)
     err.statusCode = 413
     throw err
   }
-  await microsoftCalendarService.graphRequestForUser(ownerId, 'post', `/me/messages/${encodeURIComponent(graphMessageId)}/attachments`, {
-    '@odata.type': '#microsoft.graph.fileAttachment',
-    name: file.originalname,
-    contentType: file.mimetype,
-    contentBytes: file.buffer.toString('base64')
-  })
+
+  if (file.size <= MAX_INLINE_ATTACHMENT_BYTES) {
+    await microsoftCalendarService.graphRequestForUser(ownerId, 'post', `/me/messages/${encodeURIComponent(graphMessageId)}/attachments`, {
+      '@odata.type': '#microsoft.graph.fileAttachment',
+      name: file.originalname,
+      contentType: file.mimetype,
+      contentBytes: file.buffer.toString('base64')
+    })
+    return
+  }
+
+  await uploadLargeAttachment(ownerId, graphMessageId, file)
+}
+
+/**
+ * Graph's resumable upload session for anything over the 3MB direct-
+ * attach limit: create a session (a real, authenticated Graph call),
+ * then PUT the file in fixed-size chunks straight to the returned
+ * uploadUrl. That URL is itself pre-authenticated (a short-lived token
+ * is embedded in it) - Graph's own docs say not to send our Bearer
+ * token to it, so this goes through plain axios rather than
+ * graphRequestForUser, which always attaches one.
+ */
+async function uploadLargeAttachment (ownerId, graphMessageId, file) {
+  const session = await microsoftCalendarService.graphRequestForUser(
+    ownerId,
+    'post',
+    `/me/messages/${encodeURIComponent(graphMessageId)}/attachments/createUploadSession`,
+    {
+      AttachmentItem: {
+        attachmentType: 'file',
+        name: file.originalname,
+        size: file.size
+      }
+    }
+  )
+
+  const totalSize = file.buffer.length
+  for (let start = 0; start < totalSize; start += UPLOAD_CHUNK_SIZE) {
+    const end = Math.min(start + UPLOAD_CHUNK_SIZE, totalSize)
+    const chunk = file.buffer.subarray(start, end)
+    await axios.put(session.uploadUrl, chunk, {
+      headers: {
+        'Content-Length': String(chunk.length),
+        'Content-Range': `bytes ${start}-${end - 1}/${totalSize}`
+      },
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity
+    })
+  }
 }
 
 /**

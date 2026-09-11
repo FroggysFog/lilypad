@@ -28,15 +28,13 @@ const LilyPadMicrosoftAccount = require('../models/lilypadMicrosoftAccount')
 
 const AUTHORITY = 'https://login.microsoftonline.com'
 const GRAPH = 'https://graph.microsoft.com/v1.0'
-// Mail.ReadWrite/Mail.Send were added to the Azure app registration and
-// admin-consented for the full mailbox client (compose/reply/forward/
-// send/delete/move), but were never actually added to this array - the
-// authorization URL only ever requested Mail.Read, so every write
-// action has been failing with an insufficient-scope error from Graph
-// even after the Azure-side permission was granted. Requesting the
-// scope here is what actually matters; Azure only makes it available
-// to consent to.
-const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read', 'Mail.ReadWrite', 'Mail.Send']
+// Contacts.Read (Outlook Contacts) and MailboxSettings.ReadWrite (Out
+// of Office) both need adding as Delegated permissions on the Azure
+// app registration + admin consent, same as every scope before them -
+// see this file's header comment for why that's always a two-part
+// change (here AND in Azure) plus a reconnect for already-connected
+// users.
+const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read', 'Mail.ReadWrite', 'Mail.Send', 'Contacts.Read', 'MailboxSettings.ReadWrite']
 
 function getConfig () {
   return {
