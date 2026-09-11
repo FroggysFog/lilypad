@@ -57,9 +57,29 @@ controller.callback = async (req, res) => {
     return res.redirect('/calendar.html?microsoft=connected')
   } catch (err) {
     // req.query.code is deliberately omitted - it's a live, single-use
-    // authorization code and shouldn't end up in logs.
-    winston.error(`Microsoft Calendar OAuth callback failed for user ${req.user && req.user._id}: ${err.message} (hadSessionState=${Boolean(expectedState)}, hasQueryState=${Boolean(req.query.state)}, statesMatch=${req.query.state === expectedState}, msError=${req.query.error || 'none'})`)
-    return res.status(400).send(`Microsoft Calendar connection failed: ${err.message}`)
+    // authorization code and shouldn't end up in logs or the response.
+    const diagnostics = {
+      hadSessionState: Boolean(expectedState),
+      hasQueryState: Boolean(req.query.state),
+      statesMatch: req.query.state === expectedState,
+      msError: req.query.error || 'none',
+      callbackHost: req.get('host'),
+      configuredRedirectUri: process.env.MICROSOFT_CALENDAR_REDIRECT_URI || '(unset - defaulting to localhost)'
+    }
+    winston.error(`Microsoft Calendar OAuth callback failed for user ${req.user && req.user._id}: ${err.message} ${JSON.stringify(diagnostics)}`)
+    // Plain JSON, not an HTML string built with template interpolation -
+    // err.message can contain Microsoft's error_description, which is
+    // attacker-controllable query-string content (anyone can craft a link
+    // to this callback URL with their own error/error_description values),
+    // so it must never be concatenated into an HTML response. Still fully
+    // readable in a browser without needing log access - just not styled -
+    // so whoever hits this can compare callbackHost against
+    // configuredRedirectUri themselves: a mismatch there (e.g. one is the
+    // custom domain, the other still the raw Render URL) means the browser
+    // landed on a different origin than the one that set the session's
+    // expected state, which always looks like hadSessionState: false here
+    // even though nothing is actually wrong with the session itself.
+    return res.status(400).json({ success: false, error: err.message, diagnostics })
   }
 }
 
