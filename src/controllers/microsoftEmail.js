@@ -661,6 +661,25 @@ controller.dismissWaitingOn = async function (req, res) {
 }
 
 /**
+ * POST /api/v1/lilypad/email/waiting-on/bulk-dismiss
+ * body: { ids: [...] }
+ */
+controller.bulkDismissWaitingOn = async function (req, res) {
+  try {
+    const ids = Array.isArray(req.body.ids) ? req.body.ids : []
+    if (!ids.length) return res.status(400).json({ success: false, error: 'ids must be a non-empty array' })
+
+    const result = await LilyPadAwaitingResponse.updateMany(
+      { _id: { $in: ids }, owner: req.user._id },
+      { $set: { status: 'dismissed' } }
+    )
+    return res.status(200).json({ success: true, data: { dismissed: result.modifiedCount } })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
  * POST /api/v1/lilypad/email/scan-waiting-on-now
  */
 controller.triggerWaitingOnScan = async function (req, res) {

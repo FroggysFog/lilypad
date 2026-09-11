@@ -104,6 +104,7 @@ function mainRoutes(router, controllers) {
   router.post('/api/v1/lilypad/email/link-entities-now', requireLoginApi, controllers.microsoftEmail.triggerEntityLinking)
   router.get('/api/v1/lilypad/email/waiting-on', requireLoginApi, controllers.microsoftEmail.getWaitingOn)
   router.post('/api/v1/lilypad/email/waiting-on/:id/dismiss', requireLoginApi, controllers.microsoftEmail.dismissWaitingOn)
+  router.post('/api/v1/lilypad/email/waiting-on/bulk-dismiss', requireLoginApi, controllers.microsoftEmail.bulkDismissWaitingOn)
   router.post('/api/v1/lilypad/email/scan-waiting-on-now', requireLoginApi, controllers.microsoftEmail.triggerWaitingOnScan)
 
   // Outlook Contacts (read-only, personal contact list - distinct from

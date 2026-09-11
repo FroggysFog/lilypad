@@ -31,8 +31,26 @@ const REQUEST_PATTERNS = [
   /\?\s*$/m // a line ending in a question mark
 ]
 
+/**
+ * Same reasoning as emailTriageExtractionService.js's stripQuotedHistory -
+ * a reply's body carries the entire quoted conversation beneath it, so
+ * without cutting that off, a later reply that merely quotes an earlier
+ * request would independently re-match the request patterns below and
+ * spawn a second watcher for the same original ask.
+ */
+function stripQuotedHistory (html) {
+  if (!html) return html
+  const markers = [/id=["']divRplyFwdMsg["']/i, /<blockquote/i]
+  let cutIndex = html.length
+  for (const marker of markers) {
+    const match = html.match(marker)
+    if (match && match.index < cutIndex) cutIndex = match.index
+  }
+  return html.slice(0, cutIndex)
+}
+
 function bodyToPlainText (email) {
-  return email.bodyHtml ? htmlToText(email.bodyHtml, { wordwrap: false }) : String(email.bodyPreview || '')
+  return email.bodyHtml ? htmlToText(stripQuotedHistory(email.bodyHtml), { wordwrap: false }) : String(email.bodyPreview || '')
 }
 
 function looksLikeRequest (text) {
@@ -52,6 +70,12 @@ function looksLikeRequest (text) {
  * so a brand new connection would otherwise create "awaiting reply"
  * watchers for asks sent long before anyone was using LilyPad to track
  * them.
+ *
+ * At most one open watcher per conversation - a multi-message back-
+ * and-forth thread where several sent messages each independently read
+ * as a request (a real, observed case: two nearly-identical "still
+ * waiting on this?" nudges in the same thread) otherwise produced one
+ * watcher per message instead of one per actual outstanding ask.
  */
 async function scanOutboundForOwner (ownerId) {
   const status = await microsoftCalendarService.getStatus(ownerId)
@@ -65,10 +89,18 @@ async function scanOutboundForOwner (ownerId) {
 
   const emails = await LilyPadEmailCache.find(query).sort({ receivedDateTime: 1 }).limit(BATCH_SIZE_PER_OWNER)
 
+  const openWatchers = await LilyPadAwaitingResponse.find({ owner: ownerId, status: { $in: ['waiting', 'overdue'] } })
+    .populate('sourceEmail', 'graphConversationId')
+  const conversationsAlreadyWatched = new Set(
+    openWatchers.filter((w) => w.sourceEmail && w.sourceEmail.graphConversationId).map((w) => w.sourceEmail.graphConversationId)
+  )
+
   let created = 0
   for (const email of emails) {
     const recipient = (email.toRecipients || [])[0]
-    if (recipient && recipient.address && looksLikeRequest(bodyToPlainText(email))) {
+    const alreadyWatched = email.graphConversationId && conversationsAlreadyWatched.has(email.graphConversationId)
+
+    if (!alreadyWatched && recipient && recipient.address && looksLikeRequest(bodyToPlainText(email))) {
       const sentAt = email.receivedDateTime || new Date()
       await LilyPadAwaitingResponse.create({
         owner: ownerId,
@@ -79,6 +111,7 @@ async function scanOutboundForOwner (ownerId) {
         followUpAfter: new Date(sentAt.getTime() + DEFAULT_FOLLOWUP_DAYS * 24 * 60 * 60 * 1000),
         status: 'waiting'
       })
+      if (email.graphConversationId) conversationsAlreadyWatched.add(email.graphConversationId)
       created++
     }
     email.waitingOnProcessed = true

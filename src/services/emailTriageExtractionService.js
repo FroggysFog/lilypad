@@ -202,11 +202,59 @@ async function summarizeEmailNow (ownerId, graphMessageId) {
   return extractAndPersistTriageForEmail(ownerId, email)
 }
 
+const TITLE_SIMILARITY_THRESHOLD = 0.6
+
+/**
+ * Normalized bag-of-words overlap, relative to the smaller title - not
+ * full Jaccard (divided by the union), since two titles of noticeably
+ * different length describing the same ask (a terse restatement vs. a
+ * fuller one) should still count as similar rather than being
+ * penalized for the length difference.
+ */
+function titleWords (title) {
+  return new Set(String(title || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean))
+}
+
+function isSimilarTitle (a, b) {
+  const wordsA = titleWords(a)
+  const wordsB = titleWords(b)
+  if (!wordsA.size || !wordsB.size) return false
+  let shared = 0
+  wordsA.forEach((w) => { if (wordsB.has(w)) shared++ })
+  return shared / Math.min(wordsA.size, wordsB.size) >= TITLE_SIMILARITY_THRESHOLD
+}
+
+/**
+ * Skips creating a suggestion that closely restates one already pending
+ * from earlier in the same conversation - stripQuotedHistory upstream
+ * handles a reply literally quoting an earlier ask, but a multi-message
+ * thread where each message freshly retypes basically the same request
+ * (observed: "add Adam Pogue as admin..." asked slightly differently
+ * across several messages in one thread) has no quoted content to
+ * strip, so this catches it on meaning instead.
+ */
 async function createSuggestedTasksFor (ownerId, email, tasks) {
   const qualifying = tasks.filter((t) => t && t.title && (t.confidence == null || t.confidence >= MIN_TASK_CONFIDENCE))
   if (!qualifying.length) return
 
-  await LilyPadSuggestedTask.insertMany(qualifying.map((t) => ({
+  let existingTitlesInThread = []
+  if (email.graphConversationId) {
+    const pendingInThread = await LilyPadSuggestedTask.find({ owner: ownerId, status: 'pending' })
+      .populate('sourceEmail', 'graphConversationId')
+    existingTitlesInThread = pendingInThread
+      .filter((s) => s.sourceEmail && s.sourceEmail.graphConversationId === email.graphConversationId)
+      .map((s) => s.title)
+  }
+
+  const newTasks = []
+  for (const t of qualifying) {
+    if (existingTitlesInThread.some((existingTitle) => isSimilarTitle(existingTitle, t.title))) continue
+    existingTitlesInThread.push(String(t.title)) // dedupe against sibling tasks from this same email too
+    newTasks.push(t)
+  }
+  if (!newTasks.length) return
+
+  await LilyPadSuggestedTask.insertMany(newTasks.map((t) => ({
     owner: ownerId,
     sourceEmail: email._id,
     title: String(t.title).slice(0, 255),

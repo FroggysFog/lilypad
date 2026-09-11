@@ -212,6 +212,15 @@
 							<h6 class="fw-bold mb-0 fs-14">Waiting On</h6>
 							<span class="badge bg-soft-primary text-primary rounded-pill" id="waitingOnCount">0</span>
 						</div>
+						<div class="d-flex align-items-center justify-content-between gap-2 px-2 pt-2">
+							<div class="form-check mb-0">
+								<input type="checkbox" class="form-check-input" id="waitingOnSelectAll">
+								<label class="form-check-label fs-12 text-muted" for="waitingOnSelectAll">Select all</label>
+							</div>
+							<button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 fs-11" id="waitingOnBulkDismissBtn" disabled>
+								<i class="ti ti-x me-1"></i>Dismiss Selected (<span id="waitingOnSelectedCount">0</span>)
+							</button>
+						</div>
 						<div id="waitingOnList" class="card-body p-2"></div>
 					</div>
 
@@ -1363,24 +1372,40 @@
 			return Math.max(0, Math.round((b - a) / 86400000));
 		}
 
+		let selectedWaitingOnIds = new Set();
+
 		function waitingOnRowMarkup(w) {
 			const isOverdue = w.status === 'overdue';
 			const askedDays = daysBetween(new Date(w.createdAt), new Date());
 			return `
 				<div class="d-flex align-items-start justify-content-between gap-2 p-2 border-bottom">
-					<div style="min-width:0;">
-						<div class="fs-13 fw-semibold text-dark text-truncate">
-							${isOverdue ? '<span class="badge bg-soft-primary text-primary fs-10 me-1">Overdue</span>' : ''}${escapeHtml(w.toName || w.toAddress)}
+					<div class="d-flex align-items-start gap-2" style="min-width:0;">
+						<input type="checkbox" class="form-check-input mt-1 flex-shrink-0 waiting-on-checkbox" data-id="${w._id}">
+						<div style="min-width:0;">
+							<div class="fs-13 fw-semibold text-dark text-truncate">
+								${isOverdue ? '<span class="badge bg-soft-primary text-primary fs-10 me-1">Overdue</span>' : ''}${escapeHtml(w.toName || w.toAddress)}
+							</div>
+							<div class="fs-12 text-muted text-truncate">${escapeHtml(w.askSummary)} &middot; asked ${askedDays}d ago</div>
 						</div>
-						<div class="fs-12 text-muted text-truncate">${escapeHtml(w.askSummary)} &middot; asked ${askedDays}d ago</div>
 					</div>
 					<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 flex-shrink-0 waiting-on-dismiss-btn" data-id="${w._id}">Dismiss</button>
 				</div>
 			`;
 		}
 
+		function updateWaitingOnBulkBar() {
+			const countEl = document.getElementById('waitingOnSelectedCount');
+			const bulkBtn = document.getElementById('waitingOnBulkDismissBtn');
+			const selectAll = document.getElementById('waitingOnSelectAll');
+			const allBoxes = document.querySelectorAll('.waiting-on-checkbox');
+			if (countEl) countEl.textContent = selectedWaitingOnIds.size;
+			if (bulkBtn) bulkBtn.disabled = selectedWaitingOnIds.size === 0;
+			if (selectAll) selectAll.checked = allBoxes.length > 0 && selectedWaitingOnIds.size === allBoxes.length;
+		}
+
 		async function loadWaitingOn() {
 			const card = document.getElementById('waitingOnCard');
+			selectedWaitingOnIds = new Set();
 			try {
 				const res = await fetch('/api/v1/lilypad/email/waiting-on');
 				const result = await res.json();
@@ -1392,6 +1417,14 @@
 				list.querySelectorAll('.waiting-on-dismiss-btn').forEach(btn => {
 					btn.addEventListener('click', () => dismissWaitingOn(btn.dataset.id));
 				});
+				list.querySelectorAll('.waiting-on-checkbox').forEach(box => {
+					box.addEventListener('change', () => {
+						if (box.checked) selectedWaitingOnIds.add(box.dataset.id);
+						else selectedWaitingOnIds.delete(box.dataset.id);
+						updateWaitingOnBulkBar();
+					});
+				});
+				updateWaitingOnBulkBar();
 				card.classList.remove('d-none');
 			} catch (err) {
 				console.error('Unable to load waiting-on list:', err);
@@ -1408,6 +1441,33 @@
 				alert(err.message || 'Unable to dismiss.');
 			}
 		}
+
+		document.getElementById('waitingOnSelectAll').addEventListener('change', (evt) => {
+			document.querySelectorAll('.waiting-on-checkbox').forEach(box => {
+				box.checked = evt.target.checked;
+				if (evt.target.checked) selectedWaitingOnIds.add(box.dataset.id);
+			});
+			if (!evt.target.checked) selectedWaitingOnIds.clear();
+			updateWaitingOnBulkBar();
+		});
+
+		document.getElementById('waitingOnBulkDismissBtn').addEventListener('click', async () => {
+			const ids = Array.from(selectedWaitingOnIds);
+			if (!ids.length) return;
+			if (!confirm('Dismiss ' + ids.length + ' selected item' + (ids.length === 1 ? '' : 's') + '?')) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/email/waiting-on/bulk-dismiss', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ ids })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadWaitingOn();
+			} catch (err) {
+				alert(err.message || 'Unable to dismiss selected items.');
+			}
+		});
 
 		// --- Outlook Contacts ------------------------------------------------
 
