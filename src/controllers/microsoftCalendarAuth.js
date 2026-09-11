@@ -9,6 +9,7 @@
  */
 
 const crypto = require('crypto')
+const winston = require('../logger')
 const microsoftCalendarService = require('../services/microsoftCalendarService')
 
 const controller = {}
@@ -32,17 +33,32 @@ controller.connect = (req, res) => {
 }
 
 controller.callback = async (req, res) => {
-  try {
-    const expectedState = req.session.msCalendarState
-    delete req.session.msCalendarState
+  const expectedState = req.session.msCalendarState
+  delete req.session.msCalendarState
 
-    if (!req.query.code || !req.query.state || req.query.state !== expectedState) {
+  try {
+    // Microsoft redirects back with `error`/`error_description` instead of
+    // `code` on anything from "user clicked cancel" to "admin consent
+    // required" - surfacing it here instead of falling through to the
+    // generic state-mismatch message below, which used to fire for this
+    // case too (no `code` present) and hid what Microsoft actually said.
+    if (req.query.error) {
+      throw new Error(req.query.error_description || req.query.error)
+    }
+
+    if (!expectedState || !req.query.state || req.query.state !== expectedState) {
       throw new Error('Invalid or expired Microsoft OAuth state - please try connecting again.')
+    }
+    if (!req.query.code) {
+      throw new Error('Microsoft did not return an authorization code - please try connecting again.')
     }
 
     await microsoftCalendarService.exchangeCodeForUser(req.user._id, req.query.code)
     return res.redirect('/calendar.html?microsoft=connected')
   } catch (err) {
+    // req.query.code is deliberately omitted - it's a live, single-use
+    // authorization code and shouldn't end up in logs.
+    winston.error(`Microsoft Calendar OAuth callback failed for user ${req.user && req.user._id}: ${err.message} (hadSessionState=${Boolean(expectedState)}, hasQueryState=${Boolean(req.query.state)}, statesMatch=${req.query.state === expectedState}, msError=${req.query.error || 'none'})`)
     return res.status(400).send(`Microsoft Calendar connection failed: ${err.message}`)
   }
 }
