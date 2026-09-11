@@ -23,7 +23,7 @@ const emailCacheSchema = new Schema(
     owner: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', required: true, index: true },
     graphMessageId: { type: String, required: true },
     graphConversationId: { type: String, default: '', index: true },
-    folder: { type: String, enum: ['inbox', 'sentitems', 'drafts', 'archive', 'deleteditems'], required: true, index: true },
+    folder: { type: String, enum: ['inbox', 'sentitems', 'drafts', 'archive', 'deleteditems', 'junkemail'], required: true, index: true },
     subject: { type: String, default: '' },
     bodyHtml: { type: String, default: '' },
     bodyPreview: { type: String, default: '' },

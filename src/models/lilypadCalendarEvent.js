@@ -27,6 +27,12 @@ const calendarEventSchema = new Schema(
     attendees: [{ type: Schema.Types.ObjectId, ref: 'lilypad_accounts' }],
     linkedTask: { type: Schema.Types.ObjectId, ref: 'lilypad_tasks', default: null },
     linkedTicket: { type: Schema.Types.ObjectId, ref: 'lilypad_tickets', default: null },
+    // Requests a Teams meeting be generated on save - only ever
+    // requested once (see syncEventToMicrosoft), so onlineMeetingUrl
+    // below stays stable across later edits instead of a new meeting
+    // being created on every save.
+    addTeamsMeeting: { type: Boolean, default: false },
+    onlineMeetingUrl: { type: String, default: '' },
     // One entry per attendee (+ creator) this event was pushed to in
     // Microsoft - msEventId is that person's own Graph event id, needed
     // to later PATCH/DELETE the right event in their calendar specifically.

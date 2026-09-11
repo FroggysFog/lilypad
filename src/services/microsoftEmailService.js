@@ -20,7 +20,7 @@ const microsoftCalendarService = require('./microsoftCalendarService')
 const microsoftEmailSyncService = require('./microsoftEmailSyncService')
 const LilyPadEmailCache = require('../models/lilypadEmailCache')
 
-const PUBLIC_TO_CACHE_FOLDER = { inbox: 'inbox', sent: 'sentitems', archive: 'archive', drafts: 'drafts' }
+const PUBLIC_TO_CACHE_FOLDER = { inbox: 'inbox', sent: 'sentitems', archive: 'archive', drafts: 'drafts', deleted: 'deleteditems', junk: 'junkemail' }
 const MAX_INLINE_ATTACHMENT_BYTES = 3 * 1024 * 1024 // Graph's direct-attach limit; bigger files need a resumable upload session, not built yet.
 
 function mapGraphRecipient (r) {
@@ -239,7 +239,7 @@ async function deleteMessage (ownerId, graphMessageId) {
   await LilyPadEmailCache.updateOne({ owner: ownerId, graphMessageId }, { $set: { deleted: true } })
 }
 
-const MOVE_DESTINATION_IDS = { archive: 'archive', inbox: 'inbox' }
+const MOVE_DESTINATION_IDS = { archive: 'archive', inbox: 'inbox', deleted: 'deleteditems', junk: 'junkemail' }
 
 async function moveMessage (ownerId, graphMessageId, destination) {
   const destinationId = MOVE_DESTINATION_IDS[destination]
@@ -250,7 +250,12 @@ async function moveMessage (ownerId, graphMessageId, destination) {
   // the old cached doc (old folder, old id) is now stale, not just
   // out of date, so it's removed rather than updated in place.
   await LilyPadEmailCache.deleteOne({ owner: ownerId, graphMessageId })
-  await resyncFolders(ownerId, [destination])
+  // destinationId here IS the cache/sync-engine folder name (e.g.
+  // 'deleteditems') - destination itself is the public-facing key (e.g.
+  // 'deleted') and no longer matches 1:1 now that junk/deleted exist, so
+  // resyncing on the raw `destination` would target a folder name the
+  // sync engine doesn't recognize.
+  await resyncFolders(ownerId, [destinationId])
 }
 
 module.exports = {

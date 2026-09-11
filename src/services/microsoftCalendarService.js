@@ -178,15 +178,37 @@ async function getConnectedUserIds () {
   return accounts.map((a) => a.user)
 }
 
-function toGraphEventPayload ({ title, description, location, start, end, allDay }) {
-  return {
+/**
+ * `options.addTeamsMeeting` requests Graph auto-generate a Teams
+ * meeting for THIS specific push - only ever set for the organizer's
+ * own copy (see syncEventToMicrosoft in lilypadCalendar.js), since each
+ * attendee here gets an independently-created copy of the event on
+ * their own calendar, not a real Graph invite Graph itself fans out -
+ * requesting a meeting on every copy would create a different, useless
+ * Teams call per attendee instead of one shared meeting. Attendees
+ * instead get the organizer's resulting join link appended to their
+ * copy's body text (`options.onlineMeetingUrl`).
+ */
+function toGraphEventPayload ({ title, description, location, start, end, allDay }, options = {}) {
+  const bodyContent = options.onlineMeetingUrl
+    ? `${description || ''}\n\nJoin Microsoft Teams Meeting: ${options.onlineMeetingUrl}`.trim()
+    : (description || '')
+
+  const payload = {
     subject: title,
-    body: { contentType: 'text', content: description || '' },
+    body: { contentType: 'text', content: bodyContent },
     location: { displayName: location || '' },
     isAllDay: Boolean(allDay),
     start: { dateTime: new Date(start).toISOString(), timeZone: 'UTC' },
     end: { dateTime: new Date(end).toISOString(), timeZone: 'UTC' }
   }
+
+  if (options.addTeamsMeeting) {
+    payload.isOnlineMeeting = true
+    payload.onlineMeetingProvider = 'teamsForBusiness'
+  }
+
+  return payload
 }
 
 /**
@@ -199,7 +221,7 @@ async function getEventsForUser (userId, startISO, endISO) {
     startDateTime: startISO,
     endDateTime: endISO,
     $top: '250',
-    $select: 'id,subject,bodyPreview,location,start,end,isAllDay'
+    $select: 'id,subject,bodyPreview,location,start,end,isAllDay,isOnlineMeeting,onlineMeeting'
   })
   const data = await graphRequestForUser(userId, 'get', `/me/calendarview?${params.toString()}`)
   return (data.value || []).map((e) => ({
@@ -209,17 +231,19 @@ async function getEventsForUser (userId, startISO, endISO) {
     location: (e.location && e.location.displayName) || '',
     start: e.start && e.start.dateTime ? `${e.start.dateTime}Z` : null,
     end: e.end && e.end.dateTime ? `${e.end.dateTime}Z` : null,
-    allDay: Boolean(e.isAllDay)
+    allDay: Boolean(e.isAllDay),
+    onlineMeetingUrl: (e.onlineMeeting && e.onlineMeeting.joinUrl) || ''
   }))
 }
 
-async function createEventForUser (userId, eventFields) {
-  const data = await graphRequestForUser(userId, 'post', '/me/events', toGraphEventPayload(eventFields))
-  return data.id
+async function createEventForUser (userId, eventFields, options = {}) {
+  const data = await graphRequestForUser(userId, 'post', '/me/events', toGraphEventPayload(eventFields, options))
+  return { id: data.id, onlineMeetingUrl: (data.onlineMeeting && data.onlineMeeting.joinUrl) || '' }
 }
 
-async function updateEventForUser (userId, msEventId, eventFields) {
-  await graphRequestForUser(userId, 'patch', `/me/events/${encodeURIComponent(msEventId)}`, toGraphEventPayload(eventFields))
+async function updateEventForUser (userId, msEventId, eventFields, options = {}) {
+  const data = await graphRequestForUser(userId, 'patch', `/me/events/${encodeURIComponent(msEventId)}`, toGraphEventPayload(eventFields, options))
+  return { onlineMeetingUrl: (data.onlineMeeting && data.onlineMeeting.joinUrl) || '' }
 }
 
 async function deleteEventForUser (userId, msEventId) {

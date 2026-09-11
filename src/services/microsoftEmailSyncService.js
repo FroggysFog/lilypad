@@ -231,7 +231,7 @@ async function runScheduledSync (winston) {
   const connectedIds = await microsoftCalendarService.getConnectedUserIds()
 
   for (const ownerId of connectedIds) {
-    for (const folder of ['inbox', 'sentitems', 'archive']) {
+    for (const folder of ['inbox', 'sentitems', 'archive', 'deleteditems', 'junkemail']) {
       try {
         await runDeltaSync(ownerId, folder)
       } catch (err) {

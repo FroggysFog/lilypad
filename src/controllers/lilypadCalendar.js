@@ -53,27 +53,62 @@ async function syncLinkedTask (event, performedByUser) {
 }
 
 /**
- * Pushes one saved ERP event out to every distinct connected user among
- * [creator, ...attendees] - each push is independent (Promise.allSettled)
- * so one person's expired token doesn't stop the others or roll back the
- * local save, which already happened before this runs.
+ * Pushes/re-pushes one saved ERP event to every connected target among
+ * [creator, ...attendees] - shared by both create (no existing msSync
+ * yet, everything is a fresh create) and update (existing synced
+ * copies get PATCHed in place, newly-added attendees get created).
+ *
+ * When a Teams meeting is requested and doesn't exist yet, the
+ * organizer (createdBy) is pushed FIRST and sequentially - Graph
+ * generates the meeting on that specific push, and every other
+ * attendee's copy needs the resulting join link before it can be
+ * created/updated, since each attendee gets an independently-managed
+ * copy of the event on their own calendar rather than a real Graph
+ * invite Graph itself fans out (see toGraphEventPayload's comment for
+ * why only the organizer's copy ever requests isOnlineMeeting).
+ * Sequential either way, to keep one code path instead of branching
+ * between parallel/sequential depending on whether a meeting exists.
  */
 async function syncEventToMicrosoft (event) {
   const targetUserIds = Array.from(new Set([String(event.createdBy), ...event.attendees.map(String)]))
   const connectedIds = new Set((await microsoftCalendarService.getConnectedUserIds()).map(String))
   const targets = targetUserIds.filter((id) => connectedIds.has(id))
 
-  const results = await Promise.allSettled(
-    targets.map((userId) => microsoftCalendarService.createEventForUser(userId, event))
-  )
+  const organizerId = String(event.createdBy)
+  const orderedTargets = targets.includes(organizerId)
+    ? [organizerId, ...targets.filter((id) => id !== organizerId)]
+    : targets
 
-  event.msSync = targets.map((userId, i) => {
-    const result = results[i]
-    return result.status === 'fulfilled'
-      ? { user: userId, msEventId: result.value, synced: true, error: '', syncedAt: new Date() }
-      : { user: userId, msEventId: '', synced: false, error: result.reason.message, syncedAt: new Date() }
-  })
+  const wantsTeamsMeeting = Boolean(event.addTeamsMeeting) && !event.onlineMeetingUrl
+  let onlineMeetingUrl = event.onlineMeetingUrl || ''
+  const existingSyncByUser = new Map((event.msSync || []).map((s) => [String(s.user), s]))
+  const syncEntries = []
 
+  for (const userId of orderedTargets) {
+    const isOrganizerPush = userId === organizerId
+    const pushOptions = {
+      addTeamsMeeting: isOrganizerPush && wantsTeamsMeeting,
+      onlineMeetingUrl: !isOrganizerPush ? onlineMeetingUrl : ''
+    }
+    const existing = existingSyncByUser.get(userId)
+
+    try {
+      if (existing && existing.synced) {
+        const result = await microsoftCalendarService.updateEventForUser(userId, existing.msEventId, event, pushOptions)
+        if (isOrganizerPush && result.onlineMeetingUrl) onlineMeetingUrl = result.onlineMeetingUrl
+        syncEntries.push({ user: userId, msEventId: existing.msEventId, synced: true, error: '', syncedAt: new Date() })
+      } else {
+        const result = await microsoftCalendarService.createEventForUser(userId, event, pushOptions)
+        if (isOrganizerPush && result.onlineMeetingUrl) onlineMeetingUrl = result.onlineMeetingUrl
+        syncEntries.push({ user: userId, msEventId: result.id, synced: true, error: '', syncedAt: new Date() })
+      }
+    } catch (err) {
+      syncEntries.push({ user: userId, msEventId: existing ? existing.msEventId : '', synced: false, error: err.message, syncedAt: new Date() })
+    }
+  }
+
+  event.msSync = syncEntries
+  event.onlineMeetingUrl = onlineMeetingUrl
   await event.save()
 }
 
@@ -110,6 +145,7 @@ controller.getEvents = async function (req, res) {
       creatorId: String((e.createdBy && e.createdBy._id) || e.createdBy),
       attendeeNames: (e.attendees || []).map((a) => a.fullname),
       attendeeIds: (e.attendees || []).map((a) => String(a._id)),
+      onlineMeetingUrl: e.onlineMeetingUrl || '',
       linkedTask: e.linkedTask,
       linkedTicket: e.linkedTicket,
       editable: String(e.createdBy._id || e.createdBy) === String(req.user._id)
@@ -141,6 +177,7 @@ controller.getEvents = async function (req, res) {
           itemType: 'event',
           ownerName: nameByUserId.get(String(userId)) || 'Unknown',
           ownerId: String(userId),
+          onlineMeetingUrl: msEvent.onlineMeetingUrl || '',
           editable: false
         })
       })
@@ -157,7 +194,7 @@ controller.getEvents = async function (req, res) {
  */
 controller.createEvent = async function (req, res) {
   try {
-    const { title, description, location, start, end, allDay, itemType, attendeeIds, linkedTaskId, linkedTicketId } = req.body
+    const { title, description, location, start, end, allDay, itemType, attendeeIds, linkedTaskId, linkedTicketId, addTeamsMeeting } = req.body
 
     if (!title || !title.trim()) {
       return res.status(400).json({ success: false, error: 'Title is required.' })
@@ -176,6 +213,7 @@ controller.createEvent = async function (req, res) {
       title: xss(title.trim()),
       description: description ? xss(String(description).trim()) : '',
       location: location ? xss(String(location).trim()) : '',
+      addTeamsMeeting: Boolean(addTeamsMeeting),
       start: new Date(start),
       end: new Date(end),
       allDay: Boolean(allDay),
@@ -208,7 +246,7 @@ controller.updateEvent = async function (req, res) {
       return res.status(404).json({ success: false, error: 'Event not found' })
     }
 
-    const { title, description, location, start, end, allDay, itemType, attendeeIds } = req.body
+    const { title, description, location, start, end, allDay, itemType, attendeeIds, addTeamsMeeting } = req.body
     if (title !== undefined) event.title = xss(String(title).trim())
     if (description !== undefined) event.description = xss(String(description).trim())
     if (location !== undefined) event.location = xss(String(location).trim())
@@ -216,6 +254,7 @@ controller.updateEvent = async function (req, res) {
     if (end !== undefined) event.end = new Date(end)
     if (allDay !== undefined) event.allDay = Boolean(allDay)
     if (itemType !== undefined) event.itemType = itemType === 'task' ? 'task' : 'event'
+    if (addTeamsMeeting !== undefined) event.addTeamsMeeting = Boolean(addTeamsMeeting)
     if (Array.isArray(attendeeIds)) {
       const found = await LilyPadAccount.find({ _id: { $in: attendeeIds } })
       event.attendees = found.map((a) => a._id)
@@ -223,26 +262,7 @@ controller.updateEvent = async function (req, res) {
 
     await event.save()
     await syncLinkedTask(event, req.user)
-
-    // Re-push to Microsoft: update existing synced copies, create new
-    // ones for newly-added attendees who are connected.
-    const connectedIds = new Set((await microsoftCalendarService.getConnectedUserIds()).map(String))
-    const targetUserIds = Array.from(new Set([String(event.createdBy), ...event.attendees.map(String)]))
-    const existingSyncByUser = new Map(event.msSync.map((s) => [String(s.user), s]))
-
-    await Promise.allSettled(targetUserIds.map(async (userId) => {
-      if (!connectedIds.has(userId)) return
-      const existing = existingSyncByUser.get(userId)
-      if (existing && existing.synced) {
-        await microsoftCalendarService.updateEventForUser(userId, existing.msEventId, event)
-      } else {
-        const msEventId = await microsoftCalendarService.createEventForUser(userId, event)
-        existingSyncByUser.set(userId, { user: userId, msEventId, synced: true, error: '', syncedAt: new Date() })
-      }
-    }))
-
-    event.msSync = Array.from(existingSyncByUser.values())
-    await event.save()
+    await syncEventToMicrosoft(event)
 
     return res.status(200).json({ success: true, data: event })
   } catch (err) {

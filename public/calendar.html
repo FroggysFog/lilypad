@@ -207,6 +207,11 @@
 					<div class="mb-2"><i class="ti ti-clock me-1 text-primary"></i><span id="viewEventTime"></span></div>
 					<div class="mb-2" id="viewEventLocationRow"><i class="ti ti-map-pin me-1 text-primary"></i><span id="viewEventLocation"></span></div>
 					<div class="mb-2"><i class="ti ti-user me-1 text-primary"></i><span id="viewEventOwner"></span></div>
+					<div class="mb-2" id="viewEventMeetingRow" style="display:none;">
+						<a href="#" target="_blank" rel="noopener" id="viewEventMeetingLink" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
+							<i class="ti ti-brand-teams"></i> Join Teams Meeting
+						</a>
+					</div>
 					<p class="text-muted mb-0" id="viewEventDescription"></p>
 				</div>
 			</div>
@@ -264,6 +269,15 @@
 						<label class="form-label fs-13 fw-semibold">Attendees <span class="text-muted fw-normal">(their connected Microsoft calendar gets this event too)</span></label>
 						<select class="form-select form-select-sm" id="eventFormAttendees" multiple size="4"></select>
 						<span class="text-muted fs-11">Ctrl/Cmd-click to select more than one.</span>
+					</div>
+					<div class="form-check">
+						<input type="checkbox" class="form-check-input" id="eventFormTeamsMeeting">
+						<label class="form-check-label fs-13" for="eventFormTeamsMeeting"><i class="ti ti-brand-teams me-1"></i>Add a Teams meeting</label>
+					</div>
+					<div class="mt-2" id="eventFormMeetingRow" style="display:none;">
+						<a href="#" target="_blank" rel="noopener" id="eventFormMeetingLink" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
+							<i class="ti ti-brand-teams"></i> Join Teams Meeting
+						</a>
 					</div>
 				</div>
 				<div class="modal-footer d-flex justify-content-between">
@@ -425,6 +439,13 @@
 			}
 			document.getElementById('viewEventOwner').textContent = (props.ownerName || 'Unknown') + (props.source === 'microsoft' ? "'s Microsoft calendar" : '');
 			document.getElementById('viewEventDescription').textContent = props.description || '';
+			const meetingRow = document.getElementById('viewEventMeetingRow');
+			if (props.onlineMeetingUrl) {
+				meetingRow.style.display = '';
+				document.getElementById('viewEventMeetingLink').href = props.onlineMeetingUrl;
+			} else {
+				meetingRow.style.display = 'none';
+			}
 			bootstrap.Modal.getOrCreateInstance(document.getElementById('eventViewModal')).show();
 		}
 
@@ -447,6 +468,9 @@
 			document.getElementById('eventFormDescription').value = '';
 			Array.from(document.getElementById('eventFormAttendees').options).forEach(o => { o.selected = false; });
 			document.getElementById('eventFormDeleteBtn').style.display = 'none';
+			document.getElementById('eventFormTeamsMeeting').checked = false;
+			document.getElementById('eventFormTeamsMeeting').disabled = false;
+			document.getElementById('eventFormMeetingRow').style.display = 'none';
 			bootstrap.Modal.getOrCreateInstance(document.getElementById('eventFormModal')).show();
 		}
 
@@ -462,6 +486,23 @@
 			document.getElementById('eventFormLocation').value = props.location || '';
 			document.getElementById('eventFormDescription').value = props.description || '';
 			document.getElementById('eventFormDeleteBtn').style.display = '';
+
+			const teamsCheckbox = document.getElementById('eventFormTeamsMeeting');
+			const meetingRow = document.getElementById('eventFormMeetingRow');
+			if (props.onlineMeetingUrl) {
+				// Once a meeting exists it isn't re-requested on later saves
+				// (see syncEventToMicrosoft's comment) - lock the checkbox on
+				// so it can't be unchecked into a state the backend won't
+				// actually undo, and show the join link instead.
+				teamsCheckbox.checked = true;
+				teamsCheckbox.disabled = true;
+				meetingRow.style.display = '';
+				document.getElementById('eventFormMeetingLink').href = props.onlineMeetingUrl;
+			} else {
+				teamsCheckbox.checked = false;
+				teamsCheckbox.disabled = false;
+				meetingRow.style.display = 'none';
+			}
 			bootstrap.Modal.getOrCreateInstance(document.getElementById('eventFormModal')).show();
 		}
 
@@ -477,7 +518,8 @@
 				end: new Date(document.getElementById('eventFormEnd').value).toISOString(),
 				location: document.getElementById('eventFormLocation').value.trim(),
 				description: document.getElementById('eventFormDescription').value.trim(),
-				attendeeIds: Array.from(document.getElementById('eventFormAttendees').selectedOptions).map(o => o.value)
+				attendeeIds: Array.from(document.getElementById('eventFormAttendees').selectedOptions).map(o => o.value),
+				addTeamsMeeting: document.getElementById('eventFormTeamsMeeting').checked
 			};
 
 			try {

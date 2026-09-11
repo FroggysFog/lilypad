@@ -18,7 +18,7 @@ const URGENCY_TO_PRIORITY = { urgent: 'Urgent', high: 'High', normal: 'Normal', 
 const attachmentUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
 
 const controller = {}
-const VALID_FOLDERS = ['inbox', 'sent', 'archive', 'drafts']
+const VALID_FOLDERS = ['inbox', 'sent', 'archive', 'drafts', 'deleted', 'junk']
 
 function cleanHtml (html) {
   return xss(String(html || ''))
@@ -190,7 +190,7 @@ controller.deleteMessage = async function (req, res) {
 }
 
 /**
- * POST /api/v1/lilypad/email/messages/:id/move   { destination: 'archive'|'inbox' }
+ * POST /api/v1/lilypad/email/messages/:id/move   { destination: 'archive'|'inbox'|'deleted'|'junk' }
  */
 controller.moveMessage = async function (req, res) {
   try {

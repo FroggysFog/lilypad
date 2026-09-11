@@ -226,6 +226,12 @@
 										<li class="nav-item">
 											<button type="button" class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" data-folder="archive">Archive</button>
 										</li>
+										<li class="nav-item">
+											<button type="button" class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" data-folder="junk">Junk</button>
+										</li>
+										<li class="nav-item">
+											<button type="button" class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" data-folder="deleted">Deleted</button>
+										</li>
 									</ul>
 								</div>
 								<div id="graymailBanner" class="px-3 py-2 border-bottom fs-12 text-muted d-none align-items-center gap-1" style="cursor:pointer;">
@@ -568,6 +574,7 @@
 			const reader = document.getElementById('emailReaderPane');
 			const latest = currentThreadMessages[currentThreadMessages.length - 1];
 			const isArchiveFolder = emailCurrentFolder === 'archive';
+			const isRestorableFolder = emailCurrentFolder === 'deleted' || emailCurrentFolder === 'junk';
 
 			const itemsHtml = currentThreadMessages.map((msg, idx) => {
 				const isLast = idx === currentThreadMessages.length - 1;
@@ -594,7 +601,8 @@
 						<button type="button" class="btn btn-sm btn-outline-primary" id="emailReplyAllBtn"><i class="ti ti-arrow-back-up-double me-1"></i>Reply All</button>
 						<button type="button" class="btn btn-sm btn-outline-secondary" id="emailForwardBtn"><i class="ti ti-arrow-forward-up me-1"></i>Forward</button>
 						${isArchiveFolder ? '' : '<button type="button" class="btn btn-sm btn-outline-secondary" id="emailArchiveBtn" title="Archive"><i class="ti ti-archive"></i></button>'}
-						<button type="button" class="btn btn-sm btn-outline-danger" id="emailDeleteBtn" title="Delete"><i class="ti ti-trash"></i></button>
+						${isRestorableFolder ? '<button type="button" class="btn btn-sm btn-outline-secondary" id="emailRestoreBtn" title="Restore to Inbox"><i class="ti ti-arrow-back-up"></i></button>' : ''}
+						<button type="button" class="btn btn-sm btn-outline-danger" id="emailDeleteBtn" title="${isRestorableFolder ? 'Delete permanently' : 'Delete'}"><i class="ti ti-trash"></i></button>
 					</div>
 				</div>
 				<div id="emailEntityBadges" class="d-flex flex-wrap gap-1 mb-2"></div>
@@ -628,6 +636,8 @@
 			document.getElementById('emailReplySendBtn').addEventListener('click', sendInlineReply);
 			const archiveBtn = document.getElementById('emailArchiveBtn');
 			if (archiveBtn) archiveBtn.addEventListener('click', archiveCurrentEmail);
+			const restoreBtn = document.getElementById('emailRestoreBtn');
+			if (restoreBtn) restoreBtn.addEventListener('click', restoreCurrentEmail);
 			document.getElementById('emailDeleteBtn').addEventListener('click', deleteCurrentEmail);
 		}
 
@@ -693,9 +703,28 @@
 			}
 		}
 
+		async function restoreCurrentEmail() {
+			const latest = currentThreadMessages[currentThreadMessages.length - 1];
+			try {
+				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id) + '/move', {
+					method: 'POST', headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ destination: 'inbox' })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				removeFromListAndReset(latest.id);
+			} catch (err) {
+				alert(err.message || 'Unable to restore.');
+			}
+		}
+
 		async function deleteCurrentEmail() {
 			const latest = currentThreadMessages[currentThreadMessages.length - 1];
-			if (!confirm('Delete this message?')) return;
+			// Deleting something already in Deleted Items or Junk purges it
+			// permanently (Graph's normal delete just moves to Deleted
+			// Items - there's nowhere further to move it from here).
+			const isRestorableFolder = emailCurrentFolder === 'deleted' || emailCurrentFolder === 'junk';
+			if (!confirm(isRestorableFolder ? 'Permanently delete this message? This cannot be undone.' : 'Delete this message?')) return;
 			try {
 				const res = await fetch('/api/v1/lilypad/email/messages/' + encodeURIComponent(latest.id), { method: 'DELETE' });
 				const result = await res.json();
