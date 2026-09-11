@@ -27,17 +27,18 @@ function mainRoutes(router, controllers) {
     return res.redirect('/tickets.html?action=new')
   })
 
-  // Microsoft Teams integration (used by tickets.html's Teams Chat modal)
-  router.get('/auth/microsoft/connect', requireLogin, controllers.microsoftTeams.connect)
-  router.get('/auth/microsoft/callback', controllers.microsoftTeams.callback)
+  // Microsoft Teams chat panel (global, injected on every page - see
+  // lilypad-teams-chat.js) - rides on the same per-user Microsoft 365
+  // connection as Calendar/Email below, no OAuth flow of its own.
   router.get('/api/microsoft-teams/status', requireLoginApi, controllers.microsoftTeams.status)
-  router.post('/api/microsoft-teams/disconnect', requireLoginApi, controllers.microsoftTeams.disconnect)
   router.get('/api/microsoft-teams/chats', requireLoginApi, controllers.microsoftTeams.chats)
   router.get('/api/microsoft-teams/chats/:chatId/messages', requireLoginApi, controllers.microsoftTeams.messages)
   router.post('/api/microsoft-teams/chats/:chatId/messages', requireLoginApi, controllers.microsoftTeams.send)
 
-  // Microsoft Calendar integration (used by calendar.html) - per-user
-  // connection, distinct from the single shared Teams connection above.
+  // Microsoft 365 integration (used by calendar.html, email.html, and
+  // the Teams chat panel above) - one per-user connection covers all
+  // three; connecting once here is the only auth step Calendar, Email,
+  // and Teams chat need.
   router.get('/auth/microsoft-calendar/connect', requireLogin, controllers.microsoftCalendarAuth.connect)
   router.get('/auth/microsoft-calendar/callback', requireLogin, controllers.microsoftCalendarAuth.callback)
   router.get('/api/v1/lilypad/calendar/microsoft/status', requireLoginApi, controllers.microsoftCalendarAuth.status)

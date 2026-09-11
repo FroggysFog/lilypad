@@ -1,20 +1,27 @@
 /**
- * LilyPad ERP - Per-User Microsoft 365 Connection (Calendar + Mail)
- * Despite the filename, this is the one per-user Microsoft 365
- * connection backing BOTH calendar.html and email.html (and everything
- * in between - graphRequestForUser is reused by
- * microsoftEmailService.js, microsoftEmailSyncService.js, and the whole
- * AI Email Triage Module) - one Microsoft identity per LilyPad user,
- * several Graph features, not a separate OAuth flow per feature.
- * Separate from services/microsoftTeams.js (a single shared, in-memory
- * connection, used only by the Teams chat panel) - this one is
- * per-user and persisted to Mongo (lilypadMicrosoftAccount.js), so the
- * server can act on any connected person's calendar/mail at any time
- * regardless of who's currently browsing.
+ * LilyPad ERP - Per-User Microsoft 365 Connection (Calendar + Mail + Teams)
+ * Despite the filename, this is the ONE per-user Microsoft 365
+ * connection backing calendar.html, email.html, AND the Teams chat
+ * panel (graphRequestForUser is reused by microsoftEmailService.js,
+ * microsoftEmailSyncService.js, the whole AI Email Triage Module, and
+ * microsoftTeams.js) - one Microsoft identity per LilyPad user, several
+ * Graph features, not a separate OAuth flow per feature. Every
+ * teammate connects this ONCE and gets calendar sync, email, and Teams
+ * chat all at the same time.
  *
- * Reuses the same MICROSOFT_TENANT_ID/CLIENT_ID/CLIENT_SECRET app
- * registration as Teams, but needs its own redirect URI registered in
- * Azure (a second "Redirect URI" entry on the same App Registration)
+ * Teams chat used to be its own single shared, in-memory-only
+ * connection (whoever last authorized it became "the" Teams identity
+ * for every LilyPad user) - folded into this per-user connection
+ * instead so each person's Teams panel genuinely shows their own
+ * chats. Its scopes (Chat.ReadWrite, ChannelMessage.Read.All,
+ * ChannelMessage.Send) were already granted admin consent on this same
+ * app registration from that shared connection, so no new Azure setup
+ * was needed to add them here - just this array, plus everyone already
+ * connected needs to reconnect once to pick up the wider consent (see
+ * below).
+ *
+ * Needs its own redirect URI registered in Azure (a second "Redirect
+ * URI" entry on the same App Registration as the old Teams-only flow)
  * and every scope below added there as a Delegated permission with
  * admin consent, since an app's requested scopes must already exist on
  * the registration before a user can consent to them at OAuth time -
@@ -33,8 +40,11 @@ const GRAPH = 'https://graph.microsoft.com/v1.0'
 // app registration + admin consent, same as every scope before them -
 // see this file's header comment for why that's always a two-part
 // change (here AND in Azure) plus a reconnect for already-connected
-// users.
-const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read', 'Mail.ReadWrite', 'Mail.Send', 'Contacts.Read', 'MailboxSettings.ReadWrite']
+// users. Chat.ReadWrite/ChannelMessage.Read.All/ChannelMessage.Send
+// are the exception - already consented via the old shared Teams
+// connection on this same app registration, so only the reconnect is
+// needed for those three, not an Azure change.
+const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read', 'Mail.ReadWrite', 'Mail.Send', 'Contacts.Read', 'MailboxSettings.ReadWrite', 'Chat.ReadWrite', 'ChannelMessage.Read.All', 'ChannelMessage.Send']
 
 function getConfig () {
   return {
@@ -137,11 +147,17 @@ async function ensureAccessToken (userId) {
   return refreshTokenForAccount(account)
 }
 
+/**
+ * `path` may be a relative Graph path ('/me/...') or a full absolute
+ * URL - the latter is how paginated results continue (Graph hands back
+ * a ready-to-call '@odata.nextLink' rather than a skip token to splice
+ * in yourself, e.g. Teams chat message history in microsoftTeams.js).
+ */
 async function graphRequestForUser (userId, method, path, data) {
   const token = await ensureAccessToken(userId)
   const response = await axios({
     method,
-    url: `${GRAPH}${path}`,
+    url: path.startsWith('http') ? path : `${GRAPH}${path}`,
     data,
     headers: { Authorization: `Bearer ${token}` },
     validateStatus: (status) => status < 500

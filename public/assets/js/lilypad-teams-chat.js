@@ -8,12 +8,14 @@
  * alongside each page's own unrelated inline script without any risk of
  * a global name collision.
  *
- * Talks to the same shared, single-connection Teams integration that
- * already existed as a modal on tickets.html (/api/microsoft-teams/*) -
- * this replaces that modal rather than duplicating it. Laid out as a
- * list-of-conversations view that drills into a conversation view (with
- * a back button), the same shape real Teams uses in a narrow width,
- * rather than cramming a two-column layout into a 420px panel.
+ * Talks to /api/microsoft-teams/* (server-side backed by each user's
+ * own per-user Microsoft 365 connection - see microsoftTeams.js and
+ * microsoftCalendarService.js - so everyone sees their own chats, not
+ * one shared identity). Originally replaced a modal on tickets.html.
+ * Laid out as a list-of-conversations view that drills into a
+ * conversation view (with a back button), the same shape real Teams
+ * uses in a narrow width, rather than cramming a two-column layout
+ * into a 420px panel.
  */
 (function () {
   'use strict'
@@ -247,9 +249,9 @@
         '<div class="offcanvas-body d-flex flex-column p-0" style="min-height:0;">' +
           '<div id="lpTeamsDisconnected" class="text-center py-4 px-3">' +
             '<i class="ti ti-brand-teams fs-36 text-primary"></i>' +
-            '<h6 class="fw-bold mt-2">Connect Microsoft Teams</h6>' +
-            '<p class="text-muted fs-13">Connect the shared Microsoft account to view and send Teams chat messages.</p>' +
-            '<a class="btn btn-primary btn-sm" href="/auth/microsoft/connect"><i class="ti ti-plug-connected me-1"></i> Connect Teams</a>' +
+            '<h6 class="fw-bold mt-2">Connect Microsoft 365</h6>' +
+            '<p class="text-muted fs-13">Connect your Microsoft 365 account to view and send Teams chat messages - the same connection also powers your Calendar and Email.</p>' +
+            '<a class="btn btn-primary btn-sm" href="/auth/microsoft-calendar/connect"><i class="ti ti-plug-connected me-1"></i> Connect Microsoft 365</a>' +
           '</div>' +
 
           '<div id="lpTeamsListView" class="flex-fill d-flex flex-column" style="display:none; min-height:0;">' +
@@ -258,7 +260,7 @@
             '</div>' +
             '<div id="lpTeamsChatList" class="flex-fill px-1" style="overflow-y:auto;"></div>' +
             '<div class="p-2 border-top text-center">' +
-              '<button type="button" class="btn btn-sm btn-link text-danger px-0" id="lpTeamsDisconnectBtn"><i class="ti ti-plug-x me-1"></i> Disconnect</button>' +
+              '<span class="fs-11 text-muted">Manage this connection from Calendar or Email settings.</span>' +
             '</div>' +
           '</div>' +
 
@@ -284,7 +286,6 @@
     document.getElementById('lpTeamsRefreshBtn').addEventListener('click', loadChats)
     document.getElementById('lpTeamsBackBtn').addEventListener('click', showListView)
     document.getElementById('lpTeamsSendForm').addEventListener('submit', sendMessage)
-    document.getElementById('lpTeamsDisconnectBtn').addEventListener('click', disconnect)
     document.getElementById('lpTeamsPopoutBtn').addEventListener('click', popOut)
   }
 
@@ -396,11 +397,6 @@
     } catch (err) {
       alert(err.message)
     }
-  }
-
-  async function disconnect () {
-    await fetch('/api/microsoft-teams/disconnect', { method: 'POST' })
-    checkStatus()
   }
 
   function openPanel () {
