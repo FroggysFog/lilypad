@@ -5,6 +5,7 @@ const nconf = require('nconf')
 
 const express = require('express')
 const WebServer = express()
+WebServer.set('trust proxy', 1)
 const winston = require('./logger')
 const middleware = require('./middleware')
 const routes = require('./routes')
