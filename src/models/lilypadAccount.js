@@ -96,7 +96,12 @@ accountSchema.statics.comparePassword = function (password, hash) {
 }
 
 accountSchema.statics.getByUsername = function (username, callback) {
-  return this.findOne({ username: new RegExp('^' + username + '$', 'i'), deleted: { $ne: true } })
+  const query = (username || '').trim()
+  const rx = new RegExp('^' + query + '$', 'i')
+  return this.findOne({
+    $or: [{ username: rx }, { email: rx }],
+    deleted: { $ne: true }
+  })
     .select('+password')
     .exec(callback)
 }
