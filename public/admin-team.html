@@ -495,67 +495,42 @@
 								</div>
 							</div>
 
-							<!-- Tab 2: Add User -->
+							<!-- Tab 2: Add User(s) -->
 							<div class="tab-pane fade" id="tabAdd">
-								<form id="teamAddUserForm" onsubmit="saveTeamUser(event)">
-									<div class="row g-3">
-										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Full Name <span class="text-danger">*</span></label>
-											<input type="text" id="tNewFullName" class="form-control" placeholder="e.g. Jordan Hayes" required>
-										</div>
-										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Email Address <span class="text-danger">*</span></label>
-											<input type="email" id="tNewEmail" class="form-control" placeholder="jordan@froggysfog.com" required>
-										</div>
-										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Username <span class="text-danger">*</span></label>
-											<input type="text" id="tNewUsername" class="form-control" placeholder="jhayes" required>
-										</div>
-										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Direct Phone / Extension</label>
-											<input type="text" id="tNewPhone" class="form-control" placeholder="(615) 555-0188">
-										</div>
-										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Role <span class="text-danger">*</span></label>
-											<select id="tNewRole" class="form-select">
-												<option value="Admin">Admin</option>
-												<option value="Support Lead">Support Lead</option>
-												<option value="Agent" selected>Agent</option>
-												<option value="Packaging Lead">Packaging Lead</option>
-												<option value="Viewer">Viewer</option>
-											</select>
-										</div>
-										<div class="col-md-6">
-											<label class="form-label fs-13 fw-semibold">Department <span class="text-danger">*</span></label>
-											<select id="tNewDepartment" class="form-select">
-												<option value="Engineering">Engineering</option>
-												<option value="Operations" selected>Operations</option>
-												<option value="Customer Support">Customer Support</option>
-												<option value="Finance">Finance</option>
-												<option value="Sales & Marketing">Sales & Marketing</option>
-											</select>
-										</div>
+								<p class="fs-13 text-muted mb-2">One person per line: <code>Full Name, email, role, department</code> - role and department are optional (role defaults to "user"). Works for a single person or a whole team at once.</p>
+								<textarea id="tBulkUsersInput" class="form-control font-monospace fs-13" rows="8" placeholder="Jordan Hayes, jordan@froggysfog.com, sales, Sales &amp; Marketing&#10;Casey Nguyen, casey@froggysfog.com, support, Customer Support&#10;Riley Chen, riley@froggysfog.com"></textarea>
+								<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-2">
+									<span class="fs-12 text-muted">Existing roles: <span id="tExistingRolesHint" class="fw-semibold">admin, user</span></span>
+									<button type="button" class="btn btn-primary px-4 shadow-sm" id="tCreateUsersBtn" onclick="createBulkUsers()">
+										<i class="ti ti-user-plus me-1"></i> Create Account(s)
+									</button>
+								</div>
 
-										<!-- Automated Welcome Email Checkbox -->
-										<div class="col-12">
-											<div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2">
-												<div class="form-check mb-0">
-													<input class="form-check-input" type="checkbox" id="tSendWelcomeEmail" checked>
-													<label class="form-check-label fs-13 fw-semibold text-dark" for="tSendWelcomeEmail">
-														<i class="ti ti-mail-forward text-primary me-1"></i> Automatically send Onboarding Email with Password Setup & Hub Getting Started Guide
-													</label>
-													<span class="d-block fs-11 text-muted">Sends a direct invitation link to set up their password, access the Operations Hub, and review quick-start procedures.</span>
-												</div>
-												<span class="badge bg-soft-success text-success fs-11 fw-semibold"><i class="ti ti-shield-check me-1"></i>Auto-Delivery Active</span>
-											</div>
-										</div>
+								<!-- Results: generated credentials, shown exactly once - there is
+									 no way to retrieve a password again after this, since only its
+									 bcrypt hash is ever stored. -->
+								<div id="tBulkResultsWrap" class="mt-4 pt-3 border-top d-none">
+									<div class="alert alert-warning fs-13 py-2 px-3 d-flex align-items-center gap-2 mb-3">
+										<i class="ti ti-alert-triangle fs-16"></i>
+										<div>Copy these down now - passwords are never shown again after you leave this page.</div>
 									</div>
-									<div class="text-end mt-4 pt-3 border-top">
-										<button type="submit" class="btn btn-primary px-4 shadow-sm">
-											<i class="ti ti-user-plus me-1"></i> Create Team Member
-										</button>
+									<div class="table-responsive">
+										<table class="table table-sm table-bordered align-middle fs-13 mb-0">
+											<thead class="table-light">
+												<tr>
+													<th>Name</th>
+													<th>Username</th>
+													<th>Temporary Password</th>
+													<th>Status</th>
+												</tr>
+											</thead>
+											<tbody id="tBulkResultsBody"></tbody>
+										</table>
 									</div>
-								</form>
+									<button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="copyBulkResults()">
+										<i class="ti ti-copy me-1"></i> Copy All as Text
+									</button>
+								</div>
 							</div>
 
 							<!-- Tab 3: Permissions Matrix -->
@@ -615,66 +590,6 @@
 					</div>
 				</div>
 
-				<!-- Onboarding / Welcome Email Dispatched Modal -->
-				<div class="modal fade" id="onboardingEmailModal" tabindex="-1" aria-hidden="true">
-					<div class="modal-dialog modal-dialog-centered modal-lg">
-						<div class="modal-content border-0 shadow-lg">
-							<div class="modal-header py-3 px-4 bg-primary text-white d-flex align-items-center justify-content-between">
-								<div class="d-flex align-items-center gap-2">
-									<div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center fw-bold" style="width:34px; height:34px;">
-										<i class="ti ti-mail-check fs-18"></i>
-									</div>
-									<div>
-										<h5 class="mb-0 text-white fw-bold">Onboarding & Setup Email Dispatched</h5>
-										<span class="fs-12 text-white-50">Sent via Microsoft 365 Exchange Gateway (<span id="m365SenderBadge">scott@froggysfog.com</span>) & Teams Webhook</span>
-									</div>
-								</div>
-								<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-							</div>
-							<div class="modal-body p-4">
-								<div class="alert alert-success d-flex align-items-center gap-2 py-2 px-3 fs-13 mb-3 border-0 rounded-3">
-									<i class="ti ti-circle-check fs-18 text-success"></i>
-									<div>
-										<strong>Email delivered successfully!</strong> A welcome invitation has been sent to <span id="onboardingEmailRecipient" class="fw-bold"></span>.
-									</div>
-								</div>
-
-								<!-- Email Message Live Preview Box -->
-								<div class="card border rounded-3 p-0 mb-3 shadow-none bg-white">
-									<div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between flex-wrap gap-2">
-										<div>
-											<span class="fs-12 text-muted d-block">Subject:</span>
-											<strong class="fs-14 text-dark" id="onboardingEmailSubject">Welcome to Froggy's Fog Hub | Set Up Your Account</strong>
-										</div>
-										<span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Delivered</span>
-									</div>
-									<div class="p-4" id="onboardingEmailBodyPreview" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;">
-										<!-- Rendered email content -->
-									</div>
-								</div>
-
-								<!-- Direct Action Links -->
-								<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 p-3 bg-light rounded-3 border">
-									<div class="text-truncate" style="max-width: 480px;">
-										<span class="fs-12 text-muted d-block">Password Setup & Activation URL:</span>
-										<code class="fs-12 text-primary text-truncate d-block" id="onboardingSetupUrl"></code>
-									</div>
-									<div class="d-flex gap-2">
-										<button type="button" class="btn btn-sm btn-outline-primary shadow-sm" onclick="copyOnboardingUrl()">
-											<i class="ti ti-copy me-1"></i> Copy Link
-										</button>
-										<a id="btnSimulateSetup" href="#" target="_blank" class="btn btn-sm btn-primary shadow-sm">
-											<i class="ti ti-external-link me-1"></i> Open Password Setup
-										</a>
-									</div>
-								</div>
-							</div>
-							<div class="modal-footer py-2 px-4 bg-light">
-								<button type="button" class="btn btn-sm btn-light px-3" data-bs-dismiss="modal">Close</button>
-							</div>
-						</div>
-					</div>
-				</div>
 <!-- Start Footer -->
 			<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
 				<p class="mb-md-0 mb-1">Copyright &copy;
@@ -723,38 +638,47 @@
 </script>
 
 	<script>
-        const STORAGE_TEAM_KEY = "lilypad_team_users_v2";
-        const DEFAULT_TEAM_USERS = [
-            { id: 'u1', fullname: 'Scott Karan', username: 'skaran', email: 'scott@froggysfog.com', role: 'Admin', department: 'Operations', initials: 'SK', active: true, phone: '(615) 555-0100', joined: 'Jan 2026', password: 'Password123!' },
-            { id: 'u2', fullname: 'Alex Morgan', username: 'amorgan', email: 'alex@froggysfog.com', role: 'Support Lead', department: 'Customer Support', initials: 'AM', active: true, phone: '(615) 555-0102', joined: 'Feb 2026', password: 'Password123!' },
-            { id: 'u3', fullname: 'David Miller', username: 'dmiller', email: 'david@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'DM', active: true, phone: '(615) 555-0104', joined: 'Feb 2026', password: 'Password123!' },
-            { id: 'u4', fullname: 'Sarah Connor', username: 'sconnor', email: 'sarah@froggysfog.com', role: 'Agent', department: 'Engineering', initials: 'SC', active: true, phone: '(615) 555-0106', joined: 'Mar 2026', password: 'Password123!' },
-            { id: 'u5', fullname: 'Mark Henderson', username: 'mhenderson', email: 'mark@froggysfog.com', role: 'Packaging Lead', department: 'Operations', initials: 'MH', active: true, phone: '(615) 555-0108', joined: 'Mar 2026', password: 'Password123!' }
-        ];
+        function escapeHtml(value) {
+            return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+            });
+        }
 
-        function getTeamUsers() {
+        function initialsFor(fullname) {
+            return String(fullname || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase() || 'FF';
+        }
+
+        let currentTeamUsers = [];
+
+        async function loadTeamUsers() {
             try {
-                const stored = localStorage.getItem(STORAGE_TEAM_KEY);
-                if (!stored) {
-                    localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(DEFAULT_TEAM_USERS));
-                    return DEFAULT_TEAM_USERS;
-                }
-                return JSON.parse(stored);
-            } catch(e) {
-                return DEFAULT_TEAM_USERS;
+                const res = await fetch('/api/v1/lilypad/users');
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                currentTeamUsers = result.data;
+                renderTeamTable();
+            } catch (err) {
+                const tbody = document.getElementById('adminTeamTableBody');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger fs-13 py-3">' + escapeHtml(err.message || 'Unable to load team directory.') + '</td></tr>';
             }
         }
 
-        function saveTeamUsersToStorage(users) {
+        async function loadExistingRolesHint() {
             try {
-                localStorage.setItem(STORAGE_TEAM_KEY, JSON.stringify(users));
-            } catch(e) {
-                console.error("Failed to save team users:", e);
+                const res = await fetch('/api/v1/lilypad/role-permissions');
+                const result = await res.json();
+                const hint = document.getElementById('tExistingRolesHint');
+                if (result.success && hint) {
+                    const roles = ['admin', 'user'].concat((result.data.roles || []).map(r => r.role));
+                    hint.textContent = Array.from(new Set(roles)).join(', ');
+                }
+            } catch (err) {
+                // Non-fatal - the hint is a convenience, not required to create accounts.
             }
         }
 
         function renderTeamTable() {
-            const users = getTeamUsers();
+            const users = currentTeamUsers;
             const tbody = document.getElementById('adminTeamTableBody');
             const countDisplay = document.getElementById('teamCountTotal');
             const countAdmins = document.getElementById('teamCountAdmins');
@@ -762,192 +686,120 @@
             const countDepts = document.getElementById('teamCountDepts');
 
             if (countDisplay) countDisplay.textContent = users.length;
-            if (countAdmins) countAdmins.textContent = users.filter(u => u.role === 'Admin').length;
-            if (countAgents) countAgents.textContent = users.filter(u => u.role !== 'Admin').length;
-            
-            const depts = new Set(users.map(u => u.department));
+            if (countAdmins) countAdmins.textContent = users.filter(u => u.role === 'admin').length;
+            if (countAgents) countAgents.textContent = users.filter(u => u.role !== 'admin').length;
+
+            const depts = new Set(users.map(u => u.department).filter(Boolean));
             if (countDepts) countDepts.textContent = depts.size + ' Active';
 
             if (!tbody) return;
+            if (!users.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted fs-13 py-4">No team members yet - use "Add Team Member" above.</td></tr>';
+                return;
+            }
             tbody.innerHTML = users.map(u => '<tr>' +
                 '<td>' +
                     '<div class="d-flex align-items-center gap-2">' +
                         '<div class="rounded-circle text-white bg-primary d-flex align-items-center justify-content-center fw-bold fs-11 shadow-sm" style="width: 34px; height: 34px;">' +
-                            (u.initials || 'FF') +
+                            escapeHtml(initialsFor(u.fullname)) +
                         '</div>' +
                         '<div>' +
-                            '<a href="admin-user-detail.html?id=' + u.id + '" class="d-block text-dark fw-bold text-decoration-none">' + u.fullname + '</a>' +
-                            '<span class="text-muted fs-11">' + u.email + '</span>' +
+                            '<span class="d-block text-dark fw-bold">' + escapeHtml(u.fullname) + '</span>' +
+                            '<span class="text-muted fs-11">' + escapeHtml(u.email) + '</span>' +
                         '</div>' +
                     '</div>' +
                 '</td>' +
-                '<td><span class="badge ' + (u.role === 'Admin' ? 'bg-dark' : (u.role === 'Support Lead' ? 'bg-primary' : 'bg-secondary')) + ' fs-11">' + u.role + '</span></td>' +
-                '<td><span class="text-dark fw-medium">' + u.department + '</span></td>' +
+                '<td><span class="badge ' + (u.role === 'admin' ? 'bg-dark' : 'bg-secondary') + ' fs-11 text-capitalize">' + escapeHtml(u.role) + '</span></td>' +
+                '<td><span class="text-dark fw-medium">' + escapeHtml(u.department || '—') + '</span></td>' +
                 '<td><span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Active</span></td>' +
                 '<td class="text-end">' +
-                    '<button class="btn btn-sm btn-outline-info py-1 px-2 fs-12 me-1 shadow-sm" data-user-id="${u.id}" onclick="sendOnboardingEmail(this.dataset.userId)" title="Send Onboarding & Password Setup Email">' +
-                        '<i class="ti ti-mail-forward me-1"></i>Invite' +
-                    '</button>' +
-                    '<a href="admin-user-detail.html?id=' + u.id + '" class="btn btn-sm btn-outline-primary py-1 px-2 fs-12 me-1 shadow-sm">' +
-                        '<i class="ti ti-edit me-1"></i>Edit' +
-                    '</a>' +
-                    '<button class="btn btn-sm btn-link text-danger p-0" data-user-id="${u.id}" onclick="deleteTeamUser(this.dataset.userId)" title="Delete User"><i class="ti ti-trash"></i></button>' +
+                    '<button class="btn btn-sm btn-link text-danger p-0" data-user-id="' + escapeHtml(u._id) + '" data-user-name="' + escapeHtml(u.fullname) + '" onclick="deleteTeamUser(this.dataset.userId, this.dataset.userName)" title="Delete User"><i class="ti ti-trash"></i></button>' +
                 '</td>' +
             '</tr>').join('');
         }
 
-        function saveTeamUser(e) {
-            e.preventDefault();
-            const fullname = document.getElementById('tNewFullName').value.trim();
-            const email = document.getElementById('tNewEmail').value.trim();
-            const username = document.getElementById('tNewUsername').value.trim() || email.split('@')[0];
-            const phone = document.getElementById('tNewPhone').value.trim() || '(615) 555-0188';
-            const role = document.getElementById('tNewRole').value;
-            const department = document.getElementById('tNewDepartment').value;
-            const sendEmail = document.getElementById('tSendWelcomeEmail').checked;
+        /**
+         * Parses "Full Name, email, role, department" (one per line) and
+         * creates every row in a single request to POST /users/bulk -
+         * that endpoint generates each temporary password server-side and
+         * returns it exactly once, which is rendered into the results
+         * table below rather than any kind of "email sent" claim, since
+         * there is no real onboarding-email sending wired up yet.
+         */
+        async function createBulkUsers() {
+            const raw = document.getElementById('tBulkUsersInput').value;
+            const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+            if (!lines.length) { alert('Add at least one person first.'); return; }
 
-            if (!fullname || !email) return;
+            const users = lines.map(line => {
+                const parts = line.split(',').map(p => p.trim());
+                return { fullname: parts[0] || '', email: parts[1] || '', role: parts[2] || 'user', department: parts[3] || '' };
+            });
 
-            const users = getTeamUsers();
-            const initials = fullname.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'FF';
-            const newUser = { 
-                id: 'u_' + Date.now(), 
-                fullname: fullname, 
-                username: username, 
-                email: email, 
-                phone: phone, 
-                role: role, 
-                department: department, 
-                initials: initials, 
-                active: true, 
-                joined: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-                password: 'Password123!' 
-            };
-
-            users.push(newUser);
-            saveTeamUsersToStorage(users);
-            renderTeamTable();
-            document.getElementById('teamAddUserForm').reset();
-
-            // Switch to directory tab
-            const tabBtn = document.querySelector('#teamTabs button[data-bs-target="#tabDirectory"]');
-            if (tabBtn) bootstrap.Tab.getOrCreateInstance(tabBtn).show();
-
-            // Send automated onboarding email if selected
-            if (sendEmail) {
-                sendOnboardingEmail(newUser);
-            } else {
-                alert('New team member ' + fullname + ' (' + role + ') created successfully!');
-            }
-        }
-
-        function deleteTeamUser(id) {
-            const users = getTeamUsers();
-            const target = users.find(u => u.id === id);
-            if (!target) return;
-            if (confirm('Are you sure you want to remove team member ' + target.fullname + '?')) {
-                const updated = users.filter(u => u.id !== id);
-                saveTeamUsersToStorage(updated);
-                renderTeamTable();
-            }
-        }
-
-        
-        function getM365Config() {
+            const btn = document.getElementById('tCreateUsersBtn');
+            btn.disabled = true;
             try {
-                const stored = localStorage.getItem("lilypad_m365_teams_config_v1");
-                return stored ? JSON.parse(stored) : { email: 'scott@froggysfog.com', displayName: "Froggy's Fog Operations Hub", channelName: '#operations-tickets' };
-            } catch(e) {
-                return { email: 'scott@froggysfog.com', displayName: "Froggy's Fog Operations Hub", channelName: '#operations-tickets' };
-            }
-        }
-
-        function sendOnboardingEmail(target) {
-            let user = target;
-            if (typeof target === 'string') {
-                const users = getTeamUsers();
-                user = users.find(u => u.id === target) || { fullname: 'Staff Member', email: target, role: 'Agent', department: 'Operations' };
-            }
-
-            const m365Config = getM365Config();
-            const senderEmail = m365Config.email || 'scott@froggysfog.com';
-            const senderName = m365Config.displayName || "Froggy's Fog Operations Hub";
-            const teamsChannel = m365Config.channelName || '#operations-tickets';
-
-            const origin = window.location.origin || (window.location.protocol + '//' + window.location.host);
-            const token = 'tok_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
-            const setupUrl = origin + '/login.html?action=setup-password&email=' + encodeURIComponent(user.email) + '&user=' + encodeURIComponent(user.username || '') + '&token=' + token;
-            const hubUrl = origin + '/dashboard.html';
-            const subject = "Welcome to Froggy's Fog Hub | Set Up Your Account (" + user.fullname + ")";
-
-            const emailHtml = '<div style="max-width: 620px; margin: 0 auto; color: #1e293b;">' +
-                '<div style="background: #f1f5f9; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 12px; color: #475569; border: 1px solid #e2e8f0;">' +
-                    '<strong>From:</strong> ' + senderName + ' &lt;<span style="color: var(--bs-primary, #0d6efd); font-weight:600;">' + senderEmail + '</span>&gt; (Microsoft 365 Exchange)<br>' +
-                    '<strong>To:</strong> ' + user.fullname + ' &lt;' + user.email + '&gt;<br>' +
-                    '<strong>Teams Alert:</strong> <span class="badge bg-success-subtle text-success">✓ Posted to ' + teamsChannel + '</span>' +
-                '</div>' +
-                '<div style="border-bottom: 2px solid var(--bs-primary, #0d6efd); padding-bottom: 14px; margin-bottom: 20px;">' +
-                    '<h4 style="margin: 0; color: #0f172a; font-weight: 700;">🐸 Froggy Operations Hub</h4>' +
-                    '<span style="font-size: 13px; color: #64748b;">Enterprise ERP & Diagnostic Portal</span>' +
-                '</div>' +
-                '<p style="font-size: 15px; margin-bottom: 16px;">Hi <strong>' + user.fullname + '</strong>,</p>' +
-                '<p style="font-size: 14px; line-height: 1.6; margin-bottom: 20px;">' +
-                    'An account has been created for you on the <strong>Froggy Operations Hub</strong> with the role of <strong style="color: var(--bs-primary, #0d6efd);">' + user.role + '</strong> in the <strong>' + user.department + '</strong> department.' +
-                '</p>' +
-                '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; text-align: center; margin-bottom: 24px;">' +
-                    '<p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">Please activate your profile and establish your private password:</p>' +
-                    '<a href="' + setupUrl + '" target="_blank" style="background-color: var(--bs-primary, #0d6efd); color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block; box-shadow: 0 2px 8px rgba(13,110,253,0.35);">' +
-                        '🔑 Set Password & Activate Account &rarr;' +
-                    '</a>' +
-                '</div>' +
-                '<h5 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 10px;">🚀 Getting Started on the Hub:</h5>' +
-                '<ol style="font-size: 13px; color: #334155; line-height: 1.7; padding-left: 20px; margin-bottom: 24px;">' +
-                    '<li><strong>Establish Your Password:</strong> Click the button above to set up your password.</li>' +
-                    '<li><strong>Main Operations Dashboard:</strong> Monitor real-time factory feeds and ticket movements at <a href="' + hubUrl + '" target="_blank" style="color: var(--bs-primary, #0d6efd);">' + hubUrl + '</a>.</li>' +
-                    '<li><strong>Ticket Suite:</strong> Manage assigned machine maintenance, production requests, and dynamic field entries.</li>' +
-                    '<li><strong>Diagnostic SOPs & Knowledge Base:</strong> Search symptom checklists and pre-flight factory testing protocols.</li>' +
-                '</ol>' +
-                '<div style="border-top: 1px solid #e2e8f0; padding-top: 14px; font-size: 12px; color: #64748b;">' +
-                    '<p style="margin: 0;">Need assistance? Contact Operations Admin at <a href="mailto:' + senderEmail + '" style="color: #64748b;">' + senderEmail + '</a> or visit <a href="https://froggysfog.com" target="_blank" style="color: #64748b;">froggysfog.com</a>.</p>' +
-                '</div>' +
-            '</div>';
-
-            if (window.LilypadNotifications && LilypadNotifications.addNotification) {
-                LilypadNotifications.addNotification({
-                    title: 'Outbound Email Dispatched to ' + user.fullname,
-                    message: 'Sent from ' + senderEmail + ' (Microsoft 365) & card sent to ' + teamsChannel,
-                    type: 'email',
-                    link: 'admin-team.html'
+                const res = await fetch('/api/v1/lilypad/users/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ users })
                 });
-            }
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
 
-            const senderBadge = document.getElementById('m365SenderBadge');
-            if (senderBadge) senderBadge.textContent = senderEmail;
-
-            document.getElementById('onboardingEmailRecipient').textContent = user.fullname + ' (' + user.email + ')';
-            document.getElementById('onboardingEmailSubject').textContent = subject;
-            document.getElementById('onboardingEmailBodyPreview').innerHTML = emailHtml;
-            document.getElementById('onboardingSetupUrl').textContent = setupUrl;
-            document.getElementById('btnSimulateSetup').href = setupUrl;
-
-            const modalEl = document.getElementById('onboardingEmailModal');
-            if (modalEl) {
-                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                modal.show();
+                renderBulkResults(result.data);
+                document.getElementById('tBulkUsersInput').value = '';
+                await loadTeamUsers();
+            } catch (err) {
+                alert(err.message || 'Unable to create accounts.');
+            } finally {
+                btn.disabled = false;
             }
         }
 
-        function copyOnboardingUrl() {
-            const url = document.getElementById('onboardingSetupUrl').textContent;
-            navigator.clipboard.writeText(url).then(() => {
-                alert('Password setup URL copied to clipboard!');
+        function renderBulkResults(results) {
+            const wrap = document.getElementById('tBulkResultsWrap');
+            const body = document.getElementById('tBulkResultsBody');
+            wrap.classList.remove('d-none');
+            body.innerHTML = results.map(r => '<tr>' +
+                '<td>' + escapeHtml(r.fullname) + '</td>' +
+                '<td>' + (r.success ? '<code>' + escapeHtml(r.username) + '</code>' : '—') + '</td>' +
+                '<td>' + (r.success ? '<code>' + escapeHtml(r.password) + '</code>' : '—') + '</td>' +
+                '<td>' + (r.success
+                    ? '<span class="badge bg-success-subtle text-success fs-11">Created</span>'
+                    : '<span class="badge bg-danger-subtle text-danger fs-11" title="' + escapeHtml(r.error) + '">Failed: ' + escapeHtml(r.error) + '</span>') +
+                '</td>' +
+            '</tr>').join('');
+        }
+
+        function copyBulkResults() {
+            const rows = Array.from(document.querySelectorAll('#tBulkResultsBody tr')).map(tr => {
+                const cells = tr.querySelectorAll('td');
+                return Array.from(cells).map(c => c.textContent.trim()).join('\t');
+            });
+            const text = 'Name\tUsername\tPassword\tStatus\n' + rows.join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard.');
             }).catch(() => {
-                alert('Setup URL: ' + url);
+                alert(text);
             });
         }
 
+        async function deleteTeamUser(id, name) {
+            if (!confirm('Are you sure you want to remove team member ' + name + '?')) return;
+            try {
+                const res = await fetch('/api/v1/lilypad/users/' + encodeURIComponent(id), { method: 'DELETE' });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                await loadTeamUsers();
+            } catch (err) {
+                alert(err.message || 'Unable to remove user.');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            renderTeamTable();
+            loadTeamUsers();
+            loadExistingRolesHint();
         });
 	</script>
 </body>

@@ -43,10 +43,17 @@ module.exports = function () {
   router.put('/account/password', requireLogin, controllers.lilypadUsers.changeMyPassword)
 
   // Admin & Team Management: User Accounts
+  // getUsers stays requireLogin - it's the read-only directory dropdowns
+  // across the app (task assignment, etc.) rely on. Create/update/delete
+  // are account-management actions and were previously only gated by
+  // requireLogin (any signed-in user, not just admins) - upgraded to
+  // requireAdminApi so a non-admin can't create accounts, grant
+  // themselves a different role, or delete a coworker's account.
   router.get('/users', requireLogin, controllers.lilypadUsers.getUsers)
-  router.post('/users', requireLogin, controllers.lilypadUsers.createUser)
-  router.put('/users/:id', requireLogin, controllers.lilypadUsers.updateUser)
-  router.delete('/users/:id', requireLogin, controllers.lilypadUsers.deleteUser)
+  router.post('/users', requireAdminApi, controllers.lilypadUsers.createUser)
+  router.post('/users/bulk', requireAdminApi, controllers.lilypadUsers.bulkCreateUsers)
+  router.put('/users/:id', requireAdminApi, controllers.lilypadUsers.updateUser)
+  router.delete('/users/:id', requireAdminApi, controllers.lilypadUsers.deleteUser)
 
   // Roles & Permissions - admin-only, this literally controls who can
   // see what, so no exceptions the way /users above has.

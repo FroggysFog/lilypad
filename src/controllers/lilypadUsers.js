@@ -3,9 +3,23 @@
  * Handles user creation, role & department assignments, and notification events.
  */
 
+const crypto = require('crypto')
 const LilyPadAccount = require('../models/lilypadAccount')
 const pagePermissionService = require('../services/pagePermissionService')
 const xss = require('xss')
+
+// Avoids visually-ambiguous characters (0/O, 1/l/I) since a generated
+// password gets hand-typed by whoever it's handed to, not pasted.
+const PASSWORD_CHARSET = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+const PASSWORD_SYMBOLS = '!@#$%'
+
+function generateTempPassword () {
+  const bytes = crypto.randomBytes(11)
+  let password = ''
+  for (let i = 0; i < bytes.length; i++) password += PASSWORD_CHARSET[bytes[i] % PASSWORD_CHARSET.length]
+  password += PASSWORD_SYMBOLS[crypto.randomBytes(1)[0] % PASSWORD_SYMBOLS.length]
+  return password
+}
 
 const lilypadUsersController = {}
 
@@ -90,6 +104,73 @@ lilypadUsersController.createUser = async function (req, res) {
         department: saved.department
       }
     })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/users/bulk
+ * body: { users: [{ fullname, email, username?, role?, department?, title? }, ...] }
+ *
+ * Generates a random temporary password per account server-side (never
+ * accepted from the client, unlike single createUser) and returns it
+ * exactly once in this response - there is no way to retrieve it again
+ * afterward (the schema only ever stores the bcrypt hash), so whoever
+ * calls this must capture the results immediately. One bad row doesn't
+ * fail the whole batch - each row succeeds or fails independently, so
+ * 19 good rows still go through if the 20th has a typo'd email.
+ */
+lilypadUsersController.bulkCreateUsers = async function (req, res) {
+  try {
+    const rows = Array.isArray(req.body.users) ? req.body.users : []
+    if (!rows.length) {
+      return res.status(400).json({ success: false, error: 'users must be a non-empty array.' })
+    }
+
+    const results = []
+    for (const row of rows) {
+      const fullname = String(row.fullname || '').trim()
+      const email = String(row.email || '').trim().toLowerCase()
+
+      if (!fullname || !email) {
+        results.push({ email: row.email || '', fullname: row.fullname || '', success: false, error: 'Full name and email are required.' })
+        continue
+      }
+
+      const existingEmail = await LilyPadAccount.findOne({ email })
+      if (existingEmail) {
+        results.push({ email, fullname, success: false, error: 'A user with that email already exists.' })
+        continue
+      }
+
+      const baseUsername = String(row.username || email.split('@')[0]).trim().toLowerCase().replace(/[^a-z0-9._-]/g, '') || 'user'
+      let username = baseUsername
+      let suffix = 1
+      while (await LilyPadAccount.findOne({ username })) {
+        username = baseUsername + suffix
+        suffix++
+      }
+
+      try {
+        const password = generateTempPassword()
+        const account = new LilyPadAccount({
+          username,
+          fullname: xss(fullname),
+          email,
+          password,
+          role: xss(String(row.role || 'user').trim().toLowerCase()),
+          department: xss(String(row.department || '').trim()),
+          title: xss(String(row.title || '').trim())
+        })
+        await account.save()
+        results.push({ email, fullname, username, password, role: account.role, success: true })
+      } catch (err) {
+        results.push({ email, fullname, success: false, error: err.message })
+      }
+    }
+
+    return res.status(200).json({ success: true, data: results })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }
