@@ -742,8 +742,8 @@
                         '<button type="button" class="btn btn-sm btn-outline-light rounded-circle p-0 d-flex align-items-center justify-content-center" id="bulletinEditBtn" style="display:none; width:32px; height:32px;" title="Edit announcement" data-bs-toggle="modal" data-bs-target="#bulletinEditModal">' +
                             '<i class="ti ti-pencil fs-16"></i>' +
                         '</button>' +
-                        '<a href="tickets.html?action=new&category=FX+Machine+Support" class="btn btn-sm btn-light rounded-pill px-3 fw-semibold text-primary shadow-sm">' +
-                            '<i class="ti ti-tool me-1"></i> Log Maintenance' +
+                        '<a href="tickets.html?action=new&category=FX+Machine+Support" id="bulletinButtonLink" class="btn btn-sm btn-light rounded-pill px-3 fw-semibold text-primary shadow-sm">' +
+                            '<i class="ti ti-tool me-1"></i> <span id="bulletinButtonText">Log Maintenance</span>' +
                         '</a>' +
                     '</div>' +
                 '</div>' +
@@ -751,11 +751,18 @@
         '</div>';
     }
 
-    const BULLETIN_DEFAULT = { title: 'Operations Announcement', message: 'Pre-Season Production Surge: Docks prioritize outbound pallet pickups between 1 PM - 4 PM.' };
+    const BULLETIN_DEFAULT = {
+        title: 'Operations Announcement',
+        message: 'Pre-Season Production Surge: Docks prioritize outbound pallet pickups between 1 PM - 4 PM.',
+        buttonLabel: 'Log Maintenance',
+        buttonHref: 'tickets.html?action=new&category=FX+Machine+Support'
+    };
 
     async function loadBulletinAnnouncement() {
         const titleEl = document.getElementById('bulletinTitleText');
         const messageEl = document.getElementById('bulletinMessageText');
+        const buttonTextEl = document.getElementById('bulletinButtonText');
+        const buttonLinkEl = document.getElementById('bulletinButtonLink');
         if (!titleEl || !messageEl) return;
         try {
             const res = await fetch('/api/v1/lilypad/dashboard/announcement');
@@ -763,11 +770,24 @@
             const announcement = (result.success && result.data) ? result.data : BULLETIN_DEFAULT;
             titleEl.textContent = announcement.title || BULLETIN_DEFAULT.title;
             messageEl.textContent = announcement.message || BULLETIN_DEFAULT.message;
+            applyBulletinButton(announcement);
         } catch (err) {
             titleEl.textContent = BULLETIN_DEFAULT.title;
             messageEl.textContent = BULLETIN_DEFAULT.message;
+            applyBulletinButton(BULLETIN_DEFAULT);
         }
         updateBulletinEditVisibility();
+    }
+
+    function applyBulletinButton (announcement) {
+        const buttonTextEl = document.getElementById('bulletinButtonText');
+        const buttonLinkEl = document.getElementById('bulletinButtonLink');
+        if (!buttonTextEl || !buttonLinkEl) return;
+        const label = (announcement && announcement.buttonLabel) || BULLETIN_DEFAULT.buttonLabel;
+        const href = (announcement && announcement.buttonHref) || BULLETIN_DEFAULT.buttonHref;
+        buttonTextEl.textContent = label;
+        buttonLinkEl.href = href;
+        buttonLinkEl.style.display = label ? '' : 'none';
     }
 
     function updateBulletinEditVisibility() {
@@ -778,24 +798,29 @@
     function openBulletinEditModal() {
         document.getElementById('bulletinEditTitleInput').value = document.getElementById('bulletinTitleText').textContent;
         document.getElementById('bulletinEditMessageInput').value = document.getElementById('bulletinMessageText').textContent;
+        document.getElementById('bulletinEditButtonLabelInput').value = document.getElementById('bulletinButtonText').textContent;
+        document.getElementById('bulletinEditButtonHrefInput').value = document.getElementById('bulletinButtonLink').getAttribute('href') || '';
     }
 
     async function saveBulletinAnnouncement() {
         const title = document.getElementById('bulletinEditTitleInput').value.trim();
         const message = document.getElementById('bulletinEditMessageInput').value.trim();
+        const buttonLabel = document.getElementById('bulletinEditButtonLabelInput').value.trim();
+        const buttonHref = document.getElementById('bulletinEditButtonHrefInput').value.trim();
         if (!message) { alert('A message is required.'); return; }
 
         try {
             const res = await fetch('/api/v1/lilypad/dashboard/announcement', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, message })
+                body: JSON.stringify({ title, message, buttonLabel, buttonHref })
             });
             const result = await res.json();
             if (!result.success) throw new Error(result.error);
 
             document.getElementById('bulletinTitleText').textContent = result.data.title;
             document.getElementById('bulletinMessageText').textContent = result.data.message;
+            applyBulletinButton(result.data);
             bootstrap.Modal.getInstance(document.getElementById('bulletinEditModal')).hide();
         } catch (err) {
             alert(err.message || 'Unable to update announcement.');
@@ -2268,10 +2293,21 @@
 						<label class="form-label fs-13 fw-semibold">Title</label>
 						<input type="text" id="bulletinEditTitleInput" class="form-control" placeholder="Operations Announcement">
 					</div>
-					<div class="mb-0">
+					<div class="mb-3">
 						<label class="form-label fs-13 fw-semibold">Message</label>
 						<textarea id="bulletinEditMessageInput" class="form-control" rows="3" placeholder="e.g. Holiday shipping cutoff is Friday at 3 PM."></textarea>
 					</div>
+					<div class="row g-2 mb-0">
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">Button Text</label>
+							<input type="text" id="bulletinEditButtonLabelInput" class="form-control" placeholder="Log Maintenance">
+						</div>
+						<div class="col-6">
+							<label class="form-label fs-13 fw-semibold">Button Link</label>
+							<input type="text" id="bulletinEditButtonHrefInput" class="form-control" placeholder="tickets.html?action=new">
+						</div>
+					</div>
+					<p class="fs-12 text-muted mt-1 mb-0">Link to a page on this site (e.g. tickets.html?action=new) or a full https:// URL. Leave button text blank to hide the button.</p>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>

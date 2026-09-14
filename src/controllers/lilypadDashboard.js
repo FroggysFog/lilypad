@@ -44,13 +44,22 @@ lilypadDashboardController.setAnnouncement = async function (req, res) {
   try {
     const title = xss(String(req.body.title || '').trim())
     const message = xss(String(req.body.message || '').trim())
+    const buttonLabel = xss(String(req.body.buttonLabel || '').trim())
+    const buttonHref = xss(String(req.body.buttonHref || '').trim())
     if (!message) {
       return res.status(400).json({ success: false, error: 'A message is required.' })
+    }
+    // Only relative in-app links or http(s) URLs - blocks javascript:/data:
+    // hrefs from ending up in an href attribute every user's browser renders.
+    if (buttonHref && !/^(https?:)?\/\//i.test(buttonHref) && !/^[a-z0-9_-]+\.html/i.test(buttonHref)) {
+      return res.status(400).json({ success: false, error: 'Button link must be a page on this site or a full https:// URL.' })
     }
 
     const value = {
       title: title || 'Operations Announcement',
       message,
+      buttonLabel,
+      buttonHref,
       updatedAt: new Date(),
       updatedByName: (req.user && req.user.fullname) || ''
     }
