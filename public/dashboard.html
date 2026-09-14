@@ -430,8 +430,7 @@
 						<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWorkspaceCustomizer" title="Customize widgets and role layout">
 							<i class="ti ti-adjustments-alt"></i> <span>Customize Workspace</span>
 						</button>
-						<a href="admin-email.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="ti ti-mail-cog me-1"></i> Email Gateway</a>
-						<a href="knowledge-base.html" class="btn btn-outline-success btn-sm rounded-pill px-3"><i class="ti ti-book me-1"></i> Diagnostic SOPs</a>
+						<a href="tasks.html?action=new" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-1"><i class="ti ti-plus"></i><span>New Task</span></a>
 						<a href="tickets.html?action=new" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-1"><i class="ti ti-plus"></i><span>New Ticket</span></a>
 					</div>
 				</div>
@@ -828,6 +827,11 @@
                             '</div>' +
                         '</div>' +
                     '</div>' +
+                    '<form class="d-flex align-items-center gap-2 mb-3" id="dashQuickAddTaskForm" onsubmit="quickAddTask(event)">' +
+                        '<i class="ti ti-plus text-muted flex-shrink-0"></i>' +
+                        '<input type="text" class="form-control form-control-sm" id="dashQuickAddTaskInput" placeholder="Quick add a task for today...">' +
+                        '<button type="submit" class="btn btn-sm btn-primary flex-shrink-0">Add</button>' +
+                    '</form>' +
                     '<div id="dashMyDayEventsContainer" class="mb-2"></div>' +
                     '<div class="row g-3" id="dashMyDayContainer"></div>' +
                 '</div>' +
@@ -868,6 +872,34 @@
                 '</div>' +
             '</div>' +
         '</div>';
+    }
+
+    // Defaults the new task's due date to today so it lands directly in
+    // My Day (which filters to items due today) rather than My Queue -
+    // the fastest path for the common "quick, add this to today" case;
+    // drag-and-drop already covers moving it to My Queue afterward.
+    async function quickAddTask(evt) {
+        evt.preventDefault();
+        const input = document.getElementById('dashQuickAddTaskInput');
+        const title = input.value.trim();
+        if (!title) return;
+
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+
+        try {
+            const res = await fetch('/api/v1/lilypad/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, dueDate: today.toISOString() })
+            });
+            const result = await res.json();
+            if (!result.success) throw new Error(result.error);
+            input.value = '';
+            await loadDashboard();
+        } catch (err) {
+            alert(err.message || 'Unable to add task.');
+        }
     }
 
     function renderMyDayWidgetHtml() {

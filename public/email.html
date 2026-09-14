@@ -152,7 +152,7 @@
 							<i class="ti ti-address-book me-1"></i> Contacts
 						</button>
 						<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="emailRefreshBtn">
-							<i class="ti ti-refresh me-1"></i> Refresh
+							<i class="ti ti-refresh me-1"></i> Sync Now
 						</button>
 						<button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm" id="emailComposeBtn">
 							<i class="ti ti-edit me-1"></i> Compose
@@ -1001,7 +1001,38 @@
 			loadGraymailDigest();
 		});
 
-		document.getElementById('emailRefreshBtn').addEventListener('click', () => { loadEmailList(); loadGraymailDigest(); loadSuggestedTasks(); loadPriorityRules(); loadSenderCards(); loadWaitingOn(); });
+		document.getElementById('emailRefreshBtn').addEventListener('click', syncNow);
+
+		/**
+		 * The old "Refresh" button only ever re-read whatever was already
+		 * cached - during testing (or right after sending a message you
+		 * want to see reflected) that meant waiting on the background
+		 * schedulers (mail sync, triage extraction, waiting-on scan each
+		 * run on their own ~20 minute intervals) with no way to force it.
+		 * This actually runs those passes now, then reloads the view.
+		 */
+		async function syncNow() {
+			const btn = document.getElementById('emailRefreshBtn');
+			const originalHtml = btn.innerHTML;
+			btn.disabled = true;
+			btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Syncing...';
+			try {
+				await fetch('/api/v1/lilypad/email/sync-now', { method: 'POST' });
+				await fetch('/api/v1/lilypad/email/score-now', { method: 'POST' });
+				await fetch('/api/v1/lilypad/email/extract-now', { method: 'POST' });
+				await fetch('/api/v1/lilypad/email/scan-waiting-on-now', { method: 'POST' });
+			} catch (err) {
+				console.error('Sync now failed:', err);
+			}
+			loadEmailList();
+			loadGraymailDigest();
+			loadSuggestedTasks();
+			loadPriorityRules();
+			loadSenderCards();
+			loadWaitingOn();
+			btn.disabled = false;
+			btn.innerHTML = originalHtml;
+		}
 		document.getElementById('emailLoadMoreBtn').addEventListener('click', () => {
 			emailSkip += EMAIL_PAGE_SIZE;
 			loadEmailList(false);

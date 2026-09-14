@@ -57,6 +57,30 @@ function looksLikeRequest (text) {
   return REQUEST_PATTERNS.some((pattern) => pattern.test(text))
 }
 
+const TEXT_SIMILARITY_THRESHOLD = 0.6
+
+/**
+ * Same word-overlap heuristic as emailTriageExtractionService.js's
+ * isSimilarTitle, applied to a chunk of each message's own new content
+ * (after stripQuotedHistory) rather than the subject line - a reply
+ * chain almost always keeps the same subject throughout, so comparing
+ * subjects would flag every message in a thread as "the same ask" and
+ * defeat the point of this check (a thread should be able to raise a
+ * second, genuinely different ask).
+ */
+function textWords (text) {
+  return new Set(String(text || '').toLowerCase().slice(0, 300).replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean))
+}
+
+function isSimilarText (a, b) {
+  const wordsA = textWords(a)
+  const wordsB = textWords(b)
+  if (!wordsA.size || !wordsB.size) return false
+  let shared = 0
+  wordsA.forEach((w) => { if (wordsB.has(w)) shared++ })
+  return shared / Math.min(wordsA.size, wordsB.size) >= TEXT_SIMILARITY_THRESHOLD
+}
+
 /**
  * Scans not-yet-checked outbound mail, creating an "awaiting reply"
  * watcher for anything that reads like a request - one per email, to
@@ -71,11 +95,12 @@ function looksLikeRequest (text) {
  * watchers for asks sent long before anyone was using LilyPad to track
  * them.
  *
- * At most one open watcher per conversation - a multi-message back-
- * and-forth thread where several sent messages each independently read
- * as a request (a real, observed case: two nearly-identical "still
- * waiting on this?" nudges in the same thread) otherwise produced one
- * watcher per message instead of one per actual outstanding ask.
+ * Skips creating a new watcher only when it reads as the same ask as
+ * one already open in the same conversation (compared on actual body
+ * content, not conversation membership alone) - a real, observed case
+ * was two near-identical "still waiting on this?" nudges in one thread
+ * producing two watchers for the same outstanding ask, but a thread
+ * raising a second, distinct ask should still get its own watcher.
  */
 async function scanOutboundForOwner (ownerId) {
   const status = await microsoftCalendarService.getStatus(ownerId)
@@ -89,29 +114,44 @@ async function scanOutboundForOwner (ownerId) {
 
   const emails = await LilyPadEmailCache.find(query).sort({ receivedDateTime: 1 }).limit(BATCH_SIZE_PER_OWNER)
 
+  // Compared on each watcher's own source email body (re-derived fresh,
+  // the same way as the candidate email below) rather than the stored
+  // askSummary - askSummary prefers the subject line when present,
+  // which stays constant for every message in a reply chain and would
+  // make every message in a thread look "the same ask" if used here.
   const openWatchers = await LilyPadAwaitingResponse.find({ owner: ownerId, status: { $in: ['waiting', 'overdue'] } })
-    .populate('sourceEmail', 'graphConversationId')
-  const conversationsAlreadyWatched = new Set(
-    openWatchers.filter((w) => w.sourceEmail && w.sourceEmail.graphConversationId).map((w) => w.sourceEmail.graphConversationId)
-  )
+    .populate('sourceEmail', 'graphConversationId bodyHtml bodyPreview')
+  const openAsksByConversation = new Map()
+  for (const w of openWatchers) {
+    if (!w.sourceEmail || !w.sourceEmail.graphConversationId) continue
+    const list = openAsksByConversation.get(w.sourceEmail.graphConversationId) || []
+    list.push(bodyToPlainText(w.sourceEmail))
+    openAsksByConversation.set(w.sourceEmail.graphConversationId, list)
+  }
 
   let created = 0
   for (const email of emails) {
     const recipient = (email.toRecipients || [])[0]
-    const alreadyWatched = email.graphConversationId && conversationsAlreadyWatched.has(email.graphConversationId)
+    const bodyText = bodyToPlainText(email)
+    const openAsksInThread = (email.graphConversationId && openAsksByConversation.get(email.graphConversationId)) || []
+    const isDuplicateAsk = openAsksInThread.some((existing) => isSimilarText(existing, bodyText))
 
-    if (!alreadyWatched && recipient && recipient.address && looksLikeRequest(bodyToPlainText(email))) {
+    if (!isDuplicateAsk && recipient && recipient.address && looksLikeRequest(bodyText)) {
       const sentAt = email.receivedDateTime || new Date()
       await LilyPadAwaitingResponse.create({
         owner: ownerId,
         sourceEmail: email._id,
         toAddress: recipient.address,
         toName: recipient.name || '',
-        askSummary: email.subject || bodyToPlainText(email).slice(0, 140),
+        askSummary: email.subject || bodyText.slice(0, 140),
         followUpAfter: new Date(sentAt.getTime() + DEFAULT_FOLLOWUP_DAYS * 24 * 60 * 60 * 1000),
         status: 'waiting'
       })
-      if (email.graphConversationId) conversationsAlreadyWatched.add(email.graphConversationId)
+      if (email.graphConversationId) {
+        const list = openAsksByConversation.get(email.graphConversationId) || []
+        list.push(bodyText)
+        openAsksByConversation.set(email.graphConversationId, list)
+      }
       created++
     }
     email.waitingOnProcessed = true

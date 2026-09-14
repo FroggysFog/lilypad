@@ -1138,6 +1138,10 @@
 			await loadUsers();
 			await loadTasks();
 
+			if (new URLSearchParams(window.location.search).get('action') === 'new') {
+				openNewTaskModal();
+			}
+
 			const targetTask = new URLSearchParams(window.location.search).get('task');
 			if (targetTask) {
 				if (TASKS.some(t => t.id === targetTask)) {
