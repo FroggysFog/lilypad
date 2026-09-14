@@ -4,7 +4,14 @@ const LilyPadAccount = require('../models/lilypadAccount')
 /**
  * Ensures an admin account exists in MongoDB so administrators can log in.
  * If skaran/scott@froggysfog.com is missing, it is automatically created.
- * If ADMIN_PASSWORD or RESET_ADMIN_PASSWORD env var is set, the password is reset.
+ *
+ * Once the account exists, its password is left alone on every ordinary
+ * restart - it's only reset when ADMIN_PASSWORD, RESET_ADMIN_PASSWORD, or
+ * FORCE_RESET_ADMIN=true is explicitly set, which is also the escape
+ * hatch for a forgotten password. Earlier this unconditionally reset the
+ * password to a hardcoded default on every single startup whenever none
+ * of those env vars were set, silently overwriting whatever password was
+ * actually in use.
  */
 async function ensureDefaultAdmin () {
   try {
@@ -26,11 +33,13 @@ async function ensureDefaultAdmin () {
       })
       await account.save()
       winston.info('[Bootstrap] Admin account "skaran" created successfully.')
-    } else {
+    } else if (process.env.ADMIN_PASSWORD || process.env.RESET_ADMIN_PASSWORD || process.env.FORCE_RESET_ADMIN === 'true') {
       account.role = 'admin'
       account.password = desiredPassword
       await account.save()
-      winston.info('[Bootstrap] Admin account "skaran" verified and credentials synchronized.')
+      winston.info('[Bootstrap] Admin "skaran" password reset successfully.')
+    } else {
+      winston.info('[Bootstrap] Admin account "skaran" verified.')
     }
   } catch (err) {
     winston.error('[Bootstrap] Failed to verify/create admin account: ' + err.message)
