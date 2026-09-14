@@ -6,13 +6,17 @@
 const express = require('express')
 const router = express.Router()
 const controllers = require('../controllers')
-const { requireLoginApi } = require('../middleware/lilypadAuth')
+const { requireLoginApi, requireAdminApi } = require('../middleware/lilypadAuth')
 
 module.exports = function () {
   // Preference management
   router.get('/dashboard/preferences', requireLoginApi, controllers.lilypadDashboard.getPreferences)
   router.put('/dashboard/preferences', requireLoginApi, controllers.lilypadDashboard.savePreferences)
   router.post('/dashboard/preferences/reset', requireLoginApi, controllers.lilypadDashboard.resetPreferences)
+
+  // Company-wide announcement banner (Command Center bulletin widget)
+  router.get('/dashboard/announcement', requireLoginApi, controllers.lilypadDashboard.getAnnouncement)
+  router.put('/dashboard/announcement', requireAdminApi, controllers.lilypadDashboard.setAnnouncement)
 
   // Modular Widget Data Feeds
   router.get('/dashboard/widgets/rma-bench', requireLoginApi, controllers.lilypadDashboard.getRmaBenchData)

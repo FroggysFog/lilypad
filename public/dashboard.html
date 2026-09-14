@@ -551,6 +551,7 @@
             document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
             document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
             revealAdminNav(result.data.role);
+            updateBulletinEditVisibility();
         } catch (err) {
             console.error('Unable to load current user:', err);
         }
@@ -710,6 +711,7 @@
         canvas.innerHTML = html;
 
         // Load data for active widgets asynchronously
+        if (activeWidgets.includes('company-bulletin')) loadBulletinAnnouncement();
         if (activeWidgets.includes('rma-bench')) loadRmaBenchWidgetData();
         if (activeWidgets.includes('sales-pipeline')) loadSalesPipelineWidgetData();
         if (activeWidgets.includes('shipping-dock')) loadShippingDockWidgetData();
@@ -732,16 +734,72 @@
                             '<i class="ti ti-speakerphone fs-22"></i>' +
                         '</div>' +
                         '<div>' +
-                            '<h5 class="mb-0 fw-bold text-white">Operations Announcement</h5>' +
-                            '<span class="fs-13 text-white-50">Pre-Season Production Surge: Docks prioritize outbound pallet pickups between 1 PM - 4 PM.</span>' +
+                            '<h5 class="mb-0 fw-bold text-white" id="bulletinTitleText">Operations Announcement</h5>' +
+                            '<span class="fs-13 text-white-50" id="bulletinMessageText">Loading...</span>' +
                         '</div>' +
                     '</div>' +
-                    '<a href="tickets.html?action=new&category=FX+Machine+Support" class="btn btn-sm btn-light rounded-pill px-3 fw-semibold text-primary shadow-sm">' +
-                        '<i class="ti ti-tool me-1"></i> Log Maintenance' +
-                    '</a>' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<button type="button" class="btn btn-sm btn-outline-light rounded-circle p-0 d-flex align-items-center justify-content-center" id="bulletinEditBtn" style="display:none; width:32px; height:32px;" title="Edit announcement" data-bs-toggle="modal" data-bs-target="#bulletinEditModal">' +
+                            '<i class="ti ti-pencil fs-16"></i>' +
+                        '</button>' +
+                        '<a href="tickets.html?action=new&category=FX+Machine+Support" class="btn btn-sm btn-light rounded-pill px-3 fw-semibold text-primary shadow-sm">' +
+                            '<i class="ti ti-tool me-1"></i> Log Maintenance' +
+                        '</a>' +
+                    '</div>' +
                 '</div>' +
             '</div>' +
         '</div>';
+    }
+
+    const BULLETIN_DEFAULT = { title: 'Operations Announcement', message: 'Pre-Season Production Surge: Docks prioritize outbound pallet pickups between 1 PM - 4 PM.' };
+
+    async function loadBulletinAnnouncement() {
+        const titleEl = document.getElementById('bulletinTitleText');
+        const messageEl = document.getElementById('bulletinMessageText');
+        if (!titleEl || !messageEl) return;
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/announcement');
+            const result = await res.json();
+            const announcement = (result.success && result.data) ? result.data : BULLETIN_DEFAULT;
+            titleEl.textContent = announcement.title || BULLETIN_DEFAULT.title;
+            messageEl.textContent = announcement.message || BULLETIN_DEFAULT.message;
+        } catch (err) {
+            titleEl.textContent = BULLETIN_DEFAULT.title;
+            messageEl.textContent = BULLETIN_DEFAULT.message;
+        }
+        updateBulletinEditVisibility();
+    }
+
+    function updateBulletinEditVisibility() {
+        const btn = document.getElementById('bulletinEditBtn');
+        if (btn) btn.style.display = dashIsAdmin ? '' : 'none';
+    }
+
+    function openBulletinEditModal() {
+        document.getElementById('bulletinEditTitleInput').value = document.getElementById('bulletinTitleText').textContent;
+        document.getElementById('bulletinEditMessageInput').value = document.getElementById('bulletinMessageText').textContent;
+    }
+
+    async function saveBulletinAnnouncement() {
+        const title = document.getElementById('bulletinEditTitleInput').value.trim();
+        const message = document.getElementById('bulletinEditMessageInput').value.trim();
+        if (!message) { alert('A message is required.'); return; }
+
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/announcement', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, message })
+            });
+            const result = await res.json();
+            if (!result.success) throw new Error(result.error);
+
+            document.getElementById('bulletinTitleText').textContent = result.data.title;
+            document.getElementById('bulletinMessageText').textContent = result.data.message;
+            bootstrap.Modal.getInstance(document.getElementById('bulletinEditModal')).hide();
+        } catch (err) {
+            alert(err.message || 'Unable to update announcement.');
+        }
     }
 
     function renderQuickActionsWidgetHtml() {
@@ -2190,8 +2248,38 @@
         await loadMe();
         await loadAssigneeOptions();
         await loadDashboard();
+
+        const bulletinModalEl = document.getElementById('bulletinEditModal');
+        if (bulletinModalEl) bulletinModalEl.addEventListener('show.bs.modal', openBulletinEditModal);
     });
 </script>
+
+	<!-- Edit Company Announcement Modal (admin-only) -->
+	<div class="modal fade" id="bulletinEditModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h6 class="modal-title fw-bold"><i class="ti ti-speakerphone me-1 text-primary"></i>Edit Announcement</h6>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<p class="fs-13 text-muted">Shown to everyone on the Command Center dashboard.</p>
+					<div class="mb-3">
+						<label class="form-label fs-13 fw-semibold">Title</label>
+						<input type="text" id="bulletinEditTitleInput" class="form-control" placeholder="Operations Announcement">
+					</div>
+					<div class="mb-0">
+						<label class="form-label fs-13 fw-semibold">Message</label>
+						<textarea id="bulletinEditMessageInput" class="form-control" rows="3" placeholder="e.g. Holiday shipping cutoff is Friday at 3 PM."></textarea>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary btn-sm" onclick="saveBulletinAnnouncement()">Save</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
 	<!-- Customize My Workspace Offcanvas Studio -->
 	<div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="offcanvasWorkspaceCustomizer" style="width: 440px;" aria-labelledby="offcanvasWorkspaceLabel">

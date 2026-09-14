@@ -3,7 +3,9 @@
  * Handles user dashboard preferences, role presets, and modular widget data feeds.
  */
 
+const xss = require('xss')
 const dashboardRolePresets = require('../services/dashboardRolePresets')
+const LilyPadSetting = require('../models/lilypadSetting')
 const {
   LilyPadTicket,
   LilyPadOrder,
@@ -14,6 +16,56 @@ const {
 } = require('../models')
 
 const lilypadDashboardController = {}
+
+// A singleton stored in the generic settings collection (see
+// lilypadSetting.js) rather than its own model - one banner shown to
+// everyone on the Command Center, not a list with its own lifecycle.
+const ANNOUNCEMENT_SETTING_KEY = 'dashboardAnnouncement'
+
+/**
+ * GET /api/v1/lilypad/dashboard/announcement
+ * Returns null if nothing's ever been set - the widget falls back to
+ * its own default copy in that case rather than showing an empty banner.
+ */
+lilypadDashboardController.getAnnouncement = async function (req, res) {
+  try {
+    const setting = await LilyPadSetting.findOne({ key: ANNOUNCEMENT_SETTING_KEY })
+    return res.status(200).json({ success: true, data: setting ? setting.value : null })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * PUT /api/v1/lilypad/dashboard/announcement
+ * Admin-only - this is a company-wide banner shown to every role.
+ */
+lilypadDashboardController.setAnnouncement = async function (req, res) {
+  try {
+    const title = xss(String(req.body.title || '').trim())
+    const message = xss(String(req.body.message || '').trim())
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'A message is required.' })
+    }
+
+    const value = {
+      title: title || 'Operations Announcement',
+      message,
+      updatedAt: new Date(),
+      updatedByName: (req.user && req.user.fullname) || ''
+    }
+
+    await LilyPadSetting.findOneAndUpdate(
+      { key: ANNOUNCEMENT_SETTING_KEY },
+      { key: ANNOUNCEMENT_SETTING_KEY, value },
+      { upsert: true }
+    )
+
+    return res.status(200).json({ success: true, data: value })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
 
 /**
  * GET /api/v1/lilypad/dashboard/preferences
