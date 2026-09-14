@@ -13,6 +13,17 @@ function mainRoutes(router, controllers) {
   router.get('/version', function (req, res) {
     return res.json({ version: packagejson.version })
   })
+
+  // Unauthenticated on purpose - lets the sandbox/production badge
+  // (lilypad-env-banner.js) check this from every page, including
+  // login.html, before anyone's signed in. Defaults to 'production'
+  // for anything other than an explicit LILYPAD_ENVIRONMENT=sandbox -
+  // a missing env var should never show a false "you're on sandbox"
+  // badge to a real user.
+  router.get('/api/v1/lilypad/environment', function (req, res) {
+    const environment = process.env.LILYPAD_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production'
+    return res.json({ success: true, data: { environment } })
+  })
   router.get('/install', function (req, res) {
     return res.redirect('/')
   })
