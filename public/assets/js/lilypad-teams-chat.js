@@ -26,12 +26,34 @@
   var currentChatName = ''
   var currentNextLink = null
   var loadedMessages = []
+  var chatSearchQuery = ''
 
   // A fixed persona-color palette (same idea Teams uses) so a given
   // person's avatar color is stable across the list and every message
   // bubble, without needing to know anything about the person ahead of
   // time - just hash their name into one of these.
   var PERSONA_COLORS = ['#c239b3', '#7160e8', '#5b5fc7', '#0078d4', '#038387', '#498205', '#986f0b', '#c93b1d', '#8764b8']
+
+  // Cheap phrase-matching (same tier choice as emailWaitingOnService.js's
+  // looksLikeRequest - a regex list, not an LLM call) since chat messages
+  // are far higher-frequency than email and a "does this look like
+  // something to do" heuristic doesn't need much more than that. False
+  // positives just mean an unused button, not a wrongly-created task, so
+  // erring toward over-flagging is the right tradeoff here.
+  var TASK_PATTERNS = [
+    /\bcan you\b/i,
+    /\bcould you\b/i,
+    /\bplease (?:send|confirm|review|check|update|fix|call|email|create|make|add|remove|schedule|follow up)\b/i,
+    /\bdon'?t forget\b/i,
+    /\bmake sure\b/i,
+    /\bneed (?:you|this) to\b/i,
+    /\bby (?:tomorrow|today|eod|end of day|monday|tuesday|wednesday|thursday|friday|next week)\b/i,
+    /\?\s*$/m
+  ]
+
+  function looksLikeTaskText (text) {
+    return TASK_PATTERNS.some(function (p) { return p.test(text) })
+  }
 
   function escapeHtml (value) {
     return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -81,11 +103,32 @@
     return iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''
   }
 
+  // Microsoft Teams' own brand palette, applied only within this panel -
+  // the rest of LilyPad stays on its own teal - so the chat surface reads
+  // as "Teams" the way the team already recognizes it, per feedback that
+  // this should look as close to real Teams as practical.
+  var TEAMS_PURPLE = '#5b5fc7'
+
   function ensureStylesInjected () {
     if (document.getElementById('lpTeamsChatStyles')) return
     var style = document.createElement('style')
     style.id = 'lpTeamsChatStyles'
-    style.textContent = '.lp-teams-chat-row:hover { background: #f3f2f1; }'
+    style.textContent =
+      '#lilypadTeamsChatPanel { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; }' +
+      '.lp-teams-chat-row { border-bottom: 1px solid #f0f0f0; }' +
+      '.lp-teams-chat-row:hover { background: #f5f5f5; }' +
+      '.lp-teams-search-input { padding-left: 30px; border-radius: 16px; background: #f5f5f5; border: 1px solid transparent; }' +
+      '.lp-teams-search-input:focus { background: #fff; border-color: ' + TEAMS_PURPLE + '; box-shadow: none; }' +
+      '.lp-teams-icon-btn { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }' +
+      '.lp-teams-bubble { padding: 8px 12px; border-radius: 14px; font-size: 13px; word-break: break-word; max-width: 100%; background: #f3f2f1; color: #242424; display: inline-block; }' +
+      '.lp-teams-bubble-mine { background: ' + TEAMS_PURPLE + '; color: #fff; }' +
+      '.lp-teams-quick-task-btn { border: none; background: #fff; color: ' + TEAMS_PURPLE + '; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); opacity: 0.55; flex-shrink: 0; cursor: pointer; padding: 0; transition: opacity .15s, background .15s, color .15s; }' +
+      '.lp-teams-quick-task-btn:hover { opacity: 1; background: ' + TEAMS_PURPLE + '; color: #fff; }' +
+      '.lp-teams-quick-task-btn.lp-teams-task-added { opacity: 1; background: #107c10; color: #fff; cursor: default; }' +
+      '#lpTeamsSendForm .form-control { border-radius: 20px 0 0 20px; background: #f5f5f5; border: none; }' +
+      '#lpTeamsSendForm .btn { border-radius: 0 20px 20px 0; background: ' + TEAMS_PURPLE + '; border-color: ' + TEAMS_PURPLE + '; }' +
+      '.lp-teams-accent { color: ' + TEAMS_PURPLE + ' !important; }' +
+      '.lp-teams-btn-accent { background: ' + TEAMS_PURPLE + ' !important; border-color: ' + TEAMS_PURPLE + ' !important; }'
     document.head.appendChild(style)
   }
 
@@ -104,7 +147,8 @@
         senderId: senderId,
         senderName: senderName,
         text: text,
-        time: formatTime(m.createdDateTime)
+        time: formatTime(m.createdDateTime),
+        looksLikeTask: looksLikeTaskText(text)
       }
     }).filter(Boolean)
   }
@@ -113,22 +157,42 @@
     var groups = []
     normalized.forEach(function (m) {
       var last = groups[groups.length - 1]
+      var item = { text: m.text, time: m.time, looksLikeTask: m.looksLikeTask }
       if (last && last.senderId === m.senderId) {
-        last.items.push({ text: m.text, time: m.time })
+        last.items.push(item)
       } else {
-        groups.push({ senderId: m.senderId, senderName: m.senderName, isMine: m.isMine, items: [{ text: m.text, time: m.time }] })
+        groups.push({ senderId: m.senderId, senderName: m.senderName, isMine: m.isMine, items: [item] })
       }
     })
     return groups
   }
 
+  /**
+   * The quick-task button sits on the outside edge of its own bubble (left
+   * of a "mine" bubble, right of someone else's) - always present at low
+   * opacity rather than hover-only, since a hover affordance is invisible
+   * on touch. data-task-text round-trips through an escaped HTML attribute
+   * (same pattern as data-chat-id elsewhere in this file) rather than a
+   * closure, since groupHtml/messageItemHtml only ever produce strings.
+   */
+  function messageItemHtml (item, isMine) {
+    var bodyHtml = escapeHtml(item.text).replace(/\n/g, '<br>')
+    var bubble = '<div class="lp-teams-bubble' + (isMine ? ' lp-teams-bubble-mine' : '') + '">' + bodyHtml + '</div>'
+    var taskBtn = item.looksLikeTask
+      ? '<button type="button" class="lp-teams-quick-task-btn" title="Add as a task" data-task-text="' + escapeHtml(item.text) + '"><i class="ti ti-plus"></i></button>'
+      : ''
+    return (
+      '<div class="d-flex align-items-end gap-1' + (isMine ? ' justify-content-end' : '') + ' mb-1">' +
+        (isMine ? taskBtn + bubble : bubble + taskBtn) +
+      '</div>'
+    )
+  }
+
   function groupHtml (group) {
-    var bg = group.isMine ? 'rgba(var(--bs-primary-rgb), 0.14)' : '#f3f2f1'
     var bubbles = group.items.map(function (item, idx) {
-      var bodyHtml = escapeHtml(item.text).replace(/\n/g, '<br>')
       var isLast = idx === group.items.length - 1
       return (
-        '<div class="p-2 px-3 rounded-3 mb-1 d-inline-block" style="background:' + bg + '; font-size:13px; word-break:break-word; max-width:100%;">' + bodyHtml + '</div>' +
+        messageItemHtml(item, group.isMine) +
         (isLast ? '<div class="fs-10 text-muted' + (group.isMine ? ' text-end' : '') + '">' + escapeHtml(item.time) + '</div>' : '')
       )
     }).join('')
@@ -164,10 +228,49 @@
     if (btn) btn.addEventListener('click', loadOlderMessages)
   }
 
+  function wireQuickTaskButtons (container) {
+    container.querySelectorAll('.lp-teams-quick-task-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () { addQuickTask(btn) })
+    })
+  }
+
+  /**
+   * Lands in the same Task Manager queue as everything else (see
+   * dashboard.html's quick-add-a-task, same endpoint) rather than a
+   * separate chat-only task list. Marks the button "added" permanently
+   * for this render instead of reverting it, since re-adding the exact
+   * same message as a second task isn't useful.
+   */
+  async function addQuickTask (btn) {
+    if (btn.classList.contains('lp-teams-task-added')) return
+    var text = btn.getAttribute('data-task-text') || ''
+    if (!text) return
+    btn.disabled = true
+    try {
+      var res = await fetch('/api/v1/lilypad/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: text.length > 200 ? text.slice(0, 200) + '...' : text,
+          notes: 'From Teams chat with ' + currentChatName
+        })
+      })
+      var result = await res.json()
+      if (!result.success) throw new Error(result.error)
+      btn.classList.add('lp-teams-task-added')
+      btn.innerHTML = '<i class="ti ti-check"></i>'
+      btn.title = 'Added to Tasks'
+    } catch (err) {
+      btn.disabled = false
+      alert(err.message || 'Unable to add task.')
+    }
+  }
+
   function renderMessagesPane () {
     var container = document.getElementById('lpTeamsMessages')
     container.innerHTML = loadOlderButtonHtml() + renderMessagesHtml(loadedMessages)
     wireLoadOlderButton(container)
+    wireQuickTaskButtons(container)
     return container
   }
 
@@ -178,8 +281,8 @@
     var preview = chat.lastMessagePreview ? messageBodyToText(chat.lastMessagePreview.body && chat.lastMessagePreview.body.content) : ''
     var time = chat.lastMessagePreview ? formatTime(chat.lastMessagePreview.createdDateTime) : ''
     return (
-      '<div class="d-flex align-items-center gap-2 p-2 lp-teams-chat-row" data-chat-id="' + escapeHtml(chat.id) + '" style="cursor:pointer; border-radius:8px;">' +
-        avatarHtml(name, 38) +
+      '<div class="d-flex align-items-center gap-2 p-2 lp-teams-chat-row" data-chat-id="' + escapeHtml(chat.id) + '" style="cursor:pointer;">' +
+        avatarHtml(name, 40) +
         '<div class="flex-fill" style="min-width:0;">' +
           '<div class="d-flex align-items-center justify-content-between">' +
             '<span class="fs-13 fw-semibold text-dark text-truncate">' + escapeHtml(name) + '</span>' +
@@ -193,11 +296,15 @@
 
   function renderChatList () {
     var container = document.getElementById('lpTeamsChatList')
-    if (!currentChats.length) {
-      container.innerHTML = '<p class="text-muted fs-13 mb-0 text-center p-3">No Teams conversations found.</p>'
+    var filtered = chatSearchQuery
+      ? currentChats.filter(function (c) { return (c.displayName || '').toLowerCase().indexOf(chatSearchQuery) !== -1 })
+      : currentChats
+
+    if (!filtered.length) {
+      container.innerHTML = '<p class="text-muted fs-13 mb-0 text-center p-3">' + (currentChats.length ? 'No matching conversations.' : 'No Teams conversations found.') + '</p>'
       return
     }
-    container.innerHTML = currentChats.map(chatListItemHtml).join('')
+    container.innerHTML = filtered.map(chatListItemHtml).join('')
     container.querySelectorAll('.lp-teams-chat-row').forEach(function (row) {
       row.addEventListener('click', function () { openConversation(row.dataset.chatId) })
     })
@@ -237,7 +344,7 @@
           '<div class="d-flex align-items-center gap-2 flex-fill" style="min-width:0;">' +
             '<button type="button" class="btn btn-sm btn-light" id="lpTeamsBackBtn" style="display:none;" title="Back to chats"><i class="ti ti-arrow-left"></i></button>' +
             '<div>' +
-              '<h6 class="offcanvas-title fw-bold mb-0 d-flex align-items-center gap-2"><i class="ti ti-brand-teams text-primary"></i> <span id="lpTeamsHeaderTitle">Chat</span></h6>' +
+              '<h6 class="offcanvas-title fw-bold mb-0 d-flex align-items-center gap-2"><i class="ti ti-brand-teams lp-teams-accent"></i> <span id="lpTeamsHeaderTitle">Chat</span></h6>' +
               '<span class="fs-11 text-muted" id="lpTeamsStatus">Checking connection...</span>' +
             '</div>' +
           '</div>' +
@@ -248,15 +355,19 @@
         '</div>' +
         '<div class="offcanvas-body d-flex flex-column p-0" style="min-height:0;">' +
           '<div id="lpTeamsDisconnected" class="text-center py-4 px-3">' +
-            '<i class="ti ti-brand-teams fs-36 text-primary"></i>' +
+            '<i class="ti ti-brand-teams fs-36 lp-teams-accent"></i>' +
             '<h6 class="fw-bold mt-2">Connect Microsoft 365</h6>' +
             '<p class="text-muted fs-13">Connect your Microsoft 365 account to view and send Teams chat messages - the same connection also powers your Calendar and Email.</p>' +
-            '<a class="btn btn-primary btn-sm" href="/auth/microsoft-calendar/connect"><i class="ti ti-plug-connected me-1"></i> Connect Microsoft 365</a>' +
+            '<a class="btn btn-primary btn-sm lp-teams-btn-accent" href="/auth/microsoft-calendar/connect"><i class="ti ti-plug-connected me-1"></i> Connect Microsoft 365</a>' +
           '</div>' +
 
           '<div id="lpTeamsListView" class="flex-fill d-flex flex-column" style="display:none; min-height:0;">' +
-            '<div class="px-2 pt-2">' +
-              '<button type="button" class="btn btn-sm btn-light w-100 mb-1" id="lpTeamsRefreshBtn"><i class="ti ti-refresh me-1"></i> Refresh</button>' +
+            '<div class="d-flex align-items-center gap-2 px-2 pt-2 pb-1">' +
+              '<div class="flex-fill position-relative">' +
+                '<i class="ti ti-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#a19f9d; font-size:14px;"></i>' +
+                '<input type="text" class="form-control form-control-sm lp-teams-search-input" id="lpTeamsSearchInput" placeholder="Search chats">' +
+              '</div>' +
+              '<button type="button" class="btn btn-sm btn-light lp-teams-icon-btn" id="lpTeamsRefreshBtn" title="Refresh"><i class="ti ti-refresh"></i></button>' +
             '</div>' +
             '<div id="lpTeamsChatList" class="flex-fill px-1" style="overflow-y:auto;"></div>' +
             '<div class="p-2 border-top text-center">' +
@@ -287,6 +398,10 @@
     document.getElementById('lpTeamsBackBtn').addEventListener('click', showListView)
     document.getElementById('lpTeamsSendForm').addEventListener('submit', sendMessage)
     document.getElementById('lpTeamsPopoutBtn').addEventListener('click', popOut)
+    document.getElementById('lpTeamsSearchInput').addEventListener('input', function (e) {
+      chatSearchQuery = e.target.value.trim().toLowerCase()
+      renderChatList()
+    })
   }
 
   function popOut () {
