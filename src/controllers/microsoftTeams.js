@@ -35,4 +35,16 @@ controller.send = async (req, res) => {
   }
 }
 
+/**
+ * POST /api/microsoft-teams/presences   body: { ids: [userId, ...] }
+ */
+controller.presences = async (req, res) => {
+  try {
+    const ids = Array.isArray(req.body.ids) ? req.body.ids : []
+    return res.json({ success: true, data: await microsoftTeams.getPresences(req.user._id, ids) })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
 module.exports = controller

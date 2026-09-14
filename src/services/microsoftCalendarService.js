@@ -43,8 +43,11 @@ const GRAPH = 'https://graph.microsoft.com/v1.0'
 // users. Chat.ReadWrite/ChannelMessage.Read.All/ChannelMessage.Send
 // are the exception - already consented via the old shared Teams
 // connection on this same app registration, so only the reconnect is
-// needed for those three, not an Azure change.
-const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read', 'Mail.ReadWrite', 'Mail.Send', 'Contacts.Read', 'MailboxSettings.ReadWrite', 'Chat.ReadWrite', 'ChannelMessage.Read.All', 'ChannelMessage.Send']
+// needed for those three, not an Azure change. Presence.Read.All (so
+// the Teams chat panel can show whether someone's Active/Idle/Away)
+// is a new one - needs the full two-part change like Contacts/
+// MailboxSettings did.
+const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read', 'Mail.ReadWrite', 'Mail.Send', 'Contacts.Read', 'MailboxSettings.ReadWrite', 'Chat.ReadWrite', 'ChannelMessage.Read.All', 'ChannelMessage.Send', 'Presence.Read.All']
 
 function getConfig () {
   return {

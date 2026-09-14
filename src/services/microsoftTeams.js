@@ -83,9 +83,25 @@ async function sendMessage (ownerId, chatId, content) {
   })
 }
 
+/**
+ * One batched call for however many people are visible across the chat
+ * list, rather than a Graph request per person - Graph's batch presence
+ * endpoint takes up to 650 ids at once. Requires Presence.Read.All (see
+ * microsoftCalendarService.js's SCOPES) - the frontend treats a failure
+ * here as non-fatal, since presence is a nice-to-have, not something
+ * chat itself depends on.
+ */
+async function getPresences (ownerId, userIds) {
+  const ids = Array.isArray(userIds) ? userIds.filter(Boolean).slice(0, 650) : []
+  if (!ids.length) return []
+  const result = await microsoftCalendarService.graphRequestForUser(ownerId, 'post', '/communications/getPresencesByUserId', { ids })
+  return result.value || []
+}
+
 module.exports = {
   getStatus,
   getChats,
   getMessages,
-  sendMessage
+  sendMessage,
+  getPresences
 }

@@ -27,6 +27,7 @@
   var currentNextLink = null
   var loadedMessages = []
   var chatSearchQuery = ''
+  var presenceByUserId = {}
 
   // A fixed persona-color palette (same idea Teams uses) so a given
   // person's avatar color is stable across the list and every message
@@ -94,9 +95,47 @@
     return PERSONA_COLORS[Math.abs(hash) % PERSONA_COLORS.length]
   }
 
-  function avatarHtml (name, size) {
+  // Graph's communications/getPresencesByUserId availability values,
+  // mapped down to the three states asked for (Active/Idle/Away) plus
+  // busy/offline, which Teams itself also distinguishes by color.
+  var PRESENCE_COLORS = {
+    Available: '#6bb700',
+    AvailableIdle: '#e8ac0e',
+    Away: '#e8ac0e',
+    BeRightBack: '#e8ac0e',
+    Busy: '#c4314b',
+    BusyIdle: '#c4314b',
+    DoNotDisturb: '#c4314b',
+    Offline: '#8a8886',
+    PresenceUnknown: '#8a8886'
+  }
+  var PRESENCE_LABELS = {
+    Available: 'Active',
+    AvailableIdle: 'Idle',
+    Away: 'Away',
+    BeRightBack: 'Be right back',
+    Busy: 'Busy',
+    BusyIdle: 'Busy',
+    DoNotDisturb: 'Do not disturb',
+    Offline: 'Offline',
+    PresenceUnknown: 'Unknown'
+  }
+
+  /**
+   * `presence` is optional (a Graph availability string) - passing none
+   * renders exactly the plain avatar this always was, so every existing
+   * call site (per-message sender avatars in a group thread, where
+   * presence isn't fetched) is unaffected.
+   */
+  function avatarHtml (name, size, presence) {
     var px = size || 32
-    return '<div class="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:' + px + 'px; height:' + px + 'px; font-size:' + Math.round(px * 0.4) + 'px; font-weight:600; background:' + colorForName(name) + ';">' + escapeHtml(initialsFor(name)) + '</div>'
+    var initials = '<div class="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:' + px + 'px; height:' + px + 'px; font-size:' + Math.round(px * 0.4) + 'px; font-weight:600; background:' + colorForName(name) + ';">' + escapeHtml(initialsFor(name)) + '</div>'
+    if (!presence) return initials
+
+    var dotColor = PRESENCE_COLORS[presence] || PRESENCE_COLORS.Offline
+    var dotSize = Math.max(10, Math.round(px * 0.32))
+    var dot = '<span class="lp-teams-presence-dot" title="' + escapeHtml(PRESENCE_LABELS[presence] || presence) + '" style="width:' + dotSize + 'px; height:' + dotSize + 'px; background:' + dotColor + ';"></span>'
+    return '<div class="position-relative flex-shrink-0" style="width:' + px + 'px; height:' + px + 'px;">' + initials + dot + '</div>'
   }
 
   function formatTime (iso) {
@@ -119,6 +158,7 @@
       '.lp-teams-chat-row:hover { background: #f5f5f5; }' +
       '.lp-teams-chat-row.lp-teams-row-active { background: #ebebf9; }' +
       '.lp-teams-chat-row.lp-teams-row-active:hover { background: #ebebf9; }' +
+      '.lp-teams-presence-dot { position: absolute; bottom: -1px; right: -1px; border-radius: 50%; border: 2px solid #fff; display: block; }' +
       '.lp-teams-search-input { padding-left: 30px; border-radius: 16px; background: #f5f5f5; border: 1px solid transparent; }' +
       '.lp-teams-search-input:focus { background: #fff; border-color: ' + TEAMS_PURPLE + '; box-shadow: none; }' +
       '.lp-teams-icon-btn { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }' +
@@ -278,13 +318,27 @@
 
   // --- Chat list --------------------------------------------------------
 
+  /**
+   * Presence only ever applies to a real person on the other end of a
+   * 1:1 chat - a group chat's icon has no single person's status to
+   * show, same as real Teams only ever puts a presence dot on an
+   * individual's avatar.
+   */
+  function otherMemberUserId (chat) {
+    if (!chat || chat.chatType !== 'oneOnOne' || !Array.isArray(chat.members)) return null
+    var other = chat.members.filter(function (m) { return m.userId && m.userId !== meId })[0]
+    return other ? other.userId : null
+  }
+
   function chatListItemHtml (chat) {
     var name = chat.displayName || 'Teams conversation'
     var preview = chat.lastMessagePreview ? messageBodyToText(chat.lastMessagePreview.body && chat.lastMessagePreview.body.content) : ''
     var time = chat.lastMessagePreview ? formatTime(chat.lastMessagePreview.createdDateTime) : ''
+    var otherId = otherMemberUserId(chat)
+    var presence = otherId ? presenceByUserId[otherId] : null
     return (
       '<div class="d-flex align-items-center gap-2 p-2 lp-teams-chat-row" data-chat-id="' + escapeHtml(chat.id) + '" style="cursor:pointer;">' +
-        avatarHtml(name, 40) +
+        avatarHtml(name, 40, presence) +
         '<div class="flex-fill" style="min-width:0;">' +
           '<div class="d-flex align-items-center justify-content-between">' +
             '<span class="fs-13 fw-semibold text-dark text-truncate">' + escapeHtml(name) + '</span>' +
@@ -314,22 +368,58 @@
   }
 
   /**
+   * Loads everyone's presence in one batched call rather than a request
+   * per chat - failures here are swallowed on purpose (see getPresences'
+   * comment in microsoftTeams.js): presence is a nice-to-have overlay on
+   * chats that already worked fine without it.
+   */
+  async function loadPresences () {
+    var ids = []
+    currentChats.forEach(function (chat) {
+      var id = otherMemberUserId(chat)
+      if (id && ids.indexOf(id) === -1) ids.push(id)
+    })
+    if (!ids.length) return
+    try {
+      var res = await fetch('/api/microsoft-teams/presences', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: ids })
+      })
+      var result = await res.json()
+      if (!result.success) return
+      presenceByUserId = {}
+      result.data.forEach(function (p) { presenceByUserId[p.id] = p.availability })
+      renderChatList()
+      if (currentChatId) {
+        var activeChat = currentChats.filter(function (c) { return c.id === currentChatId })[0]
+        if (activeChat) updateConversationHeader(activeChat)
+      }
+    } catch (err) {
+      // Presence is a nice-to-have - chats already work without it.
+    }
+  }
+
+  /**
    * Two-pane layout (list always visible on the left, active conversation
    * on the right) instead of the old single-column view that swapped
    * between a list screen and a conversation screen - matches how the
    * real Teams desktop client is actually laid out.
    */
-  function updateConversationHeader (chatName) {
+  function updateConversationHeader (chat) {
     var header = document.getElementById('lpTeamsConversationHeader')
-    header.innerHTML = chatName
-      ? '<div class="d-flex align-items-center gap-2">' + avatarHtml(chatName, 32) + '<strong class="fs-13">' + escapeHtml(chatName) + '</strong></div>'
-      : '<span class="fs-13 text-muted">Select a conversation to view messages.</span>'
+    if (!chat) {
+      header.innerHTML = '<span class="fs-13 text-muted">Select a conversation to view messages.</span>'
+      return
+    }
+    var name = chat.displayName || 'Teams conversation'
+    var otherId = otherMemberUserId(chat)
+    var presence = otherId ? presenceByUserId[otherId] : null
+    header.innerHTML = '<div class="d-flex align-items-center gap-2">' + avatarHtml(name, 32, presence) + '<strong class="fs-13">' + escapeHtml(name) + '</strong></div>'
   }
 
   async function openConversation (chatId) {
     var chat = currentChats.filter(function (c) { return c.id === chatId })[0]
     currentChatName = (chat && chat.displayName) || 'Teams conversation'
-    updateConversationHeader(currentChatName)
+    updateConversationHeader(chat)
     renderChatList()
     await loadMessages(chatId)
   }
@@ -440,6 +530,7 @@
       if (!res.ok || !result.success) throw new Error(result.error || 'Unable to load Teams chats')
       currentChats = result.data
       renderChatList()
+      loadPresences() // fire-and-forget - re-renders once it resolves
     } catch (err) {
       document.getElementById('lpTeamsChatList').innerHTML = '<p class="text-danger fs-13 mb-0 p-2">' + escapeHtml(err.message) + '</p>'
     }
