@@ -1,0 +1,55 @@
+name: Promote main to production
+
+# Keeps the live site on a once-a-day cadence instead of deploying on every
+# push - `main` is the continuously-deployed sandbox, `production` is what
+# the live Render service (once repointed - see the rollout notes) actually
+# deploys from. This job fast-forwards production to whatever's on main.
+#
+# Cron is UTC and does not observe daylight saving, so this fires at both
+# possible UTC offsets for 4am Central (CDT and CST) and the first real
+# step checks the actual Central time before doing anything - that gives
+# exactly one real run per day, always at ~4am Central, without needing to
+# hand-edit this file twice a year at the DST boundary.
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 4am CDT (UTC-5)
+    - cron: '0 10 * * *' # 4am CST (UTC-6)
+  workflow_dispatch: {} # lets anyone trigger a promotion on demand from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Only proceed if it's actually ~4am Central right now
+        id: gate
+        run: |
+          HOUR=$(TZ="America/Chicago" date +%H)
+          echo "Current Central hour: $HOUR"
+          if [ "$HOUR" = "04" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward production to main
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main production
+          git checkout production
+          # --ff-only refuses to proceed (and fails this job loudly) if
+          # production ever picks up a commit main doesn't have - e.g. a
+          # direct hotfix pushed to production - rather than silently
+          # merging or overwriting it.
+          git merge --ff-only origin/main
+          git push origin production
