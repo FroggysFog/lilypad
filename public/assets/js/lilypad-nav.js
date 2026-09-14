@@ -180,14 +180,19 @@ function lilypadNavRenderTopTabs (currentPage) {
   const section = LILYPAD_NAV_SECTIONS.find((s) => s.renderAs === 'topTabs')
   if (!section) return ''
 
+  // Styled with explicit inline color/border rather than relying on
+  // Bootstrap's nav-underline default (--bs-emphasis-color, a near-black
+  // that doesn't read as "branded") - the active tab should visibly use
+  // the same primary blue as every other active/selected state in the app.
   const tabsHtml = section.items.map((item) => {
     const isActive = item.href === currentPage
-    const classes = 'btn btn-sm rounded-pill px-3 d-flex align-items-center gap-1 ' +
-      (isActive ? 'btn-primary text-white' : 'btn-light text-dark')
-    return `<a href="${item.href}" class="${classes}" data-lilypad-top-tab="${item.href}"><i class="ti ${item.icon} fs-14"></i><span>${item.label}</span></a>`
+    const style = isActive
+      ? 'color:var(--bs-primary); border-bottom:3px solid var(--bs-primary); font-weight:700;'
+      : 'color:var(--bs-secondary-color, #6c757d); border-bottom:3px solid transparent;'
+    return `<a href="${item.href}" class="nav-link d-flex align-items-center gap-2 px-1 pb-2" data-lilypad-top-tab="${item.href}" style="${style}"><i class="ti ${item.icon} fs-16"></i><span>${item.label}</span></a>`
   }).join('\n')
 
-  return `<div class="d-flex align-items-center gap-2 flex-wrap" id="lilypadTopTabsRow" style="padding: 0 0 12px;">${tabsHtml}</div>`
+  return `<div class="nav gap-4 flex-wrap fs-14" id="lilypadTopTabsRow" style="padding: 4px 0 0;">${tabsHtml}</div>`
 }
 
 /**
