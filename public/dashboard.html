@@ -699,6 +699,9 @@
                 case 'lapsed-customers':
                     html += renderLapsedCustomersWidgetHtml();
                     break;
+                case 'sales-quota':
+                    html += renderSalesQuotaWidgetHtml();
+                    break;
                 case 'priority-conversations':
                     html += renderPriorityConversationsWidgetHtml();
                     break;
@@ -717,6 +720,7 @@
         if (activeWidgets.includes('shipping-dock')) loadShippingDockWidgetData();
         if (activeWidgets.includes('past-due-ar')) loadPastDueWidgetData();
         if (activeWidgets.includes('lapsed-customers')) loadLapsedCustomersWidgetData();
+        if (activeWidgets.includes('sales-quota')) loadSalesQuotaWidgetData();
         if (activeWidgets.includes('priority-conversations')) loadPriorityConversationsWidgetData();
         if (activeWidgets.includes('suggested-tasks')) loadSuggestedTasksWidgetData();
     }
@@ -1104,6 +1108,27 @@
         '</div>';
     }
 
+    function renderSalesQuotaWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-target fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark">Quota &amp; Commission Attainment</h5>' +
+                            '<span class="fs-12 text-muted">This month\'s closed-won vs. target</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashSalesQuotaWidgetBody">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading quota attainment...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
     let dashSenderCardsByAddress = {};
     let dashOpenSenderCardAddress = null;
 
@@ -1286,6 +1311,53 @@
             '</div>').join('');
         } catch (err) {
             container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load customer radar.</div>';
+        }
+    }
+
+    function quotaProgressBarHtml(quotaAmount, attainedAmount) {
+        const pct = quotaAmount > 0 ? Math.min(100, Math.round((attainedAmount / quotaAmount) * 100)) : 0;
+        const barColor = pct >= 100 ? 'bg-success' : pct >= 60 ? 'bg-primary' : 'bg-warning';
+        return '<div class="d-flex align-items-center justify-content-between mb-1">' +
+                '<span class="fs-12 fw-semibold text-dark">$' + Math.round(attainedAmount).toLocaleString() + ' of $' + Math.round(quotaAmount).toLocaleString() + '</span>' +
+                '<span class="fs-12 text-muted">' + pct + '%</span>' +
+            '</div>' +
+            '<div class="progress" style="height:8px;">' +
+                '<div class="progress-bar ' + barColor + '" style="width:' + pct + '%"></div>' +
+            '</div>';
+    }
+
+    async function loadSalesQuotaWidgetData() {
+        const container = document.getElementById('dashSalesQuotaWidgetBody');
+        if (!container) return;
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/widgets/sales-quota');
+            const result = await res.json();
+            if (!result.success) throw new Error(result.error || 'Unable to load quota data');
+
+            if (Array.isArray(result.data)) {
+                // Org-wide view (admin/operations) - one row per rep.
+                if (!result.data.length) {
+                    container.innerHTML = '<div class="text-center py-4 text-muted"><i class="ti ti-target fs-24 d-block mb-1"></i>No sales reps with quotas configured yet.</div>';
+                    return;
+                }
+                container.innerHTML = result.data.map(row => '<div class="mb-3">' +
+                    '<div class="fs-12 fw-semibold text-dark mb-1">' + escapeHtml(row.fullname) + '</div>' +
+                    (row.quotaAmount > 0
+                        ? quotaProgressBarHtml(row.quotaAmount, row.attainedAmount)
+                        : '<span class="fs-11 text-muted">No quota set for this month.</span>') +
+                '</div>').join('') +
+                    '<a href="admin-sales-quotas.html" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-12 mt-1">Manage Quotas</a>';
+            } else {
+                // Personal view (sales rep) - a single bar for themselves.
+                const { quotaAmount, attainedAmount } = result.data;
+                if (!quotaAmount) {
+                    container.innerHTML = '<div class="text-center py-4 text-muted"><i class="ti ti-target fs-24 d-block mb-1"></i>No quota set for this month yet - check with your manager.</div>';
+                    return;
+                }
+                container.innerHTML = quotaProgressBarHtml(quotaAmount, attainedAmount);
+            }
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load quota attainment.</div>';
         }
     }
 

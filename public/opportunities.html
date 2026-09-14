@@ -114,8 +114,12 @@
 				</div>
 
 				<div class="card border-0 shadow-sm rounded-3 mb-3">
-					<div class="card-body py-2 px-3">
+					<div class="card-body py-2 px-3 d-flex align-items-center gap-2 flex-wrap">
 						<input type="text" id="oppSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search name or account..." oninput="debounceOppSearch()">
+						<div class="btn-group btn-group-sm" role="group" id="oppScopeToggle">
+							<button type="button" class="btn btn-outline-primary" id="oppScopeMineBtn" onclick="setOppScope('mine')">My Accounts</button>
+							<button type="button" class="btn btn-outline-primary" id="oppScopeAllBtn" onclick="setOppScope('all')">All</button>
+						</div>
 					</div>
 				</div>
 
@@ -175,6 +179,15 @@
 		let oppTotal = 0;
 		let oppTotalPages = 1;
 		let oppSearchDebounce = null;
+		let oppScope = 'all';
+
+		function setOppScope(scope) {
+			oppScope = scope;
+			document.getElementById('oppScopeMineBtn').classList.toggle('active', scope === 'mine');
+			document.getElementById('oppScopeAllBtn').classList.toggle('active', scope === 'all');
+			oppPage = 1;
+			loadOpportunities();
+		}
 
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -207,6 +220,7 @@
 				const search = document.getElementById('oppSearchInput').value.trim();
 				const params = new URLSearchParams({ page: oppPage, pageSize: oppPageSize, sortKey: oppSortKey, sortDir: oppSortDir });
 				if (search) params.set('search', search);
+				if (oppScope === 'mine') params.set('scope', 'mine');
 
 				const res = await fetch('/api/v1/lilypad/opportunities?' + params.toString());
 				const result = await res.json();
@@ -319,6 +333,9 @@
 					if (result.data.role === 'admin') {
 						document.getElementById('adminSetupNavItem').style.display = '';
 					}
+					oppScope = String(result.data.role || '').toLowerCase().includes('sale') ? 'mine' : 'all';
+					document.getElementById('oppScopeMineBtn').classList.toggle('active', oppScope === 'mine');
+					document.getElementById('oppScopeAllBtn').classList.toggle('active', oppScope === 'all');
 				}
 			} catch (e) {}
 

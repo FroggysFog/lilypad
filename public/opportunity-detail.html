@@ -154,6 +154,64 @@
 			`;
 		}
 
+		const ACTIVITY_TYPE_LABELS = { call: 'Call', visit: 'Visit', email: 'Email', follow_up: 'Follow-Up', note: 'Note' };
+		const ACTIVITY_TYPE_ICONS = { call: 'ti-phone', visit: 'ti-map-pin', email: 'ti-mail', follow_up: 'ti-calendar-time', note: 'ti-note' };
+
+		function activityRowHtml(a) {
+			const label = ACTIVITY_TYPE_LABELS[a.type] || a.type;
+			const icon = ACTIVITY_TYPE_ICONS[a.type] || 'ti-note';
+			return `
+				<div class="d-flex align-items-start justify-content-between p-2 mb-2 rounded bg-light border">
+					<div class="d-flex align-items-start gap-2">
+						<div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:30px; height:30px;">
+							<i class="ti ${icon} fs-14"></i>
+						</div>
+						<div>
+							<div class="d-flex align-items-center gap-2 mb-1">
+								<span class="badge bg-soft-primary text-primary fs-11">${escapeHtml(label)}</span>
+								<span class="fs-11 text-muted">${escapeHtml(a.authorName || 'Unknown')} &middot; ${new Date(a.occurredAt).toLocaleString()}</span>
+							</div>
+							<p class="mb-0 text-dark fs-13">${escapeHtml(a.body)}</p>
+							${a.followUpDate ? `<span class="fs-11 text-warning fw-semibold"><i class="ti ti-calendar-time me-1"></i>Follow up ${new Date(a.followUpDate).toLocaleDateString()}</span>` : ''}
+						</div>
+					</div>
+					<button class="btn btn-sm btn-link text-danger p-0" onclick="deleteOppActivity('${a._id}')" title="Delete"><i class="ti ti-trash fs-14"></i></button>
+				</div>
+			`;
+		}
+
+		function activityTimelineHtml(activities) {
+			const sorted = (activities || []).slice().sort((a, b) => new Date(b.occurredAt) - new Date(a.occurredAt));
+			return `
+				<div class="card border-0 shadow-sm rounded-3 p-4">
+					<h6 class="fw-bold mb-3"><i class="ti ti-history me-1 text-primary"></i>Activity Log</h6>
+					<div class="row g-2 mb-3">
+						<div class="col-md-3">
+							<select id="oppActivityType" class="form-select form-select-sm">
+								<option value="call">Call</option>
+								<option value="visit">Visit</option>
+								<option value="email">Email</option>
+								<option value="follow_up">Follow-Up</option>
+								<option value="note">Note</option>
+							</select>
+						</div>
+						<div class="col-md-6">
+							<input type="text" id="oppActivityBody" class="form-control form-control-sm" placeholder="What happened?">
+						</div>
+						<div class="col-md-2">
+							<input type="date" id="oppActivityFollowUp" class="form-control form-control-sm" title="Optional follow-up date">
+						</div>
+						<div class="col-md-1">
+							<button type="button" class="btn btn-primary btn-sm w-100" onclick="addOppActivity()"><i class="ti ti-plus"></i></button>
+						</div>
+					</div>
+					<div id="oppActivityList">
+						${sorted.length ? sorted.map(activityRowHtml).join('') : '<p class="text-muted fs-13 mb-0">No activity logged yet.</p>'}
+					</div>
+				</div>
+			`;
+		}
+
 		async function loadOpportunityDetail() {
 			const id = new URLSearchParams(window.location.search).get('id');
 			if (!id) {
@@ -173,8 +231,6 @@
 				document.getElementById('oppDetailBody').innerHTML = `
 					<div class="card border-0 shadow-sm rounded-3 p-4 mb-3">
 						<div class="row">
-							${field('Stage', o.stageName)}
-							${field('Amount', o.amount ? formatCurrency(o.amount) : '')}
 							${field('Close Date', o.closeDate ? new Date(o.closeDate).toLocaleDateString() : '')}
 							${field('Probability', o.probability ? o.probability + '%' : '')}
 							${field('Owner', o.ownerName)}
@@ -182,12 +238,105 @@
 							${field('Lead Source', o.leadSource)}
 							${field('Status', o.isWon ? 'Won' : (o.isClosed ? 'Closed Lost' : 'Open'))}
 						</div>
-						${o.description ? `<div class="mt-2"><span class="fs-12 text-muted d-block text-uppercase fw-semibold mb-1">Description</span><p class="text-dark mb-0">${escapeHtml(o.description)}</p></div>` : ''}
 					</div>
+					<div class="card border-0 shadow-sm rounded-3 p-4 mb-3">
+						<h6 class="fw-bold mb-3"><i class="ti ti-brand-salesforce me-1 text-primary"></i>Update in Salesforce</h6>
+						<div id="oppSyncError" class="alert alert-danger fs-13 py-2 px-3 mb-3" style="display:none;"></div>
+						<div class="row g-3">
+							<div class="col-md-4">
+								<label class="form-label fs-12 fw-semibold text-uppercase text-muted">Stage</label>
+								<input type="text" id="oppEditStage" class="form-control form-control-sm" value="${escapeHtml(o.stageName)}">
+							</div>
+							<div class="col-md-4">
+								<label class="form-label fs-12 fw-semibold text-uppercase text-muted">Amount</label>
+								<input type="number" id="oppEditAmount" class="form-control form-control-sm" value="${Number(o.amount || 0)}">
+							</div>
+							<div class="col-md-4 d-flex align-items-end">
+								<button type="button" class="btn btn-primary btn-sm w-100" onclick="saveOppStageAmount()">Push Stage &amp; Amount</button>
+							</div>
+							<div class="col-12">
+								<label class="form-label fs-12 fw-semibold text-uppercase text-muted">Description / Notes</label>
+								<textarea id="oppEditDescription" class="form-control form-control-sm" rows="2">${escapeHtml(o.description || '')}</textarea>
+								<button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="saveOppDescription()">Push Notes</button>
+							</div>
+						</div>
+					</div>
+					${activityTimelineHtml(o.activities)}
 				`;
 			} catch (err) {
 				document.getElementById('oppDetailName').textContent = 'Unable to load opportunity';
 				document.getElementById('oppDetailBody').innerHTML = '<p class="text-danger">' + escapeHtml(err.message) + '</p>';
+			}
+		}
+
+		function currentOppId() {
+			return new URLSearchParams(window.location.search).get('id');
+		}
+
+		function showOppSyncError(message) {
+			const el = document.getElementById('oppSyncError');
+			if (!el) return;
+			el.textContent = message;
+			el.style.display = message ? '' : 'none';
+		}
+
+		async function pushOppSalesforceUpdate(fields) {
+			try {
+				const res = await fetch('/api/v1/lilypad/opportunities/' + currentOppId() + '/salesforce-sync', {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(fields)
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadOpportunityDetail();
+				showOppSyncError('');
+			} catch (err) {
+				await loadOpportunityDetail();
+				showOppSyncError(err.message || 'Salesforce rejected this update.');
+			}
+		}
+
+		function saveOppStageAmount() {
+			const stageName = document.getElementById('oppEditStage').value.trim();
+			const amount = Number(document.getElementById('oppEditAmount').value);
+			pushOppSalesforceUpdate({ stageName, amount });
+		}
+
+		function saveOppDescription() {
+			const description = document.getElementById('oppEditDescription').value;
+			pushOppSalesforceUpdate({ description });
+		}
+
+		async function addOppActivity() {
+			const type = document.getElementById('oppActivityType').value;
+			const body = document.getElementById('oppActivityBody').value.trim();
+			const followUpDate = document.getElementById('oppActivityFollowUp').value;
+			if (!body) { alert('Enter what happened first.'); return; }
+
+			try {
+				const res = await fetch('/api/v1/lilypad/opportunities/' + currentOppId() + '/activities', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ type, body, followUpDate: followUpDate || null })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadOpportunityDetail();
+			} catch (err) {
+				alert(err.message || 'Unable to add activity.');
+			}
+		}
+
+		async function deleteOppActivity(activityId) {
+			if (!confirm('Delete this activity entry?')) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/opportunities/' + currentOppId() + '/activities/' + activityId, { method: 'DELETE' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				await loadOpportunityDetail();
+			} catch (err) {
+				alert(err.message || 'Unable to delete activity.');
 			}
 		}
 

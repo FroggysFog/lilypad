@@ -51,6 +51,15 @@ const ALL_WIDGETS = [
     allowedRoles: ['admin', 'sales', 'marketing', 'operations']
   },
   {
+    id: 'sales-quota',
+    title: 'Quota & Commission Attainment',
+    description: 'Monthly quota vs. closed-won attainment, per rep',
+    category: 'Sales',
+    icon: 'ti-target',
+    defaultWidth: 6,
+    allowedRoles: ['admin', 'sales', 'operations']
+  },
+  {
     id: 'shipping-dock',
     title: 'Shipping & Fulfillment Board',
     description: 'Cart.com and wholesale orders ready for packing and freight pickup',
@@ -137,7 +146,7 @@ const ROLE_PRESETS = {
   sales: {
     roleName: 'Sales & Account Executive',
     kpis: ['kpi-deals', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'lapsed-customers'],
+    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'lapsed-customers', 'sales-quota'],
     layoutMode: 'bento'
   },
 
@@ -173,13 +182,13 @@ const ROLE_PRESETS = {
   admin: {
     roleName: 'Operations Leadership & Admin',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'past-due-ar', 'shipping-dock', 'rma-bench'],
+    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'sales-quota', 'past-due-ar', 'shipping-dock', 'rma-bench'],
     layoutMode: 'bento'
   },
   operations: {
     roleName: 'Operations Leadership & Admin',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'past-due-ar', 'shipping-dock', 'rma-bench'],
+    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'sales-quota', 'past-due-ar', 'shipping-dock', 'rma-bench'],
     layoutMode: 'bento'
   },
 

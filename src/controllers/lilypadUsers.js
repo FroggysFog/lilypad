@@ -30,7 +30,7 @@ const lilypadUsersController = {}
 lilypadUsersController.getUsers = async function (req, res) {
   try {
     const users = await LilyPadAccount.find({ deleted: { $ne: true } })
-      .select('username fullname email role title department')
+      .select('username fullname email role title department salesforceUserId')
       .sort('fullname')
 
     return res.status(200).json({
@@ -182,7 +182,7 @@ lilypadUsersController.bulkCreateUsers = async function (req, res) {
  */
 lilypadUsersController.updateUser = async function (req, res) {
   try {
-    const { fullname, email, role, department, title } = req.body
+    const { fullname, email, role, department, title, salesforceUserId } = req.body
     const account = await LilyPadAccount.findById(req.params.id)
 
     if (!account) {
@@ -194,6 +194,9 @@ lilypadUsersController.updateUser = async function (req, res) {
     if (role) account.role = role
     if (department) account.department = xss(department.trim())
     if (title) account.title = xss(title.trim())
+    // Explicitly allow clearing this one (empty string) - unlike the
+    // fields above, "no Salesforce Id" is a meaningful, settable state.
+    if (typeof salesforceUserId === 'string') account.salesforceUserId = xss(salesforceUserId.trim())
 
     const saved = await account.save()
     return res.status(200).json({

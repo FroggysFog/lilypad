@@ -49,6 +49,13 @@ const salesforceAccountSchema = new Schema(
       trim: true,
       default: ''
     },
+    // Salesforce's Owner.Id - see lilypadOpportunity.js's ownerSourceId
+    // for why this exists alongside the free-text ownerName.
+    ownerSourceId: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     annualRevenue: {
       type: Number,
       default: 0

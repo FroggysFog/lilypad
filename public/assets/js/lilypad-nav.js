@@ -75,6 +75,7 @@ const LILYPAD_NAV_SECTIONS = [
     items: [
       { href: 'admin-email.html', icon: 'ti-mail-forward', label: 'Inbound Email & Anti-Spam' },
       { href: 'admin-team.html', icon: 'ti-users', label: 'Team & User Permissions' },
+      { href: 'admin-sales-quotas.html', icon: 'ti-target', label: 'Sales Quotas' },
       { href: 'admin-roles.html', icon: 'ti-shield-lock', label: 'Roles & Permissions' },
       { href: 'admin-forms.html', icon: 'ti-adjustments', label: 'Dynamic Form Builder' },
       { href: 'api-credentials.html', icon: 'ti-key', label: 'API Credentials Vault' },

@@ -114,8 +114,12 @@
 				</div>
 
 				<div class="card border-0 shadow-sm rounded-3 mb-3">
-					<div class="card-body py-2 px-3">
+					<div class="card-body py-2 px-3 d-flex align-items-center gap-2 flex-wrap">
 						<input type="text" id="acctSearchInput" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Search account name..." oninput="debounceAccountSearch()">
+						<div class="btn-group btn-group-sm" role="group" id="acctScopeToggle">
+							<button type="button" class="btn btn-outline-primary" id="acctScopeMineBtn" onclick="setAcctScope('mine')">My Accounts</button>
+							<button type="button" class="btn btn-outline-primary" id="acctScopeAllBtn" onclick="setAcctScope('all')">All</button>
+						</div>
 					</div>
 				</div>
 
@@ -175,6 +179,15 @@
 		let acctTotal = 0;
 		let acctTotalPages = 1;
 		let acctSearchDebounce = null;
+		let acctScope = 'all';
+
+		function setAcctScope(scope) {
+			acctScope = scope;
+			document.getElementById('acctScopeMineBtn').classList.toggle('active', scope === 'mine');
+			document.getElementById('acctScopeAllBtn').classList.toggle('active', scope === 'all');
+			acctPage = 1;
+			loadAccounts();
+		}
 
 		function escapeHtml(value) {
 			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
@@ -207,6 +220,7 @@
 				const search = document.getElementById('acctSearchInput').value.trim();
 				const params = new URLSearchParams({ page: acctPage, pageSize: acctPageSize, sortKey: acctSortKey, sortDir: acctSortDir });
 				if (search) params.set('search', search);
+				if (acctScope === 'mine') params.set('scope', 'mine');
 
 				const res = await fetch('/api/v1/lilypad/salesforce-accounts?' + params.toString());
 				const result = await res.json();
@@ -310,6 +324,9 @@
 					if (result.data.role === 'admin') {
 						document.getElementById('adminSetupNavItem').style.display = '';
 					}
+					acctScope = String(result.data.role || '').toLowerCase().includes('sale') ? 'mine' : 'all';
+					document.getElementById('acctScopeMineBtn').classList.toggle('active', acctScope === 'mine');
+					document.getElementById('acctScopeAllBtn').classList.toggle('active', acctScope === 'all');
 				}
 			} catch (e) {}
 

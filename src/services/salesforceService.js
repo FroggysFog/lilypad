@@ -352,11 +352,37 @@ async function previewSalesforceObject (objectName, options = {}) {
   return { object: described.name, fields: fieldNames, rows, soql }
 }
 
+/**
+ * Updates one Salesforce record. Used for the Opportunity two-way sync
+ * (see opportunitySyncService.js's pushOpportunityUpdate) - the existing
+ * 'api refresh_token' OAuth scope already covers writes, no separate
+ * grant needed. Throws with Salesforce's own error text (a validation
+ * rule rejection, a required-field error, etc.) rather than a generic
+ * message, since the whole point is surfacing that text to the user.
+ */
+async function updateSalesforceRecord (objectName, sfId, fields) {
+  try {
+    const conn = await getSalesforceConnection()
+    const result = await withTimeout(conn.sobject(objectName).update({ Id: sfId, ...fields }), `Salesforce ${objectName} update`)
+    if (!result.success) {
+      const errors = (result.errors || []).map((e) => (e && e.message) || String(e)).join('; ')
+      throw new Error(errors || 'Salesforce rejected the update.')
+    }
+    return result
+  } catch (error) {
+    const details = error.response && error.response.data
+      ? `: ${typeof error.response.data === 'string' ? error.response.data : JSON.stringify(error.response.data)}`
+      : ''
+    throw new Error(`Salesforce update failed${details || `: ${error.message}`}`)
+  }
+}
+
 module.exports = {
   getSalesforceConnection,
   querySalesforce,
   queryAllSalesforce,
   queryAllSalesforcePages,
+  updateSalesforceRecord,
   singleFlight,
   fetchSalesforceReport,
   describeGlobalSalesforce,

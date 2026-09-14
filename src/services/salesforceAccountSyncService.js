@@ -25,7 +25,7 @@ function soqlEscape (value) {
 const OWNER_IN_CLAUSE = ALLOWED_OWNERS.map((name) => `'${soqlEscape(name)}'`).join(',')
 
 const DEFAULT_ACCOUNTS_SOQL = `
-    SELECT Id, Name, Type, Industry, Phone, Website, Owner.Name,
+    SELECT Id, Name, Type, Industry, Phone, Website, Owner.Id, Owner.Name,
            AnnualRevenue, NumberOfEmployees, Description,
            BillingStreet, BillingCity, BillingState, BillingPostalCode, BillingCountry,
            ShippingStreet, ShippingCity, ShippingState, ShippingPostalCode, ShippingCountry,
@@ -60,6 +60,7 @@ function normalizeAccountRecord (raw) {
     phone: String(source.Phone || '').trim(),
     website: String(source.Website || '').trim(),
     ownerName: String(owner.Name || '').trim(),
+    ownerSourceId: String(owner.Id || '').trim(),
     annualRevenue: Number(source.AnnualRevenue || 0),
     numberOfEmployees: Number(source.NumberOfEmployees || 0),
     billingAddress: {

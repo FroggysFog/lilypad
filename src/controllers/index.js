@@ -21,7 +21,8 @@ const Controllers = {
   salesforceAuth: require('./salesforceAuth'),
   salesforceExplorer: require('./salesforceExplorer'),
   cartAuth: require('./cartAuth'),
-  lilypadDashboard: require('./lilypadDashboard')
+  lilypadDashboard: require('./lilypadDashboard'),
+  lilypadSalesQuota: require('./lilypadSalesQuota')
 }
 
 module.exports = Controllers

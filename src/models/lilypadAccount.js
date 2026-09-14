@@ -58,6 +58,16 @@ const accountSchema = new Schema(
       trim: true,
       default: ''
     },
+    // Optional escape hatch for "My Accounts" rep-scoping (see
+    // repMatchingService.js): Salesforce owner-name matching is
+    // case-insensitive-fullname by default, which is enough for most
+    // reps, but this lets an admin pin an exact Salesforce User Id for
+    // anyone whose LilyPad name and Salesforce owner name diverge.
+    salesforceUserId: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     dashboardPreferences: {
       widgets: [{ type: String, trim: true }],
       kpis: [{ type: String, trim: true }],

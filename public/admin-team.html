@@ -607,6 +607,48 @@
 		</div>
 		<!-- End Page Content -->
 
+		<!-- Edit Team Member Modal -->
+		<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h6 class="modal-title fw-bold"><i class="ti ti-user-edit me-1 text-primary"></i>Edit Team Member</h6>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					</div>
+					<div class="modal-body">
+						<input type="hidden" id="editUserId">
+						<div class="mb-3">
+							<label class="form-label fs-13 fw-semibold">Full Name</label>
+							<input type="text" id="editUserFullname" class="form-control">
+						</div>
+						<div class="row g-2 mb-3">
+							<div class="col-6">
+								<label class="form-label fs-13 fw-semibold">Role</label>
+								<input type="text" id="editUserRole" class="form-control">
+							</div>
+							<div class="col-6">
+								<label class="form-label fs-13 fw-semibold">Department</label>
+								<input type="text" id="editUserDepartment" class="form-control">
+							</div>
+						</div>
+						<div class="mb-3">
+							<label class="form-label fs-13 fw-semibold">Title</label>
+							<input type="text" id="editUserTitle" class="form-control">
+						</div>
+						<div class="mb-0">
+							<label class="form-label fs-13 fw-semibold">Salesforce User Id</label>
+							<input type="text" id="editUserSalesforceId" class="form-control" placeholder="Optional - e.g. 005XXXXXXXXXXXXXXX">
+							<p class="fs-12 text-muted mt-1 mb-0">Only needed if this person's "My Accounts" view isn't matching correctly by name. Find it in Salesforce Setup &rarr; Users.</p>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+						<button type="button" class="btn btn-primary btn-sm" onclick="saveEditedUser()">Save</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 	</div>
 	<!-- End Wrapper -->
 
@@ -713,6 +755,7 @@
                 '<td><span class="text-dark fw-medium">' + escapeHtml(u.department || '—') + '</span></td>' +
                 '<td><span class="badge bg-success-subtle text-success fs-11"><i class="ti ti-point-filled"></i> Active</span></td>' +
                 '<td class="text-end">' +
+                    '<button class="btn btn-sm btn-link text-primary p-0 me-2" data-user-id="' + escapeHtml(u._id) + '" onclick="openEditUserModal(this.dataset.userId)" title="Edit User"><i class="ti ti-edit"></i></button>' +
                     '<button class="btn btn-sm btn-link text-danger p-0" data-user-id="' + escapeHtml(u._id) + '" data-user-name="' + escapeHtml(u.fullname) + '" onclick="deleteTeamUser(this.dataset.userId, this.dataset.userName)" title="Delete User"><i class="ti ti-trash"></i></button>' +
                 '</td>' +
             '</tr>').join('');
@@ -783,6 +826,42 @@
             }).catch(() => {
                 alert(text);
             });
+        }
+
+        function openEditUserModal(id) {
+            const user = currentTeamUsers.find(u => u._id === id);
+            if (!user) return;
+            document.getElementById('editUserId').value = user._id;
+            document.getElementById('editUserFullname').value = user.fullname || '';
+            document.getElementById('editUserRole').value = user.role || '';
+            document.getElementById('editUserDepartment').value = user.department || '';
+            document.getElementById('editUserTitle').value = user.title || '';
+            document.getElementById('editUserSalesforceId').value = user.salesforceUserId || '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('editUserModal')).show();
+        }
+
+        async function saveEditedUser() {
+            const id = document.getElementById('editUserId').value;
+            const fullname = document.getElementById('editUserFullname').value.trim();
+            const role = document.getElementById('editUserRole').value.trim();
+            const department = document.getElementById('editUserDepartment').value.trim();
+            const title = document.getElementById('editUserTitle').value.trim();
+            const salesforceUserId = document.getElementById('editUserSalesforceId').value.trim();
+            if (!fullname) { alert('Full name is required.'); return; }
+
+            try {
+                const res = await fetch('/api/v1/lilypad/users/' + encodeURIComponent(id), {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullname, role, department, title, salesforceUserId })
+                });
+                const result = await res.json();
+                if (!result.success) throw new Error(result.error);
+                bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                await loadTeamUsers();
+            } catch (err) {
+                alert(err.message || 'Unable to update user.');
+            }
         }
 
         async function deleteTeamUser(id, name) {

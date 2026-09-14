@@ -11,9 +11,13 @@ const {
   LilyPadOrder,
   LilyPadCartOrder,
   LilyPadOpportunity,
-  LilyPadPastDueAccount,
-  LilyPadCustomerProfile
+  LilyPadPastDueAccount
 } = require('../models')
+// Not exported from the models/index.js barrel (only a handful of models
+// are) - require it directly, same as lilypadCustomerIntelligence.js does.
+const LilyPadCustomerProfile = require('../models/lilypadCustomerProfile')
+const { getOpportunityOwnerFilter, resolveOwnedSalesforceAccountIds } = require('../services/repMatchingService')
+const lilypadSalesQuotaController = require('./lilypadSalesQuota')
 
 const lilypadDashboardController = {}
 
@@ -218,9 +222,14 @@ lilypadDashboardController.getSalesPipelineData = async function (req, res) {
   try {
     let opportunities = []
     if (LilyPadOpportunity) {
-      opportunities = await LilyPadOpportunity.find({
-        isClosed: false
-      })
+      const query = { isClosed: false }
+      // Admins previewing a role see that role's scoped view too, same
+      // as every other role-gated behavior in this file (see getMe).
+      const effectiveRole = (req.user.role === 'admin' ? req.session.previewRole : null) || req.user.role
+      if (dashboardRolePresets.normalizeRoleKey(effectiveRole) === 'sales') {
+        Object.assign(query, getOpportunityOwnerFilter(req.user))
+      }
+      opportunities = await LilyPadOpportunity.find(query)
         .sort({ amount: -1, closeDate: 1 })
         .limit(8)
         .lean()
@@ -294,10 +303,14 @@ lilypadDashboardController.getLapsedCustomersData = async function (req, res) {
     const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
     let customers = []
     if (LilyPadCustomerProfile) {
-      customers = await LilyPadCustomerProfile.find({
-        lastOrderDate: { $lte: sixtyDaysAgo, $ne: null }
-      })
-        .sort({ totalSpend: -1 })
+      const query = { 'orderStats.lastOrderDate': { $lte: sixtyDaysAgo, $ne: null } }
+      const effectiveRole = (req.user.role === 'admin' ? req.session.previewRole : null) || req.user.role
+      if (dashboardRolePresets.normalizeRoleKey(effectiveRole) === 'sales') {
+        const ownedIds = await resolveOwnedSalesforceAccountIds(req.user)
+        query.salesforceAccountId = { $in: ownedIds }
+      }
+      customers = await LilyPadCustomerProfile.find(query)
+        .sort({ 'orderStats.lifetimeRevenue': -1 })
         .limit(8)
         .lean()
     }
@@ -306,6 +319,15 @@ lilypadDashboardController.getLapsedCustomersData = async function (req, res) {
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }
+}
+
+/**
+ * GET /api/v1/lilypad/dashboard/widgets/sales-quota
+ * Delegates to the quota controller rather than duplicating its
+ * personal-vs-org-wide branching logic here.
+ */
+lilypadDashboardController.getSalesQuotaData = function (req, res) {
+  return lilypadSalesQuotaController.getQuotaWidgetData(req, res)
 }
 
 module.exports = lilypadDashboardController

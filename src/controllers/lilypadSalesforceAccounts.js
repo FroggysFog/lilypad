@@ -6,6 +6,7 @@ const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
 const LilyPadCustomer = require('../models/lilypadCustomer')
 const { syncSalesforceAccounts } = require('../services/salesforceAccountSyncService')
 const { normalizeDomain, normalizeCompanyName, isNameMatch } = require('../services/customerIntelligence/fuzzyMatchService')
+const { getSalesforceAccountOwnerFilter } = require('../services/repMatchingService')
 
 const controller = {}
 
@@ -59,6 +60,9 @@ controller.getAccounts = async function (req, res) {
   try {
     const search = String(req.query.name || req.query.search || '').trim()
     const query = search ? { name: { $regex: search, $options: 'i' } } : {}
+    if (req.query.scope === 'mine') {
+      Object.assign(query, getSalesforceAccountOwnerFilter(req.user))
+    }
 
     const page = Math.max(1, Number(req.query.page) || 1)
     const pageSize = Math.min(200, Math.max(1, Number(req.query.pageSize) || 50))

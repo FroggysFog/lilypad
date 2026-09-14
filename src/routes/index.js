@@ -182,6 +182,9 @@ module.exports = function (app) {
   const lilypadDashboardRouter = require('./lilypadDashboard')()
   app.use('/api/v1/lilypad', lilypadDashboardRouter)
 
+  const lilypadSalesQuotaRouter = require('./lilypadSalesQuota')()
+  app.use('/api/v1/lilypad', lilypadSalesQuotaRouter)
+
   mainRoutes(router, controllers)
   app.use('/', router)
 

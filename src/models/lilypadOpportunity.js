@@ -47,6 +47,14 @@ const opportunitySchema = new Schema(
       trim: true,
       default: ''
     },
+    // Salesforce's Owner.Id - lets rep-scoping match precisely even if
+    // a rep's LilyPad fullname and Salesforce owner display name diverge
+    // (see repMatchingService.js).
+    ownerSourceId: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     type: {
       type: String,
       trim: true,
@@ -78,7 +86,27 @@ const opportunitySchema = new Schema(
     lastSyncAt: {
       type: Date,
       default: Date.now
-    }
+    },
+    // Rep-logged calls/visits/notes - not synced from Salesforce, purely
+    // a LilyPad-side addition (see lilypadOpportunities.js's addActivity).
+    activities: [{
+      type: { type: String, enum: ['call', 'visit', 'email', 'follow_up', 'note'], required: true },
+      author: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', default: null },
+      authorName: { type: String, default: '' },
+      body: { type: String, required: true },
+      occurredAt: { type: Date, default: Date.now },
+      followUpDate: { type: Date, default: null }
+    }],
+    // Audit trail for both activity logging and Salesforce push-backs
+    // (see opportunitySyncService.js's pushOpportunityUpdate) - same
+    // shape as lilypadTicket.js's history array.
+    history: [{
+      action: { type: String, required: true },
+      by: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', default: null },
+      byName: { type: String, default: 'System' },
+      description: { type: String, default: '' },
+      timestamp: { type: Date, default: Date.now }
+    }]
   },
   { timestamps: true }
 )
