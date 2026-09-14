@@ -117,6 +117,8 @@
       '#lilypadTeamsChatPanel { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; }' +
       '.lp-teams-chat-row { border-bottom: 1px solid #f0f0f0; }' +
       '.lp-teams-chat-row:hover { background: #f5f5f5; }' +
+      '.lp-teams-chat-row.lp-teams-row-active { background: #ebebf9; }' +
+      '.lp-teams-chat-row.lp-teams-row-active:hover { background: #ebebf9; }' +
       '.lp-teams-search-input { padding-left: 30px; border-radius: 16px; background: #f5f5f5; border: 1px solid transparent; }' +
       '.lp-teams-search-input:focus { background: #fff; border-color: ' + TEAMS_PURPLE + '; box-shadow: none; }' +
       '.lp-teams-icon-btn { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }' +
@@ -306,50 +308,39 @@
     }
     container.innerHTML = filtered.map(chatListItemHtml).join('')
     container.querySelectorAll('.lp-teams-chat-row').forEach(function (row) {
+      if (row.dataset.chatId === currentChatId) row.classList.add('lp-teams-row-active')
       row.addEventListener('click', function () { openConversation(row.dataset.chatId) })
     })
   }
 
-  // --- View switching (list <-> conversation, mirrors how Teams itself
-  // behaves at this width instead of cramming two columns in) ----------
-
-  function showListView () {
-    currentChatId = null
-    document.getElementById('lpTeamsListView').style.display = 'flex'
-    document.getElementById('lpTeamsConversationView').style.display = 'none'
-    document.getElementById('lpTeamsHeaderTitle').textContent = 'Chat'
-    document.getElementById('lpTeamsBackBtn').style.display = 'none'
-    document.getElementById('lpTeamsPopoutBtn').style.display = 'none'
-  }
-
-  function showConversationView (chatName) {
-    document.getElementById('lpTeamsListView').style.display = 'none'
-    document.getElementById('lpTeamsConversationView').style.display = 'flex'
-    document.getElementById('lpTeamsHeaderTitle').textContent = chatName
-    document.getElementById('lpTeamsBackBtn').style.display = ''
-    document.getElementById('lpTeamsPopoutBtn').style.display = ''
+  /**
+   * Two-pane layout (list always visible on the left, active conversation
+   * on the right) instead of the old single-column view that swapped
+   * between a list screen and a conversation screen - matches how the
+   * real Teams desktop client is actually laid out.
+   */
+  function updateConversationHeader (chatName) {
+    var header = document.getElementById('lpTeamsConversationHeader')
+    header.innerHTML = chatName
+      ? '<div class="d-flex align-items-center gap-2">' + avatarHtml(chatName, 32) + '<strong class="fs-13">' + escapeHtml(chatName) + '</strong></div>'
+      : '<span class="fs-13 text-muted">Select a conversation to view messages.</span>'
   }
 
   async function openConversation (chatId) {
     var chat = currentChats.filter(function (c) { return c.id === chatId })[0]
     currentChatName = (chat && chat.displayName) || 'Teams conversation'
-    showConversationView(currentChatName)
+    updateConversationHeader(currentChatName)
+    renderChatList()
     await loadMessages(chatId)
   }
 
   function panelMarkup () {
     return (
-      '<div class="offcanvas offcanvas-end" tabindex="-1" id="lilypadTeamsChatPanel" style="width:420px;">' +
+      '<div class="offcanvas offcanvas-end" tabindex="-1" id="lilypadTeamsChatPanel" style="width:700px;">' +
         '<div class="offcanvas-header border-bottom py-2">' +
-          '<div class="d-flex align-items-center gap-2 flex-fill" style="min-width:0;">' +
-            '<button type="button" class="btn btn-sm btn-light" id="lpTeamsBackBtn" style="display:none;" title="Back to chats"><i class="ti ti-arrow-left"></i></button>' +
-            '<div>' +
-              '<h6 class="offcanvas-title fw-bold mb-0 d-flex align-items-center gap-2"><i class="ti ti-brand-teams lp-teams-accent"></i> <span id="lpTeamsHeaderTitle">Chat</span></h6>' +
-              '<span class="fs-11 text-muted" id="lpTeamsStatus">Checking connection...</span>' +
-            '</div>' +
-          '</div>' +
+          '<h6 class="offcanvas-title fw-bold mb-0 d-flex align-items-center gap-2"><i class="ti ti-brand-teams lp-teams-accent"></i> Chat <span class="fs-11 text-muted fw-normal ms-1" id="lpTeamsStatus">Checking connection...</span></h6>' +
           '<div class="d-flex align-items-center gap-1">' +
-            '<button type="button" class="btn btn-sm btn-outline-secondary" id="lpTeamsPopoutBtn" style="display:none;" title="Open in its own window"><i class="ti ti-external-link"></i></button>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary" id="lpTeamsPopoutBtn" title="Open in its own window"><i class="ti ti-external-link"></i></button>' +
             '<button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>' +
           '</div>' +
         '</div>' +
@@ -361,26 +352,32 @@
             '<a class="btn btn-primary btn-sm lp-teams-btn-accent" href="/auth/microsoft-calendar/connect"><i class="ti ti-plug-connected me-1"></i> Connect Microsoft 365</a>' +
           '</div>' +
 
-          '<div id="lpTeamsListView" class="flex-fill d-flex flex-column" style="display:none; min-height:0;">' +
-            '<div class="d-flex align-items-center gap-2 px-2 pt-2 pb-1">' +
-              '<div class="flex-fill position-relative">' +
-                '<i class="ti ti-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#a19f9d; font-size:14px;"></i>' +
-                '<input type="text" class="form-control form-control-sm lp-teams-search-input" id="lpTeamsSearchInput" placeholder="Search chats">' +
+          '<div id="lpTeamsConnectedArea" class="d-flex flex-fill" style="display:none; min-height:0;">' +
+            '<div class="d-flex flex-column border-end" style="width:280px; flex-shrink:0; min-height:0;">' +
+              '<div class="d-flex align-items-center gap-2 px-2 pt-2 pb-1">' +
+                '<div class="flex-fill position-relative">' +
+                  '<i class="ti ti-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#a19f9d; font-size:14px;"></i>' +
+                  '<input type="text" class="form-control form-control-sm lp-teams-search-input" id="lpTeamsSearchInput" placeholder="Search chats">' +
+                '</div>' +
+                '<button type="button" class="btn btn-sm btn-light lp-teams-icon-btn" id="lpTeamsRefreshBtn" title="Refresh"><i class="ti ti-refresh"></i></button>' +
               '</div>' +
-              '<button type="button" class="btn btn-sm btn-light lp-teams-icon-btn" id="lpTeamsRefreshBtn" title="Refresh"><i class="ti ti-refresh"></i></button>' +
+              '<div id="lpTeamsChatList" class="flex-fill px-1" style="overflow-y:auto;"></div>' +
+              '<div class="p-2 border-top text-center">' +
+                '<span class="fs-11 text-muted">Manage this connection from Calendar or Email settings.</span>' +
+              '</div>' +
             '</div>' +
-            '<div id="lpTeamsChatList" class="flex-fill px-1" style="overflow-y:auto;"></div>' +
-            '<div class="p-2 border-top text-center">' +
-              '<span class="fs-11 text-muted">Manage this connection from Calendar or Email settings.</span>' +
+            '<div class="d-flex flex-column flex-fill" style="min-width:0; min-height:0;">' +
+              '<div id="lpTeamsConversationHeader" class="p-2 px-3 border-bottom" style="min-height:52px; display:flex; align-items:center;">' +
+                '<span class="fs-13 text-muted">Select a conversation to view messages.</span>' +
+              '</div>' +
+              '<div id="lpTeamsMessages" class="flex-fill p-3" style="overflow-y:auto; min-height:0;"></div>' +
+              '<div class="p-2 border-top">' +
+                '<form id="lpTeamsSendForm" class="input-group">' +
+                  '<input id="lpTeamsMessageInput" class="form-control" placeholder="Type a message..." autocomplete="off" required>' +
+                  '<button class="btn btn-primary" type="submit"><i class="ti ti-send"></i><span class="visually-hidden">Send message</span></button>' +
+                '</form>' +
+              '</div>' +
             '</div>' +
-          '</div>' +
-
-          '<div id="lpTeamsConversationView" class="flex-fill d-flex flex-column p-3" style="display:none; min-height:0;">' +
-            '<div id="lpTeamsMessages" class="flex-fill mb-2" style="overflow-y:auto; min-height:0;"></div>' +
-            '<form id="lpTeamsSendForm" class="input-group">' +
-              '<input id="lpTeamsMessageInput" class="form-control" placeholder="Type a message..." autocomplete="off" required>' +
-              '<button class="btn btn-primary" type="submit"><i class="ti ti-send"></i><span class="visually-hidden">Send message</span></button>' +
-            '</form>' +
           '</div>' +
         '</div>' +
       '</div>'
@@ -395,7 +392,6 @@
     while (wrapper.firstChild) document.body.appendChild(wrapper.firstChild)
 
     document.getElementById('lpTeamsRefreshBtn').addEventListener('click', loadChats)
-    document.getElementById('lpTeamsBackBtn').addEventListener('click', showListView)
     document.getElementById('lpTeamsSendForm').addEventListener('submit', sendMessage)
     document.getElementById('lpTeamsPopoutBtn').addEventListener('click', popOut)
     document.getElementById('lpTeamsSearchInput').addEventListener('input', function (e) {
@@ -406,7 +402,7 @@
 
   function popOut () {
     var url = 'chat-popout.html' + (currentChatId ? '?chatId=' + encodeURIComponent(currentChatId) : '')
-    var popup = window.open(url, 'lilypadTeamsChatPopout', 'width=420,height=640,resizable=yes,scrollbars=yes')
+    var popup = window.open(url, 'lilypadTeamsChatPopout', 'width=860,height=640,resizable=yes,scrollbars=yes')
     // Popping out moves the conversation into its own window - closing
     // the embedded panel avoids showing (and having to keep in sync) the
     // same conversation in two places at once.
@@ -425,13 +421,11 @@
       var connected = result.data.connected
       meId = result.data.meId || null
       document.getElementById('lpTeamsDisconnected').style.display = connected ? 'none' : 'block'
+      document.getElementById('lpTeamsConnectedArea').style.display = connected ? 'flex' : 'none'
       if (connected) {
-        showListView()
         statusEl.textContent = 'Connected'
         loadChats()
       } else {
-        document.getElementById('lpTeamsListView').style.display = 'none'
-        document.getElementById('lpTeamsConversationView').style.display = 'none'
         statusEl.textContent = result.data.configured ? 'Not connected' : 'Not configured'
       }
     } catch (err) {
