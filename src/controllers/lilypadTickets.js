@@ -6,6 +6,7 @@
 const fs = require('fs')
 const path = require('path')
 const multer = require('multer')
+const winston = require('../logger')
 const { LilyPadTicket, IntakeForm, LilyPadAccount, LilyPadNotification } = require('../models')
 const xss = require('xss')
 
@@ -233,7 +234,7 @@ lilypadTicketsController.seedDefaultCategories = async function () {
   ]
 
   await IntakeForm.insertMany(defaultCategories)
-  console.log('[LilyPad ERP] Seeded default dynamic intake forms successfully.')
+  winston.info('[LilyPad ERP] Seeded default dynamic intake forms successfully.')
 }
 
 /**
