@@ -30,7 +30,7 @@ const controller = {}
  */
 controller.getRolePermissions = async function (req, res) {
   try {
-    // Administration & Setup is excluded - it's admin-only regardless of
+    // Administrative is excluded - it's admin-only regardless of
     // what a role's permission doc says (see pagePermissionService.js's
     // ADMIN_ONLY_PAGES), so offering it as a checkbox here would be
     // misleading - checking it would silently do nothing.

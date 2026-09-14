@@ -22,6 +22,13 @@ const LILYPAD_NAV_SECTIONS = [
     type: 'group',
     icon: 'ti-ticket',
     label: 'Operations',
+    // Rendered as a top tab row (below the topbar search) instead of a
+    // sidebar submenu - see lilypadNavRenderTopTabs. Still walked by
+    // lilypadNavAllPages() same as any other group, so these pages stay
+    // fully covered by ALL_PAGES/ADMIN_ONLY_PAGES and the Roles &
+    // Permissions checklist exactly as before - only where they render
+    // changed, not whether they're permission-gated.
+    renderAs: 'topTabs',
     items: [
       { href: 'tickets.html', icon: 'ti-ticket', label: 'Ticket Operations' },
       { href: 'tasks.html', icon: 'ti-list-check', label: 'Task Manager' },
@@ -58,8 +65,8 @@ const LILYPAD_NAV_SECTIONS = [
   },
   {
     type: 'group',
-    icon: 'ti-user-search',
-    label: 'Prospecting',
+    icon: 'ti-currency-dollar',
+    label: 'Sales',
     items: [
       { href: 'prospects.html', icon: 'ti-user-search', label: 'Lead Prospector' },
       { href: 'customer-intelligence.html', icon: 'ti-chart-arrows', label: 'Customer Intelligence' },
@@ -69,7 +76,7 @@ const LILYPAD_NAV_SECTIONS = [
   {
     type: 'group',
     icon: 'ti-settings-2',
-    label: 'Administration & Setup',
+    label: 'Administrative',
     id: 'adminSetupNavItem',
     adminOnly: true,
     items: [
@@ -147,9 +154,11 @@ function lilypadNavRenderGroup (group, currentPage) {
 function lilypadRenderSidebarNav () {
   const currentPage = lilypadNavCurrentPage()
 
-  const sectionsHtml = LILYPAD_NAV_SECTIONS.map((section) =>
-    section.type === 'single' ? lilypadNavRenderSingle(section, currentPage) : lilypadNavRenderGroup(section, currentPage)
-  ).join('\n')
+  const sectionsHtml = LILYPAD_NAV_SECTIONS
+    .filter((section) => section.renderAs !== 'topTabs')
+    .map((section) =>
+      section.type === 'single' ? lilypadNavRenderSingle(section, currentPage) : lilypadNavRenderGroup(section, currentPage)
+    ).join('\n')
 
   return `<ul>
     ${sectionsHtml}
@@ -160,6 +169,59 @@ function lilypadRenderSidebarNav () {
       </ul>
     </li>
   </ul>`
+}
+
+/**
+ * The "Operations" group (renderAs: 'topTabs' above) renders here instead
+ * of the sidebar - the pages every role uses daily, one click away below
+ * the topbar's search bar rather than buried in a collapsible submenu.
+ */
+function lilypadNavRenderTopTabs (currentPage) {
+  const section = LILYPAD_NAV_SECTIONS.find((s) => s.renderAs === 'topTabs')
+  if (!section) return ''
+
+  const tabsHtml = section.items.map((item) => {
+    const isActive = item.href === currentPage
+    const classes = 'btn btn-sm rounded-pill px-3 d-flex align-items-center gap-1 ' +
+      (isActive ? 'btn-primary text-white' : 'btn-light text-dark')
+    return `<a href="${item.href}" class="${classes}" data-lilypad-top-tab="${item.href}"><i class="ti ${item.icon} fs-14"></i><span>${item.label}</span></a>`
+  }).join('\n')
+
+  return `<div class="d-flex align-items-center gap-2 flex-wrap" id="lilypadTopTabsRow" style="padding: 0 0 12px;">${tabsHtml}</div>`
+}
+
+/**
+ * Appended as a second row inside the existing sticky <header> rather
+ * than as a sibling in the page body - the header already carries the
+ * correct sidebar-width left margin (see .navbar-header in style.css),
+ * so anything placed inside it inherits that alignment for free instead
+ * of needing its own per-page layout math.
+ */
+function lilypadInjectTopTabs () {
+  const header = document.querySelector('header.navbar-header')
+  if (!header) return
+  const html = lilypadNavRenderTopTabs(lilypadNavCurrentPage())
+  if (!html) return
+  const wrapper = document.createElement('div')
+  wrapper.innerHTML = html
+  header.appendChild(wrapper.firstElementChild)
+}
+
+/**
+ * Same idea as lilypadNavApplyPermissions, but for the flat top-tab row
+ * instead of the grouped sidebar tree - removes any tab the role can't
+ * access, then removes the whole row if that leaves it empty.
+ */
+function lilypadTopTabsApplyPermissions (allowedPages) {
+  if (allowedPages == null) return
+  const allowed = new Set(allowedPages)
+  const row = document.getElementById('lilypadTopTabsRow')
+  if (!row) return
+
+  row.querySelectorAll('a[data-lilypad-top-tab]').forEach((a) => {
+    if (!allowed.has(a.getAttribute('data-lilypad-top-tab'))) a.remove()
+  })
+  if (!row.querySelector('a')) row.remove()
 }
 
 /**
@@ -233,6 +295,7 @@ function lilypadNavShowPreviewBanner (role) {
 const lilypadNavContainer = typeof document !== 'undefined' ? document.getElementById('sidebar-menu') : null
 if (lilypadNavContainer) {
   lilypadNavContainer.innerHTML = lilypadRenderSidebarNav()
+  lilypadInjectTopTabs()
 
   // Self-contained on purpose: every page already fetches its own
   // /account/me for topbar name/role display, so this is a second, small
@@ -241,6 +304,7 @@ if (lilypadNavContainer) {
   fetch('/api/v1/lilypad/account/me').then((r) => r.json()).then((result) => {
     if (!result.success) return
     lilypadNavApplyPermissions(result.data.allowedPages)
+    lilypadTopTabsApplyPermissions(result.data.allowedPages)
     if (result.data.previewRole) lilypadNavShowPreviewBanner(result.data.previewRole)
   }).catch(() => {})
 }

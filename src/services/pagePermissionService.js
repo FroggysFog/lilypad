@@ -12,7 +12,7 @@ const LilyPadRolePermission = require('../models/lilypadRolePermission')
 
 const ALL_PAGES = lilypadNavAllPages()
 
-// "Administration & Setup" pages are admin-only by nature, independent
+// "Administrative" pages are admin-only by nature, independent
 // of whatever a role's permission doc says - closes off the case where
 // someone accidentally (or a bug elsewhere) grants a non-admin role one
 // of these via the allowedPages array.
