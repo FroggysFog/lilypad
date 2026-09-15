@@ -2,6 +2,8 @@
  * LilyPad ERP - Customers Controller
  */
 
+const crypto = require('crypto')
+const xss = require('xss')
 const LilyPadCustomer = require('../models/lilypadCustomer')
 const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
 const { syncCustomersFromSalesforce } = require('../services/customerSyncService')
@@ -95,6 +97,41 @@ lilypadCustomersController.getCustomerDetail = async function (req, res) {
       parentAccount: account,
       parentAccountMatchType: matchType
     })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/customers
+ * Manually-captured lead (quick-create, not a Salesforce sync product).
+ * sourceRecordId is required+unique on this model since every other row
+ * is Salesforce-sourced - a "manual-..." id satisfies that constraint
+ * without colliding with a real 15/18-char Salesforce id, and the sync
+ * job only ever touches rows whose id it fetched from Salesforce, so
+ * this row is simply never touched by future syncs.
+ */
+lilypadCustomersController.createLead = async function (req, res) {
+  try {
+    const { name, company, phone, email, industry, state } = req.body
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ success: false, error: 'Name is required.' })
+    }
+
+    const lead = await LilyPadCustomer.create({
+      name: xss(String(name).trim()),
+      company: xss(String(company || '').trim()),
+      phone: xss(String(phone || '').trim()),
+      email: xss(String(email || '').trim().toLowerCase()),
+      industry: xss(String(industry || '').trim()),
+      state: xss(String(state || '').trim()),
+      leadSource: 'Manual Entry',
+      createdByName: (req.user && req.user.fullname) || '',
+      createdDate: new Date(),
+      sourceRecordId: 'manual-' + crypto.randomBytes(8).toString('hex')
+    })
+
+    return res.status(201).json({ success: true, data: lead })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }
