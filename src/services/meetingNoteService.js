@@ -120,6 +120,23 @@ async function processReadAiEvent (rawEvent) {
   }
   const participantEmails = Array.from(participantEmailSet)
 
+  const chapterSummaries = (payload.chapter_summaries || []).map((c) => ({
+    title: String((c && c.title) || '').slice(0, 200),
+    description: String((c && c.description) || '').slice(0, 2000),
+    topics: (((c && c.topics) || [])).map((t) => ({ text: String((t && t.text) || t).slice(0, 200) }))
+  }))
+
+  const rawTranscript = payload.transcript || {}
+  const transcript = {
+    speakers: (rawTranscript.speakers || []).map((s) => ({ name: String((s && s.name) || '') })),
+    speakerBlocks: (rawTranscript.speaker_blocks || []).map((b) => ({
+      startTime: b && b.start_time,
+      endTime: b && b.end_time,
+      speakerName: String((b && b.speaker && b.speaker.name) || ''),
+      words: String((b && b.words) || '')
+    }))
+  }
+
   const note = await LilyPadMeetingNote.create({
     owner: owner ? owner._id : null,
     sessionId: payload.session_id || '',
@@ -132,6 +149,8 @@ async function processReadAiEvent (rawEvent) {
     actionItems: (payload.action_items || []).map((item) => ({ text: String((item && item.text) || item).slice(0, 500) })),
     keyQuestions: (payload.key_questions || []).map((q) => ({ text: String((q && q.text) || q).slice(0, 500) })),
     topics: (payload.topics || []).map((t) => ({ text: String((t && t.text) || t).slice(0, 200) })),
+    chapterSummaries,
+    transcript,
     participantEmails,
     erpEventId,
     msEventId,

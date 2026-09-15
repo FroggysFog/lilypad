@@ -10,6 +10,8 @@ const { requireLoginApi, requireAdminApi } = require('../middleware/lilypadAuth'
 module.exports = function () {
   router.get('/meeting-notes', requireAdminApi, controllers.lilypadMeetingNotes.listRecent)
   router.get('/meeting-notes/for-event', requireLoginApi, controllers.lilypadMeetingNotes.getForEvent)
+  router.get('/meeting-notes/mine', requireLoginApi, controllers.lilypadMeetingNotes.listMine)
+  router.get('/meeting-notes/:id', requireLoginApi, controllers.lilypadMeetingNotes.getById)
 
   return router
 }

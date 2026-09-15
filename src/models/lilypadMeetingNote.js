@@ -41,6 +41,23 @@ const meetingNoteSchema = new Schema(
     }],
     keyQuestions: [{ text: String }],
     topics: [{ text: String }],
+    chapterSummaries: [{
+      title: { type: String, default: '' },
+      description: { type: String, default: '' },
+      topics: [{ text: String }]
+    }],
+    // Kept here (not just on the raw LilyPadReadAiEvent capture) so the
+    // Meeting Recap page can show the full transcript without joining
+    // back to the audit-trail collection for basic display.
+    transcript: {
+      speakers: [{ name: String }],
+      speakerBlocks: [{
+        startTime: Number,
+        endTime: Number,
+        speakerName: String,
+        words: String
+      }]
+    },
     participantEmails: [{ type: String, trim: true, lowercase: true }],
     erpEventId: { type: Schema.Types.ObjectId, ref: 'lilypad_calendar_events', default: null },
     msEventId: { type: String, default: '', index: true },
