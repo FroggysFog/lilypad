@@ -321,8 +321,13 @@ async function getRollupCards (ownerId) {
         reason,
         unreadCount,
         executiveSummary: contact.rollup.executiveSummary,
+        // b.text guards against a rollup saved before blockers became
+        // {text} subdocuments (previously a plain string array) - those
+        // cast to a subdocument with no text rather than crashing, and
+        // are worth hiding rather than showing a blank row; they clear
+        // themselves the next time this sender's rollup regenerates.
         blockers: (contact.rollup.blockers || [])
-          .filter((b) => !declined.has(String(b._id)))
+          .filter((b) => b.text && !declined.has(String(b._id)))
           .map((b) => ({ id: String(b._id), text: b.text })),
         quickReplies: contact.rollup.quickReplies,
         mostRecentMessageId: contact.rollup.mostRecentMessageId,
@@ -363,15 +368,28 @@ async function regenerateStaleCandidates (ownerId) {
 const BLOCKER_STALE_MESSAGE = 'This conversation was just refreshed - please check the current list and try again.'
 
 function findBlocker (contact, blockerId) {
-  return contact && contact.rollup && (contact.rollup.blockers || []).find((b) => String(b._id) === String(blockerId))
+  const blocker = contact && contact.rollup && (contact.rollup.blockers || []).find((b) => String(b._id) === String(blockerId))
+  // A rollup saved before blockers became {text} subdocuments (formerly
+  // a plain string array) casts each old entry to a subdocument with no
+  // text - treat that the same as "not found" rather than letting a
+  // caller try to use its (missing) text.
+  return blocker && blocker.text ? blocker : null
 }
 
-function markBlockerConsumed (contact, blockerId) {
-  contact.rollup.declinedBlockers = contact.rollup.declinedBlockers || []
-  if (!contact.rollup.declinedBlockers.includes(String(blockerId))) {
-    contact.rollup.declinedBlockers.push(String(blockerId))
-  }
-  contact.markModified('rollup')
+/**
+ * A targeted atomic update, not a load-mutate-save of the whole
+ * document - contact.save() would re-validate every field, including
+ * blockers, and a rollup saved before blockers became {text}
+ * subdocuments still has the old plain-string shape on disk until it
+ * next regenerates. Re-validating that shape against the current
+ * schema fails required-field validation on a field this operation
+ * isn't even touching. $addToSet only ever writes declinedBlockers.
+ */
+async function markBlockerConsumed (contactId, blockerId) {
+  await LilyPadContactInteractionScore.updateOne(
+    { _id: contactId },
+    { $addToSet: { 'rollup.declinedBlockers': String(blockerId) } }
+  )
 }
 
 /**
@@ -401,8 +419,7 @@ async function addTaskFromBlocker (ownerId, address, blockerId) {
     status: 'pending'
   })
 
-  markBlockerConsumed(contact, blockerId)
-  await contact.save()
+  await markBlockerConsumed(contact._id, blockerId)
 
   return task
 }
@@ -418,8 +435,7 @@ async function declineBlocker (ownerId, address, blockerId) {
   const blocker = findBlocker(contact, blockerId)
   if (!blocker) throw new Error(BLOCKER_STALE_MESSAGE)
 
-  markBlockerConsumed(contact, blockerId)
-  await contact.save()
+  await markBlockerConsumed(contact._id, blockerId)
 }
 
 /**
@@ -431,11 +447,19 @@ async function dismissCard (ownerId, address) {
   const contact = await LilyPadContactInteractionScore.findOne({ owner: ownerId, address })
   if (!contact) throw new Error('No conversation found for this address.')
 
-  contact.rollup = contact.rollup || {}
-  contact.rollup.dismissedAt = new Date()
-  contact.rollup.dismissedAtMessageCount = contact.receivedCount + contact.repliedCount
-  contact.markModified('rollup')
-  await contact.save()
+  // Atomic update, not load-mutate-save, for the same reason as
+  // markBlockerConsumed above - a full save() would re-validate
+  // blockers too, which fails for any rollup saved before blockers
+  // became {text} subdocuments even though this never touches them.
+  await LilyPadContactInteractionScore.updateOne(
+    { _id: contact._id },
+    {
+      $set: {
+        'rollup.dismissedAt': new Date(),
+        'rollup.dismissedAtMessageCount': contact.receivedCount + contact.repliedCount
+      }
+    }
+  )
 }
 
 // --- Manual priority rules ---------------------------------------------
