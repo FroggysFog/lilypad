@@ -213,6 +213,14 @@
 						</a>
 					</div>
 					<p class="text-muted mb-0" id="viewEventDescription"></p>
+					<div class="mt-3 pt-3 border-top" id="viewEventMeetingNoteSection" style="display:none;">
+						<h6 class="fw-bold fs-13 mb-2"><i class="ti ti-sparkles text-primary me-1"></i>Meeting Notes</h6>
+						<p class="text-dark mb-2" id="viewEventMeetingNoteSummary"></p>
+						<div class="mb-2" id="viewEventMeetingNoteActionItems"></div>
+						<a href="#" target="_blank" rel="noopener" id="viewEventMeetingNoteReportLink" class="fs-12 text-primary text-decoration-none d-inline-flex align-items-center gap-1">
+							<i class="ti ti-external-link"></i> View Full Report
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -447,7 +455,49 @@
 			} else {
 				meetingRow.style.display = 'none';
 			}
+			// Hide immediately (not just on "no note found") so a
+			// previously-viewed event's note doesn't flash while this
+			// event's own lookup is still in flight.
+			document.getElementById('viewEventMeetingNoteSection').style.display = 'none';
+			loadMeetingNoteForEvent(props);
 			bootstrap.Modal.getOrCreateInstance(document.getElementById('eventViewModal')).show();
+		}
+
+		async function loadMeetingNoteForEvent(props) {
+			const section = document.getElementById('viewEventMeetingNoteSection');
+			const eventIdParam = props.source === 'microsoft'
+				? (props.msEventId ? 'msEventId=' + encodeURIComponent(props.msEventId) : null)
+				: (props.erpId ? 'erpEventId=' + encodeURIComponent(props.erpId) : null);
+			if (!eventIdParam) return;
+
+			try {
+				const res = await fetch('/api/v1/lilypad/meeting-notes/for-event?' + eventIdParam);
+				const result = await res.json();
+				if (!result.success || !result.data) return;
+
+				const note = result.data;
+				document.getElementById('viewEventMeetingNoteSummary').textContent = note.summary || 'No summary available.';
+
+				const itemsEl = document.getElementById('viewEventMeetingNoteActionItems');
+				const items = note.actionItems || [];
+				itemsEl.innerHTML = items.length
+					? '<span class="fs-12 text-muted d-block fw-semibold mb-1">Action Items</span>' +
+						items.map(i => '<div class="fs-12 text-dark mb-1">&bull; ' + escapeHtml(i.text) + '</div>').join('')
+					: '';
+
+				const reportLink = document.getElementById('viewEventMeetingNoteReportLink');
+				if (note.reportUrl) {
+					reportLink.href = note.reportUrl;
+					reportLink.style.display = '';
+				} else {
+					reportLink.style.display = 'none';
+				}
+
+				section.style.display = '';
+			} catch (err) {
+				// No note for this event yet (or a fetch hiccup) - the section
+				// just stays hidden, same as an event that was never recorded.
+			}
 		}
 
 		function toggleAllDayInputs() {

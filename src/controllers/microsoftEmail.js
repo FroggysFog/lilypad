@@ -368,9 +368,10 @@ controller.approveSuggestedTask = async function (req, res) {
     const suggestion = await LilyPadSuggestedTask.findOne({ _id: req.params.id, owner: req.user._id, status: 'pending' })
     if (!suggestion) return res.status(404).json({ success: false, error: 'Suggested task not found' })
 
+    const sourceLabel = suggestion.sourceMeetingNote ? 'From meeting' : 'From email'
     const task = await LilyPadTask.create({
       title: suggestion.title,
-      notes: suggestion.context ? `From email: ${suggestion.context}` : 'Suggested from email triage.',
+      notes: suggestion.context ? `${sourceLabel}: ${suggestion.context}` : 'Suggested from email triage.',
       dueDate: suggestion.suggestedDueDate,
       priority: URGENCY_TO_PRIORITY[suggestion.urgency] || 'Normal',
       owner: req.user._id,

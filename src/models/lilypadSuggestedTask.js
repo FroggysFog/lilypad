@@ -15,7 +15,11 @@ const COLLECTION = 'lilypad_suggested_tasks'
 const suggestedTaskSchema = new Schema(
   {
     owner: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', required: true, index: true },
-    sourceEmail: { type: Schema.Types.ObjectId, ref: 'lilypad_email_cache', required: true },
+    // Exactly one of sourceEmail/sourceMeetingNote is set, depending on
+    // which pipeline generated this suggestion - not required on either
+    // individually since a meeting-derived suggestion has no email.
+    sourceEmail: { type: Schema.Types.ObjectId, ref: 'lilypad_email_cache', default: null },
+    sourceMeetingNote: { type: Schema.Types.ObjectId, ref: 'lilypad_meeting_notes', default: null },
     title: { type: String, required: true, trim: true },
     context: { type: String, default: '' },
     suggestedDueDate: { type: Date, default: null },

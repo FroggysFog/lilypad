@@ -167,6 +167,7 @@ controller.getEvents = async function (req, res) {
       result.value.forEach((msEvent) => {
         merged.push({
           id: `ms-${userId}-${msEvent.msEventId}`,
+          msEventId: msEvent.msEventId,
           source: 'microsoft',
           title: msEvent.title,
           description: msEvent.description,

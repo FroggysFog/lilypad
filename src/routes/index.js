@@ -191,6 +191,9 @@ module.exports = function (app) {
   const readAiRouter = require('./readAi')()
   app.use('/api/v1/lilypad', readAiRouter)
 
+  const lilypadMeetingNotesRouter = require('./lilypadMeetingNotes')()
+  app.use('/api/v1/lilypad', lilypadMeetingNotesRouter)
+
   mainRoutes(router, controllers)
   app.use('/', router)
 
