@@ -23,7 +23,8 @@ const Controllers = {
   cartAuth: require('./cartAuth'),
   lilypadDashboard: require('./lilypadDashboard'),
   lilypadSalesQuota: require('./lilypadSalesQuota'),
-  lilypadSearch: require('./lilypadSearch')
+  lilypadSearch: require('./lilypadSearch'),
+  readAi: require('./readAi')
 }
 
 module.exports = Controllers

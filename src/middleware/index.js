@@ -15,7 +15,11 @@ module.exports = function (app, db, callback) {
   app.disable('x-powered-by')
 
   app.use(bodyParser.urlencoded({ limit: '2mb', extended: false }))
-  app.use(bodyParser.json({ limit: '2mb' }))
+  // `verify` stashes the raw body buffer on every request - cheap, and
+  // needed by the Read.ai webhook route to check its HMAC signature,
+  // which has to be computed over the exact bytes received, not a
+  // re-serialized copy of the parsed JSON (see readAiService.js).
+  app.use(bodyParser.json({ limit: '2mb', verify: (req, res, buf) => { req.rawBody = buf } }))
   app.use(cookieParser())
 
   // Assets (CSS/JS/images/fonts) are the bulk of requests per page load
