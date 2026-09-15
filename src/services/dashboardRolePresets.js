@@ -96,15 +96,6 @@ const ALL_WIDGETS = [
     allowedRoles: ['*']
   },
   {
-    id: 'quick-actions',
-    title: 'Quick Launch Hub',
-    description: 'Role-tailored shortcut buttons for fast daily execution',
-    category: 'Productivity',
-    icon: 'ti-bolt',
-    defaultWidth: 12,
-    allowedRoles: ['*']
-  },
-  {
     id: 'company-bulletin',
     title: 'Company Announcements & Safety Alerts',
     description: 'Facility notices, dock schedules, and team messages',
@@ -132,13 +123,13 @@ const ROLE_PRESETS = {
   support: {
     roleName: 'Support & Machine Technician',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-rma-active'],
-    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'rma-bench'],
+    widgets: ['my-day', 'priority-conversations', 'suggested-tasks', 'rma-bench'],
     layoutMode: 'bento'
   },
   tech: {
     roleName: 'Support & Machine Technician',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-rma-active'],
-    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'rma-bench'],
+    widgets: ['my-day', 'priority-conversations', 'suggested-tasks', 'rma-bench'],
     layoutMode: 'bento'
   },
 
@@ -146,7 +137,7 @@ const ROLE_PRESETS = {
   sales: {
     roleName: 'Sales & Account Executive',
     kpis: ['kpi-deals', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'lapsed-customers', 'sales-quota'],
+    widgets: ['my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'lapsed-customers', 'sales-quota'],
     layoutMode: 'bento'
   },
 
@@ -154,13 +145,13 @@ const ROLE_PRESETS = {
   warehouse: {
     roleName: 'Warehouse & Logistics Operations',
     kpis: ['kpi-orders-shipping', 'kpi-todo', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['quick-actions', 'shipping-dock', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
+    widgets: ['shipping-dock', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
     layoutMode: 'bento'
   },
   logistics: {
     roleName: 'Warehouse & Logistics Operations',
     kpis: ['kpi-orders-shipping', 'kpi-todo', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['quick-actions', 'shipping-dock', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
+    widgets: ['shipping-dock', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
     layoutMode: 'bento'
   },
 
@@ -168,13 +159,13 @@ const ROLE_PRESETS = {
   finance: {
     roleName: 'Finance & Accounts Receivable',
     kpis: ['kpi-past-due-total', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['quick-actions', 'past-due-ar', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
+    widgets: ['past-due-ar', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
     layoutMode: 'bento'
   },
   accounting: {
     roleName: 'Finance & Accounts Receivable',
     kpis: ['kpi-past-due-total', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['quick-actions', 'past-due-ar', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
+    widgets: ['past-due-ar', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
     layoutMode: 'bento'
   },
 
@@ -182,13 +173,13 @@ const ROLE_PRESETS = {
   admin: {
     roleName: 'Operations Leadership & Admin',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'sales-quota', 'past-due-ar', 'shipping-dock', 'rma-bench'],
+    widgets: ['company-bulletin', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'sales-quota', 'past-due-ar', 'shipping-dock', 'rma-bench'],
     layoutMode: 'bento'
   },
   operations: {
     roleName: 'Operations Leadership & Admin',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['company-bulletin', 'quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'sales-quota', 'past-due-ar', 'shipping-dock', 'rma-bench'],
+    widgets: ['company-bulletin', 'my-day', 'priority-conversations', 'suggested-tasks', 'sales-pipeline', 'sales-quota', 'past-due-ar', 'shipping-dock', 'rma-bench'],
     layoutMode: 'bento'
   },
 
@@ -196,7 +187,7 @@ const ROLE_PRESETS = {
   user: {
     roleName: 'Staff Member',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['quick-actions', 'my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
+    widgets: ['my-day', 'priority-conversations', 'suggested-tasks', 'company-bulletin'],
     layoutMode: 'bento'
   }
 }

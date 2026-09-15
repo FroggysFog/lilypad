@@ -435,11 +435,6 @@
 					</div>
 				</div>
 
-				<!-- Live KPI Counters Container (Dynamically rendered based on role/preferences) -->
-				<div class="row g-3 mb-4" id="dashKpiContainer">
-					<!-- Dynamically rendered KPI counters -->
-				</div>
-
 				<!-- Modular Role-Based Widget Canvas Container -->
 				<div class="row g-3 mb-4" id="dashboardWidgetCanvas">
 					<!-- Dynamically rendered widgets based on role and preferences -->
@@ -502,11 +497,9 @@
         roleName: 'Staff Member',
         customized: false,
         layoutMode: 'bento',
-        widgets: ['quick-actions', 'my-day', 'my-queue'],
-        kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete']
+        widgets: ['my-day', 'my-queue']
     };
     let dashAvailableWidgets = [];
-    let dashAvailableKpis = [];
 
     function dashTodayStr() {
         return new Date().toISOString().slice(0, 10);
@@ -590,14 +583,12 @@
             if (data.success) {
                 dashPreferences = data.preferences;
                 dashAvailableWidgets = data.availableWidgets || [];
-                dashAvailableKpis = data.availableKpis || [];
             }
         } catch (err) {
             console.warn('Using default workspace preferences:', err);
         }
 
         renderRoleHeaderInfo();
-        renderKpis();
         renderWidgetCanvas();
         populateCustomizerStudio();
     }
@@ -622,50 +613,12 @@
         if (customizerRoleBadge) customizerRoleBadge.textContent = dashPreferences.roleName;
     }
 
-    function renderKpis() {
-        const container = document.getElementById('dashKpiContainer');
-        if (!container) return;
-
-        const kpisToRender = dashPreferences.kpis || ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'];
-        
-        const kpiTemplates = {
-            'kpi-todo': { label: 'To-Do Queue', icon: 'ti-clock', color: 'primary', id: 'dashKpiTodo', action: () => goToFilteredTickets('status', 'To-Do') },
-            'kpi-in-progress': { label: 'In Progress', icon: 'ti-loader', color: 'primary', id: 'dashKpiInProgress', action: () => goToFilteredTickets('status', 'In Progress') },
-            'kpi-urgent': { label: 'Urgent / High', icon: 'ti-alert-triangle', color: 'danger', id: 'dashKpiUrgent', action: () => goToFilteredTickets('priority', 'urgent-high') },
-            'kpi-complete': { label: 'Completed', icon: 'ti-circle-check', color: 'secondary', id: 'dashKpiComplete', action: () => goToFilteredTickets('status', 'Complete') },
-            'kpi-suggested-tasks': { label: 'Email AI Tasks', icon: 'ti-bulb', color: 'warning', id: 'dashKpiSuggestedTasks', action: () => window.location.href = 'email.html' },
-            'kpi-deals': { label: 'Active Deals ($)', icon: 'ti-currency-dollar', color: 'primary', id: 'dashKpiDeals', action: () => window.location.href = 'opportunities.html' },
-            'kpi-orders-shipping': { label: 'Orders to Ship', icon: 'ti-package', color: 'warning', id: 'dashKpiOrdersShipping', action: () => window.location.href = 'orders.html' },
-            'kpi-past-due-total': { label: 'Past Due A/R ($)', icon: 'ti-report-money', color: 'danger', id: 'dashKpiPastDue', action: () => window.location.href = 'past-due-payments.html' },
-            'kpi-rma-active': { label: 'Active RMAs', icon: 'ti-tool', color: 'warning', id: 'dashKpiRma', action: () => window.location.href = 'tickets.html?category=FX+Machine+Support' }
-        };
-
-        const colClass = kpisToRender.length <= 4 ? 'col-xl-3 col-sm-6' : 'col-xl-2 col-md-4 col-sm-6';
-
-        container.innerHTML = kpisToRender.map(kId => {
-            const kpi = kpiTemplates[kId] || kpiTemplates['kpi-todo'];
-            return '<div class="' + colClass + '">' +
-                '<div class="card border-0 shadow-sm rounded-3 p-3 h-100" style="cursor:pointer;" onclick="(' + kpi.action.toString() + ')()">' +
-                    '<div class="d-flex align-items-center justify-content-between">' +
-                        '<div>' +
-                            '<span class="fs-12 text-muted fw-semibold text-uppercase">' + kpi.label + '</span>' +
-                            '<h3 class="fw-bold mb-0 mt-1 text-' + kpi.color + '" id="' + kpi.id + '">-</h3>' +
-                        '</div>' +
-                        '<div class="rounded-3 p-2 text-white bg-' + kpi.color + ' d-flex align-items-center justify-content-center shadow-sm" style="width:44px; height:44px;">' +
-                            '<i class="ti ' + kpi.icon + ' fs-22"></i>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-        }).join('');
-    }
-
     function renderWidgetCanvas() {
         const canvas = document.getElementById('dashboardWidgetCanvas');
         if (!canvas) return;
 
         let renderedCombinedMyDay = false;
-        const activeWidgets = dashPreferences.widgets || ['quick-actions', 'my-day', 'my-queue'];
+        const activeWidgets = dashPreferences.widgets || ['my-day', 'my-queue'];
 
         let html = '';
 
@@ -673,9 +626,6 @@
             switch (wId) {
                 case 'company-bulletin':
                     html += renderCompanyBulletinWidgetHtml();
-                    break;
-                case 'quick-actions':
-                    html += renderQuickActionsWidgetHtml();
                     break;
                 case 'my-day':
                 case 'my-queue':
@@ -829,63 +779,6 @@
         } catch (err) {
             alert(err.message || 'Unable to update announcement.');
         }
-    }
-
-    function renderQuickActionsWidgetHtml() {
-        let shortcuts = [];
-        const role = dashPreferences.role || 'user';
-
-        if (role === 'sales') {
-            shortcuts = [
-                { label: 'New Quote', href: 'opportunities.html', icon: 'ti-file-plus', color: 'primary' },
-                { label: 'Apollo Lead Search', href: 'prospects.html', icon: 'ti-radar', color: 'info' },
-                { label: 'Customer Accounts', href: 'salesforce-accounts.html', icon: 'ti-building', color: 'dark' },
-                { label: 'Wholesale Catalog', href: 'cart-explorer.html', icon: 'ti-shopping-cart', color: 'success' }
-            ];
-        } else if (role === 'support' || role === 'tech') {
-            shortcuts = [
-                { label: 'Log Diagnostic Ticket', href: 'tickets.html?action=new', icon: 'ti-plus', color: 'primary' },
-                { label: 'Search SOP Playbooks', href: 'knowledge-base.html', icon: 'ti-book', color: 'success' },
-                { label: 'Machine Specs & Video', href: 'machine.html', icon: 'ti-device-tv', color: 'info' },
-                { label: 'RMA Diagnostic Bench', href: 'tickets.html?category=FX+Machine+Support', icon: 'ti-tool', color: 'warning' }
-            ];
-        } else if (role === 'warehouse' || role === 'logistics') {
-            shortcuts = [
-                { label: 'Orders to Pack', href: 'orders.html', icon: 'ti-package', color: 'primary' },
-                { label: 'Cart.com Storefront Feed', href: 'cart-explorer.html', icon: 'ti-shopping-cart', color: 'info' },
-                { label: 'Pallet Freight Dock', href: 'orders.html?status=ready', icon: 'ti-truck', color: 'success' },
-                { label: 'Warehouse Issue Ticket', href: 'tickets.html?action=new&category=Vendor+Purchase+Order', icon: 'ti-alert-circle', color: 'warning' }
-            ];
-        } else if (role === 'finance' || role === 'accounting') {
-            shortcuts = [
-                { label: 'Past-Due Dunning A/R', href: 'past-due-payments.html', icon: 'ti-coin', color: 'danger' },
-                { label: 'Send Statement Link', href: 'past-due-payments.html', icon: 'ti-mail', color: 'primary' },
-                { label: 'Wholesale Orders', href: 'orders.html', icon: 'ti-receipt', color: 'success' },
-                { label: 'Inbound Invoices', href: 'admin-email.html', icon: 'ti-mail-cog', color: 'dark' }
-            ];
-        } else {
-            // Admin / Operations
-            shortcuts = [
-                { label: 'New Ticket', href: 'tickets.html?action=new', icon: 'ti-plus', color: 'primary' },
-                { label: 'Email Gateway', href: 'admin-email.html', icon: 'ti-mail-cog', color: 'dark' },
-                { label: 'Diagnostic SOPs', href: 'knowledge-base.html', icon: 'ti-book', color: 'success' },
-                { label: 'Past-Due A/R', href: 'past-due-payments.html', icon: 'ti-coin', color: 'danger' },
-                { label: 'Apollo Leads', href: 'prospects.html', icon: 'ti-radar', color: 'info' }
-            ];
-        }
-
-        return '<div class="col-12">' +
-            '<div class="card border-0 shadow-sm rounded-3 p-3 bg-light">' +
-                '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
-                    '<span class="fs-12 text-muted fw-bold text-uppercase d-flex align-items-center gap-1"><i class="ti ti-bolt text-primary"></i> Fast Actions</span>' +
-                    '<div class="d-flex align-items-center gap-2 flex-wrap">' +
-                        shortcuts.map(s => '<a href="' + s.href + '" class="btn btn-sm btn-white border rounded-pill px-3 shadow-none text-dark d-flex align-items-center gap-1 fs-12 fw-semibold">' +
-                            '<i class="ti ' + s.icon + ' text-' + s.color + '"></i> <span>' + s.label + '</span>' +
-                        '</a>').join('') +
-                    '</div>' +
-                '</div>' +
-            '</div>' +
-        '</div>';
     }
 
     function renderCombinedMyDayAndQueueWidgetHtml() {
@@ -1692,27 +1585,9 @@
     // =========================================================================
 
     function populateCustomizerStudio() {
-        const kpiListEl = document.getElementById('customizerKpiList');
         const widgetListEl = document.getElementById('customizerWidgetList');
-
-        const activeKpis = dashPreferences.kpis || [];
         const activeWidgets = dashPreferences.widgets || [];
 
-        // 1. Populate KPI Checkboxes
-        if (kpiListEl) {
-            kpiListEl.innerHTML = dashAvailableKpis.map(k => {
-                const checked = activeKpis.includes(k.id) ? 'checked' : '';
-                return '<label class="form-check d-flex align-items-center justify-content-between p-2 border rounded bg-white mb-0" style="cursor:pointer;">' +
-                    '<div class="d-flex align-items-center gap-2">' +
-                        '<i class="ti ' + k.icon + ' text-' + k.color + ' fs-16"></i>' +
-                        '<span class="fs-13 text-dark fw-medium">' + k.label + '</span>' +
-                    '</div>' +
-                    '<input class="form-check-input kpi-toggle-input" type="checkbox" value="' + k.id + '" ' + checked + '>' +
-                '</label>';
-            }).join('');
-        }
-
-        // 2. Populate Widget Toggles with Order Controls
         if (widgetListEl) {
             // Sort available widgets so active ones appear first in their saved order
             const sortedWidgets = [...dashAvailableWidgets].sort((a, b) => {
@@ -1768,7 +1643,6 @@
 
     async function saveCustomWorkspacePreferences() {
         const widgetListEl = document.getElementById('customizerWidgetList');
-        const kpiListEl = document.getElementById('customizerKpiList');
         if (!widgetListEl) return;
 
         const selectedWidgets = [];
@@ -1779,27 +1653,18 @@
             }
         });
 
-        const selectedKpis = [];
-        if (kpiListEl) {
-            kpiListEl.querySelectorAll('.kpi-toggle-input:checked').forEach(input => {
-                selectedKpis.push(input.value);
-            });
-        }
-
         try {
             const res = await fetch('/api/v1/lilypad/dashboard/preferences', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     widgets: selectedWidgets,
-                    kpis: selectedKpis,
                     layoutMode: 'bento'
                 })
             });
             const data = await res.json();
             if (data.success) {
                 dashPreferences = data.preferences;
-                renderKpis();
                 renderWidgetCanvas();
                 await loadDashboard(); // refresh feeds
 
@@ -1832,7 +1697,6 @@
             if (data.success) {
                 dashPreferences = data.preferences;
                 renderRoleHeaderInfo();
-                renderKpis();
                 renderWidgetCanvas();
                 populateCustomizerStudio();
                 await loadDashboard();
@@ -2263,16 +2127,6 @@
             const result = await res.json();
             if (!result.success) return;
 
-            const c = result.counts;
-            const todoEl = document.getElementById('dashKpiTodo');
-            const progEl = document.getElementById('dashKpiInProgress');
-            const urgentEl = document.getElementById('dashKpiUrgent');
-            const completeEl = document.getElementById('dashKpiComplete');
-            if (todoEl) todoEl.textContent = c.todo;
-            if (progEl) progEl.textContent = c.inProgress;
-            if (urgentEl) urgentEl.textContent = c.urgent;
-            if (completeEl) completeEl.textContent = c.complete;
-
             dashLastTickets = result.data || [];
 
             // Tasks are always the logged-in user's own personal list (by
@@ -2416,19 +2270,6 @@
 				<button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fs-12 w-100 d-flex align-items-center justify-content-center gap-1" onclick="resetToRoleDefaultWorkspace()">
 					<i class="ti ti-rotate-clockwise"></i> <span>Reset to Role Defaults</span>
 				</button>
-			</div>
-
-			<!-- KPI Metrics Section -->
-			<div class="mb-4">
-				<div class="d-flex align-items-center justify-content-between mb-2">
-					<h6 class="fw-bold fs-13 text-dark mb-0 d-flex align-items-center gap-1">
-						<i class="ti ti-chart-bar text-primary"></i> <span>Top KPI Metrics</span>
-					</h6>
-					<span class="fs-11 text-muted">Select up to 4</span>
-				</div>
-				<div class="d-flex flex-column gap-2" id="customizerKpiList">
-					<!-- Dynamically populated KPI checkboxes -->
-				</div>
 			</div>
 
 			<!-- Active Widgets Manager Section -->
