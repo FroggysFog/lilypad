@@ -74,6 +74,9 @@ function launchServer (db) {
 
       const { startWaitingOnScheduler } = require('./src/services/emailWaitingOnService')
       startWaitingOnScheduler(winston)
+
+      const { startReceiptExtractionScheduler } = require('./src/services/receiptExtractionService')
+      startReceiptExtractionScheduler(winston)
     })
   })
 }

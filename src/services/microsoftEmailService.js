@@ -355,6 +355,40 @@ async function moveMessage (ownerId, graphMessageId, destination) {
   await resyncFolders(ownerId, [destinationId])
 }
 
+// Inbound-attachment reads for receiptExtractionService.js - a fresh
+// addition alongside the outbound-only attachment code above (attaching
+// a file the user is composing/sending). Filtered here to file
+// attachments only (not itemAttachment/referenceAttachment, which Graph
+// can also return) since those are the only kind that can be a receipt
+// PDF/image.
+const MIN_ATTACHMENT_BYTES = 5 * 1024 // below this it's virtually always a signature logo/tracking pixel, not a real document
+const RECEIPT_CONTENT_TYPES = [/^application\/pdf/i, /^image\//i]
+
+async function listMessageAttachments (ownerId, graphMessageId) {
+  const result = await microsoftCalendarService.graphRequestForUser(ownerId, 'get', `/me/messages/${encodeURIComponent(graphMessageId)}/attachments`)
+  const items = (result && result.value) || []
+  return items.filter((a) =>
+    a['@odata.type'] === '#microsoft.graph.fileAttachment' &&
+    !a.isInline &&
+    a.size >= MIN_ATTACHMENT_BYTES &&
+    a.size <= MAX_ATTACHMENT_BYTES &&
+    RECEIPT_CONTENT_TYPES.some((re) => re.test(a.contentType || ''))
+  )
+}
+
+/**
+ * Returns the attachment's raw bytes - Graph inlines `contentBytes`
+ * (base64) directly on the list response for attachments under ~3MB, so
+ * this only falls back to a separate $value fetch for anything larger.
+ */
+async function getAttachmentBytes (ownerId, graphMessageId, attachment) {
+  if (attachment.contentBytes) return Buffer.from(attachment.contentBytes, 'base64')
+  return microsoftCalendarService.graphRequestBinaryForUser(
+    ownerId,
+    `/me/messages/${encodeURIComponent(graphMessageId)}/attachments/${encodeURIComponent(attachment.id)}/$value`
+  )
+}
+
 module.exports = {
   getMessages,
   getGraymailDigest,
@@ -369,5 +403,7 @@ module.exports = {
   replyToMessage,
   forwardMessage,
   deleteMessage,
-  moveMessage
+  moveMessage,
+  listMessageAttachments,
+  getAttachmentBytes
 }

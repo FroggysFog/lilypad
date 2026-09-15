@@ -61,6 +61,11 @@ const emailCacheSchema = new Schema(
     // coupled to the stage 3/4 triage fields.
     entityLinksProcessed: { type: Boolean, default: false, index: true },
     waitingOnProcessed: { type: Boolean, default: false, index: true },
+    // Receipt-capture pass (receiptExtractionService.js) - independent of
+    // `triage.isColdInbound`, since automated vendor/shipping/payment
+    // mail (exactly what that flag quarantines) is precisely what this
+    // pass is looking for.
+    receiptExtractionProcessed: { type: Boolean, default: false, index: true },
     // Soft-deleted when Graph delta reports a removal, not hard-deleted -
     // keeps a "Recently Deleted" view possible later without re-syncing.
     deleted: { type: Boolean, default: false, index: true }

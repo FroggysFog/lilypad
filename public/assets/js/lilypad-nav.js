@@ -47,7 +47,8 @@ const LILYPAD_NAV_SECTIONS = [
     label: 'Accounting',
     items: [
       { href: 'past-due-payments.html', icon: 'ti-cash-banknote', label: 'Past Due Payments' },
-      { href: 'reminder-templates.html', icon: 'ti-mail-cog', label: 'Reminder Templates' }
+      { href: 'reminder-templates.html', icon: 'ti-mail-cog', label: 'Reminder Templates' },
+      { href: 'receipts.html', icon: 'ti-receipt', label: 'Receipts' }
     ]
   },
   {

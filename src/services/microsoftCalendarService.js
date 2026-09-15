@@ -176,6 +176,32 @@ async function graphRequestForUser (userId, method, path, data) {
   return response.data
 }
 
+/**
+ * Same auth plumbing as graphRequestForUser, but for endpoints that
+ * return raw bytes instead of JSON (e.g. an attachment's $value) -
+ * axios's default JSON transform would otherwise corrupt binary
+ * content, so this forces `responseType: 'arraybuffer'` and hands back
+ * a plain Buffer.
+ */
+async function graphRequestBinaryForUser (userId, path) {
+  const token = await ensureAccessToken(userId)
+  const response = await axios({
+    method: 'get',
+    url: path.startsWith('http') ? path : `${GRAPH}${path}`,
+    headers: { Authorization: `Bearer ${token}` },
+    responseType: 'arraybuffer',
+    validateStatus: (status) => status < 500
+  })
+
+  if (response.status >= 400) {
+    const err = new Error(`Graph API error ${response.status}`)
+    err.graphStatus = response.status
+    throw err
+  }
+
+  return Buffer.from(response.data)
+}
+
 async function getStatus (userId) {
   const account = await LilyPadMicrosoftAccount.findOne({ user: userId })
   return {
@@ -285,5 +311,6 @@ module.exports = {
   // Shared per-user Graph token plumbing - reused by microsoftEmailService
   // so mail doesn't need its own OAuth connect flow or token storage; it's
   // the same Microsoft 365 connection, just a different Graph endpoint.
-  graphRequestForUser
+  graphRequestForUser,
+  graphRequestBinaryForUser
 }

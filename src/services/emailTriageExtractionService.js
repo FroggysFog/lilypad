@@ -367,5 +367,9 @@ module.exports = {
   runExtractionForOwner,
   summarizeEmailNow,
   runScheduledExtraction,
-  startEmailExtractionScheduler
+  startEmailExtractionScheduler,
+  // Shared body-cleanup helper - reused by receiptExtractionService.js so
+  // a second LLM pass over the same emails doesn't re-derive its own
+  // quoted-history-stripping logic.
+  bodyToPlainText
 }
