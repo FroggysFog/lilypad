@@ -111,11 +111,14 @@ async function processReadAiEvent (rawEvent) {
     }
   }
 
-  const participantEmails = []
-  if (payload.owner && payload.owner.email) participantEmails.push(payload.owner.email)
+  // Read.ai lists the organizer redundantly inside participants too, so
+  // this dedupes rather than storing the owner's email twice.
+  const participantEmailSet = new Set()
+  if (payload.owner && payload.owner.email) participantEmailSet.add(payload.owner.email.toLowerCase())
   for (const p of payload.participants || []) {
-    if (p.email) participantEmails.push(p.email)
+    if (p.email) participantEmailSet.add(p.email.toLowerCase())
   }
+  const participantEmails = Array.from(participantEmailSet)
 
   const note = await LilyPadMeetingNote.create({
     owner: owner ? owner._id : null,
