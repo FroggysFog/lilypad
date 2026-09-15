@@ -457,15 +457,14 @@ controller.regenerateSenderCard = async function (req, res) {
 }
 
 /**
- * POST /api/v1/lilypad/email/sender-cards/:address/blockers/add-task   { blockerText }
- * Matched by exact blocker text rather than an array index - the
- * frontend only ever sees the already-declined-filtered list, so
- * positions there don't line up with the stored array once anything's
- * been declined.
+ * POST /api/v1/lilypad/email/sender-cards/:address/blockers/add-task   { blockerId }
+ * Matched by the blocker's own _id, not its text - text drifts whenever
+ * this sender's rollup regenerates, but the id is stable for the
+ * lifetime of one rollup generation.
  */
 controller.addTaskFromBlocker = async function (req, res) {
   try {
-    const task = await emailSenderRollupService.addTaskFromBlocker(req.user._id, decodeURIComponent(req.params.address), req.body.blockerText)
+    const task = await emailSenderRollupService.addTaskFromBlocker(req.user._id, decodeURIComponent(req.params.address), req.body.blockerId)
     return res.status(201).json({ success: true, data: task })
   } catch (err) {
     return res.status(502).json({ success: false, error: err.message })
@@ -473,11 +472,11 @@ controller.addTaskFromBlocker = async function (req, res) {
 }
 
 /**
- * POST /api/v1/lilypad/email/sender-cards/:address/blockers/decline   { blockerText }
+ * POST /api/v1/lilypad/email/sender-cards/:address/blockers/decline   { blockerId }
  */
 controller.declineBlocker = async function (req, res) {
   try {
-    await emailSenderRollupService.declineBlocker(req.user._id, decodeURIComponent(req.params.address), req.body.blockerText)
+    await emailSenderRollupService.declineBlocker(req.user._id, decodeURIComponent(req.params.address), req.body.blockerId)
     return res.status(200).json({ success: true })
   } catch (err) {
     return res.status(502).json({ success: false, error: err.message })

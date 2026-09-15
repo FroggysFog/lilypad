@@ -38,7 +38,12 @@ const interactionScoreSchema = new Schema(
     // stale, not on every read, since it's a Sonnet call.
     rollup: {
       executiveSummary: { type: String, default: '' },
-      blockers: [{ type: String }],
+      // Each blocker gets Mongoose's normal auto _id, giving it a stable
+      // identifier that survives the declined-filtering/re-render cycle -
+      // matching by exact text (the original design) broke as soon as a
+      // background regeneration reworded blockers between when a card
+      // was rendered and when a button on it was clicked.
+      blockers: [{ text: { type: String, required: true } }],
       quickReplies: [{ label: String, draftBody: String }],
       generatedAt: { type: Date, default: null },
       // A cheap staleness signal: total inbound+outbound message count
@@ -48,10 +53,11 @@ const interactionScoreSchema = new Schema(
       // The most recent inbound message from this sender, graphMessageId -
       // what a quick-reply or "Add Task" from the card actually targets.
       mostRecentMessageId: { type: String, default: '' },
-      // Blocker text the user marked "not relevant" - filtered out of
-      // what's shown, cleared whenever a fresh rollup is generated (new
-      // activity deserves a clean slate, not permanently-hidden text
-      // that happens to reappear verbatim).
+      // Blocker _ids (stringified) the user marked "not relevant" or
+      // already turned into a task - filtered out of what's shown,
+      // cleared whenever a fresh rollup is generated (new activity
+      // deserves a clean slate, and the old ids wouldn't match the new
+      // blockers' ids anyway).
       declinedBlockers: [{ type: String }],
       // Dismissing a card hides it until new activity arrives - checked
       // against basedOnMessageCount at dismiss time, not a hard

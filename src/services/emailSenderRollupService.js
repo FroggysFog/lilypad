@@ -158,7 +158,7 @@ async function generateRollupForSender (ownerId, address) {
 
   const rollup = {
     executiveSummary: String(result.executive_summary || '').slice(0, 600),
-    blockers: Array.isArray(result.blockers) ? result.blockers.slice(0, 10).map((b) => String(b).slice(0, 300)) : [],
+    blockers: Array.isArray(result.blockers) ? result.blockers.slice(0, 10).map((b) => ({ text: String(b).slice(0, 300) })) : [],
     quickReplies: Array.isArray(result.quick_replies)
       ? result.quick_replies.slice(0, 3).map((q) => ({ label: String(q.label || '').slice(0, 60), draftBody: String(q.draft_body || '').slice(0, 2000) }))
       : [],
@@ -275,10 +275,32 @@ async function getRollupCandidates (ownerId) {
   return result
 }
 
+// Keyed by `${ownerId}:${address}` - de-dupes concurrent regeneration
+// attempts for the same sender so repeated interactive polling (e.g.
+// the dashboard re-fetching after every Dismiss/+Task click) can't pile
+// up redundant Sonnet calls for a sender that's already regenerating.
+const regenerationInFlight = new Set()
+
+function triggerBackgroundRegeneration (ownerId, address) {
+  const key = `${ownerId}:${address}`
+  if (regenerationInFlight.has(key)) return
+  regenerationInFlight.add(key)
+  generateRollupForSender(ownerId, address)
+    .catch((err) => winston.error(`Sender rollup generation failed for ${address}: ${err.message}`))
+    .finally(() => regenerationInFlight.delete(key))
+}
+
 /**
- * Read path for the frontend - regenerates anything stale, then returns
- * every current card. Regeneration is sequential (not parallel) to
- * avoid bursting several Sonnet calls at once for one page load.
+ * Read path for the frontend - returns whatever's currently cached
+ * immediately, even if stale, and kicks off regeneration for anything
+ * stale in the background rather than awaiting it. This used to await
+ * each stale sender's regeneration sequentially before responding,
+ * which made an interactive click that just wants a quick re-render
+ * (Dismiss, +Task) block on however many Sonnet calls happened to be
+ * due - sometimes tens of seconds to minutes. The next fetch after a
+ * background regeneration lands picks up the fresh card; see
+ * regenerateStaleCandidates for the one caller (the scheduler) that
+ * still deliberately awaits regeneration sequentially.
  */
 async function getRollupCards (ownerId) {
   const candidates = await getRollupCandidates(ownerId)
@@ -287,16 +309,11 @@ async function getRollupCards (ownerId) {
   for (const { contact, unreadCount, reason, label } of candidates) {
     const totalMessageCount = contact.receivedCount + contact.repliedCount
     if (isRollupConfigured() && needsRegeneration(contact, totalMessageCount)) {
-      try {
-        const rollup = await generateRollupForSender(ownerId, contact.address)
-        if (rollup) contact.rollup = rollup
-      } catch (err) {
-        winston.error(`Sender rollup generation failed for ${contact.address}: ${err.message}`)
-      }
+      triggerBackgroundRegeneration(ownerId, contact.address)
     }
 
     if (contact.rollup && contact.rollup.generatedAt) {
-      const declined = new Set(contact.rollup.declinedBlockers || [])
+      const declined = new Set((contact.rollup.declinedBlockers || []).map(String))
       cards.push({
         address: contact.address,
         displayName: contact.displayName || contact.address,
@@ -304,7 +321,9 @@ async function getRollupCards (ownerId) {
         reason,
         unreadCount,
         executiveSummary: contact.rollup.executiveSummary,
-        blockers: (contact.rollup.blockers || []).filter((b) => !declined.has(b)),
+        blockers: (contact.rollup.blockers || [])
+          .filter((b) => !declined.has(String(b._id)))
+          .map((b) => ({ id: String(b._id), text: b.text })),
         quickReplies: contact.rollup.quickReplies,
         mostRecentMessageId: contact.rollup.mostRecentMessageId,
         generatedAt: contact.rollup.generatedAt
@@ -316,49 +335,90 @@ async function getRollupCards (ownerId) {
 }
 
 /**
+ * The scheduler's path - actually awaits each stale sender's
+ * regeneration, sequentially, so a background sweep across every
+ * connected owner doesn't burst several Sonnet calls at once. This is
+ * the one caller that should still block on generateRollupForSender;
+ * the interactive read path (getRollupCards) deliberately does not.
+ */
+async function regenerateStaleCandidates (ownerId) {
+  const candidates = await getRollupCandidates(ownerId)
+  for (const { contact } of candidates) {
+    const totalMessageCount = contact.receivedCount + contact.repliedCount
+    if (isRollupConfigured() && needsRegeneration(contact, totalMessageCount)) {
+      try {
+        await generateRollupForSender(ownerId, contact.address)
+      } catch (err) {
+        winston.error(`Sender rollup generation failed for ${contact.address}: ${err.message}`)
+      }
+    }
+  }
+}
+
+// Both "add task" and "decline" end with the same not-found message,
+// since both share the same actual cause: the card the user clicked on
+// no longer matches the stored rollup, almost always because a
+// regeneration (background trigger or the 30-minute scheduler)
+// replaced it with fresh blockers/ids in between.
+const BLOCKER_STALE_MESSAGE = 'This conversation was just refreshed - please check the current list and try again.'
+
+function findBlocker (contact, blockerId) {
+  return contact && contact.rollup && (contact.rollup.blockers || []).find((b) => String(b._id) === String(blockerId))
+}
+
+function markBlockerConsumed (contact, blockerId) {
+  contact.rollup.declinedBlockers = contact.rollup.declinedBlockers || []
+  if (!contact.rollup.declinedBlockers.includes(String(blockerId))) {
+    contact.rollup.declinedBlockers.push(String(blockerId))
+  }
+  contact.markModified('rollup')
+}
+
+/**
  * "Add Task" from a card's blocker - creates a real suggestion the same
  * way stage 4's extraction pipeline does, rather than a second,
  * parallel task-creation path. Lands in the same Suggested Tasks queue
- * for Approve/Dismiss. Matched by exact blocker text rather than array
- * index, since the frontend only ever sees the already-declined-filtered
- * list - its positions don't line up with the stored array once
- * anything's been declined.
+ * for Approve/Dismiss. Matched by the blocker's own _id (stable across
+ * a single rollup generation), not its text - also marks the blocker
+ * consumed the same way Decline does, so it stops showing on the card
+ * and a second click can't create a duplicate task.
  */
-async function addTaskFromBlocker (ownerId, address, blockerText) {
+async function addTaskFromBlocker (ownerId, address, blockerId) {
   const contact = await LilyPadContactInteractionScore.findOne({ owner: ownerId, address })
-  if (!contact || !contact.rollup || !(contact.rollup.blockers || []).includes(blockerText)) {
-    throw new Error('Blocker not found.')
-  }
+  const blocker = findBlocker(contact, blockerId)
+  if (!blocker) throw new Error(BLOCKER_STALE_MESSAGE)
 
   const sourceEmail = contact.rollup.mostRecentMessageId
     ? await LilyPadEmailCache.findOne({ owner: ownerId, graphMessageId: contact.rollup.mostRecentMessageId })
     : null
   if (!sourceEmail) throw new Error('Could not find the source email for this rollup - it may have been deleted or moved.')
 
-  return LilyPadSuggestedTask.create({
+  const task = await LilyPadSuggestedTask.create({
     owner: ownerId,
     sourceEmail: sourceEmail._id,
-    title: blockerText.slice(0, 255),
+    title: blocker.text.slice(0, 255),
     context: `From conversation with ${contact.displayName || contact.address}`,
     status: 'pending'
   })
+
+  markBlockerConsumed(contact, blockerId)
+  await contact.save()
+
+  return task
 }
 
 /**
  * "Decline" a blocker - marks it not relevant without turning it into a
  * task. Cleared automatically the next time this sender's rollup
  * regenerates (see generateRollupForSender), so it's "not relevant
- * right now," not a permanent hide of that exact sentence forever.
+ * right now," not a permanent hide of that exact blocker forever.
  */
-async function declineBlocker (ownerId, address, blockerText) {
+async function declineBlocker (ownerId, address, blockerId) {
   const contact = await LilyPadContactInteractionScore.findOne({ owner: ownerId, address })
-  if (!contact || !contact.rollup || !(contact.rollup.blockers || []).includes(blockerText)) {
-    throw new Error('Blocker not found.')
-  }
+  const blocker = findBlocker(contact, blockerId)
+  if (!blocker) throw new Error(BLOCKER_STALE_MESSAGE)
 
-  contact.rollup.declinedBlockers = contact.rollup.declinedBlockers || []
-  if (!contact.rollup.declinedBlockers.includes(blockerText)) contact.rollup.declinedBlockers.push(blockerText)
-  contact.markModified('rollup')
+  markBlockerConsumed(contact, blockerId)
   await contact.save()
 }
 
@@ -406,7 +466,7 @@ async function runScheduledRollups (winstonLogger) {
   const connectedIds = await microsoftCalendarService.getConnectedUserIds()
   for (const ownerId of connectedIds) {
     try {
-      await getRollupCards(ownerId)
+      await regenerateStaleCandidates(ownerId)
     } catch (err) {
       if (winstonLogger) winstonLogger.error(`Sender rollup pass failed for ${ownerId}: ${err.message}`)
     }

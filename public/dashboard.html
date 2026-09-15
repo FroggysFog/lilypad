@@ -1329,13 +1329,12 @@
         const blockersHtml = blockers.length ? '<div class="mb-3">' +
             '<span class="fs-11 fw-bold text-uppercase text-muted d-block mb-2"><i class="ti ti-alert-circle text-danger me-1"></i>Open Action Items / Blockers</span>' +
             blockers.map(b => {
-                const safeBlocker = escapeHtml(b).replace(/'/g, "\\'");
                 return '<div class="d-flex align-items-start justify-content-between gap-2 p-2 mb-1 rounded bg-light border">' +
-                    '<span class="fs-12 text-dark">&bull; ' + escapeHtml(b) + '</span>' +
+                    '<span class="fs-12 text-dark">&bull; ' + escapeHtml(b.text) + '</span>' +
                     '<div class="d-flex align-items-center gap-1 flex-shrink-0">' +
-                        '<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11" onclick="addBlockerAsTask(\'' + escapeHtml(activeCard.address) + '\', \'' + safeBlocker + '\')" title="Turn into task">+ Task</button>' +
-                        '<a href="tickets.html?action=new&title=' + encodeURIComponent(b) + '" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11" title="Log Ticket"><i class="ti ti-ticket"></i></a>' +
-                        '<button type="button" class="btn btn-sm btn-link text-muted p-0 px-1" onclick="declineBlockerItem(\'' + escapeHtml(activeCard.address) + '\', \'' + safeBlocker + '\')" title="Decline"><i class="ti ti-x"></i></button>' +
+                        '<button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fs-11" onclick="addBlockerAsTask(\'' + escapeHtml(activeCard.address) + '\', \'' + escapeHtml(b.id) + '\')" title="Turn into task">+ Task</button>' +
+                        '<a href="tickets.html?action=new&title=' + encodeURIComponent(b.text) + '" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11" title="Log Ticket"><i class="ti ti-ticket"></i></a>' +
+                        '<button type="button" class="btn btn-sm btn-link text-muted p-0 px-1" onclick="declineBlockerItem(\'' + escapeHtml(activeCard.address) + '\', \'' + escapeHtml(b.id) + '\')" title="Decline"><i class="ti ti-x"></i></button>' +
                     '</div>' +
                 '</div>';
             }).join('') +
@@ -1375,12 +1374,12 @@
         renderPriorityConversationsDeck(cards);
     }
 
-    async function addBlockerAsTask(address, blockerText) {
+    async function addBlockerAsTask(address, blockerId) {
         try {
             const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/blockers/add-task', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ blockerText })
+                body: JSON.stringify({ blockerId })
             });
             const data = await res.json();
             if (!data.success) throw new Error(data.error);
@@ -1400,12 +1399,12 @@
         }
     }
 
-    async function declineBlockerItem(address, blockerText) {
+    async function declineBlockerItem(address, blockerId) {
         try {
             const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/blockers/decline', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ blockerText })
+                body: JSON.stringify({ blockerId })
             });
             const data = await res.json();
             if (!data.success) throw new Error(data.error);
@@ -1973,6 +1972,11 @@
                         <span class="badge bg-soft-info text-info fs-10 px-2 py-1 rounded-pill fw-semibold">${escapeHtml(timeLabel)}</span>
                         <span class="fw-semibold fs-13 text-dark text-truncate">${escapeHtml(ev.title)}</span>
                         ${ev.location ? `<span class="fs-12 text-muted text-truncate">- ${escapeHtml(ev.location)}</span>` : ''}
+                        ${ev.onlineMeetingUrl ? `
+                            <a href="${escapeHtml(ev.onlineMeetingUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="btn btn-sm btn-primary py-0 px-2 fs-11 d-inline-flex align-items-center gap-1 ms-auto flex-shrink-0">
+                                <i class="ti ti-brand-teams"></i> Join
+                            </a>
+                        ` : ''}
                     </div>
                 `;
             }).join('');

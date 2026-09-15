@@ -1126,11 +1126,11 @@
 		function senderCardDetailMarkup(card) {
 			const blockersHtml = (card.blockers || []).map((b) => `
 				<div class="d-flex align-items-start justify-content-between gap-2 fs-12 mb-1">
-					<span class="text-dark">&bull; ${escapeHtml(b)}</span>
+					<span class="text-dark">&bull; ${escapeHtml(b.text)}</span>
 					<div class="d-flex align-items-center gap-1 flex-shrink-0">
-						<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 sender-card-add-task-btn" data-blocker="${escapeHtml(b)}">+ Task</button>
-						<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 sender-card-add-ticket-btn" data-blocker="${escapeHtml(b)}" title="Create a ticket"><i class="ti ti-ticket"></i></button>
-						<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 sender-card-decline-btn" data-blocker="${escapeHtml(b)}" title="Not relevant"><i class="ti ti-x"></i></button>
+						<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 sender-card-add-task-btn" data-blocker-id="${escapeHtml(b.id)}">+ Task</button>
+						<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 sender-card-add-ticket-btn" data-blocker-text="${escapeHtml(b.text)}" title="Create a ticket"><i class="ti ti-ticket"></i></button>
+						<button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11 sender-card-decline-btn" data-blocker-id="${escapeHtml(b.id)}" title="Not relevant"><i class="ti ti-x"></i></button>
 					</div>
 				</div>
 			`).join('') || '<p class="fs-12 text-muted mb-0">No open blockers.</p>';
@@ -1166,13 +1166,13 @@
 			container.innerHTML = senderCardDetailMarkup(card);
 			document.getElementById('senderCardDismissBtn').addEventListener('click', () => dismissSenderCard(card.address));
 			container.querySelectorAll('.sender-card-add-task-btn').forEach(btn => {
-				btn.addEventListener('click', () => addTaskFromSenderCard(card.address, btn.dataset.blocker, btn));
+				btn.addEventListener('click', () => addTaskFromSenderCard(card.address, btn.dataset.blockerId, btn));
 			});
 			container.querySelectorAll('.sender-card-add-ticket-btn').forEach(btn => {
-				btn.addEventListener('click', () => openCreateTicketModal(card, btn.dataset.blocker));
+				btn.addEventListener('click', () => openCreateTicketModal(card, btn.dataset.blockerText));
 			});
 			container.querySelectorAll('.sender-card-decline-btn').forEach(btn => {
-				btn.addEventListener('click', () => declineBlockerFromCard(card.address, btn.dataset.blocker));
+				btn.addEventListener('click', () => declineBlockerFromCard(card.address, btn.dataset.blockerId));
 			});
 			container.querySelectorAll('.sender-card-quick-reply-btn').forEach(btn => {
 				btn.addEventListener('click', () => quickReplyFromSenderCard(card.address, btn.dataset.replyIndex));
@@ -1230,28 +1230,29 @@
 			}
 		}
 
-		async function addTaskFromSenderCard(address, blockerText, btn) {
+		async function addTaskFromSenderCard(address, blockerId, btn) {
 			btn.disabled = true;
 			try {
 				const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/blockers/add-task', {
 					method: 'POST', headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ blockerText })
+					body: JSON.stringify({ blockerId })
 				});
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error);
 				btn.textContent = 'Added';
 				await loadSuggestedTasks();
+				await loadSenderCards();
 			} catch (err) {
 				btn.disabled = false;
 				alert(err.message || 'Unable to add task.');
 			}
 		}
 
-		async function declineBlockerFromCard(address, blockerText) {
+		async function declineBlockerFromCard(address, blockerId) {
 			try {
 				const res = await fetch('/api/v1/lilypad/email/sender-cards/' + encodeURIComponent(address) + '/blockers/decline', {
 					method: 'POST', headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ blockerText })
+					body: JSON.stringify({ blockerId })
 				});
 				const result = await res.json();
 				if (!result.success) throw new Error(result.error);
