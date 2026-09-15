@@ -202,6 +202,19 @@ function lilypadNavRenderTopTabs (currentPage) {
  * it - not a permanent highlight box, that's reserved for :hover, which
  * can only be expressed via a real CSS rule, not the inline styles the
  * first pass used.
+ *
+ * Colors come from the topbar's OWN theme tokens (--topbar-item-*), the
+ * same ones .topbar-link (the notification bell, search, profile menu)
+ * already uses - not --bs-primary/--bs-card-bg. This app's theme
+ * customizer has an independent "Topbar Color" picker (light, dark, or
+ * one of several bold/gradient presets - see style.css's
+ * [data-topbar=...] blocks) whose colored/dark variants deliberately
+ * override --topbar-item-hover-color to a fixed light shade instead of
+ * the user's chosen accent color, since an arbitrary accent can be
+ * illegible against a bold topbar background. Hardcoding --bs-primary
+ * here would fight that and could land unreadable on those topbars;
+ * riding the same tokens every other topbar element uses means this
+ * always lands correctly whatever topbar color is selected.
  */
 function lilypadInjectTopTabStyles () {
   if (document.getElementById('lilypadTopTabStyles')) return
@@ -209,8 +222,8 @@ function lilypadInjectTopTabStyles () {
   style.id = 'lilypadTopTabStyles'
   style.textContent = `
     #lilypadTopTabsRow {
-      background: var(--bs-card-bg, #fff);
-      border: 1px solid var(--border-color);
+      background: var(--topbar-item-bg);
+      border: 1px solid var(--topbar-item-border);
       border-radius: 10px;
       padding: 4px 8px;
       margin: 8px 0 12px;
@@ -221,19 +234,19 @@ function lilypadInjectTopTabStyles () {
       padding: 8px 14px;
       border-radius: 8px 8px 0 0;
       border-bottom: 2px solid transparent;
-      color: var(--bs-secondary-color, #6c757d);
+      color: var(--topbar-item-color);
       font-size: 14px;
       text-decoration: none;
       transition: color .15s ease, background-color .15s ease, border-color .15s ease;
     }
     .lilypad-top-tab:hover {
-      color: var(--bs-primary);
-      background-color: rgba(var(--bs-primary-rgb), .06);
+      color: var(--topbar-item-hover-color);
+      background-color: var(--topbar-item-hover-bg);
     }
     .lilypad-top-tab.active {
-      color: var(--bs-primary);
+      color: var(--topbar-item-hover-color);
       font-weight: 700;
-      border-bottom-color: var(--bs-primary);
+      border-bottom-color: var(--topbar-item-hover-color);
     }
   `
   document.head.appendChild(style)
