@@ -17,7 +17,6 @@
  */
 
 const LILYPAD_NAV_SECTIONS = [
-  { type: 'single', href: 'dashboard.html', icon: 'ti-dashboard', label: 'Main Dashboard' },
   {
     type: 'group',
     icon: 'ti-ticket',
@@ -27,9 +26,13 @@ const LILYPAD_NAV_SECTIONS = [
     // lilypadNavAllPages() same as any other group, so these pages stay
     // fully covered by ALL_PAGES/ADMIN_ONLY_PAGES and the Roles &
     // Permissions checklist exactly as before - only where they render
-    // changed, not whether they're permission-gated.
+    // changed, not whether they're permission-gated. Dashboard leads the
+    // row (not the sidebar) on purpose - landing there with its tab
+    // already showing active is what makes the row's purpose obvious on
+    // first login, instead of a row of tabs nothing points to.
     renderAs: 'topTabs',
     items: [
+      { href: 'dashboard.html', icon: 'ti-dashboard', label: 'Dashboard' },
       { href: 'tickets.html', icon: 'ti-ticket', label: 'Ticket Operations' },
       { href: 'tasks.html', icon: 'ti-list-check', label: 'Task Manager' },
       { href: 'calendar.html', icon: 'ti-calendar', label: 'Calendar' },
@@ -175,24 +178,65 @@ function lilypadRenderSidebarNav () {
  * The "Operations" group (renderAs: 'topTabs' above) renders here instead
  * of the sidebar - the pages every role uses daily, one click away below
  * the topbar's search bar rather than buried in a collapsible submenu.
+ * Uses a real injected stylesheet (lilypadInjectTopTabStyles) rather than
+ * inline styles so :hover can actually be expressed in CSS.
  */
 function lilypadNavRenderTopTabs (currentPage) {
   const section = LILYPAD_NAV_SECTIONS.find((s) => s.renderAs === 'topTabs')
   if (!section) return ''
 
-  // Styled with explicit inline color/border rather than relying on
-  // Bootstrap's nav-underline default (--bs-emphasis-color, a near-black
-  // that doesn't read as "branded") - the active tab should visibly use
-  // the same primary blue as every other active/selected state in the app.
   const tabsHtml = section.items.map((item) => {
     const isActive = item.href === currentPage
-    const style = isActive
-      ? 'color:var(--bs-primary); border-bottom:3px solid var(--bs-primary); font-weight:700;'
-      : 'color:var(--bs-secondary-color, #6c757d); border-bottom:3px solid transparent;'
-    return `<a href="${item.href}" class="nav-link d-flex align-items-center gap-2 px-1 pb-2" data-lilypad-top-tab="${item.href}" style="${style}"><i class="ti ${item.icon} fs-16"></i><span>${item.label}</span></a>`
+    const cls = 'lilypad-top-tab' + (isActive ? ' active' : '')
+    return `<a href="${item.href}" class="${cls}" data-lilypad-top-tab="${item.href}"><i class="ti ${item.icon} fs-16"></i><span>${item.label}</span></a>`
   }).join('\n')
 
-  return `<div class="nav gap-4 flex-wrap fs-14" id="lilypadTopTabsRow" style="padding: 4px 0 0;">${tabsHtml}</div>`
+  return `<div class="d-flex flex-wrap" id="lilypadTopTabsRow">${tabsHtml}</div>`
+}
+
+/**
+ * One-time stylesheet for the tab row - a bordered card (var(--bs-card-bg)/
+ * var(--border-color), the same tokens every .card in the app already
+ * uses, so this adapts to dark mode for free) holding tabs whose active
+ * state is a bold, colored label with a short underline directly under
+ * it - not a permanent highlight box, that's reserved for :hover, which
+ * can only be expressed via a real CSS rule, not the inline styles the
+ * first pass used.
+ */
+function lilypadInjectTopTabStyles () {
+  if (document.getElementById('lilypadTopTabStyles')) return
+  const style = document.createElement('style')
+  style.id = 'lilypadTopTabStyles'
+  style.textContent = `
+    #lilypadTopTabsRow {
+      background: var(--bs-card-bg, #fff);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 4px 8px;
+      margin: 8px 0 12px;
+      gap: 2px;
+    }
+    .lilypad-top-tab {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px;
+      border-radius: 8px 8px 0 0;
+      border-bottom: 2px solid transparent;
+      color: var(--bs-secondary-color, #6c757d);
+      font-size: 14px;
+      text-decoration: none;
+      transition: color .15s ease, background-color .15s ease, border-color .15s ease;
+    }
+    .lilypad-top-tab:hover {
+      color: var(--bs-primary);
+      background-color: rgba(var(--bs-primary-rgb), .06);
+    }
+    .lilypad-top-tab.active {
+      color: var(--bs-primary);
+      font-weight: 700;
+      border-bottom-color: var(--bs-primary);
+    }
+  `
+  document.head.appendChild(style)
 }
 
 /**
@@ -207,6 +251,7 @@ function lilypadInjectTopTabs () {
   if (!header) return
   const html = lilypadNavRenderTopTabs(lilypadNavCurrentPage())
   if (!html) return
+  lilypadInjectTopTabStyles()
   const wrapper = document.createElement('div')
   wrapper.innerHTML = html
   header.appendChild(wrapper.firstElementChild)
