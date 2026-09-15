@@ -8,9 +8,11 @@
 const express = require('express')
 const router = express.Router()
 const controllers = require('../controllers')
+const { requireAdminApi } = require('../middleware/lilypadAuth')
 
 module.exports = function () {
   router.post('/integrations/read-ai/webhook', controllers.readAi.webhook)
+  router.get('/integrations/read-ai/events', requireAdminApi, controllers.readAi.listEvents)
 
   return router
 }
