@@ -31,4 +31,21 @@ lilypadMeetingNotesController.getForEvent = async function (req, res) {
   }
 }
 
+/**
+ * GET /api/v1/lilypad/meeting-notes
+ * Admin-only, temporary - lets recent notes (including unowned ones,
+ * e.g. a test payload whose email matches no real account) be checked
+ * directly while confirming the pipeline works, without needing a
+ * matched calendar event to look one up via getForEvent. Safe to
+ * remove once this integration is trusted.
+ */
+lilypadMeetingNotesController.listRecent = async function (req, res) {
+  try {
+    const notes = await LilyPadMeetingNote.find({}).sort({ createdAt: -1 }).limit(20)
+    return res.status(200).json({ success: true, data: notes })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
 module.exports = lilypadMeetingNotesController
