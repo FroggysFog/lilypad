@@ -21,6 +21,7 @@ const LilyPadTicket = require('../../models/lilypadTicket')
 const LilyPadCustomerProfile = require('../../models/lilypadCustomerProfile')
 const { normalizeCompanyName, normalizeDomain, isNameMatch } = require('./fuzzyMatchService')
 const { summarizeProductMix } = require('./productCategoryService')
+const { computeAccountTier } = require('./accountTierService')
 const winston = require('../../logger')
 
 const ACTIVE_WINDOW_DAYS = 180
@@ -58,6 +59,7 @@ async function aggregateOrderStats (accountSourceIds) {
         _id: '$accountId',
         totalOrders: { $sum: 1 },
         lifetimeRevenue: { $sum: '$grandTotal' },
+        maxOrderAmount: { $max: '$grandTotal' },
         openBalanceDue: { $sum: '$totalDue' },
         firstOrderDate: { $min: '$effectiveDateParsed' },
         lastOrderDate: { $max: '$effectiveDateParsed' },
@@ -69,6 +71,7 @@ async function aggregateOrderStats (accountSourceIds) {
   return new Map(rows.map((row) => [row._id, {
     totalOrders: row.totalOrders,
     lifetimeRevenue: row.lifetimeRevenue || 0,
+    maxOrderAmount: row.maxOrderAmount || 0,
     openBalanceDue: row.openBalanceDue || 0,
     firstOrderDate: row.firstOrderDate,
     lastOrderDate: row.lastOrderDate,
@@ -208,19 +211,21 @@ function computeEngagementStatus ({ hasOrderHistory, daysSinceLastOrder, hasOpen
  */
 async function rebuildCustomerProfiles (accountFilter) {
   const accounts = await LilyPadSalesforceAccount.find(accountFilter || {})
-    .select('_id name website industry sourceRecordId')
+    .select('_id name website industry sourceRecordId ownerName ownerSourceId')
     .lean()
 
   if (!accounts.length) return { profilesBuilt: 0 }
 
   const accountSourceIds = accounts.map((a) => a.sourceRecordId).filter(Boolean)
 
-  const [orderStatsByAccountId, oppStatsByAccountId, leadIndex, cartOrderIndex, ticketIndex] = await Promise.all([
+  const [orderStatsByAccountId, oppStatsByAccountId, leadIndex, cartOrderIndex, ticketIndex, priorTierByAccountId] = await Promise.all([
     aggregateOrderStats(accountSourceIds),
     aggregateOpportunityStats(accountSourceIds),
     buildLeadIndex(),
     buildCartOrderIndex(),
-    buildTicketIndex()
+    buildTicketIndex(),
+    LilyPadCustomerProfile.find({}).select('salesforceAccountId qualification.firstQualifiedAt').lean()
+      .then((rows) => new Map(rows.map((r) => [String(r.salesforceAccountId), r.qualification && r.qualification.firstQualifiedAt])))
   ])
 
   const bulkOps = []
@@ -237,6 +242,7 @@ async function rebuildCustomerProfiles (accountFilter) {
     const oppStats = oppStatsByAccountId.get(account.sourceRecordId) || { openCount: 0, closedWonCount: 0, closedLostCount: 0, totalWonAmount: 0, lastCloseDate: null }
 
     const cartRevenue = cartMatch.records.reduce((sum, o) => sum + (o.grandTotal || 0), 0)
+    const cartMaxOrderAmount = cartMatch.records.reduce((max, o) => Math.max(max, o.grandTotal || 0), 0)
     const cartLastDate = latestOf(cartMatch.records.map((o) => o.orderedAt))
     const cartItems = cartMatch.records.flatMap((o) => o.items || [])
 
@@ -261,6 +267,15 @@ async function rebuildCustomerProfiles (accountFilter) {
     // domain, a rep should still see "fuzzy" so they know to sanity-check.
     const confidences = [leadMatch, cartMatch, ticketMatch].filter((m) => m.records.length).map((m) => m.confidence)
     const matchConfidence = confidences.includes('fuzzy_name') ? 'fuzzy_name' : (confidences.includes('domain') ? 'domain' : 'none')
+
+    const { accountTier, qualification } = computeAccountTier({
+      totalSpend: orderStats.lifetimeRevenue + cartRevenue,
+      orderCount: orderStats.totalOrders + cartMatch.records.length,
+      maxSingleOrderAmount: Math.max(orderStats.maxOrderAmount || 0, cartMaxOrderAmount),
+      daysSinceLastOrder,
+      hasActiveRep: Boolean(account.ownerName || account.ownerSourceId),
+      previousFirstQualifiedAt: priorTierByAccountId.get(String(account._id)) || null
+    })
 
     bulkOps.push({
       updateOne: {
@@ -302,6 +317,8 @@ async function rebuildCustomerProfiles (accountFilter) {
             daysSinceLastOrder,
             daysSinceLastContact,
             engagementStatus,
+            accountTier,
+            qualification,
             lastResolvedAt: new Date()
           }
         },

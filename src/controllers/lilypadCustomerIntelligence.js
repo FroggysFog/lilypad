@@ -1,8 +1,11 @@
 const mongoose = require('mongoose')
 const LilyPadCustomerProfile = require('../models/lilypadCustomerProfile')
+const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
 const { rebuildCustomerProfiles } = require('../services/customerIntelligence/entityResolutionService')
 const { detectSiblingGroups } = require('../services/customerIntelligence/siblingDetectionService')
 const { generateRecommendations, isRecommendationConfigured } = require('../services/customerIntelligence/recommendationService')
+const { resolveOwnedSalesforceAccountIds } = require('../services/repMatchingService')
+const { updateSalesforceRecord } = require('../services/salesforceService')
 const winston = require('../logger')
 
 const controller = {}
@@ -115,6 +118,9 @@ controller.getProfiles = async function (req, res) {
     if (req.query.minScore) {
       query['recommendation.score'] = { $gte: Number(req.query.minScore) }
     }
+    if (req.query.accountTier && LilyPadCustomerProfile.ACCOUNT_TIERS.includes(req.query.accountTier)) {
+      query.accountTier = req.query.accountTier
+    }
 
     const page = Math.max(1, Number(req.query.page) || 1)
     const pageSize = Math.min(200, Math.max(1, Number(req.query.pageSize) || 50))
@@ -153,6 +159,99 @@ controller.getProfileDetail = async function (req, res) {
     if (!profile) return res.status(404).json({ success: false, error: 'Profile not found.' })
 
     return res.status(200).json({ success: true, data: profile })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/customer-intelligence/my-managed
+ * A rep's own qualified, worked accounts - accountTier 'managed' AND
+ * owned by this rep in Salesforce (same ownership join the rest of the
+ * app's "My Accounts" scoping already uses).
+ */
+controller.getMyManaged = async function (req, res) {
+  try {
+    const ownedIds = await resolveOwnedSalesforceAccountIds(req.user)
+    const profiles = await LilyPadCustomerProfile.find({
+      accountTier: 'managed',
+      salesforceAccountId: { $in: ownedIds }
+    })
+      .sort({ 'qualification.isDormant': -1, 'orderStats.lifetimeRevenue': -1 })
+      .populate('salesforceAccountId', 'name ownerName phone website')
+
+    return res.status(200).json({ success: true, data: profiles })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/customer-intelligence/territory-pool
+ * Qualifying accounts with no Salesforce Owner yet - open for any rep
+ * to claim. No territory/state mapping exists in this app today, so
+ * this is a shared pool rather than a state-filtered one.
+ */
+controller.getTerritoryPool = async function (req, res) {
+  try {
+    const profiles = await LilyPadCustomerProfile.find({ accountTier: 'available_pool' })
+      .sort({ 'qualification.firstQualifiedAt': 1 })
+      .populate('salesforceAccountId', 'name phone website industry')
+
+    return res.status(200).json({ success: true, data: profiles })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/customer-intelligence/profiles/:id/claim
+ * Assigns an available_pool account to the requesting rep by writing
+ * Salesforce's real Account Owner field - the same field
+ * repMatchingService.js already reads for every other "My Accounts"
+ * view - rather than a separate LilyPad-only assignment field that
+ * would compete with it. Locks the profile to 'managed' first (atomic
+ * findOneAndUpdate against accountTier: 'available_pool', so two reps
+ * can't both claim it), then pushes the Salesforce write; on failure,
+ * the lock is rolled back so the account returns to the pool.
+ */
+controller.claimAccount = async function (req, res) {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, error: 'Invalid profile id.' })
+    }
+    if (!req.user.salesforceUserId) {
+      return res.status(400).json({ success: false, error: 'Your account has no linked Salesforce User Id. An admin needs to set one on your LilyPad profile before you can claim accounts.' })
+    }
+
+    const profile = await LilyPadCustomerProfile.findOneAndUpdate(
+      { _id: req.params.id, accountTier: 'available_pool' },
+      { $set: { accountTier: 'managed' } }
+    )
+    if (!profile) {
+      return res.status(409).json({ success: false, error: 'This account is not currently available to claim (already claimed, or not qualified).' })
+    }
+
+    const account = await LilyPadSalesforceAccount.findById(profile.salesforceAccountId)
+    if (!account || !account.sourceRecordId) {
+      await LilyPadCustomerProfile.updateOne({ _id: profile._id }, { $set: { accountTier: 'available_pool' } })
+      return res.status(500).json({ success: false, error: 'This profile has no linked Salesforce account record.' })
+    }
+
+    try {
+      await updateSalesforceRecord('Account', account.sourceRecordId, { OwnerId: req.user.salesforceUserId })
+    } catch (sfError) {
+      // Roll back the lock - the account goes back to the pool rather
+      // than sitting silently as 'managed' with no real Salesforce Owner.
+      await LilyPadCustomerProfile.updateOne({ _id: profile._id }, { $set: { accountTier: 'available_pool' } })
+      return res.status(502).json({ success: false, error: sfError.message })
+    }
+
+    account.ownerName = req.user.fullname
+    account.ownerSourceId = req.user.salesforceUserId
+    await account.save()
+
+    return res.status(200).json({ success: true, data: { profileId: profile._id, accountTier: 'managed' } })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

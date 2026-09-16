@@ -186,6 +186,14 @@
 								</select>
 							</div>
 							<div class="col-md-2">
+								<select class="form-select form-select-sm" id="ciTierFilter" onchange="goToPage(1)">
+									<option value="">Any Tier</option>
+									<option value="available_pool">Available Pool</option>
+									<option value="managed">Managed</option>
+									<option value="self_serve">Self-Serve</option>
+								</select>
+							</div>
+							<div class="col-md-2">
 								<select class="form-select form-select-sm" id="ciSortKey" onchange="goToPage(1)">
 									<option value="recommendation.score">Sort: AI Score</option>
 									<option value="daysSinceLastOrder">Sort: Days Since Order</option>
@@ -209,7 +217,9 @@
 									<th>Open Opps</th>
 									<th>Product Mix</th>
 									<th>Chain</th>
+									<th>Tier</th>
 									<th style="min-width: 260px;">AI Score & Reason</th>
+									<th></th>
 								</tr>
 							</thead>
 							<tbody id="profilesTableBody"></tbody>
@@ -257,6 +267,14 @@
 		const STATUS_LABELS = {
 			active: 'Active', dormant: 'Dormant', churned: 'Churned',
 			lead_only: 'Lead Only', never_purchased: 'Never Purchased'
+		};
+		const TIER_BADGES = {
+			available_pool: 'bg-soft-warning text-warning',
+			managed: 'bg-soft-success text-success',
+			self_serve: 'bg-soft-secondary text-secondary'
+		};
+		const TIER_LABELS = {
+			available_pool: 'Available Pool', managed: 'Managed', self_serve: 'Self-Serve'
 		};
 
 		let PROFILES = [];
@@ -360,6 +378,8 @@
 				if (status) params.set('engagementStatus', status);
 				const siblingsOnly = document.getElementById('ciSiblingFilter').value;
 				if (siblingsOnly) params.set('siblingsOnly', siblingsOnly);
+				const tier = document.getElementById('ciTierFilter').value;
+				if (tier) params.set('accountTier', tier);
 
 				const res = await fetch('/api/v1/lilypad/customer-intelligence/profiles?' + params.toString());
 				const result = await res.json();
@@ -405,7 +425,7 @@
 		function renderTable() {
 			const tbody = document.getElementById('profilesTableBody');
 			if (!PROFILES.length) {
-				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No profiles yet. Click "Rebuild Profiles" to resolve accounts against orders, opportunities, and leads.</td></tr>';
+				tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-4">No profiles yet. Click "Rebuild Profiles" to resolve accounts against orders, opportunities, and leads.</td></tr>';
 				return;
 			}
 
@@ -437,9 +457,23 @@
 					<td>${p.opportunityStats ? p.opportunityStats.openCount : 0}</td>
 					<td>${productMix}</td>
 					<td>${chainBadge}</td>
+					<td><span class="badge ${TIER_BADGES[p.accountTier] || TIER_BADGES.self_serve} fs-12 rounded-pill fw-semibold">${TIER_LABELS[p.accountTier] || p.accountTier}</span>${p.qualification && p.qualification.isDormant ? ' <span class="badge bg-soft-danger text-danger fs-10 rounded-pill fw-semibold" title="No orders in ~18 months">Dormant</span>' : ''}</td>
 					<td class="ci-reason-cell fs-12">${scoreBar}${escapeHtml(reason)}</td>
+					<td>${p.accountTier === 'available_pool' ? `<button type="button" class="btn btn-primary btn-sm" onclick="claimProfile('${p._id}')">Claim</button>` : ''}</td>
 				</tr>`;
 			}).join('');
+		}
+
+		async function claimProfile(id) {
+			if (!confirm('Claim this account? This sets you as the Salesforce Account Owner.')) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/customer-intelligence/profiles/' + id + '/claim', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to claim this account.');
+				loadProfiles();
+			} catch (err) {
+				alert(err.message || 'Unable to claim this account.');
+			}
 		}
 
 		document.addEventListener('DOMContentLoaded', async () => {

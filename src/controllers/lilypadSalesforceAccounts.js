@@ -4,6 +4,9 @@
 
 const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
 const LilyPadCustomer = require('../models/lilypadCustomer')
+const LilyPadOrder = require('../models/lilypadOrder')
+const LilyPadOpportunity = require('../models/lilypadOpportunity')
+const LilyPadCustomerProfile = require('../models/lilypadCustomerProfile')
 const { syncSalesforceAccounts } = require('../services/salesforceAccountSyncService')
 const { normalizeDomain, normalizeCompanyName, isNameMatch } = require('../services/customerIntelligence/fuzzyMatchService')
 const { getSalesforceAccountOwnerFilter } = require('../services/repMatchingService')
@@ -94,13 +97,31 @@ controller.getAccountDetail = async function (req, res) {
       return res.status(404).json({ success: false, error: 'Account not found' })
     }
 
-    const { matches, matchType } = await findMatchedCustomersForAccount(account)
+    const [{ matches, matchType }, orders, opportunities, profile] = await Promise.all([
+      findMatchedCustomersForAccount(account),
+      LilyPadOrder.find({ accountId: account.sourceRecordId })
+        .select('orderNumber status effectiveDate grandTotal totalDue')
+        .sort({ effectiveDate: -1 })
+        .limit(10)
+        .lean(),
+      LilyPadOpportunity.find({ accountId: account.sourceRecordId })
+        .select('name stageName amount closeDate isClosed isWon')
+        .sort({ closeDate: -1 })
+        .limit(10)
+        .lean(),
+      LilyPadCustomerProfile.findOne({ salesforceAccountId: account._id })
+        .select('accountTier qualification engagementStatus daysSinceLastOrder orderStats opportunityStats cartOrderStats ticketStats recommendation')
+        .lean()
+    ])
 
     return res.status(200).json({
       success: true,
       data: account,
       customers: matches,
-      customerMatchType: matchType
+      customerMatchType: matchType,
+      orders,
+      opportunities,
+      profile: profile || null
     })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })

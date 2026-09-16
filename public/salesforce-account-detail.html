@@ -108,26 +108,92 @@
 					<a href="salesforce-accounts.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="ti ti-arrow-left me-1"></i> Back to Accounts</a>
 				</div>
 
-				<div id="acctDetailBody"></div>
+				<div class="row g-3" id="acctDetailBody" style="display:none;">
+					<!-- Left column: identity, quick actions, key information -->
+					<div class="col-lg-3">
+						<div class="card border-0 shadow-sm rounded-3 mb-3">
+							<div class="card-body">
+								<div class="d-flex align-items-center gap-2 mb-3">
+									<div class="rounded-circle bg-soft-primary text-primary d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width:44px;height:44px;font-size:18px;" id="acctAvatarInitial">?</div>
+									<div class="overflow-hidden">
+										<div class="fw-bold text-dark text-truncate" id="acctLeftName">—</div>
+										<a href="#" target="_blank" rel="noopener" class="fs-12 text-decoration-none d-block text-truncate" id="acctWebsiteLink" style="display:none;"></a>
+									</div>
+								</div>
+								<div class="d-flex gap-2 flex-wrap" id="acctQuickActions"></div>
+							</div>
+						</div>
 
-				<div class="card border-0 shadow-sm rounded-3 mb-4" id="acctCustomersCard" style="display:none;">
-					<div class="card-header bg-white border-0 pb-0 d-flex align-items-center justify-content-between flex-wrap gap-2">
-						<h6 class="fw-bold mb-0"><i class="ti ti-users-group me-1 text-primary"></i> Individuals at this Account</h6>
-						<span class="badge fs-11 rounded-pill fw-semibold" id="acctCustomersMatchBadge"></span>
+						<div class="card border-0 shadow-sm rounded-3 mb-3">
+							<div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+								<button class="btn btn-link p-0 text-decoration-none fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#acctKeyInfoBody">
+									<i class="ti ti-chevron-down me-1"></i> Key Information
+								</button>
+								<div class="dropdown">
+									<button class="btn btn-sm btn-light rounded-pill px-2" data-bs-toggle="dropdown"><i class="ti ti-dots"></i></button>
+									<ul class="dropdown-menu dropdown-menu-end">
+										<li><a class="dropdown-item" href="javascript:void(0)" onclick="triggerAccountResync()"><i class="ti ti-refresh me-1"></i> Re-sync from Salesforce</a></li>
+									</ul>
+								</div>
+							</div>
+							<div class="collapse show" id="acctKeyInfoBody">
+								<div class="card-body pt-0" id="acctKeyInfoFields"></div>
+							</div>
+						</div>
 					</div>
-					<div class="table-responsive">
-						<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
-							<thead class="table-light">
-								<tr>
-									<th>Name</th>
-									<th>Email</th>
-									<th>Phone</th>
-									<th>Lead Status</th>
-									<th>Last Activity</th>
-								</tr>
-							</thead>
-							<tbody id="acctCustomersTableBody"></tbody>
-						</table>
+
+					<!-- Center column: tabbed overview / orders / opportunities -->
+					<div class="col-lg-6">
+						<ul class="nav nav-tabs mb-3">
+							<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#acctTabOverview" type="button">Overview</button></li>
+							<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#acctTabOrders" type="button">Orders <span class="badge bg-soft-secondary text-secondary rounded-pill fs-10 ms-1" id="acctOrdersTabCount"></span></button></li>
+							<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#acctTabOpps" type="button">Opportunities <span class="badge bg-soft-secondary text-secondary rounded-pill fs-10 ms-1" id="acctOppsTabCount"></span></button></li>
+						</ul>
+						<div class="tab-content">
+							<div class="tab-pane fade show active" id="acctTabOverview">
+								<div id="acctOverviewBody"></div>
+							</div>
+							<div class="tab-pane fade" id="acctTabOrders">
+								<div class="card border-0 shadow-sm rounded-3">
+									<div class="table-responsive">
+										<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
+											<thead class="table-light"><tr><th>Order #</th><th>Status</th><th>Date</th><th>Total</th><th>Due</th></tr></thead>
+											<tbody id="acctOrdersTableBody"></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="tab-pane fade" id="acctTabOpps">
+								<div class="card border-0 shadow-sm rounded-3">
+									<div class="table-responsive">
+										<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
+											<thead class="table-light"><tr><th>Name</th><th>Stage</th><th>Amount</th><th>Close Date</th></tr></thead>
+											<tbody id="acctOppsTableBody"></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Right column: related records rail -->
+					<div class="col-lg-3">
+						<div class="card border-0 shadow-sm rounded-3 mb-3">
+							<div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+								<h6 class="fw-bold mb-0">Individuals <span class="text-muted fw-normal fs-12" id="acctCustomersCount"></span></h6>
+								<span class="badge fs-10 rounded-pill fw-semibold" id="acctCustomersMatchBadge"></span>
+							</div>
+							<div id="acctCustomersList" class="list-group list-group-flush" style="max-height:320px; overflow-y:auto;"></div>
+						</div>
+
+						<div class="card border-0 shadow-sm rounded-3 mb-3">
+							<div class="card-body">
+								<h6 class="fw-bold mb-3">Related Records</h6>
+								<div class="d-flex justify-content-between fs-13 mb-2"><span class="text-muted">Cart.com Orders</span><span class="fw-semibold" id="acctCartOrderCount">—</span></div>
+								<div class="d-flex justify-content-between fs-13 mb-2"><span class="text-muted">Cart.com Revenue</span><span class="fw-semibold" id="acctCartRevenue">—</span></div>
+								<div class="d-flex justify-content-between fs-13"><span class="text-muted">Support Tickets</span><span class="fw-semibold" id="acctTicketCount">—</span></div>
+							</div>
+						</div>
 					</div>
 				</div>
 
@@ -168,11 +234,11 @@
 			window.location.href = 'login.html';
 		}
 
-		function field(label, value) {
+		function fieldRow(label, value) {
 			return `
-				<div class="col-md-4 mb-3">
-					<span class="fs-12 text-muted d-block text-uppercase fw-semibold">${escapeHtml(label)}</span>
-					<strong class="text-dark">${value === null || value === undefined || value === '' ? '—' : escapeHtml(value)}</strong>
+				<div class="mb-2">
+					<span class="fs-11 text-muted d-block text-uppercase fw-semibold">${escapeHtml(label)}</span>
+					<span class="text-dark fs-13">${value === null || value === undefined || value === '' ? '—' : escapeHtml(value)}</span>
 				</div>
 			`;
 		}
@@ -182,8 +248,27 @@
 			return [addr.street, addr.city, addr.state, addr.postalCode, addr.country].filter(Boolean).join(', ');
 		}
 
+		const ENGAGEMENT_BADGES = {
+			active: 'bg-soft-success text-success', dormant: 'bg-soft-warning text-warning',
+			churned: 'bg-soft-danger text-danger', lead_only: 'bg-soft-secondary text-secondary',
+			never_purchased: 'bg-soft-secondary text-secondary'
+		};
+		const TIER_BADGES = {
+			available_pool: 'bg-soft-warning text-warning', managed: 'bg-soft-success text-success',
+			self_serve: 'bg-soft-secondary text-secondary'
+		};
+		const TIER_LABELS = { available_pool: 'Available Pool', managed: 'Managed', self_serve: 'Self-Serve' };
+		const MATCH_TYPE_LABELS = {
+			domain: { text: 'By email domain', cls: 'bg-soft-success text-success' },
+			fuzzy_name: { text: 'Approximate match', cls: 'bg-soft-warning text-warning' },
+			none: { text: '', cls: '' }
+		};
+
+		let CURRENT_ACCOUNT_ID = null;
+
 		async function loadAccountDetail() {
 			const id = new URLSearchParams(window.location.search).get('id');
+			CURRENT_ACCOUNT_ID = id;
 			if (!id) {
 				document.getElementById('acctDetailName').textContent = 'No account specified';
 				return;
@@ -197,35 +282,163 @@
 				const a = result.data;
 				document.getElementById('acctDetailName').textContent = a.name || '(no name)';
 				document.getElementById('acctDetailIndustry').textContent = a.industry || '';
+				document.getElementById('acctDetailBody').style.display = '';
 
-				document.getElementById('acctDetailBody').innerHTML = `
-					<div class="card border-0 shadow-sm rounded-3 p-4 mb-3">
-						<div class="row">
-							${field('Type', a.type)}
-							${field('Owner', a.ownerName)}
-							${field('Phone', a.phone)}
-							${field('Website', a.website)}
-							${field('Annual Revenue', a.annualRevenue ? formatCurrency(a.annualRevenue) : '')}
-							${field('Employees', a.numberOfEmployees || '')}
-							${field('Billing Address', formatAddress(a.billingAddress))}
-							${field('Shipping Address', formatAddress(a.shippingAddress))}
-						</div>
-						${a.description ? `<div class="mt-2"><span class="fs-12 text-muted d-block text-uppercase fw-semibold mb-1">Description</span><p class="text-dark mb-0">${escapeHtml(a.description)}</p></div>` : ''}
-					</div>
-				`;
-
+				renderIdentityAndActions(a);
+				renderKeyInfo(a);
+				renderOverview(a, result.profile);
+				renderOrders(result.orders || []);
+				renderOpportunities(result.opportunities || []);
 				renderMatchedCustomers(result.customers || [], result.customerMatchType || 'none');
+				renderRelatedStats(result.profile);
 			} catch (err) {
 				document.getElementById('acctDetailName').textContent = 'Unable to load account';
-				document.getElementById('acctDetailBody').innerHTML = '<p class="text-danger">' + escapeHtml(err.message) + '</p>';
+				document.getElementById('acctDetailBody').innerHTML = '<p class="text-danger p-3">' + escapeHtml(err.message) + '</p>';
+				document.getElementById('acctDetailBody').style.display = '';
 			}
 		}
 
-		const MATCH_TYPE_LABELS = {
-			domain: { text: 'Matched by email domain', cls: 'bg-soft-success text-success' },
-			fuzzy_name: { text: 'Matched by company name (approximate)', cls: 'bg-soft-warning text-warning' },
-			none: { text: '', cls: '' }
-		};
+		function renderIdentityAndActions(a) {
+			document.getElementById('acctAvatarInitial').textContent = (a.name || '?').trim().charAt(0).toUpperCase();
+			document.getElementById('acctLeftName').textContent = a.name || '(no name)';
+
+			const websiteLink = document.getElementById('acctWebsiteLink');
+			if (a.website) {
+				const href = /^https?:\/\//i.test(a.website) ? a.website : 'https://' + a.website;
+				websiteLink.href = href;
+				websiteLink.textContent = a.website;
+				websiteLink.style.display = '';
+			} else {
+				websiteLink.style.display = 'none';
+			}
+
+			const actions = [];
+			if (a.phone) actions.push(`<a href="tel:${escapeHtml(a.phone)}" class="btn btn-light btn-sm rounded-pill px-3"><i class="ti ti-phone me-1"></i>Call</a>`);
+			if (a.website) actions.push(`<a href="${/^https?:\/\//i.test(a.website) ? a.website : 'https://' + a.website}" target="_blank" rel="noopener" class="btn btn-light btn-sm rounded-pill px-3"><i class="ti ti-external-link me-1"></i>Website</a>`);
+			actions.push(`<a href="tickets.html?action=new" class="btn btn-light btn-sm rounded-pill px-3"><i class="ti ti-ticket me-1"></i>New Ticket</a>`);
+			document.getElementById('acctQuickActions').innerHTML = actions.join('');
+		}
+
+		function renderKeyInfo(a) {
+			document.getElementById('acctKeyInfoFields').innerHTML = `
+				${fieldRow('Type', a.type)}
+				${fieldRow('Owner', a.ownerName)}
+				${fieldRow('Phone', a.phone)}
+				${fieldRow('Annual Revenue', a.annualRevenue ? formatCurrency(a.annualRevenue) : '')}
+				${fieldRow('Employees', a.numberOfEmployees || '')}
+				${fieldRow('Billing Address', formatAddress(a.billingAddress))}
+				${fieldRow('Shipping Address', formatAddress(a.shippingAddress))}
+			`;
+		}
+
+		/**
+		 * Everything here is real, already-computed data from
+		 * LilyPadCustomerProfile (entityResolutionService.js's rebuild) -
+		 * account tier, engagement status, and the AI recommendation score/
+		 * reason - never anything generated fresh on page load. If no
+		 * profile has been resolved for this account yet, says so plainly
+		 * instead of showing blank/fabricated cards.
+		 */
+		function renderOverview(a, profile) {
+			const el = document.getElementById('acctOverviewBody');
+			const descriptionCard = a.description
+				? `<div class="card border-0 shadow-sm rounded-3 mb-3"><div class="card-body"><h6 class="fw-bold mb-2">Description</h6><p class="text-dark mb-0 fs-13">${escapeHtml(a.description)}</p></div></div>`
+				: '';
+
+			if (!profile) {
+				el.innerHTML = `
+					<div class="card border-0 shadow-sm rounded-3 mb-3"><div class="card-body text-center py-4">
+						<p class="text-muted mb-2 fs-13">No resolved Customer Intelligence profile yet for this account.</p>
+						<a href="customer-intelligence.html" class="btn btn-primary btn-sm rounded-pill px-3">Go rebuild profiles</a>
+					</div></div>
+					${descriptionCard}
+				`;
+				return;
+			}
+
+			const tier = profile.accountTier || 'self_serve';
+			const claimBtn = tier === 'available_pool'
+				? `<button type="button" class="btn btn-primary btn-sm rounded-pill px-3 ms-2" onclick="claimThisAccount('${profile._id}')">Claim Account</button>`
+				: '';
+			const dormantBadge = (profile.qualification && profile.qualification.isDormant)
+				? '<span class="badge bg-soft-danger text-danger fs-12 rounded-pill fw-semibold" title="No orders in ~18 months">Dormant</span>'
+				: '';
+
+			const score = profile.recommendation && profile.recommendation.score != null ? profile.recommendation.score : null;
+			const reason = profile.recommendation && profile.recommendation.reason ? profile.recommendation.reason : '';
+			const generatedAt = profile.recommendation && profile.recommendation.generatedAt ? new Date(profile.recommendation.generatedAt).toLocaleDateString() : null;
+
+			el.innerHTML = `
+				<div class="card border-0 shadow-sm rounded-3 mb-3">
+					<div class="card-body">
+						<div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+							<span class="badge ${ENGAGEMENT_BADGES[profile.engagementStatus] || ENGAGEMENT_BADGES.never_purchased} fs-12 rounded-pill fw-semibold">${(profile.engagementStatus || '').replace('_', ' ')}</span>
+							<span class="badge ${TIER_BADGES[tier]} fs-12 rounded-pill fw-semibold">${TIER_LABELS[tier]}</span>
+							${dormantBadge}
+							${claimBtn}
+						</div>
+						<div class="row g-3">
+							<div class="col-6 col-md-4"><span class="fs-11 text-muted d-block text-uppercase fw-semibold">Lifetime Revenue</span><span class="fw-bold text-dark">${formatCurrency(profile.orderStats ? profile.orderStats.lifetimeRevenue : 0)}</span></div>
+							<div class="col-6 col-md-4"><span class="fs-11 text-muted d-block text-uppercase fw-semibold">Total Orders</span><span class="fw-bold text-dark">${profile.orderStats ? profile.orderStats.totalOrders : 0}</span></div>
+							<div class="col-6 col-md-4"><span class="fs-11 text-muted d-block text-uppercase fw-semibold">Days Since Order</span><span class="fw-bold text-dark">${profile.daysSinceLastOrder != null ? profile.daysSinceLastOrder : '—'}</span></div>
+						</div>
+					</div>
+				</div>
+
+				${score != null ? `
+				<div class="card border-0 shadow-sm rounded-3 mb-3">
+					<div class="card-body">
+						<div class="d-flex align-items-center justify-content-between mb-2">
+							<h6 class="fw-bold mb-0">AI Recommendation</h6>
+							<span class="badge bg-soft-danger text-danger fs-10 rounded-pill fw-bold px-2">AI</span>
+						</div>
+						${generatedAt ? `<div class="fs-11 text-muted mb-2">Generated ${generatedAt}</div>` : ''}
+						<div class="d-flex align-items-center gap-2 mb-2">
+							<div class="progress flex-grow-1" style="height:6px; max-width:140px;"><div class="progress-bar ${score >= 70 ? 'bg-danger' : score >= 40 ? 'bg-warning' : 'bg-secondary'}" style="width:${score}%"></div></div>
+							<span class="fs-13 fw-semibold">${score}</span>
+						</div>
+						<p class="fs-13 text-dark mb-0">${escapeHtml(reason)}</p>
+					</div>
+				</div>` : ''}
+
+				${descriptionCard}
+			`;
+		}
+
+		function renderOrders(orders) {
+			document.getElementById('acctOrdersTabCount').textContent = orders.length;
+			const tbody = document.getElementById('acctOrdersTableBody');
+			if (!orders.length) {
+				tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No orders found.</td></tr>';
+				return;
+			}
+			tbody.innerHTML = orders.map(o => `
+				<tr>
+					<td>${escapeHtml(o.orderNumber)}</td>
+					<td>${escapeHtml(o.status)}</td>
+					<td>${o.effectiveDate || '<span class="text-muted">—</span>'}</td>
+					<td>${formatCurrency(o.grandTotal)}</td>
+					<td>${o.totalDue ? formatCurrency(o.totalDue) : '<span class="text-muted">—</span>'}</td>
+				</tr>
+			`).join('');
+		}
+
+		function renderOpportunities(opportunities) {
+			document.getElementById('acctOppsTabCount').textContent = opportunities.length;
+			const tbody = document.getElementById('acctOppsTableBody');
+			if (!opportunities.length) {
+				tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No opportunities found.</td></tr>';
+				return;
+			}
+			tbody.innerHTML = opportunities.map(o => `
+				<tr>
+					<td>${escapeHtml(o.name)}</td>
+					<td>${escapeHtml(o.stageName)}</td>
+					<td>${formatCurrency(o.amount)}</td>
+					<td>${o.closeDate || '<span class="text-muted">—</span>'}</td>
+				</tr>
+			`).join('');
+		}
 
 		/**
 		 * Individual Customers (Leads) have no clean ID link to this Account -
@@ -235,27 +448,50 @@
 		 * they're an approximation, not a confirmed link.
 		 */
 		function renderMatchedCustomers(customers, matchType) {
-			const card = document.getElementById('acctCustomersCard');
-			if (!customers.length) {
-				card.style.display = 'none';
-				return;
-			}
-			card.style.display = '';
-
+			document.getElementById('acctCustomersCount').textContent = '(' + customers.length + ')';
 			const badge = document.getElementById('acctCustomersMatchBadge');
 			const label = MATCH_TYPE_LABELS[matchType] || MATCH_TYPE_LABELS.none;
 			badge.textContent = label.text;
-			badge.className = 'badge fs-11 rounded-pill fw-semibold ' + label.cls;
+			badge.className = 'badge fs-10 rounded-pill fw-semibold ' + label.cls;
 
-			document.getElementById('acctCustomersTableBody').innerHTML = customers.map(c => `
-				<tr>
-					<td><a href="customer-detail.html?id=${c._id}" class="fw-semibold text-decoration-none">${escapeHtml(c.name)}</a></td>
-					<td>${escapeHtml(c.email) || '<span class="text-muted">—</span>'}</td>
-					<td>${escapeHtml(c.phone) || '<span class="text-muted">—</span>'}</td>
-					<td>${escapeHtml(c.leadStatus) || '<span class="text-muted">—</span>'}</td>
-					<td>${c.lastActivityDate ? new Date(c.lastActivityDate).toLocaleDateString() : '<span class="text-muted">—</span>'}</td>
-				</tr>
+			const list = document.getElementById('acctCustomersList');
+			if (!customers.length) {
+				list.innerHTML = '<div class="text-center text-muted fs-13 py-3">No individuals matched.</div>';
+				return;
+			}
+			list.innerHTML = customers.map(c => `
+				<a href="customer-detail.html?id=${c._id}" class="list-group-item list-group-item-action border-0 px-3 py-2">
+					<div class="fw-semibold fs-13">${escapeHtml(c.name)}</div>
+					<div class="fs-12 text-muted">${escapeHtml(c.email) || escapeHtml(c.phone) || '—'}</div>
+				</a>
 			`).join('');
+		}
+
+		function renderRelatedStats(profile) {
+			document.getElementById('acctCartOrderCount').textContent = profile && profile.cartOrderStats ? profile.cartOrderStats.totalOrders : '—';
+			document.getElementById('acctCartRevenue').textContent = profile && profile.cartOrderStats ? formatCurrency(profile.cartOrderStats.lifetimeRevenue) : '—';
+			document.getElementById('acctTicketCount').textContent = profile && profile.ticketStats ? profile.ticketStats.totalTickets : '—';
+		}
+
+		async function claimThisAccount(profileId) {
+			if (!confirm('Claim this account? This sets you as the Salesforce Account Owner.')) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/customer-intelligence/profiles/' + profileId + '/claim', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Unable to claim this account.');
+				loadAccountDetail();
+			} catch (err) {
+				alert(err.message || 'Unable to claim this account.');
+			}
+		}
+
+		async function triggerAccountResync() {
+			try {
+				await fetch('/api/v1/lilypad/salesforce-accounts/sync', { method: 'POST' });
+				alert('Sync started - refresh in a moment to see updates.');
+			} catch (err) {
+				alert('Unable to start sync.');
+			}
 		}
 
 		document.addEventListener('DOMContentLoaded', async () => {

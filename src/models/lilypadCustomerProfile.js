@@ -19,6 +19,7 @@ const COLLECTION = 'lilypad_customer_profiles'
 
 const ENGAGEMENT_STATUSES = ['never_purchased', 'active', 'dormant', 'churned', 'lead_only']
 const MATCH_CONFIDENCE = ['id', 'domain', 'fuzzy_name', 'none']
+const ACCOUNT_TIERS = ['self_serve', 'available_pool', 'managed']
 
 const productMixEntrySchema = new Schema({
   category: { type: String, trim: true, default: 'other' },
@@ -100,6 +101,30 @@ const customerProfileSchema = new Schema(
       generatedAt: { type: Date, default: null }
     },
 
+    // Worklist tier - derived fresh on every rebuild from spend/order
+    // thresholds plus whether the linked LilyPadSalesforceAccount already
+    // has a Salesforce Owner (ownerName/ownerSourceId), the same
+    // definition repMatchingService.js uses for "My Accounts". There is
+    // deliberately no separate "assignedRep" field here - Salesforce
+    // Owner is the one source of truth for who owns an account, so this
+    // tier is always recomputed from it rather than stored independently
+    // of it. See accountTierService.js.
+    accountTier: { type: String, enum: ACCOUNT_TIERS, default: 'self_serve', index: true },
+    qualification: {
+      qualifies: { type: Boolean, default: false },
+      totalSpend: { type: Number, default: 0 },
+      orderCount: { type: Number, default: 0 },
+      maxSingleOrderAmount: { type: Number, default: 0 },
+      // First time this profile crossed the qualification thresholds -
+      // carried forward across rebuilds (not reset to "now" every run)
+      // so the pool can be sorted oldest-qualified-first.
+      firstQualifiedAt: { type: Date, default: null },
+      // Flags a 'managed' account with no orders in ~18 months for a rep
+      // to review - never acted on automatically. Releasing it back to
+      // the pool is a human decision (see accountTierService.js).
+      isDormant: { type: Boolean, default: false, index: true }
+    },
+
     lastResolvedAt: { type: Date, default: null }
   },
   { timestamps: true }
@@ -107,8 +132,10 @@ const customerProfileSchema = new Schema(
 
 customerProfileSchema.index({ engagementStatus: 1, daysSinceLastOrder: -1 })
 customerProfileSchema.index({ 'recommendation.score': -1 })
+customerProfileSchema.index({ accountTier: 1, 'qualification.firstQualifiedAt': 1 })
 
 customerProfileSchema.statics.ENGAGEMENT_STATUSES = ENGAGEMENT_STATUSES
 customerProfileSchema.statics.MATCH_CONFIDENCE = MATCH_CONFIDENCE
+customerProfileSchema.statics.ACCOUNT_TIERS = ACCOUNT_TIERS
 
 module.exports = mongoose.model(COLLECTION, customerProfileSchema)
