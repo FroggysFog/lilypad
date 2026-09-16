@@ -74,6 +74,7 @@ const LILYPAD_NAV_SECTIONS = [
     icon: 'ti-currency-dollar',
     label: 'Sales',
     items: [
+      { href: 'all-leads.html', icon: 'ti-users-group', label: 'All Leads' },
       { href: 'prospects.html', icon: 'ti-user-search', label: 'Lead Prospector' },
       { href: 'customer-intelligence.html', icon: 'ti-chart-arrows', label: 'Customer Intelligence' },
       { href: 'opportunities.html', icon: 'ti-target-arrow', label: 'Opportunities' },
