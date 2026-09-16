@@ -3,10 +3,13 @@
  */
 
 const LilyPadSalesLead = require('../models/lilypadSalesLead')
+const LilyPadSalesScrapeJob = require('../models/lilypadSalesScrapeJob')
 const leadScorer = require('../services/leadScorer')
 const quoteBridge = require('../services/quoteBridge')
 const salesSearch = require('../services/salesSearch')
 const reactivationService = require('../services/reactivationService')
+const goalModePlanner = require('../services/goalModePlanner')
+const waterfallScraper = require('../services/waterfallScraper')
 
 const controller = {}
 
@@ -132,6 +135,54 @@ controller.reactivation = async function (req, res) {
       inSeasonalWindow: result.inSeasonalWindow,
       currentWindowName: result.currentWindowName
     })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/sales-leads/goal-scrape
+ * body: { prompt }
+ * Compiles the prompt into criteria, creates a tracked job, and fires
+ * the waterfall engine in the background (fire-and-forget, same
+ * pattern this app already uses elsewhere for background regeneration -
+ * no job queue infra exists here to reach for instead).
+ */
+controller.goalScrape = async function (req, res) {
+  try {
+    const prompt = String(req.body.prompt || '').trim()
+    if (!prompt) {
+      return res.status(400).json({ success: false, error: 'A sourcing prompt is required.' })
+    }
+
+    const criteria = await goalModePlanner.compilePromptToGoalPlan(prompt)
+
+    const job = await LilyPadSalesScrapeJob.create({
+      rawPrompt: prompt,
+      division: criteria.division,
+      criteria
+    })
+
+    setImmediate(() => {
+      waterfallScraper.executeWaterfallJob(job._id).catch(() => {})
+    })
+
+    return res.status(200).json({ success: true, data: { jobId: job._id, criteria } })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/v1/lilypad/sales-leads/jobs/:id
+ */
+controller.getJob = async function (req, res) {
+  try {
+    const job = await LilyPadSalesScrapeJob.findById(req.params.id)
+    if (!job) {
+      return res.status(404).json({ success: false, error: 'Job not found.' })
+    }
+    return res.status(200).json({ success: true, data: job })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

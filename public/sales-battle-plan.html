@@ -113,6 +113,7 @@
 							<button type="button" class="btn btn-outline-primary btn-sm division-toggle" data-division="training_smoke" onclick="setDivision('training_smoke')">Training Smoke</button>
 						</div>
 						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3" id="runScoringBtn" onclick="runAiScoring()"><i class="ti ti-sparkles me-1"></i>Run AI Scoring</button>
+						<button type="button" class="btn btn-success btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#goalModeModal"><i class="ti ti-target-arrow me-1"></i>Build Target List (Goal Mode)</button>
 					</div>
 				</div>
 
@@ -192,6 +193,42 @@
 		</div>
 	</div>
 
+	<!-- Goal Mode Modal -->
+	<div class="modal fade" id="goalModeModal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title fw-bold">Goal-Mode Lead Sourcing</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<p class="fs-13 text-muted">State your criteria in plain English. This enriches leads already in your system with verified contacts (registry data → department website → AI web search, in that order) - it does not discover brand-new departments that aren't imported yet.</p>
+					<textarea id="goalPromptInput" class="form-control mb-3" rows="3" placeholder="e.g. Find all fire departments in Tennessee, get the Training Chief (fallback to Fire Chief or Captain) with phone and email."></textarea>
+
+					<div id="goalJobProgress" style="display:none;">
+						<div class="d-flex align-items-center justify-content-between fs-12 fw-semibold mb-1">
+							<span id="goalJobStatusText">Compiling plan...</span>
+							<span id="goalJobCountText">0 / 0 verified</span>
+						</div>
+						<div class="progress mb-2" style="height: 8px;">
+							<div id="goalJobProgressBar" class="progress-bar bg-success" style="width: 0%;"></div>
+						</div>
+						<div class="d-flex gap-3 fs-11 text-muted mb-2">
+							<span>Tier 1 (Registry): <strong id="goalStatT1">0</strong></span>
+							<span>Tier 2 (Directory): <strong id="goalStatT2">0</strong></span>
+							<span>Tier 3 (AI Search): <strong id="goalStatT3">0</strong></span>
+						</div>
+						<div id="goalJobLog" class="fs-12 text-muted" style="max-height: 100px; overflow-y: auto;"></div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-success rounded-pill px-3" id="goalModeStartBtn" onclick="triggerGoalScrape()">Execute Goal Plan</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<script src="assets/js/bootstrap.bundle.min.js"></script>
 	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
 	<script src="assets/js/lilypad-nav.js"></script>
@@ -212,6 +249,12 @@
 		const DIVISION_META = {
 			froggys_fog: { label: "Froggy's Fog", badgeClass: 'bg-soft-purple text-purple' },
 			training_smoke: { label: 'Training Smoke', badgeClass: 'bg-soft-danger text-danger' }
+		};
+
+		const PROVENANCE_LABELS = {
+			tier1_registry: 'Registry',
+			tier2_directory: 'Dept. Website',
+			tier3_ai_search: 'AI Web Search'
 		};
 
 		let currentDivision = 'all';
@@ -330,6 +373,9 @@
 			const countLabel = lead.division === 'froggys_fog'
 				? ((lead.metadata && lead.metadata.reviewCount) || 0) + ' review(s)'
 				: ((lead.metadata && lead.metadata.stationCount) || 1) + ' station(s)';
+			const provenance = lead.provenance && lead.provenance.sourceTier && lead.provenance.sourceTier !== 'manual'
+				? `<span class="badge bg-light text-dark border fs-10 me-1">${escapeHtml(PROVENANCE_LABELS[lead.provenance.sourceTier] || lead.provenance.sourceTier)}</span><span class="fs-11 text-success fw-semibold">${lead.provenance.verificationConfidence}% verified</span>`
+				: '';
 
 			return `
 				<div class="col-md-6 col-xl-4">
@@ -340,7 +386,8 @@
 								<span class="badge ${scoreBadgeClass} fs-11">Score: ${score}/100</span>
 							</div>
 							<strong class="d-block text-dark fs-14 mb-1">${escapeHtml(lead.companyName)}</strong>
-							<span class="fs-12 text-muted mb-2">${escapeHtml(location || 'Location unknown')} &middot; ${escapeHtml(countLabel)}</span>
+							<span class="fs-12 text-muted mb-1">${escapeHtml(location || 'Location unknown')} &middot; ${escapeHtml(countLabel)}</span>
+							${provenance ? `<div class="mb-2">${provenance}</div>` : ''}
 							<div class="bg-light rounded-2 p-2 mb-2 flex-grow-1">
 								<span class="fs-12 text-dark fst-italic">${escapeHtml(pitchHook)}</span>
 							</div>
@@ -460,6 +507,65 @@
 				btn.disabled = false;
 				btn.innerHTML = '<i class="ti ti-sparkles me-1"></i>Run AI Scoring';
 			}
+		}
+
+		let goalJobPollInterval = null;
+
+		async function triggerGoalScrape() {
+			const prompt = document.getElementById('goalPromptInput').value.trim();
+			if (!prompt) return;
+
+			const btn = document.getElementById('goalModeStartBtn');
+			btn.disabled = true;
+			btn.textContent = 'Compiling plan...';
+			document.getElementById('goalJobProgress').style.display = '';
+			document.getElementById('goalJobLog').innerHTML = '';
+
+			try {
+				const res = await fetch('/api/v1/lilypad/sales-leads/goal-scrape', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ prompt })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				pollGoalJob(result.data.jobId, result.data.criteria.targetCount);
+			} catch (err) {
+				alert(err.message || 'Unable to start goal-mode job.');
+				btn.disabled = false;
+				btn.textContent = 'Execute Goal Plan';
+			}
+		}
+
+		function pollGoalJob(jobId, targetCount) {
+			if (goalJobPollInterval) clearInterval(goalJobPollInterval);
+
+			goalJobPollInterval = setInterval(async () => {
+				try {
+					const res = await fetch('/api/v1/lilypad/sales-leads/jobs/' + jobId);
+					const result = await res.json();
+					if (!result.success) throw new Error(result.error);
+
+					const job = result.data;
+					document.getElementById('goalJobStatusText').textContent = 'Status: ' + job.status;
+					document.getElementById('goalJobCountText').textContent = job.progress.verified + ' / ' + targetCount + ' verified';
+					const pct = Math.min(100, Math.round((job.progress.verified / targetCount) * 100));
+					document.getElementById('goalJobProgressBar').style.width = pct + '%';
+					document.getElementById('goalStatT1').textContent = job.provenanceSummary.tier1_registry || 0;
+					document.getElementById('goalStatT2').textContent = job.provenanceSummary.tier2_directory || 0;
+					document.getElementById('goalStatT3').textContent = job.provenanceSummary.tier3_ai_search || 0;
+					document.getElementById('goalJobLog').innerHTML = (job.logs || []).map(l => '<div>' + escapeHtml(l.message) + '</div>').join('');
+
+					if (job.status === 'completed' || job.status === 'failed') {
+						clearInterval(goalJobPollInterval);
+						const btn = document.getElementById('goalModeStartBtn');
+						btn.disabled = false;
+						btn.textContent = 'Execute Goal Plan';
+						if (job.status === 'completed') loadLeads();
+					}
+				} catch (err) {}
+			}, 2500);
 		}
 
 		document.addEventListener('DOMContentLoaded', async () => {

@@ -44,7 +44,18 @@ const salesLeadSchema = new Schema({
   contact: {
     name: String,
     title: String,
-    email: { type: String, trim: true, lowercase: true }
+    email: { type: String, trim: true, lowercase: true },
+    // The person's own direct number - distinct from the department's
+    // HQ `phone` field above.
+    phone: { type: String, trim: true, default: '' },
+    // Set by deptContactResearchService.js - which role tier actually
+    // matched (training_chief is preferred; fire_chief/captain are
+    // fallbacks only used when no training chief was found) and how
+    // confident that match is, so a human can judge before trusting it.
+    roleMatched: { type: String, enum: ['training_chief', 'fire_chief', 'captain', 'none'], default: 'none' },
+    sourceUrl: { type: String, trim: true, default: '' },
+    confidence: { type: String, enum: ['', 'high', 'medium', 'low'], default: '' },
+    researchedAt: { type: Date, default: null }
   },
   aiScore: {
     intentScore: { type: Number, default: 0, min: 0, max: 100, index: true },
@@ -63,7 +74,17 @@ const salesLeadSchema = new Schema({
   notes: [{
     body: String,
     createdAt: { type: Date, default: Date.now }
-  }]
+  }],
+  // Set by waterfallScraper.js - which tier actually produced this
+  // lead/contact, so a rep can judge reliability at a glance (a free
+  // registry hit vs. an AI-search-resolved contact carry different
+  // trust levels).
+  provenance: {
+    sourceTier: { type: String, enum: ['tier1_registry', 'tier2_directory', 'tier3_ai_search', 'manual'], default: 'manual' },
+    sourceDetails: { type: String, trim: true, default: '' },
+    verificationConfidence: { type: Number, default: 0 }
+  },
+  jobId: { type: Schema.Types.ObjectId, ref: 'lilypad_sales_scrape_jobs', default: null }
 }, { timestamps: true })
 
 salesLeadSchema.index({ division: 1, status: 1, 'aiScore.intentScore': -1 })
