@@ -33,6 +33,7 @@ const LILYPAD_NAV_SECTIONS = [
     renderAs: 'topTabs',
     items: [
       { href: 'dashboard.html', icon: 'ti-dashboard', label: 'Dashboard' },
+      { href: 'morning-report.html', icon: 'ti-sun', label: 'Morning Report' },
       { href: 'tickets.html', icon: 'ti-ticket', label: 'Ticket Operations' },
       { href: 'tasks.html', icon: 'ti-list-check', label: 'Task Manager' },
       { href: 'calendar.html', icon: 'ti-calendar', label: 'Calendar' },

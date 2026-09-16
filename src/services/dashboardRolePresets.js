@@ -105,6 +105,15 @@ const ALL_WIDGETS = [
     allowedRoles: ['*']
   },
   {
+    id: 'morning-report',
+    title: 'Morning Report',
+    description: "Today's calendar, tasks, priority conversations, and pipeline alerts in one place",
+    category: 'Core Operations',
+    icon: 'ti-sun',
+    defaultWidth: 12,
+    allowedRoles: ['*']
+  },
+  {
     id: 'report-cards',
     title: 'My Reports',
     description: "AI-generated report cards you've created or been shared, refreshed live",

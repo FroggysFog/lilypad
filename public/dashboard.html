@@ -663,6 +663,9 @@
                 case 'report-cards':
                     html += renderReportCardsWidgetHtml();
                     break;
+                case 'morning-report':
+                    html += renderMorningReportWidgetHtml();
+                    break;
             }
         });
 
@@ -679,6 +682,7 @@
         if (activeWidgets.includes('priority-conversations')) loadPriorityConversationsWidgetData();
         if (activeWidgets.includes('suggested-tasks')) loadSuggestedTasksWidgetData();
         if (activeWidgets.includes('report-cards')) loadReportCardsWidgetData();
+        if (activeWidgets.includes('morning-report')) loadMorningReportWidgetData();
     }
 
     // =========================================================================
@@ -1028,6 +1032,28 @@
         '</div>';
     }
 
+    function renderMorningReportWidgetHtml() {
+        return '<div class="col-12">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-warning d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-sun fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark">Morning Report</h5>' +
+                            '<span class="fs-12 text-muted">Everything worth knowing before you start</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="morning-report.html" class="btn btn-sm btn-outline-warning rounded-pill px-3 fs-12 text-dark">View Full Report</a>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashMorningReportBody">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Preparing your morning report...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
     function renderReportCardsWidgetHtml() {
         return '<div class="col-12">' +
             '<div class="card border-0 shadow-sm rounded-3 h-100">' +
@@ -1156,6 +1182,37 @@
             '</div>').join('');
         } catch (err) {
             container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load sales pipeline.</div>';
+        }
+    }
+
+    async function loadMorningReportWidgetData() {
+        const container = document.getElementById('dashMorningReportBody');
+        if (!container) return;
+        try {
+            const res = await fetch('/api/v1/lilypad/morning-digest');
+            const result = await res.json();
+            if (!result.success) throw new Error(result.error);
+            const digest = result.data;
+            const s = digest.sections || {};
+
+            const badges = [
+                { count: (s.calendar || []).length, label: 'meeting', icon: 'ti-calendar-event' },
+                { count: (s.tasksDueToday || []).length, label: 'task due', icon: 'ti-list-check' },
+                { count: (s.priorityConversations || []).length, label: 'conversation', icon: 'ti-user-star' },
+                { count: (s.suggestedTasks || []).length, label: 'suggested task', icon: 'ti-bulb' },
+                { count: (s.meetingNotes || []).length, label: 'meeting note', icon: 'ti-notes' },
+                { count: (s.pipelineAlerts && s.pipelineAlerts.closingSoon || []).length, label: 'deal closing soon', icon: 'ti-target-arrow' },
+                { count: (s.pipelineAlerts && s.pipelineAlerts.stalled || []).length, label: 'stalled deal', icon: 'ti-alert-triangle' }
+            ].filter(b => b.count > 0);
+
+            container.innerHTML = '<p class="text-dark mb-3">' + escapeHtml(digest.greeting) + '</p>' +
+                '<div class="d-flex flex-wrap gap-2">' +
+                (badges.length
+                    ? badges.map(b => '<span class="badge bg-soft-secondary text-secondary fs-12 fw-normal px-2 py-2"><i class="ti ' + b.icon + ' me-1"></i>' + b.count + ' ' + escapeHtml(b.label) + (b.count === 1 ? '' : 's') + '</span>').join('')
+                    : '<span class="fs-12 text-muted">Nothing urgent today - enjoy the calm.</span>') +
+                '</div>';
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load your morning report.</div>';
         }
     }
 
