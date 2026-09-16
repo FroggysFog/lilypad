@@ -10,6 +10,7 @@
 const LilyPadStagedLead = require('../models/lilypadStagedLead')
 const LilyPadCustomer = require('../models/lilypadCustomer')
 const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
+const LilyPadSalesLead = require('../models/lilypadSalesLead')
 const { verifyNonProfit } = require('./proPublicaService')
 const { verifyEmail } = require('./emailVerificationService')
 const { expandZipCodesToLocations } = require('./zipLookupService')
@@ -308,6 +309,45 @@ async function promoteStagedLeads (leadIds) {
   return results
 }
 
+/**
+ * Additive alternative to promoteStagedLeads - promotes ONE staged
+ * lead into a LilyPadSalesLead (Sales OS) instead of a CRM account/
+ * contact, so it becomes scoreable/quotable through the existing Sales
+ * OS tooling. Does not touch promotedAccountId/promotedContactId or
+ * the CRM promotion path at all - a lead can go through either path,
+ * or in principle both, independently.
+ */
+async function promoteStagedLeadToSalesLead (stagedLeadId) {
+  const lead = await LilyPadStagedLead.findOne({ _id: stagedLeadId, status: { $ne: 'imported' } })
+  if (!lead) throw new Error('Staged lead not found, or already imported.')
+
+  const contactName = `${lead.firstName || ''} ${lead.lastName || ''}`.trim()
+
+  const salesLead = await LilyPadSalesLead.create({
+    division: 'froggys_fog',
+    companyName: lead.companyName || contactName || 'Prospected Lead',
+    domain: lead.companyDomain || '',
+    phone: lead.phoneNumber || '',
+    address: { city: lead.city || '', state: lead.state || '', zip: lead.postalCode || '' },
+    source: 'apollo',
+    contact: {
+      name: contactName,
+      title: lead.jobTitle || '',
+      email: lead.email || '',
+      phone: lead.phoneNumber || '',
+      sourceUrl: lead.sourceUrl || ''
+    },
+    status: 'unprocessed'
+  })
+
+  await LilyPadStagedLead.updateOne(
+    { _id: lead._id },
+    { $set: { status: 'imported', promotedSalesLeadId: salesLead._id } }
+  )
+
+  return salesLead
+}
+
 module.exports = {
   SECTOR_TITLES,
   ALL_SECTOR_TITLES,
@@ -317,5 +357,6 @@ module.exports = {
   classifySector,
   findDuplicateMatch,
   buildStagedLeadDoc,
-  promoteStagedLeads
+  promoteStagedLeads,
+  promoteStagedLeadToSalesLead
 }

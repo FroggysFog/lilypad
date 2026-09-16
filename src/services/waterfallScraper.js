@@ -14,6 +14,7 @@ const winston = require('../logger')
 const LilyPadSalesLead = require('../models/lilypadSalesLead')
 const LilyPadSalesScrapeJob = require('../models/lilypadSalesScrapeJob')
 const deptContactResearchService = require('./deptContactResearchService')
+const apolloHarvestBridge = require('./apolloHarvestBridge')
 
 const REQUEST_TIMEOUT_MS = 30000
 const MAX_RETRIES = 3
@@ -117,6 +118,20 @@ async function executeWaterfallJob (jobId) {
 
   job.status = 'running'
   await job.save()
+
+  // Froggy's Fog has no baseline registry like USFA - the only thing in
+  // this app that finds brand-new commercial companies is the Apollo
+  // pipeline, so that division delegates entirely to the harvest bridge
+  // rather than running the training_smoke-specific tier cascade below.
+  if (job.division === 'froggys_fog') {
+    try {
+      await apolloHarvestBridge.dispatchApolloHarvest(job)
+    } catch (err) {
+      job.status = 'failed'
+      await addLog(job, err.message, 'error')
+    }
+    return
+  }
 
   try {
     const query = { division: job.division, 'contact.name': { $in: [null, ''] } }

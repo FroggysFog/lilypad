@@ -10,6 +10,7 @@ const salesSearch = require('../services/salesSearch')
 const reactivationService = require('../services/reactivationService')
 const goalModePlanner = require('../services/goalModePlanner')
 const waterfallScraper = require('../services/waterfallScraper')
+const leadProspectorService = require('../services/leadProspectorService')
 
 const controller = {}
 
@@ -158,6 +159,8 @@ controller.goalScrape = async function (req, res) {
     const criteria = await goalModePlanner.compilePromptToGoalPlan(prompt)
 
     const job = await LilyPadSalesScrapeJob.create({
+      createdByUserId: req.user._id,
+      createdByName: req.user.fullname,
       rawPrompt: prompt,
       division: criteria.division,
       criteria
@@ -183,6 +186,21 @@ controller.getJob = async function (req, res) {
       return res.status(404).json({ success: false, error: 'Job not found.' })
     }
     return res.status(200).json({ success: true, data: job })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/sales-leads/promote-staged/:stagedLeadId
+ * Promotes a Lead Prospector staged lead into a Sales OS lead (in
+ * addition to, not instead of, the existing CRM-contact promotion on
+ * prospects.html) so it becomes scoreable/quotable.
+ */
+controller.promoteStaged = async function (req, res) {
+  try {
+    const salesLead = await leadProspectorService.promoteStagedLeadToSalesLead(req.params.stagedLeadId)
+    return res.status(200).json({ success: true, data: salesLead })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

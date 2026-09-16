@@ -691,7 +691,12 @@
 					</td>
 					<td>${escapeHtml(l.phoneNumber) || '<span class="text-muted">—</span>'}${l.phoneType ? ` <span class="fs-10 text-muted text-capitalize">(${l.phoneType})</span>` : ''}</td>
 					<td class="prospector-bio-cell fs-12 text-muted" title="${escapeHtml(l.personBio)}">${escapeHtml((l.personBio || '').slice(0, 110))}${(l.personBio || '').length > 110 ? '…' : ''}</td>
-					<td>${flags.join(' ') || '<span class="text-muted fs-12">—</span>'}</td>
+					<td>
+						<div class="d-flex align-items-center gap-1 flex-wrap">
+							${flags.join(' ') || (l.status === 'imported' ? '' : '<span class="text-muted fs-12">—</span>')}
+							${l.status !== 'imported' ? `<button type="button" class="btn btn-outline-success btn-sm rounded-pill px-2 py-0 fs-11" onclick="promoteToSalesOS('${l._id}', this)" title="Promote this lead into Sales OS for AI scoring and quoting"><i class="ti ti-target-arrow me-1"></i>To Sales OS</button>` : ''}
+						</div>
+					</td>
 				</tr>`;
 			}).join('');
 		}
@@ -737,6 +742,22 @@
 				alert(err.message || 'Unable to import selected leads.');
 			} finally {
 				btn.disabled = false;
+			}
+		}
+
+		async function promoteToSalesOS(stagedLeadId, btn) {
+			btn.disabled = true;
+			btn.innerHTML = '<i class="ti ti-loader-2"></i>';
+			try {
+				const res = await fetch('/api/v1/lilypad/sales-leads/promote-staged/' + stagedLeadId, { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error || 'Promotion failed');
+
+				await loadLeads();
+			} catch (err) {
+				alert(err.message || 'Unable to promote this lead to Sales OS.');
+				btn.disabled = false;
+				btn.innerHTML = '<i class="ti ti-target-arrow me-1"></i>To Sales OS';
 			}
 		}
 

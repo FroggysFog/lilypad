@@ -33,7 +33,7 @@ const salesLeadSchema = new Schema({
   },
   source: {
     type: String,
-    enum: ['usfa_registry', 'manual_import', 'gmaps_csv', 'inbound'],
+    enum: ['usfa_registry', 'manual_import', 'gmaps_csv', 'inbound', 'apollo'],
     default: 'manual_import'
   },
   metadata: {

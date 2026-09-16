@@ -1,6 +1,10 @@
 # Logs
 *.log
 
+# Raw data drops (e.g. the USFA national registry CSV) - large data
+# files, not source, shouldn't bloat repo history.
+/data/
+
 # Yarn Cache
 .yarn/cache
 .yarn/*.gz

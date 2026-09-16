@@ -174,6 +174,16 @@ const stagedLeadSchema = new Schema(
     promotedAccountId: {
       type: Schema.Types.ObjectId,
       default: null
+    },
+    // Set by leadProspectorService.promoteStagedLeadToSalesLead - an
+    // additive promotion path alongside promotedAccountId/
+    // promotedContactId, not a replacement, so a staged lead can be
+    // promoted into a Sales OS lead (scoreable/quotable) without
+    // touching the existing CRM-contact promotion flow.
+    promotedSalesLeadId: {
+      type: Schema.Types.ObjectId,
+      ref: 'lilypad_sales_leads',
+      default: null
     }
   },
   { timestamps: true }
