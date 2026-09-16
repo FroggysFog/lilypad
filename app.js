@@ -77,6 +77,9 @@ function launchServer (db) {
 
       const { startReceiptExtractionScheduler } = require('./src/services/receiptExtractionService')
       startReceiptExtractionScheduler(winston)
+
+      const { startLeadScoringScheduler } = require('./src/services/leadScorer')
+      startLeadScoringScheduler(winston)
     })
   })
 }

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Sales Command Center | LilyPad ERP</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="index, follow">
+	<link rel="shortcut icon" href="assets/img/favicon.png">
+	<link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+	<script src="assets/js/theme-script.js"></script>
+	<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+	<link rel="stylesheet" href="assets/plugins/tabler-icons/tabler-icons.min.css">
+	<link rel="stylesheet" href="assets/plugins/simplebar/simplebar.min.css">
+	<link rel="stylesheet" href="assets/css/style.css" id="app-style">
+	<link rel="stylesheet" href="assets/css/dark-theme-enhancements.css">
+</head>
+
+<body>
+
+	<div class="main-wrapper">
+
+		<!-- Topbar Start -->
+		<header class="navbar-header">
+			<div class="page-container topbar-menu d-flex align-items-center justify-content-between">
+				<div class="d-flex align-items-center gap-2">
+					<a id="mobile_btn" class="mobile-btn" href="#sidebar"><i class="ti ti-menu-deep fs-24"></i></a>
+					<button class="sidenav-toggle-btn btn border-0 p-0" id="toggle_btn2"><i class="ti ti-arrow-bar-to-right"></i></button>
+				</div>
+				<div class="header-search d-none d-md-flex align-items-center justify-content-center mx-auto" style="width: 100%; max-width: 520px;">
+					<div class="input-icon position-relative w-100">
+						<input type="text" class="form-control rounded-pill py-2 px-4 shadow-sm" placeholder="Search anything in LilyPad ERP... (Ctrl + K)" style="font-size: 14px; height: 42px;">
+						<span class="input-icon-addon d-inline-flex p-0 header-search-icon pe-3"><i class="ti ti-command fs-16 text-muted"></i></span>
+					</div>
+				</div>
+				<div class="d-flex align-items-center">
+					<div class="header-item me-2">
+						<a href="tickets.html?action=new" class="btn btn-primary btn-sm d-flex align-items-center gap-2 px-3 py-2 text-white shadow-sm fw-semibold rounded-pill" style="font-size: 13px;"><i class="ti ti-plus fs-16"></i><span>New Ticket</span></a>
+					</div>
+					<div class="header-item"><div class="dropdown me-2"><a href="javascript:void(0);" class="btn topbar-link btnFullscreen"><i class="ti ti-maximize"></i></a></div></div>
+					<div class="header-item d-none d-sm-flex me-2"><button class="topbar-link btn topbar-link" id="light-dark-mode" type="button"><i class="ti ti-moon fs-16"></i></button></div>
+					<div class="header-item">
+						<div class="dropdown me-2 position-relative">
+							<button class="topbar-link btn topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" data-bs-offset="0,24" type="button" aria-haspopup="false" aria-expanded="false" id="notificationBellBtn" title="Ticket Notifications & Updates">
+								<i class="ti ti-bell fs-19" id="notificationBellIcon"></i>
+								<span class="notification-badge" id="notificationBadge" data-notif-badge style="display:none;">0</span>
+							</button>
+							<div class="dropdown-menu p-0 dropdown-menu-end shadow-lg border-0" style="min-width: 360px; max-width: 380px; z-index: 1060;">
+								<div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+									<div class="d-flex align-items-center gap-2"><h6 class="m-0 fs-15 fw-bold text-dark">Notifications</h6><span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold">Live Feed</span></div>
+									<a href="javascript:void(0);" onclick="LilypadNotifications.markAllAsRead(event)" class="fs-12 text-decoration-none fw-semibold text-primary">Mark all read</a>
+								</div>
+								<div class="notification-body position-relative z-2" id="notificationListContainer" style="max-height: 360px; overflow-y: auto;"></div>
+								<div class="p-2 rounded-bottom border-top text-center bg-light"><a href="tickets.html" class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-2 text-white fw-semibold rounded-2 py-2"><i class="ti ti-ticket fs-16"></i><span>Open Ticket Operations</span></a></div>
+							</div>
+						</div>
+					</div>
+					<div class="dropdown profile-dropdown d-flex align-items-center justify-content-center">
+						<a href="javascript:void(0);" class="topbar-link dropdown-toggle drop-arrow-none position-relative" data-bs-toggle="dropdown" data-bs-offset="0,22" aria-haspopup="false" aria-expanded="false">
+							<img src="assets/img/users/user-40.jpg" width="38" class="rounded-1 d-flex" alt="user-image">
+							<span class="online text-success"><i class="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white"></i></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+							<div class="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
+								<img src="assets/img/users/user-40.jpg" class="rounded-circle" width="42" height="42" alt="Img">
+								<div class="ms-2"><p class="fw-medium text-dark mb-0 topbar-user-name">Scott Karan</p><span class="d-block fs-13 topbar-user-role">Operations Admin</span></div>
+							</div>
+							<a href="profile-settings.html" class="dropdown-item"><i class="ti ti-user-circle me-1 align-middle"></i><span class="align-middle">Profile Settings</span></a>
+							<div class="pt-2 mt-2 border-top"><a href="javascript:void(0);" onclick="doLogout()" class="dropdown-item text-danger"><i class="ti ti-logout me-1 fs-17 align-middle"></i><span class="align-middle">Sign Out</span></a></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</header>
+		<!-- Topbar End -->
+
+		<!-- Sidenav Menu Start -->
+		<div class="sidebar" id="sidebar">
+			<div class="sidebar-logo">
+				<div>
+					<a href="/" class="logo logo-normal align-items-center gap-2 text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:30px; height:30px; font-size:15px;"><i class="ti ti-leaf"></i></div>
+						<span class="fs-17 fw-bold text-dark">LilyPad <span class="text-primary">ERP</span></span>
+					</a>
+					<a href="/" class="logo logo-small align-items-center justify-content-center text-decoration-none">
+						<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:16px;"><i class="ti ti-leaf"></i></div>
+					</a>
+				</div>
+				<button class="sidenav-toggle-btn btn border-0 p-0 active" id="toggle_btn"><i class="ti ti-arrow-bar-to-left"></i></button>
+				<button class="sidebar-close"><i class="ti ti-x align-middle"></i></button>
+			</div>
+
+			<div class="sidebar-inner" data-simplebar>
+				<div id="sidebar-menu" class="sidebar-menu"></div>
+			</div>
+		</div>
+		<!-- Sidenav Menu End -->
+
+		<div class="page-wrapper">
+			<div class="content pb-0">
+
+				<div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+					<div>
+						<h4 class="mb-1 fw-bold text-dark">Sales Command Center</h4>
+						<p class="text-muted fs-13 mb-0">Target accounts prioritized by Claude AI</p>
+						<p class="text-muted fs-13 mb-0" id="leadCount"></p>
+					</div>
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<div class="btn-group" role="group">
+							<button type="button" class="btn btn-outline-primary btn-sm division-toggle active" data-division="all" onclick="setDivision('all')">All</button>
+							<button type="button" class="btn btn-outline-primary btn-sm division-toggle" data-division="froggys_fog" onclick="setDivision('froggys_fog')">Froggy's Fog</button>
+							<button type="button" class="btn btn-outline-primary btn-sm division-toggle" data-division="training_smoke" onclick="setDivision('training_smoke')">Training Smoke</button>
+						</div>
+						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3" id="runScoringBtn" onclick="runAiScoring()"><i class="ti ti-sparkles me-1"></i>Run AI Scoring</button>
+					</div>
+				</div>
+
+				<div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
+					<div class="d-flex align-items-center gap-2 flex-wrap">
+						<div class="input-icon position-relative flex-grow-1" style="min-width: 280px;">
+							<input type="text" id="nlSearchInput" class="form-control rounded-pill" placeholder="Ask in plain English (e.g. &quot;Unworked fire departments in TN with over 4 stations&quot;)...">
+							<span class="input-icon-addon"><i class="ti ti-search fs-16 text-muted"></i></span>
+						</div>
+						<button type="button" class="btn btn-dark btn-sm rounded-pill px-3" onclick="runNaturalLanguageSearch()"><i class="ti ti-sparkles me-1"></i>Search</button>
+						<button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="clearSearchBtn" onclick="clearSearch()" style="display:none;">Clear</button>
+						<div class="vr"></div>
+						<span class="fs-12 text-muted text-uppercase fw-semibold">Reactivation:</span>
+						<button type="button" class="btn btn-outline-purple btn-sm rounded-pill px-3" onclick="loadReactivation('froggys_fog')">Froggy's Fog</button>
+						<button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="loadReactivation('training_smoke')">Training Smoke</button>
+					</div>
+				</div>
+
+				<div id="reactivationBanner" class="alert alert-warning d-flex align-items-center gap-2 mb-3" style="display:none;">
+					<i class="ti ti-calendar-event fs-18"></i>
+					<span id="reactivationBannerText"></span>
+				</div>
+
+				<div class="row g-3" id="leadCardGrid"></div>
+
+				<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center mt-4">
+					<p class="mb-md-0 mb-1">Copyright &copy; <script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.</p>
+					<div class="d-flex align-items-center gap-3 footer-links justify-content-center justify-content-md-end">
+						<a href="https://froggysfog.com" target="_blank" class="text-muted fs-13">froggysfog.com</a>
+					</div>
+				</footer>
+			</div>
+		</div>
+	</div>
+
+	<!-- Lead Inspector Modal -->
+	<div class="modal fade" id="leadModal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title fw-bold" id="leadModalCompanyName">Lead</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<div class="row mb-3">
+						<div class="col-md-6 mb-2">
+							<span class="fs-12 text-muted d-block text-uppercase fw-semibold">Location</span>
+							<strong class="text-dark" id="leadModalLocation">—</strong>
+						</div>
+						<div class="col-md-6 mb-2">
+							<span class="fs-12 text-muted d-block text-uppercase fw-semibold">Recommended SKU</span>
+							<span class="badge bg-soft-primary text-primary fs-12" id="leadModalSku">—</span>
+						</div>
+						<div class="col-md-6 mb-2">
+							<span class="fs-12 text-muted d-block text-uppercase fw-semibold">Contact</span>
+							<strong class="text-dark" id="leadModalContact">—</strong>
+						</div>
+						<div class="col-md-6 mb-2">
+							<span class="fs-12 text-muted d-block text-uppercase fw-semibold">Phone</span>
+							<strong class="text-dark" id="leadModalPhone">—</strong>
+						</div>
+						<div class="col-md-6 mb-2">
+							<span class="fs-12 text-muted d-block text-uppercase fw-semibold">Contact Email</span>
+							<strong class="text-dark" id="leadModalEmail">—</strong>
+						</div>
+					</div>
+					<label class="fs-12 text-muted d-block text-uppercase fw-semibold mb-1">Pitch Hook</label>
+					<textarea class="form-control mb-3" id="leadModalPitchHook" rows="3"></textarea>
+					<div class="d-flex flex-wrap gap-2">
+						<button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="copyPitchText()"><i class="ti ti-copy me-1"></i>Copy Pitch Hook</button>
+						<button type="button" class="btn btn-success btn-sm rounded-pill px-3" onclick="submitTrialQuote()"><i class="ti ti-file-invoice me-1"></i>1-Click: Create Trial / Sample Quote</button>
+						<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="markContacted()"><i class="ti ti-check me-1"></i>Mark as Contacted</button>
+						<button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="disqualifyLead()"><i class="ti ti-x me-1"></i>Disqualify / Skip</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="assets/js/bootstrap.bundle.min.js"></script>
+	<script src="assets/plugins/simplebar/simplebar.min.js"></script>
+	<script src="assets/js/lilypad-nav.js"></script>
+	<script src="assets/js/lilypad-teams-chat.js"></script>
+	<script src="assets/js/lilypad-env-banner.js"></script>
+	<script src="assets/js/script.js"></script>
+	<script src="assets/js/lilypad-notifications.js"></script>
+	<script src="assets/js/lilypad-quick-create.js"></script>
+	<script src="assets/js/lilypad-global-search.js"></script>
+
+	<script>
+		function escapeHtml(value) {
+			return String(value == null ? '' : value).replace(/[&<>'"]/g, function (c) {
+				return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
+			});
+		}
+
+		const DIVISION_META = {
+			froggys_fog: { label: "Froggy's Fog", badgeClass: 'bg-soft-purple text-purple' },
+			training_smoke: { label: 'Training Smoke', badgeClass: 'bg-soft-danger text-danger' }
+		};
+
+		let currentDivision = 'all';
+		let currentLeads = [];
+		let openLeadId = null;
+
+		function setDivision(division) {
+			currentDivision = division;
+			document.querySelectorAll('.division-toggle').forEach(btn => btn.classList.toggle('active', btn.dataset.division === division));
+			loadLeads();
+		}
+
+		function renderLeadGrid(leads, emptyMessage) {
+			const grid = document.getElementById('leadCardGrid');
+			currentLeads = leads;
+
+			if (!leads.length) {
+				grid.innerHTML = '<div class="col-12 text-center py-4 text-muted"><i class="ti ti-target-off fs-24 d-block mb-1"></i>' + escapeHtml(emptyMessage) + '</div>';
+				return;
+			}
+
+			grid.innerHTML = leads.map(leadCardHtml).join('');
+		}
+
+		function hideReactivationBanner() {
+			document.getElementById('reactivationBanner').style.display = 'none';
+		}
+
+		function showReactivationBanner(inSeasonalWindow, windowName) {
+			const banner = document.getElementById('reactivationBanner');
+			banner.className = 'alert d-flex align-items-center gap-2 mb-3 ' + (inSeasonalWindow ? 'alert-success' : 'alert-secondary');
+			document.getElementById('reactivationBannerText').textContent = inSeasonalWindow
+				? 'Active Window: ' + windowName
+				: 'Seasonal window closed - ' + windowName + ' is not currently active.';
+			banner.style.display = '';
+		}
+
+		async function loadLeads() {
+			hideReactivationBanner();
+			document.getElementById('clearSearchBtn').style.display = 'none';
+			const grid = document.getElementById('leadCardGrid');
+			grid.innerHTML = '<div class="col-12 text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading leads...</div>';
+
+			try {
+				const res = await fetch('/api/v1/lilypad/sales-leads?division=' + encodeURIComponent(currentDivision));
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				document.getElementById('leadCount').textContent = (result.data || []).length + ' workable lead' + ((result.data || []).length === 1 ? '' : 's');
+				renderLeadGrid(result.data || [], 'No workable leads right now.');
+			} catch (err) {
+				document.getElementById('leadCardGrid').innerHTML = '<div class="col-12"><p class="text-danger">' + escapeHtml(err.message) + '</p></div>';
+			}
+		}
+
+		async function runNaturalLanguageSearch() {
+			const query = document.getElementById('nlSearchInput').value.trim();
+			if (!query) return;
+
+			hideReactivationBanner();
+			const grid = document.getElementById('leadCardGrid');
+			grid.innerHTML = '<div class="col-12 text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Searching...</div>';
+
+			try {
+				const res = await fetch('/api/v1/lilypad/sales-leads/search', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ query })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				document.getElementById('clearSearchBtn').style.display = '';
+				document.getElementById('leadCount').textContent = (result.data || []).length + ' result(s) for "' + query + '"';
+				renderLeadGrid(result.data || [], 'No leads matched that search.');
+			} catch (err) {
+				grid.innerHTML = '<div class="col-12"><p class="text-danger">' + escapeHtml(err.message) + '</p></div>';
+			}
+		}
+
+		async function loadReactivation(division) {
+			const label = DIVISION_META[division] ? DIVISION_META[division].label : division;
+			const grid = document.getElementById('leadCardGrid');
+			grid.innerHTML = '<div class="col-12 text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading reactivation targets...</div>';
+
+			try {
+				const res = await fetch('/api/v1/lilypad/sales-leads/reactivation/' + encodeURIComponent(division));
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+
+				document.getElementById('clearSearchBtn').style.display = '';
+				showReactivationBanner(result.inSeasonalWindow, result.currentWindowName);
+
+				const emptyMessage = result.inSeasonalWindow
+					? 'No dormant leads meet the seasonal reactivation window right now.'
+					: 'This division\'s seasonal window is closed - no reactivation targets to show.';
+				document.getElementById('leadCount').textContent = (result.data || []).length + ' seasonal reactivation target(s) - ' + label;
+				renderLeadGrid(result.data || [], emptyMessage);
+			} catch (err) {
+				grid.innerHTML = '<div class="col-12"><p class="text-danger">' + escapeHtml(err.message) + '</p></div>';
+			}
+		}
+
+		function clearSearch() {
+			document.getElementById('nlSearchInput').value = '';
+			loadLeads();
+		}
+
+		function leadCardHtml(lead) {
+			const meta = DIVISION_META[lead.division] || { label: lead.division, badgeClass: 'bg-soft-secondary text-secondary' };
+			const score = (lead.aiScore && lead.aiScore.intentScore) || 0;
+			const scoreBadgeClass = score >= 75 ? 'bg-soft-success text-success' : 'bg-soft-secondary text-secondary';
+			const sku = (lead.aiScore && lead.aiScore.recommendedSku) || '';
+			const pitchHook = (lead.aiScore && lead.aiScore.pitchHook) || 'Not yet scored - run AI scoring to generate a pitch hook.';
+			const location = [(lead.address && lead.address.city), (lead.address && lead.address.state)].filter(Boolean).join(', ');
+			const countLabel = lead.division === 'froggys_fog'
+				? ((lead.metadata && lead.metadata.reviewCount) || 0) + ' review(s)'
+				: ((lead.metadata && lead.metadata.stationCount) || 1) + ' station(s)';
+
+			return `
+				<div class="col-md-6 col-xl-4">
+					<div class="card border-0 shadow-sm rounded-3 h-100">
+						<div class="card-body p-3 d-flex flex-column">
+							<div class="d-flex align-items-center justify-content-between mb-2">
+								<span class="badge rounded-pill ${meta.badgeClass} fs-11">${escapeHtml(meta.label)}</span>
+								<span class="badge ${scoreBadgeClass} fs-11">Score: ${score}/100</span>
+							</div>
+							<strong class="d-block text-dark fs-14 mb-1">${escapeHtml(lead.companyName)}</strong>
+							<span class="fs-12 text-muted mb-2">${escapeHtml(location || 'Location unknown')} &middot; ${escapeHtml(countLabel)}</span>
+							<div class="bg-light rounded-2 p-2 mb-2 flex-grow-1">
+								<span class="fs-12 text-dark fst-italic">${escapeHtml(pitchHook)}</span>
+							</div>
+							<div class="d-flex align-items-center justify-content-between">
+								<span class="badge bg-soft-primary text-primary fs-11">${escapeHtml(sku || 'No SKU yet')}</span>
+								<button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0 fs-12" onclick="openLeadModal('${lead._id}')">Review &amp; Action &rarr;</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			`;
+		}
+
+		function openLeadModal(leadId) {
+			const lead = currentLeads.find(l => l._id === leadId);
+			if (!lead) return;
+			openLeadId = leadId;
+
+			document.getElementById('leadModalCompanyName').textContent = lead.companyName;
+			document.getElementById('leadModalLocation').textContent = [(lead.address && lead.address.city), (lead.address && lead.address.state)].filter(Boolean).join(', ') || '—';
+			document.getElementById('leadModalSku').textContent = (lead.aiScore && lead.aiScore.recommendedSku) || 'Not yet scored';
+			const contactName = lead.contact && lead.contact.name;
+			const contactTitle = lead.contact && lead.contact.title;
+			document.getElementById('leadModalContact').textContent = contactName
+				? contactName + (contactTitle ? ' (' + contactTitle + ')' : '')
+				: 'No contact on file';
+			document.getElementById('leadModalPhone').textContent = lead.phone || '—';
+			document.getElementById('leadModalEmail').textContent = (lead.contact && lead.contact.email) || '—';
+			document.getElementById('leadModalPitchHook').value = (lead.aiScore && lead.aiScore.pitchHook) || '';
+
+			bootstrap.Modal.getOrCreateInstance(document.getElementById('leadModal')).show();
+		}
+
+		function closeLeadModal() {
+			const modalEl = document.getElementById('leadModal');
+			const instance = bootstrap.Modal.getInstance(modalEl);
+			if (instance) instance.hide();
+			openLeadId = null;
+		}
+
+		async function copyPitchText() {
+			const text = document.getElementById('leadModalPitchHook').value;
+			try {
+				await navigator.clipboard.writeText(text);
+				alert('Pitch hook copied to clipboard.');
+			} catch (err) {
+				alert('Unable to copy - select and copy the text manually.');
+			}
+		}
+
+		async function submitTrialQuote() {
+			if (!openLeadId) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/sales-leads/' + openLeadId + '/create-quote', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				alert('Trial quote created.');
+				closeLeadModal();
+				loadLeads();
+			} catch (err) {
+				alert(err.message || 'Unable to create quote.');
+			}
+		}
+
+		async function markContacted() {
+			if (!openLeadId) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/sales-leads/' + openLeadId + '/status', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ status: 'contacted' })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				closeLeadModal();
+				loadLeads();
+			} catch (err) {
+				alert(err.message || 'Unable to update status.');
+			}
+		}
+
+		async function disqualifyLead() {
+			if (!openLeadId) return;
+			const reason = prompt('Reason for disqualifying this lead (optional):') || 'Manually disqualified';
+			try {
+				const res = await fetch('/api/v1/lilypad/sales-leads/' + openLeadId + '/status', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ status: 'disqualified', reason })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				closeLeadModal();
+				loadLeads();
+			} catch (err) {
+				alert(err.message || 'Unable to update status.');
+			}
+		}
+
+		async function runAiScoring() {
+			const btn = document.getElementById('runScoringBtn');
+			btn.disabled = true;
+			btn.innerHTML = '<i class="ti ti-loader-2 me-1"></i>Scoring...';
+			try {
+				const res = await fetch('/api/v1/lilypad/sales-leads/score-now', { method: 'POST' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				if (result.data && result.data.skipped) {
+					alert('AI scoring is not configured: ' + result.data.skipped);
+				} else {
+					alert('Scored ' + (result.data ? result.data.scored : 0) + ' lead(s).');
+				}
+				loadLeads();
+			} catch (err) {
+				alert(err.message || 'Unable to run scoring.');
+			} finally {
+				btn.disabled = false;
+				btn.innerHTML = '<i class="ti ti-sparkles me-1"></i>Run AI Scoring';
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			try {
+				const res = await fetch('/api/v1/lilypad/account/me');
+				const result = await res.json();
+				if (result.success) {
+					document.querySelectorAll('.topbar-user-name').forEach(el => el.textContent = result.data.fullname || '');
+					document.querySelectorAll('.topbar-user-role').forEach(el => el.textContent = result.data.role || '');
+				}
+			} catch (e) {}
+
+			document.getElementById('nlSearchInput').addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') runNaturalLanguageSearch();
+			});
+
+			loadLeads();
+		});
+	</script>
+</body>
+</html>
