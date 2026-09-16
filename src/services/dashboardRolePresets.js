@@ -103,6 +103,18 @@ const ALL_WIDGETS = [
     icon: 'ti-speakerphone',
     defaultWidth: 12,
     allowedRoles: ['*']
+  },
+  {
+    id: 'report-cards',
+    title: 'My Reports',
+    description: "AI-generated report cards you've created or been shared, refreshed live",
+    category: 'Reports',
+    icon: 'ti-chart-bar',
+    defaultWidth: 12,
+    // Catalog-level gate only - actual per-card visibility is enforced
+    // separately by each LilyPadReportCard's own visibility/sharedRole
+    // fields (see reportQueryService.js/lilypadReports.js), not by this.
+    allowedRoles: ['*']
   }
 ]
 
@@ -358,6 +370,28 @@ async function savePreferencesForAccount(accountId, preferences, userRole) {
   return LilyPadAccount.findByIdAndUpdate(accountId, update, { new: true })
 }
 
+/**
+ * Adds one widget id to an account's dashboard if it isn't already
+ * showing there - used by the "Add to Dashboard" action on a saved
+ * report card so a user doesn't need a separate trip to the customizer.
+ * Reuses getPreferencesForAccount's own customized-vs-preset merge
+ * logic rather than re-deriving it, so this stays correct regardless of
+ * whether the account has ever customized its dashboard before.
+ */
+async function ensureWidgetEnabled (accountId, widgetId) {
+  const account = await LilyPadAccount.findById(accountId)
+  if (!account) return
+
+  const current = await getPreferencesForAccount(account)
+  if (current.widgets.includes(widgetId)) return
+
+  return savePreferencesForAccount(accountId, {
+    widgets: [...current.widgets, widgetId],
+    kpis: current.kpis,
+    layoutMode: current.layoutMode
+  }, account.role)
+}
+
 async function resetPreferencesForAccount(accountId, userRole) {
   const preset = await getPresetForRole(userRole)
   const update = {
@@ -382,5 +416,6 @@ module.exports = {
   getAvailableKpisForRole,
   getPreferencesForAccount,
   savePreferencesForAccount,
-  resetPreferencesForAccount
+  resetPreferencesForAccount,
+  ensureWidgetEnabled
 }

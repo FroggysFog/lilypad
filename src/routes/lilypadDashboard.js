@@ -25,6 +25,7 @@ module.exports = function () {
   router.get('/dashboard/widgets/past-due-ar', requireLoginApi, controllers.lilypadDashboard.getPastDueData)
   router.get('/dashboard/widgets/lapsed-customers', requireLoginApi, controllers.lilypadDashboard.getLapsedCustomersData)
   router.get('/dashboard/widgets/sales-quota', requireLoginApi, controllers.lilypadDashboard.getSalesQuotaData)
+  router.get('/dashboard/widgets/report-cards', requireLoginApi, controllers.lilypadReports.getWidgetData)
 
   return router
 }

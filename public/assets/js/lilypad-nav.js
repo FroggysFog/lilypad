@@ -75,7 +75,8 @@ const LILYPAD_NAV_SECTIONS = [
     items: [
       { href: 'prospects.html', icon: 'ti-user-search', label: 'Lead Prospector' },
       { href: 'customer-intelligence.html', icon: 'ti-chart-arrows', label: 'Customer Intelligence' },
-      { href: 'opportunities.html', icon: 'ti-target-arrow', label: 'Opportunities' }
+      { href: 'opportunities.html', icon: 'ti-target-arrow', label: 'Opportunities' },
+      { href: 'reports.html', icon: 'ti-chart-bar', label: 'Reports' }
     ]
   },
   {

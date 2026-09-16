@@ -26,6 +26,7 @@ const Controllers = {
   lilypadSearch: require('./lilypadSearch'),
   lilypadMeetingNotes: require('./lilypadMeetingNotes'),
   lilypadReceipts: require('./lilypadReceipts'),
+  lilypadReports: require('./lilypadReports'),
   readAi: require('./readAi')
 }
 

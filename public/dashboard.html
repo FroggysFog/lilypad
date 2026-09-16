@@ -660,6 +660,9 @@
                 case 'suggested-tasks':
                     html += renderSuggestedTasksWidgetHtml();
                     break;
+                case 'report-cards':
+                    html += renderReportCardsWidgetHtml();
+                    break;
             }
         });
 
@@ -675,6 +678,7 @@
         if (activeWidgets.includes('sales-quota')) loadSalesQuotaWidgetData();
         if (activeWidgets.includes('priority-conversations')) loadPriorityConversationsWidgetData();
         if (activeWidgets.includes('suggested-tasks')) loadSuggestedTasksWidgetData();
+        if (activeWidgets.includes('report-cards')) loadReportCardsWidgetData();
     }
 
     // =========================================================================
@@ -1024,6 +1028,28 @@
         '</div>';
     }
 
+    function renderReportCardsWidgetHtml() {
+        return '<div class="col-12">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-primary d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-chart-bar fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark">My Reports</h5>' +
+                            '<span class="fs-12 text-muted">AI-generated report cards, refreshed live</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<a href="reports.html" class="btn btn-sm btn-outline-primary rounded-pill px-3 fs-12">Ask a Report</a>' +
+                '</div>' +
+                '<div class="card-body p-3" id="dashReportCardsBody">' +
+                    '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading reports...</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
     let dashSenderCardsByAddress = {};
     let dashOpenSenderCardAddress = null;
 
@@ -1131,6 +1157,41 @@
         } catch (err) {
             container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load sales pipeline.</div>';
         }
+    }
+
+    async function loadReportCardsWidgetData() {
+        const container = document.getElementById('dashReportCardsBody');
+        if (!container) return;
+        try {
+            const res = await fetch('/api/v1/lilypad/dashboard/widgets/report-cards');
+            const result = await res.json();
+            const cards = (result.data || []);
+            if (!cards.length) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="ti ti-chart-bar fs-24 d-block mb-1"></i>No reports yet. <a href="reports.html">Ask a question</a> to create one.</div>';
+                return;
+            }
+            container.innerHTML = '<div class="row g-2">' + cards.map(c => '<div class="col-md-6 col-xl-4">' +
+                '<div class="p-3 rounded bg-light border h-100">' +
+                    '<div class="d-flex align-items-start justify-content-between gap-2 mb-1">' +
+                        '<strong class="text-dark fs-13">' + escapeHtml(c.title) + '</strong>' +
+                        (c.isOwner ? '<button type="button" class="btn btn-sm btn-link text-danger p-0 fs-12" onclick="removeDashReportCard(\'' + c._id + '\')" title="Remove"><i class="ti ti-x"></i></button>' : '') +
+                    '</div>' +
+                    (c.error
+                        ? '<span class="fs-12 text-danger">' + escapeHtml(c.error) + '</span>'
+                        : '<span class="fs-12 text-muted">' + escapeHtml(c.summary) + '</span>') +
+                '</div>' +
+            '</div>').join('') + '</div>';
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load reports.</div>';
+        }
+    }
+
+    async function removeDashReportCard(id) {
+        if (!confirm('Remove this report card?')) return;
+        try {
+            await fetch('/api/v1/lilypad/reports/' + id, { method: 'DELETE' });
+            loadReportCardsWidgetData();
+        } catch (err) {}
     }
 
     async function loadShippingDockWidgetData() {
