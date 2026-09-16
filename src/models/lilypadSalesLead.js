@@ -33,13 +33,21 @@ const salesLeadSchema = new Schema({
   },
   source: {
     type: String,
-    enum: ['usfa_registry', 'manual_import', 'gmaps_csv', 'inbound', 'apollo'],
+    enum: ['usfa_registry', 'manual_import', 'gmaps_csv', 'inbound', 'apollo', 'apify_gmaps'],
     default: 'manual_import'
   },
   metadata: {
     stationCount: { type: Number, default: 1 },
     reviewCount: { type: Number, default: 0 },
-    googleRating: { type: Number, default: 0 }
+    googleRating: { type: Number, default: 0 },
+    googlePlaceId: { type: String, trim: true, default: '' },
+    categories: [String],
+    // Which curated sub-vertical (leadTargetingMatrix.js) this lead was
+    // sourced under, e.g. 'haunts' or 'worship' - lets contact research
+    // prioritize the right titles for THIS lead instead of just a
+    // division-wide default.
+    sector: { type: String, trim: true, default: '' },
+    titleHierarchy: [String]
   },
   contact: {
     name: String,
@@ -49,10 +57,14 @@ const salesLeadSchema = new Schema({
     // HQ `phone` field above.
     phone: { type: String, trim: true, default: '' },
     // Set by deptContactResearchService.js - which role tier actually
-    // matched (training_chief is preferred; fire_chief/captain are
-    // fallbacks only used when no training chief was found) and how
-    // confident that match is, so a human can judge before trusting it.
-    roleMatched: { type: String, enum: ['training_chief', 'fire_chief', 'captain', 'none'], default: 'none' },
+    // matched (a slugified version of the lead's own titleHierarchy
+    // entry, e.g. "technical_director", or a division default like
+    // "training_chief"/"owner" - the most-preferred role is tried
+    // first, the rest are fallbacks only used when nothing earlier was
+    // found) and how confident that match is, so a human can judge
+    // before trusting it. Not an enum - role names are data-driven from
+    // leadTargetingMatrix.js, not a fixed code list.
+    roleMatched: { type: String, trim: true, default: 'none' },
     sourceUrl: { type: String, trim: true, default: '' },
     confidence: { type: String, enum: ['', 'high', 'medium', 'low'], default: '' },
     researchedAt: { type: Date, default: null }

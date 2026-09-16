@@ -113,6 +113,7 @@
 							<button type="button" class="btn btn-outline-primary btn-sm division-toggle" data-division="training_smoke" onclick="setDivision('training_smoke')">Training Smoke</button>
 						</div>
 						<button type="button" class="btn btn-primary btn-sm rounded-pill px-3" id="runScoringBtn" onclick="runAiScoring()"><i class="ti ti-sparkles me-1"></i>Run AI Scoring</button>
+						<button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3" id="researchContactsBtn" onclick="runResearchContacts()"><i class="ti ti-user-search me-1"></i>Research Contacts</button>
 						<button type="button" class="btn btn-success btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#goalModeModal"><i class="ti ti-target-arrow me-1"></i>Build Target List (Goal Mode)</button>
 					</div>
 				</div>
@@ -536,6 +537,33 @@
 			} finally {
 				btn.disabled = false;
 				btn.innerHTML = '<i class="ti ti-sparkles me-1"></i>Run AI Scoring';
+			}
+		}
+
+		async function runResearchContacts() {
+			const btn = document.getElementById('researchContactsBtn');
+			const division = currentDivision !== 'all' ? currentDivision : 'froggys_fog';
+			btn.disabled = true;
+			btn.innerHTML = '<i class="ti ti-loader-2 me-1"></i>Researching...';
+			try {
+				const res = await fetch('/api/v1/lilypad/sales-leads/research-contacts', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ division, limit: 10 })
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				if (result.data && result.data.skipped) {
+					alert('Contact research is not configured: ' + result.data.skipped);
+				} else {
+					alert('Researched ' + (result.data ? result.data.researched : 0) + ' lead(s), found a contact for ' + (result.data ? result.data.found : 0) + '.');
+				}
+				loadLeads();
+			} catch (err) {
+				alert(err.message || 'Unable to research contacts.');
+			} finally {
+				btn.disabled = false;
+				btn.innerHTML = '<i class="ti ti-user-search me-1"></i>Research Contacts';
 			}
 		}
 

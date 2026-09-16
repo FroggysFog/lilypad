@@ -14,7 +14,7 @@ const winston = require('../logger')
 const LilyPadSalesLead = require('../models/lilypadSalesLead')
 const LilyPadSalesScrapeJob = require('../models/lilypadSalesScrapeJob')
 const deptContactResearchService = require('./deptContactResearchService')
-const apolloHarvestBridge = require('./apolloHarvestBridge')
+const mapsHarvestBridge = require('./mapsHarvestBridge')
 
 const REQUEST_TIMEOUT_MS = 30000
 const MAX_RETRIES = 3
@@ -119,17 +119,23 @@ async function executeWaterfallJob (jobId) {
   job.status = 'running'
   await job.save()
 
-  // Froggy's Fog has no baseline registry like USFA - the only thing in
-  // this app that finds brand-new commercial companies is the Apollo
-  // pipeline, so that division delegates entirely to the harvest bridge
-  // rather than running the training_smoke-specific tier cascade below.
-  if (job.division === 'froggys_fog') {
-    try {
-      await apolloHarvestBridge.dispatchApolloHarvest(job)
-    } catch (err) {
-      job.status = 'failed'
-      await addLog(job, err.message, 'error')
-    }
+  // Froggy's Fog has no baseline registry like USFA - it always
+  // delegates to the Google Maps harvest bridge. Training Smoke also
+  // delegates there when the prompt matched one of the curated
+  // specialized sub-verticals (fire academies, industrial safety
+  // companies) - USFA's registry has no concept of those as distinct
+  // entities, only general municipal/volunteer fire departments, which
+  // is exactly what falls through to the unchanged cascade below.
+  // (Froggy's Fog previously tried Apollo for this - a real test came
+  // back with zero results for "haunted attractions," since Apollo is a
+  // B2B/corporate contact database, not a fit for small seasonal
+  // entertainment venues.)
+  try {
+    const harvestResult = await mapsHarvestBridge.dispatchMapsHarvest(job)
+    if (harvestResult.handled) return
+  } catch (err) {
+    job.status = 'failed'
+    await addLog(job, err.message, 'error')
     return
   }
 

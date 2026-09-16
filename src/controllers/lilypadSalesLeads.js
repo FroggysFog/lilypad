@@ -11,6 +11,7 @@ const reactivationService = require('../services/reactivationService')
 const goalModePlanner = require('../services/goalModePlanner')
 const waterfallScraper = require('../services/waterfallScraper')
 const leadProspectorService = require('../services/leadProspectorService')
+const deptContactResearchService = require('../services/deptContactResearchService')
 
 const controller = {}
 
@@ -47,6 +48,24 @@ controller.list = async function (req, res) {
 controller.scoreNow = async function (req, res) {
   try {
     const summary = await leadScorer.scoreLeadBatch(10)
+    return res.status(200).json({ success: true, data: summary })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/sales-leads/research-contacts
+ * body: { division, limit }
+ * Explicit, separately-triggered enrichment step - discovery (Goal
+ * Mode's Maps harvest) never calls this on its own, so a large harvest
+ * never silently turns into a burst of AI calls.
+ */
+controller.researchContacts = async function (req, res) {
+  try {
+    const division = VALID_DIVISIONS.includes(req.body.division) ? req.body.division : 'froggys_fog'
+    const limit = Number(req.body.limit) > 0 ? Math.min(Number(req.body.limit), 50) : 10
+    const summary = await deptContactResearchService.researchContactBatch(division, limit)
     return res.status(200).json({ success: true, data: summary })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })

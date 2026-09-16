@@ -1,11 +1,18 @@
 /**
- * LilyPad ERP - Department Leadership Contact Research (pilot)
- * Finds a real named Training Chief (falling back to Fire Chief, then
- * Captain) for one fire department lead, via Anthropic's server-side
+ * LilyPad ERP - Lead Contact Research
+ * Finds a real named contact for one lead, following a division-
+ * specific role-priority fallback, via Anthropic's server-side
  * web_search tool - Claude runs its own search queries and only calls
  * the forced-shape extraction tool with what it actually found in real
  * results. Never invents a name/phone/email: `found: false` when
  * nothing turns up, not a guess.
+ *
+ * Originally built and pilot-validated (5/5 real Tennessee departments)
+ * for Training Smoke's Training Chief -> Fire Chief -> Captain
+ * hierarchy; generalized here to also cover Froggy's Fog's
+ * Owner -> General Manager -> Manager hierarchy for leads sourced via
+ * the Google Maps harvest (mapsHarvestBridge.js), which only ever
+ * returns company-level data (name/phone/reviews), never a contact.
  *
  * Deliberately NOT the forced-single-tool-choice pattern used for
  * cheap classification elsewhere in this app (emailTriageExtractionService.js,
@@ -32,6 +39,23 @@ const MAX_SEARCHES_PER_LEAD = 3
 
 const CONFIDENCE_RANK = { '': 0, low: 1, medium: 2, high: 3 }
 
+// One entry per division - roles are checked in order, most-preferred
+// first, matching how each division's Goal Mode prompts already phrase
+// their own fallback ("Training Chief, fallback to Fire Chief or
+// Captain" / a haunt's decision-maker being whoever runs the place).
+const ROLE_HIERARCHIES = {
+  training_smoke: {
+    entityLabel: 'fire department',
+    roles: ['training_chief', 'fire_chief', 'captain'],
+    titleLabels: { training_chief: 'Training Chief', fire_chief: 'Fire Chief', captain: 'Captain' }
+  },
+  froggys_fog: {
+    entityLabel: 'business',
+    roles: ['owner', 'general_manager', 'manager'],
+    titleLabels: { owner: 'Owner', general_manager: 'General Manager', manager: 'Manager' }
+  }
+}
+
 function getConfig () {
   return {
     apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -54,59 +78,82 @@ function getClient (apiKey) {
   return cachedClient
 }
 
-const RESEARCH_TOOL = {
-  name: 'emit_department_contact',
-  description: 'The best available training/leadership contact found via web search for one fire department, following a strict role-priority fallback.',
-  input_schema: {
-    type: 'object',
-    required: ['found', 'role_matched', 'confidence'],
-    properties: {
-      found: { type: 'boolean', description: 'True only if a named person with a phone number or email was actually found in real search results - never true on a guess or inference.' },
-      contact_name: { type: ['string', 'null'] },
-      role_matched: { type: 'string', enum: ['training_chief', 'fire_chief', 'captain', 'none'], description: 'training_chief is preferred - only report fire_chief or captain if a training chief genuinely could not be found. "none" if found is false.' },
-      phone: { type: ['string', 'null'] },
-      email: { type: ['string', 'null'] },
-      source_url: { type: ['string', 'null'], description: 'The exact URL the name and contact detail were found on.' },
-      confidence: { type: 'string', enum: ['high', 'medium', 'low'], description: 'high = official department site/roster; medium = local news or secondary source; low = indirect/uncertain match.' }
+function buildResearchTool (roleHierarchy) {
+  return {
+    name: 'emit_lead_contact',
+    description: `The best available contact found via web search for one ${roleHierarchy.entityLabel}, following a strict role-priority fallback.`,
+    input_schema: {
+      type: 'object',
+      required: ['found', 'role_matched', 'confidence'],
+      properties: {
+        found: { type: 'boolean', description: 'True only if a named person with a phone number or email was actually found in real search results - never true on a guess or inference.' },
+        contact_name: { type: ['string', 'null'] },
+        role_matched: { type: 'string', enum: [...roleHierarchy.roles, 'none'], description: `${roleHierarchy.roles[0]} is preferred - only report a later role in the list if an earlier one genuinely could not be found. "none" if found is false.` },
+        phone: { type: ['string', 'null'] },
+        email: { type: ['string', 'null'] },
+        source_url: { type: ['string', 'null'], description: 'The exact URL the name and contact detail were found on.' },
+        confidence: { type: 'string', enum: ['high', 'medium', 'low'], description: 'high = official site/roster; medium = local news or secondary source; low = indirect/uncertain match.' }
+      }
     }
   }
 }
 
-function buildSystemPrompt () {
-  return 'You research one specific fire department\'s leadership contact for an internal ERP\'s sales tool, via web search. ' +
-    'Search for the department\'s Training Chief or Training Officer first. Only if you genuinely cannot find one after searching, ' +
-    'fall back to the Fire Chief. Only if neither exists, fall back to a Captain. ' +
-    'You MUST call the emit_department_contact tool exactly once when you are done searching. ' +
+function buildSystemPrompt (roleHierarchy) {
+  const roleList = roleHierarchy.roles.map((r) => roleHierarchy.titleLabels[r] || r).join(' -> ')
+  return `You research one specific ${roleHierarchy.entityLabel}'s contact for an internal ERP's sales tool, via web search. ` +
+    `Search in this priority order, falling back only if the earlier role genuinely cannot be found: ${roleList}. ` +
+    'You MUST call the emit_lead_contact tool exactly once when you are done searching. ' +
     'Set found:true ONLY if you found a real named person together with a phone number or email address in actual search results - ' +
     'never invent, infer, or guess a name or contact detail that wasn\'t actually in the results. If nothing solid turns up after searching, set found:false and role_matched:"none".'
 }
 
-async function researchContact (companyName, city, state) {
+// Free-text titles from leadTargetingMatrix.js ("Technical Director")
+// need an enum-safe key for the tool schema's role_matched field -
+// "Technical Director" -> "technical_director".
+function slugify (title) {
+  return String(title || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+}
+
+/**
+ * Prefers a lead's OWN saved title hierarchy (set per-sector by
+ * mapsHarvestBridge.js, e.g. "Technical Director" for haunts vs.
+ * "Production Director" for worship) over the division-wide default -
+ * falls back to the default for leads with none saved (manually-added,
+ * USFA-sourced, etc.).
+ */
+function resolveRoleHierarchy (lead) {
+  const fallback = ROLE_HIERARCHIES[lead.division] || ROLE_HIERARCHIES.training_smoke
+  const titles = lead.metadata && lead.metadata.titleHierarchy
+  if (!titles || !titles.length) return fallback
+
+  const roles = titles.map(slugify).filter(Boolean)
+  const titleLabels = {}
+  titles.forEach((title, i) => { titleLabels[roles[i]] = title })
+
+  return { entityLabel: fallback.entityLabel, roles, titleLabels }
+}
+
+async function researchContact (companyName, city, state, roleHierarchy) {
   const config = getConfig()
   const client = getClient(config.apiKey)
 
   const response = await client.messages.create({
     model: config.model,
     max_tokens: 2048,
-    system: buildSystemPrompt(),
+    system: buildSystemPrompt(roleHierarchy),
     tools: [
       { type: WEB_SEARCH_TOOL_TYPE, name: 'web_search', max_uses: MAX_SEARCHES_PER_LEAD },
-      RESEARCH_TOOL
+      buildResearchTool(roleHierarchy)
     ],
     tool_choice: { type: 'auto' },
-    messages: [{ role: 'user', content: `Fire department: "${companyName}", ${city}, ${state}` }]
+    messages: [{ role: 'user', content: `${roleHierarchy.entityLabel[0].toUpperCase()}${roleHierarchy.entityLabel.slice(1)}: "${companyName}", ${city}, ${state}` }]
   })
 
-  const toolUse = [...response.content].reverse().find((block) => block.type === 'tool_use' && block.name === 'emit_department_contact')
+  const toolUse = [...response.content].reverse().find((block) => block.type === 'tool_use' && block.name === 'emit_lead_contact')
   if (!toolUse) return { found: false, role_matched: 'none', confidence: 'low' }
   return toolUse.input || { found: false, role_matched: 'none', confidence: 'low' }
 }
 
-/**
- * Researches and saves a contact for one lead. Atomic update, not
- * load-mutate-save - and never overwrites an existing higher-confidence
- * contact with a weaker one from a re-run.
- */
 // Confirmed in pilot testing: a real result (Nashville Fire Dept) came
 // back with the literal placeholder text "[email protected]" - some
 // sites render that string as a fallback when their JS-based email
@@ -122,11 +169,17 @@ function sanitizeEmail (rawEmail) {
   return email
 }
 
+/**
+ * Researches and saves a contact for one lead. Atomic update, not
+ * load-mutate-save - and never overwrites an existing higher-confidence
+ * contact with a weaker one from a re-run.
+ */
 async function researchContactForLead (leadId) {
   const lead = await LilyPadSalesLead.findById(leadId)
   if (!lead) throw new Error('Lead not found.')
 
-  const result = await researchContact(lead.companyName, (lead.address && lead.address.city) || '', (lead.address && lead.address.state) || '')
+  const roleHierarchy = resolveRoleHierarchy(lead)
+  const result = await researchContact(lead.companyName, (lead.address && lead.address.city) || '', (lead.address && lead.address.state) || '', roleHierarchy)
 
   if (!result.found) {
     await LilyPadSalesLead.updateOne({ _id: leadId }, { $set: { 'contact.researchedAt': new Date() } })
@@ -142,7 +195,7 @@ async function researchContactForLead (leadId) {
   await LilyPadSalesLead.updateOne({ _id: leadId }, {
     $set: {
       'contact.name': String(result.contact_name || '').slice(0, 200),
-      'contact.title': result.role_matched === 'training_chief' ? 'Training Chief' : result.role_matched === 'fire_chief' ? 'Fire Chief' : result.role_matched === 'captain' ? 'Captain' : '',
+      'contact.title': roleHierarchy.titleLabels[result.role_matched] || '',
       'contact.phone': String(result.phone || '').slice(0, 50),
       'contact.email': sanitizeEmail(result.email).slice(0, 200),
       'contact.roleMatched': result.role_matched,
@@ -172,7 +225,7 @@ async function researchContactBatch (division, limit = 10) {
       const result = await researchContactForLead(lead._id)
       results.push({ companyName: lead.companyName, ...result })
     } catch (err) {
-      winston.error(`Department contact research failed for ${lead._id}: ${err.message}`)
+      winston.error(`Lead contact research failed for ${lead._id}: ${err.message}`)
       results.push({ companyName: lead.companyName, leadId: lead._id, found: false, error: err.message })
     }
   }

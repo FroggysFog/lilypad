@@ -11,14 +11,18 @@ const Schema = mongoose.Schema
 const COLLECTION = 'lilypad_sales_scrape_jobs'
 
 const scrapeJobSchema = new Schema({
-  // Needed so a froggys_fog job can dispatch a real LilyPadLeadBatch on
-  // the requester's behalf - that model requires createdByUserId.
+  // Audit trail of who requested this job.
   createdByUserId: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', default: null },
   createdByName: { type: String, trim: true, default: '' },
   rawPrompt: { type: String, required: true },
   division: { type: String, enum: ['froggys_fog', 'training_smoke'], required: true },
   status: { type: String, enum: ['planning', 'running', 'verifying', 'completed', 'failed'], default: 'planning', index: true },
   criteria: {
+    // Which curated sub-vertical (see leadTargetingMatrix.js) this
+    // matched, or 'general' if none fit - decides whether the job
+    // dispatches to the Maps harvest bridge or a division's own
+    // default path (USFA for a general training_smoke request).
+    sector: { type: String, default: 'general' },
     targetEntity: { type: String, default: '' },
     state: { type: String, default: '' },
     city: { type: String, default: '' },
@@ -40,11 +44,7 @@ const scrapeJobSchema = new Schema({
     timestamp: { type: Date, default: Date.now },
     message: String,
     level: { type: String, enum: ['info', 'warn', 'error'], default: 'info' }
-  }],
-  // Set when this job dispatches a real Apollo batch (froggys_fog
-  // division) - see apolloHarvestBridge.js. Null for training_smoke
-  // jobs, which never create a LilyPadLeadBatch.
-  apolloBatchId: { type: Schema.Types.ObjectId, ref: 'lilypad_lead_batches', default: null }
+  }]
 }, { timestamps: true })
 
 module.exports = mongoose.model(COLLECTION, scrapeJobSchema)
