@@ -108,9 +108,79 @@
 					<a href="customers.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="ti ti-arrow-left me-1"></i> Back to Customers</a>
 				</div>
 
-				<div id="custParentAccount" style="display:none;"></div>
+				<div class="row g-3" id="custDetailBody" style="display:none;">
+					<!-- Left column: identity, quick actions, key information -->
+					<div class="col-lg-3">
+						<div class="card border-0 shadow-sm rounded-3 mb-3">
+							<div class="card-body">
+								<div class="d-flex align-items-center gap-2 mb-3">
+									<div class="rounded-circle bg-soft-primary text-primary d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width:44px;height:44px;font-size:18px;" id="custAvatarInitial">?</div>
+									<div class="overflow-hidden">
+										<div class="fw-bold text-dark text-truncate" id="custLeftName">—</div>
+										<div class="fs-12 text-muted text-truncate" id="custLeftCompany"></div>
+									</div>
+								</div>
+								<div class="d-flex gap-2 flex-wrap" id="custQuickActions"></div>
+							</div>
+						</div>
 
-				<div id="custDetailBody"></div>
+						<div class="card border-0 shadow-sm rounded-3 mb-3">
+							<div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+								<button class="btn btn-link p-0 text-decoration-none fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#custKeyInfoBody">
+									<i class="ti ti-chevron-down me-1"></i> Key Information
+								</button>
+							</div>
+							<div class="collapse show" id="custKeyInfoBody">
+								<div class="card-body pt-0" id="custKeyInfoFields"></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Center column: tabbed overview / orders / opportunities -->
+					<div class="col-lg-6">
+						<ul class="nav nav-tabs mb-3">
+							<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#custTabOverview" type="button">Overview</button></li>
+							<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#custTabOrders" type="button">Orders <span class="badge bg-soft-secondary text-secondary rounded-pill fs-10 ms-1" id="custOrdersTabCount"></span></button></li>
+							<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#custTabOpps" type="button">Opportunities <span class="badge bg-soft-secondary text-secondary rounded-pill fs-10 ms-1" id="custOppsTabCount"></span></button></li>
+						</ul>
+						<div class="tab-content">
+							<div class="tab-pane fade show active" id="custTabOverview">
+								<div id="custOverviewBody"></div>
+							</div>
+							<div class="tab-pane fade" id="custTabOrders">
+								<div class="card border-0 shadow-sm rounded-3">
+									<div class="table-responsive">
+										<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
+											<thead class="table-light"><tr><th>Order #</th><th>Status</th><th>Date</th><th>Total</th><th>Due</th></tr></thead>
+											<tbody id="custOrdersTableBody"></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							<div class="tab-pane fade" id="custTabOpps">
+								<div class="card border-0 shadow-sm rounded-3">
+									<div class="table-responsive">
+										<table class="table table-hover table-sm mb-0" style="white-space: nowrap;">
+											<thead class="table-light"><tr><th>Name</th><th>Stage</th><th>Amount</th><th>Close Date</th></tr></thead>
+											<tbody id="custOppsTableBody"></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Right column: parent account rail -->
+					<div class="col-lg-3">
+						<div class="card border-0 shadow-sm rounded-3 mb-3">
+							<div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+								<h6 class="fw-bold mb-0">Account</h6>
+								<span class="badge fs-10 rounded-pill fw-semibold" id="custParentMatchBadge"></span>
+							</div>
+							<div class="card-body" id="custParentAccountBody"></div>
+						</div>
+					</div>
+				</div>
 
 				<footer class="footer d-block d-md-flex justify-content-between text-md-start text-center">
 					<p class="mb-md-0 mb-1">Copyright &copy; <script>document.write(new Date().getFullYear())</script> <a href="https://froggysfog.com" target="_blank" class="link-primary text-decoration-underline" style="font-weight: 600;">Froggy's Fog</a>. All rights reserved.</p>
@@ -145,14 +215,34 @@
 			window.location.href = 'login.html';
 		}
 
-		function field(label, value) {
+		function fieldRow(label, value) {
 			return `
-				<div class="col-md-4 mb-3">
-					<span class="fs-12 text-muted d-block text-uppercase fw-semibold">${escapeHtml(label)}</span>
-					<strong class="text-dark">${value === null || value === undefined || value === '' ? '—' : escapeHtml(value)}</strong>
+				<div class="mb-2">
+					<span class="fs-11 text-muted d-block text-uppercase fw-semibold">${escapeHtml(label)}</span>
+					<span class="text-dark fs-13">${value === null || value === undefined || value === '' ? '—' : escapeHtml(value)}</span>
 				</div>
 			`;
 		}
+
+		function formatCurrency(amount) {
+			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(amount || 0));
+		}
+
+		const ENGAGEMENT_BADGES = {
+			active: 'bg-soft-success text-success', dormant: 'bg-soft-warning text-warning',
+			churned: 'bg-soft-danger text-danger', lead_only: 'bg-soft-secondary text-secondary',
+			never_purchased: 'bg-soft-secondary text-secondary'
+		};
+		const TIER_BADGES = {
+			available_pool: 'bg-soft-warning text-warning', managed: 'bg-soft-success text-success',
+			self_serve: 'bg-soft-secondary text-secondary'
+		};
+		const TIER_LABELS = { available_pool: 'Available Pool', managed: 'Managed', self_serve: 'Self-Serve' };
+		const PARENT_MATCH_TYPE_LABELS = {
+			domain: { text: 'By email domain', cls: 'bg-soft-success text-success' },
+			fuzzy_name: { text: 'Approximate match', cls: 'bg-soft-warning text-warning' },
+			none: { text: '', cls: '' }
+		};
 
 		async function loadCustomerDetail() {
 			const id = new URLSearchParams(window.location.search).get('id');
@@ -169,70 +259,184 @@
 				const c = result.data;
 				document.getElementById('custDetailName').textContent = c.name;
 				document.getElementById('custDetailCompany').textContent = c.company || '';
+				document.getElementById('custDetailBody').style.display = '';
 
-				const age = c.createdDate ? Math.max(0, Math.floor((Date.now() - new Date(c.createdDate).getTime()) / 86400000)) : '';
-
-				document.getElementById('custDetailBody').innerHTML = `
-					<div class="card border-0 shadow-sm rounded-3 p-4">
-						<div class="row">
-							${field('Lead Status', c.leadStatus)}
-							${field('Owner', c.ownerAlias)}
-							${field('Industry', c.industry)}
-							${field('State', c.state)}
-							${field('Lead Source', c.leadSource)}
-							${field('Trade Show', c.tradeShow)}
-							${field('Phone', c.phone)}
-							${field('Email', c.email)}
-							${field('Last Activity', c.lastActivityDate ? new Date(c.lastActivityDate).toLocaleDateString() : '')}
-							${field('Created Date', c.createdDate ? new Date(c.createdDate).toLocaleString() : '')}
-							${field('Age (days)', age)}
-							${field('Created By', c.createdByName)}
-						</div>
-						<div class="mt-2">
-							<span class="fs-12 text-muted d-block text-uppercase fw-semibold mb-1">Import Notes</span>
-							<p class="text-dark mb-0">${c.importNotes ? escapeHtml(c.importNotes) : '—'}</p>
-						</div>
-					</div>
-				`;
-
-				renderParentAccount(result.parentAccount, result.parentAccountMatchType);
+				renderIdentityAndActions(c);
+				renderKeyInfo(c);
+				renderOverview(c, result.parentAccount, result.parentAccountMatchType, result.profile);
+				renderOrders(result.orders || []);
+				renderOpportunities(result.opportunities || []);
+				renderParentAccountCard(result.parentAccount, result.parentAccountMatchType);
 			} catch (err) {
 				document.getElementById('custDetailName').textContent = 'Unable to load customer';
-				document.getElementById('custDetailBody').innerHTML = '<p class="text-danger">' + escapeHtml(err.message) + '</p>';
+				document.getElementById('custDetailBody').innerHTML = '<p class="text-danger p-3">' + escapeHtml(err.message) + '</p>';
+				document.getElementById('custDetailBody').style.display = '';
 			}
 		}
 
-		const PARENT_MATCH_TYPE_LABELS = {
-			domain: { text: 'Matched by email domain', cls: 'bg-soft-success text-success' },
-			fuzzy_name: { text: 'Matched by company name (approximate)', cls: 'bg-soft-warning text-warning' }
-		};
+		function renderIdentityAndActions(c) {
+			document.getElementById('custAvatarInitial').textContent = (c.name || '?').trim().charAt(0).toUpperCase();
+			document.getElementById('custLeftName').textContent = c.name || '(no name)';
+			document.getElementById('custLeftCompany').textContent = c.company || '';
+
+			const actions = [];
+			if (c.phone) actions.push(`<a href="tel:${escapeHtml(c.phone)}" class="btn btn-light btn-sm rounded-pill px-3"><i class="ti ti-phone me-1"></i>Call</a>`);
+			if (c.email) actions.push(`<a href="mailto:${escapeHtml(c.email)}" class="btn btn-light btn-sm rounded-pill px-3"><i class="ti ti-mail me-1"></i>Email</a>`);
+			actions.push(`<a href="tickets.html?action=new" class="btn btn-light btn-sm rounded-pill px-3"><i class="ti ti-ticket me-1"></i>New Ticket</a>`);
+			document.getElementById('custQuickActions').innerHTML = actions.join('');
+		}
+
+		function renderKeyInfo(c) {
+			const age = c.createdDate ? Math.max(0, Math.floor((Date.now() - new Date(c.createdDate).getTime()) / 86400000)) : '';
+			document.getElementById('custKeyInfoFields').innerHTML = `
+				${fieldRow('Lead Status', c.leadStatus)}
+				${fieldRow('Owner', c.ownerAlias)}
+				${fieldRow('Industry', c.industry)}
+				${fieldRow('State', c.state)}
+				${fieldRow('Lead Source', c.leadSource)}
+				${fieldRow('Trade Show', c.tradeShow)}
+				${fieldRow('Phone', c.phone)}
+				${fieldRow('Email', c.email)}
+				${fieldRow('Last Activity', c.lastActivityDate ? new Date(c.lastActivityDate).toLocaleDateString() : '')}
+				${fieldRow('Created Date', c.createdDate ? new Date(c.createdDate).toLocaleString() : '')}
+				${fieldRow('Age (days)', age)}
+				${fieldRow('Created By', c.createdByName)}
+			`;
+		}
 
 		/**
-		 * This individual's parent company Account, matched live the same
-		 * way Customer Intelligence does (email domain first, fuzzy
-		 * company-name fallback) - there's no clean ID link either
-		 * direction. Shown as a small banner rather than a table since
-		 * it's a single relationship, not a list.
+		 * This individual has no clean ID link to a company Account -
+		 * matched live by email domain first, fuzzy name fallback (see
+		 * findParentAccountForCustomer in lilypadCustomers.js). Everything
+		 * here beyond the match itself (engagement, tier, AI score) is the
+		 * matched account's own real, already-computed LilyPadCustomerProfile -
+		 * shown only when a match and a resolved profile actually exist.
 		 */
-		function renderParentAccount(account, matchType) {
-			const el = document.getElementById('custParentAccount');
+		function renderOverview(c, account, matchType, profile) {
+			const el = document.getElementById('custOverviewBody');
+			const notesCard = `<div class="card border-0 shadow-sm rounded-3 mb-3"><div class="card-body"><h6 class="fw-bold mb-2">Import Notes</h6><p class="text-dark mb-0 fs-13">${c.importNotes ? escapeHtml(c.importNotes) : '—'}</p></div></div>`;
+
 			if (!account) {
-				el.style.display = 'none';
+				el.innerHTML = `
+					<div class="card border-0 shadow-sm rounded-3 mb-3"><div class="card-body text-center py-4">
+						<p class="text-muted mb-0 fs-13">No parent Account matched for this individual yet.</p>
+					</div></div>
+					${notesCard}
+				`;
 				return;
 			}
-			el.style.display = '';
-			const label = PARENT_MATCH_TYPE_LABELS[matchType] || { text: '', cls: 'bg-soft-secondary text-secondary' };
+
+			if (!profile) {
+				el.innerHTML = `
+					<div class="card border-0 shadow-sm rounded-3 mb-3"><div class="card-body text-center py-4">
+						<p class="text-muted mb-2 fs-13">Matched to <strong>${escapeHtml(account.name)}</strong>, but no resolved Customer Intelligence profile yet.</p>
+						<a href="customer-intelligence.html" class="btn btn-primary btn-sm rounded-pill px-3">Go rebuild profiles</a>
+					</div></div>
+					${notesCard}
+				`;
+				return;
+			}
+
+			const tier = profile.accountTier || 'self_serve';
+			const dormantBadge = (profile.qualification && profile.qualification.isDormant)
+				? '<span class="badge bg-soft-danger text-danger fs-12 rounded-pill fw-semibold" title="No orders in ~18 months">Dormant</span>'
+				: '';
+			const score = profile.recommendation && profile.recommendation.score != null ? profile.recommendation.score : null;
+			const reason = profile.recommendation && profile.recommendation.reason ? profile.recommendation.reason : '';
+			const generatedAt = profile.recommendation && profile.recommendation.generatedAt ? new Date(profile.recommendation.generatedAt).toLocaleDateString() : null;
+
 			el.innerHTML = `
-				<div class="card border-0 shadow-sm rounded-3 p-3 mb-3 d-flex flex-row align-items-center justify-content-between flex-wrap gap-2">
-					<div class="d-flex align-items-center gap-2">
-						<i class="ti ti-building text-primary fs-20"></i>
-						<div>
-							<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Part of Account</span>
-							<a href="salesforce-account-detail.html?id=${account._id}" class="fw-semibold text-decoration-none">${escapeHtml(account.name)}</a>
+				<div class="card border-0 shadow-sm rounded-3 mb-3">
+					<div class="card-body">
+						<div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+							<span class="badge ${ENGAGEMENT_BADGES[profile.engagementStatus] || ENGAGEMENT_BADGES.never_purchased} fs-12 rounded-pill fw-semibold">${(profile.engagementStatus || '').replace('_', ' ')}</span>
+							<span class="badge ${TIER_BADGES[tier]} fs-12 rounded-pill fw-semibold">${TIER_LABELS[tier]}</span>
+							${dormantBadge}
+						</div>
+						<div class="row g-3">
+							<div class="col-6 col-md-4"><span class="fs-11 text-muted d-block text-uppercase fw-semibold">Lifetime Revenue</span><span class="fw-bold text-dark">${formatCurrency(profile.orderStats ? profile.orderStats.lifetimeRevenue : 0)}</span></div>
+							<div class="col-6 col-md-4"><span class="fs-11 text-muted d-block text-uppercase fw-semibold">Total Orders</span><span class="fw-bold text-dark">${profile.orderStats ? profile.orderStats.totalOrders : 0}</span></div>
+							<div class="col-6 col-md-4"><span class="fs-11 text-muted d-block text-uppercase fw-semibold">Days Since Order</span><span class="fw-bold text-dark">${profile.daysSinceLastOrder != null ? profile.daysSinceLastOrder : '—'}</span></div>
 						</div>
 					</div>
-					<span class="badge fs-11 rounded-pill fw-semibold ${label.cls}">${label.text}</span>
 				</div>
+
+				${score != null ? `
+				<div class="card border-0 shadow-sm rounded-3 mb-3">
+					<div class="card-body">
+						<div class="d-flex align-items-center justify-content-between mb-2">
+							<h6 class="fw-bold mb-0">AI Recommendation</h6>
+							<span class="badge bg-soft-danger text-danger fs-10 rounded-pill fw-bold px-2">AI</span>
+						</div>
+						${generatedAt ? `<div class="fs-11 text-muted mb-2">Generated ${generatedAt}</div>` : ''}
+						<div class="d-flex align-items-center gap-2 mb-2">
+							<div class="progress flex-grow-1" style="height:6px; max-width:140px;"><div class="progress-bar ${score >= 70 ? 'bg-danger' : score >= 40 ? 'bg-warning' : 'bg-secondary'}" style="width:${score}%"></div></div>
+							<span class="fs-13 fw-semibold">${score}</span>
+						</div>
+						<p class="fs-13 text-dark mb-0">${escapeHtml(reason)}</p>
+					</div>
+				</div>` : ''}
+
+				${notesCard}
+			`;
+		}
+
+		function renderOrders(orders) {
+			document.getElementById('custOrdersTabCount').textContent = orders.length;
+			const tbody = document.getElementById('custOrdersTableBody');
+			if (!orders.length) {
+				tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No orders found.</td></tr>';
+				return;
+			}
+			tbody.innerHTML = orders.map(o => `
+				<tr>
+					<td>${escapeHtml(o.orderNumber)}</td>
+					<td>${escapeHtml(o.status)}</td>
+					<td>${o.effectiveDate || '<span class="text-muted">—</span>'}</td>
+					<td>${formatCurrency(o.grandTotal)}</td>
+					<td>${o.totalDue ? formatCurrency(o.totalDue) : '<span class="text-muted">—</span>'}</td>
+				</tr>
+			`).join('');
+		}
+
+		function renderOpportunities(opportunities) {
+			document.getElementById('custOppsTabCount').textContent = opportunities.length;
+			const tbody = document.getElementById('custOppsTableBody');
+			if (!opportunities.length) {
+				tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No opportunities found.</td></tr>';
+				return;
+			}
+			tbody.innerHTML = opportunities.map(o => `
+				<tr>
+					<td>${escapeHtml(o.name)}</td>
+					<td>${escapeHtml(o.stageName)}</td>
+					<td>${formatCurrency(o.amount)}</td>
+					<td>${o.closeDate || '<span class="text-muted">—</span>'}</td>
+				</tr>
+			`).join('');
+		}
+
+		function renderParentAccountCard(account, matchType) {
+			const badge = document.getElementById('custParentMatchBadge');
+			const body = document.getElementById('custParentAccountBody');
+
+			if (!account) {
+				badge.textContent = '';
+				badge.className = 'badge fs-10 rounded-pill fw-semibold';
+				body.innerHTML = '<p class="text-muted fs-13 mb-0">No matching Account found.</p>';
+				return;
+			}
+
+			const label = PARENT_MATCH_TYPE_LABELS[matchType] || PARENT_MATCH_TYPE_LABELS.none;
+			badge.textContent = label.text;
+			badge.className = 'badge fs-10 rounded-pill fw-semibold ' + label.cls;
+
+			body.innerHTML = `
+				<a href="salesforce-account-detail.html?id=${account._id}" class="fw-semibold text-decoration-none d-block mb-2">${escapeHtml(account.name)}</a>
+				${fieldRow('Industry', account.industry)}
+				${fieldRow('Owner', account.ownerName)}
+				${fieldRow('Phone', account.phone)}
+				${fieldRow('Website', account.website)}
 			`;
 		}
 

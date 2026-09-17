@@ -6,6 +6,9 @@ const crypto = require('crypto')
 const xss = require('xss')
 const LilyPadCustomer = require('../models/lilypadCustomer')
 const LilyPadSalesforceAccount = require('../models/lilypadSalesforceAccount')
+const LilyPadOrder = require('../models/lilypadOrder')
+const LilyPadOpportunity = require('../models/lilypadOpportunity')
+const LilyPadCustomerProfile = require('../models/lilypadCustomerProfile')
 const { syncCustomersFromSalesforce } = require('../services/customerSyncService')
 const { normalizeDomain, normalizeCompanyName, isNameMatch } = require('../services/customerIntelligence/fuzzyMatchService')
 
@@ -26,7 +29,7 @@ function escapeRegExp (value) {
  * narrowed query rather than a collection scan.
  */
 async function findParentAccountForCustomer (customer) {
-  const projection = 'name industry phone website'
+  const projection = 'name industry phone website sourceRecordId ownerName annualRevenue numberOfEmployees type'
   const domain = normalizeDomain(customer.email)
 
   if (domain) {
@@ -91,11 +94,35 @@ lilypadCustomersController.getCustomerDetail = async function (req, res) {
 
     const { account, matchType } = await findParentAccountForCustomer(customer)
 
+    let orders = []
+    let opportunities = []
+    let profile = null
+    if (account && account.sourceRecordId) {
+      [orders, opportunities, profile] = await Promise.all([
+        LilyPadOrder.find({ accountId: account.sourceRecordId })
+          .select('orderNumber status effectiveDate grandTotal totalDue')
+          .sort({ effectiveDate: -1 })
+          .limit(10)
+          .lean(),
+        LilyPadOpportunity.find({ accountId: account.sourceRecordId })
+          .select('name stageName amount closeDate isClosed isWon')
+          .sort({ closeDate: -1 })
+          .limit(10)
+          .lean(),
+        LilyPadCustomerProfile.findOne({ salesforceAccountId: account._id })
+          .select('accountTier qualification engagementStatus daysSinceLastOrder orderStats opportunityStats cartOrderStats ticketStats recommendation')
+          .lean()
+      ])
+    }
+
     return res.status(200).json({
       success: true,
       data: customer,
       parentAccount: account,
-      parentAccountMatchType: matchType
+      parentAccountMatchType: matchType,
+      orders,
+      opportunities,
+      profile
     })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
