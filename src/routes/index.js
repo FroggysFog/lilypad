@@ -210,6 +210,9 @@ module.exports = function (app) {
   const lilypadSalesCommandCenterRouter = require('./lilypadSalesCommandCenter')()
   app.use('/api/v1/lilypad', lilypadSalesCommandCenterRouter)
 
+  const lilypadInventoryRouter = require('./lilypadInventory')()
+  app.use('/api/v1/lilypad', lilypadInventoryRouter)
+
   const lilypadAllLeadsRouter = require('./lilypadAllLeads')()
   app.use('/api/v1/lilypad', lilypadAllLeadsRouter)
 

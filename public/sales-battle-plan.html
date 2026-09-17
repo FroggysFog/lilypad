@@ -122,6 +122,52 @@
 					</div>
 				</div>
 
+				<!-- Existing-record lookup: Customers, Accounts, Orders, Machines -
+					 distinct from the "Ask in plain English" box below, which
+					 searches this rep's own Sales OS prospecting leads via AI, not
+					 already-existing CRM/order/machine records. -->
+				<div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
+					<div class="position-relative">
+						<div class="input-icon position-relative">
+							<input type="text" id="recordSearchInput" class="form-control rounded-pill" placeholder="Look up a customer, account, order, or machine by name/number...">
+							<span class="input-icon-addon"><i class="ti ti-search fs-16 text-muted"></i></span>
+						</div>
+						<div id="recordSearchResults" class="list-group shadow-lg" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:1050; max-height:400px; overflow-y:auto; margin-top:4px;"></div>
+					</div>
+				</div>
+
+				<!-- Quick Inventory Search - no live stock feed exists anywhere in
+					 this app (Cart.com's connected API never touches products, and
+					 nothing else tracks on-hand/incoming counts) - this is a real,
+					 manually-maintained record, not a fabricated one. Counts start
+					 at zero/empty and only change when someone updates them here. -->
+				<div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
+					<div class="d-flex align-items-center justify-content-between mb-2">
+						<h6 class="fw-bold mb-0"><i class="ti ti-package me-1 text-primary"></i>Quick Inventory Search</h6>
+						<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="openInventoryModal()"><i class="ti ti-plus me-1"></i>Add Item</button>
+					</div>
+					<p class="fs-11 text-muted mb-2">Manually-maintained stock levels - no live feed is connected yet, so these figures are only as current as the last manual update.</p>
+					<div class="input-icon position-relative mb-2">
+						<input type="text" id="inventorySearchInput" class="form-control rounded-pill" placeholder="Search by machine type, name, manufacturer, or SKU...">
+						<span class="input-icon-addon"><i class="ti ti-search fs-16 text-muted"></i></span>
+					</div>
+					<div class="table-responsive" id="inventoryResultsWrap" style="display:none;">
+						<table class="table table-sm table-hover align-middle mb-0">
+							<thead class="table-light">
+								<tr>
+									<th>Name</th>
+									<th>On Hand</th>
+									<th>On the Way</th>
+									<th>Available to Sell</th>
+									<th>Est. Arrival</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody id="inventoryResultsBody"></tbody>
+						</table>
+					</div>
+				</div>
+
 				<div class="row g-3">
 					<!-- Main column: search, tabs, lead list -->
 					<div class="col-lg-8">
@@ -366,6 +412,49 @@
 				<div class="modal-footer">
 					<button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
 					<button type="button" class="btn btn-primary rounded-pill px-3" id="nlSubmitBtn" onclick="submitNewLead()">Add Lead</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Add/Edit Inventory Item Modal -->
+	<div class="modal fade" id="inventoryModal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title fw-bold" id="invModalTitle">Add Inventory Item</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<input type="hidden" id="invItemId">
+					<div class="row g-2 mb-2">
+						<div class="col-6"><label class="form-label fs-13 fw-semibold">Name *</label><input type="text" id="invName" class="form-control" required></div>
+						<div class="col-6"><label class="form-label fs-13 fw-semibold">Machine Type</label><input type="text" id="invMachineType" class="form-control" placeholder="e.g. Fog Machine"></div>
+					</div>
+					<div class="row g-2 mb-2">
+						<div class="col-6"><label class="form-label fs-13 fw-semibold">Manufacturer</label><input type="text" id="invManufacturer" class="form-control"></div>
+						<div class="col-6"><label class="form-label fs-13 fw-semibold">SKU</label><input type="text" id="invSku" class="form-control"></div>
+					</div>
+					<hr>
+					<div class="row g-2 mb-2">
+						<div class="col-4"><label class="form-label fs-13 fw-semibold">On Hand</label><input type="number" min="0" id="invOnHand" class="form-control" value="0"></div>
+						<div class="col-4"><label class="form-label fs-13 fw-semibold">On the Way</label><input type="number" min="0" id="invOnTheWay" class="form-control" value="0"></div>
+						<div class="col-4"><label class="form-label fs-13 fw-semibold">Available to Sell</label><input type="number" min="0" id="invAvailableToSell" class="form-control" value="0"></div>
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Estimated Arrival Date</label>
+						<input type="date" id="invEstimatedArrivalDate" class="form-control">
+					</div>
+					<div class="mb-2">
+						<label class="form-label fs-13 fw-semibold">Notes</label>
+						<textarea id="invNotes" class="form-control" rows="2"></textarea>
+					</div>
+					<div id="invErr" class="text-danger fs-13 mt-1"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-outline-danger rounded-pill px-3 me-auto" id="invDeleteBtn" onclick="deleteInventoryItem()" style="display:none;">Delete</button>
+					<button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary rounded-pill px-3" id="invSubmitBtn" onclick="submitInventoryItem()">Save</button>
 				</div>
 			</div>
 		</div>
@@ -1003,6 +1092,187 @@
 			}
 		}
 
+		// --- Existing-record lookup (Customers, Accounts, Orders, Machines) ---
+
+		const RECORD_SEARCH_GROUPS = [
+			{ type: 'lead', label: 'Customers' },
+			{ type: 'salesforceAccount', label: 'Accounts' },
+			{ type: 'order', label: 'Orders' },
+			{ type: 'machine', label: 'Machines' }
+		];
+
+		let recordSearchDebounce = null;
+
+		function hideRecordSearchResults() {
+			document.getElementById('recordSearchResults').style.display = 'none';
+		}
+
+		function renderRecordSearchResults(grouped) {
+			const el = document.getElementById('recordSearchResults');
+			const hasAny = RECORD_SEARCH_GROUPS.some(g => (grouped[g.type] || []).length);
+			if (!hasAny) {
+				el.innerHTML = '<div class="list-group-item fs-13 text-muted">No matches found.</div>';
+				el.style.display = '';
+				return;
+			}
+
+			el.innerHTML = RECORD_SEARCH_GROUPS.map(g => {
+				const rows = grouped[g.type] || [];
+				if (!rows.length) return '';
+				const rowsHtml = rows.map(r => `
+					<a href="${escapeHtml(r.detailUrl)}" class="list-group-item list-group-item-action py-2">
+						<div class="fw-semibold fs-13">${escapeHtml(r.title || 'Untitled')}</div>
+						${r.subtitle ? `<div class="fs-12 text-muted">${escapeHtml(r.subtitle)}</div>` : ''}
+					</a>
+				`).join('');
+				return `<div class="list-group-item bg-light fs-11 text-uppercase fw-semibold text-muted py-1">${escapeHtml(g.label)}</div>` + rowsHtml;
+			}).join('');
+			el.style.display = '';
+		}
+
+		async function runRecordSearch(query) {
+			try {
+				const [globalRes, machineRes] = await Promise.all([
+					fetch('/api/v1/lilypad/search?q=' + encodeURIComponent(query)),
+					fetch('/api/v1/lilypad/machines/search?q=' + encodeURIComponent(query))
+				]);
+				const globalResult = await globalRes.json();
+				const machineResult = machineRes.ok ? await machineRes.json() : { data: [] };
+				const machines = (machineResult.success && Array.isArray(machineResult.data)) ? machineResult.data : [];
+
+				const grouped = {
+					lead: (globalResult.data && globalResult.data.lead) || [],
+					salesforceAccount: (globalResult.data && globalResult.data.salesforceAccount) || [],
+					order: (globalResult.data && globalResult.data.order) || [],
+					machine: machines.slice(0, 10).map(m => ({
+						title: m.name,
+						subtitle: m.category,
+						detailUrl: 'machine.html?slug=' + encodeURIComponent(m.slug)
+					}))
+				};
+				renderRecordSearchResults(grouped);
+			} catch (err) {
+				console.error('Record search failed:', err);
+			}
+		}
+
+		// --- Quick Inventory Search (manually-maintained, see model comment) ---
+
+		let inventoryItems = [];
+		let inventorySearchDebounce = null;
+
+		function formatInvDate(iso) {
+			if (!iso) return '<span class="text-muted">—</span>';
+			return new Date(iso).toLocaleDateString();
+		}
+
+		function renderInventoryResults(items) {
+			inventoryItems = items;
+			const wrap = document.getElementById('inventoryResultsWrap');
+			const tbody = document.getElementById('inventoryResultsBody');
+
+			if (!items.length) {
+				wrap.style.display = '';
+				tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3 fs-13">No inventory items yet - click "Add Item" to start tracking one.</td></tr>';
+				return;
+			}
+
+			wrap.style.display = '';
+			tbody.innerHTML = items.map(item => `
+				<tr>
+					<td>
+						<div class="fw-semibold fs-13">${escapeHtml(item.name)}</div>
+						<div class="fs-11 text-muted">${escapeHtml([item.manufacturer, item.machineType].filter(Boolean).join(' · '))}${item.sku ? ' · SKU: ' + escapeHtml(item.sku) : ''}</div>
+					</td>
+					<td>${item.onHand}</td>
+					<td>${item.onTheWay}</td>
+					<td>${item.availableToSell}</td>
+					<td class="fs-13">${formatInvDate(item.estimatedArrivalDate)}</td>
+					<td><button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="openInventoryModal('${item._id}')"><i class="ti ti-pencil"></i></button></td>
+				</tr>
+			`).join('');
+		}
+
+		async function runInventorySearch(query) {
+			try {
+				const res = await fetch('/api/v1/lilypad/inventory?q=' + encodeURIComponent(query || ''));
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				renderInventoryResults(result.data || []);
+			} catch (err) {
+				console.error('Inventory search failed:', err);
+			}
+		}
+
+		function openInventoryModal(itemId) {
+			const item = itemId ? inventoryItems.find(i => i._id === itemId) : null;
+			document.getElementById('invModalTitle').textContent = item ? 'Edit Inventory Item' : 'Add Inventory Item';
+			document.getElementById('invItemId').value = item ? item._id : '';
+			document.getElementById('invName').value = item ? item.name : '';
+			document.getElementById('invMachineType').value = item ? item.machineType : '';
+			document.getElementById('invManufacturer').value = item ? item.manufacturer : '';
+			document.getElementById('invSku').value = item ? item.sku : '';
+			document.getElementById('invOnHand').value = item ? item.onHand : 0;
+			document.getElementById('invOnTheWay').value = item ? item.onTheWay : 0;
+			document.getElementById('invAvailableToSell').value = item ? item.availableToSell : 0;
+			document.getElementById('invEstimatedArrivalDate').value = item && item.estimatedArrivalDate ? item.estimatedArrivalDate.slice(0, 10) : '';
+			document.getElementById('invNotes').value = item ? item.notes : '';
+			document.getElementById('invErr').textContent = '';
+			document.getElementById('invDeleteBtn').style.display = item ? '' : 'none';
+			bootstrap.Modal.getOrCreateInstance(document.getElementById('inventoryModal')).show();
+		}
+
+		async function submitInventoryItem() {
+			const name = document.getElementById('invName').value.trim();
+			if (!name) {
+				document.getElementById('invErr').textContent = 'Name is required.';
+				return;
+			}
+			const itemId = document.getElementById('invItemId').value;
+			const btn = document.getElementById('invSubmitBtn');
+			btn.disabled = true;
+			try {
+				const payload = {
+					name,
+					machineType: document.getElementById('invMachineType').value.trim(),
+					manufacturer: document.getElementById('invManufacturer').value.trim(),
+					sku: document.getElementById('invSku').value.trim(),
+					onHand: document.getElementById('invOnHand').value,
+					onTheWay: document.getElementById('invOnTheWay').value,
+					availableToSell: document.getElementById('invAvailableToSell').value,
+					estimatedArrivalDate: document.getElementById('invEstimatedArrivalDate').value || null,
+					notes: document.getElementById('invNotes').value.trim()
+				};
+				const res = await fetch('/api/v1/lilypad/inventory' + (itemId ? '/' + itemId : ''), {
+					method: itemId ? 'PUT' : 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload)
+				});
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				bootstrap.Modal.getInstance(document.getElementById('inventoryModal')).hide();
+				runInventorySearch(document.getElementById('inventorySearchInput').value.trim());
+			} catch (err) {
+				document.getElementById('invErr').textContent = err.message || 'Unable to save this item.';
+			} finally {
+				btn.disabled = false;
+			}
+		}
+
+		async function deleteInventoryItem() {
+			const itemId = document.getElementById('invItemId').value;
+			if (!itemId || !confirm('Delete this inventory item?')) return;
+			try {
+				const res = await fetch('/api/v1/lilypad/inventory/' + itemId, { method: 'DELETE' });
+				const result = await res.json();
+				if (!result.success) throw new Error(result.error);
+				bootstrap.Modal.getInstance(document.getElementById('inventoryModal')).hide();
+				runInventorySearch(document.getElementById('inventorySearchInput').value.trim());
+			} catch (err) {
+				alert(err.message || 'Unable to delete this item.');
+			}
+		}
+
 		document.addEventListener('DOMContentLoaded', async () => {
 			try {
 				const res = await fetch('/api/v1/lilypad/account/me');
@@ -1024,6 +1294,25 @@
 				nqSearchDebounce = setTimeout(() => searchLeadsForQuote(query), 300);
 			});
 			document.getElementById('newQuoteModal').addEventListener('hidden.bs.modal', clearSelectedQuoteLead);
+
+			document.getElementById('recordSearchInput').addEventListener('input', (e) => {
+				clearTimeout(recordSearchDebounce);
+				const query = e.target.value.trim();
+				if (query.length < 2) { hideRecordSearchResults(); return; }
+				recordSearchDebounce = setTimeout(() => runRecordSearch(query), 300);
+			});
+			document.addEventListener('click', (e) => {
+				if (!e.target.closest('#recordSearchInput') && !e.target.closest('#recordSearchResults')) {
+					hideRecordSearchResults();
+				}
+			});
+
+			document.getElementById('inventorySearchInput').addEventListener('input', (e) => {
+				clearTimeout(inventorySearchDebounce);
+				const query = e.target.value.trim();
+				inventorySearchDebounce = setTimeout(() => runInventorySearch(query), 300);
+			});
+			runInventorySearch('');
 
 			loadLeads();
 			loadSalesCommandCenterOverview();
