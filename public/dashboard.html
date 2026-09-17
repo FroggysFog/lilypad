@@ -447,7 +447,10 @@
 							<p class="fs-14 text-dark mb-2" id="dashMorningGreeting">Loading your morning report...</p>
 							<div class="d-flex flex-wrap gap-2" id="dashMorningReportBadges"></div>
 						</div>
-						<a href="morning-report.html" class="btn btn-outline-warning btn-sm rounded-pill px-3 text-dark flex-shrink-0"><i class="ti ti-arrow-right me-1"></i>View Your Report</a>
+						<div class="d-flex align-items-center gap-2 flex-shrink-0">
+							<a href="morning-report.html" class="btn btn-outline-warning btn-sm rounded-pill px-3 text-dark"><i class="ti ti-arrow-right me-1"></i>View Your Report</a>
+							<button type="button" class="btn btn-sm btn-light rounded-circle p-1 d-flex align-items-center justify-content-center" style="width:28px;height:28px;" onclick="dismissMorningReportCard()" title="Dismiss for today"><i class="ti ti-x fs-14"></i></button>
+						</div>
 					</div>
 				</div>
 
@@ -2286,12 +2289,17 @@
         }
     }
 
+    const DASH_MORNING_REPORT_DISMISS_KEY = 'lilypad_morning_report_dismissed_date';
+    let dashMorningReportDigestDate = null;
+
     /**
      * Compact preview of the same digest morning-report.html renders in
      * full - only the LLM-written greeting plus real counts already
      * computed by morningDigestService.js (never re-derived here).
      * Loaded independently of the rest of the dashboard so a slow/failed
-     * digest never blocks the widget canvas.
+     * digest never blocks the widget canvas. Stays hidden if the user
+     * already dismissed today's digest (digestDate-keyed, so dismissing
+     * only lasts until a new digest exists tomorrow).
      */
     async function loadMorningReportSummary() {
         try {
@@ -2300,6 +2308,11 @@
             if (!result.success) return;
 
             const digest = result.data;
+            dashMorningReportDigestDate = digest.digestDate;
+            let dismissedDate = null;
+            try { dismissedDate = localStorage.getItem(DASH_MORNING_REPORT_DISMISS_KEY); } catch (e) {}
+            if (dismissedDate === digest.digestDate) return;
+
             const s = digest.sections || {};
             document.getElementById('dashMorningGreeting').textContent = digest.greeting || '';
             document.getElementById('dashMorningReportDate').textContent = digest.generatedAt ? 'Generated ' + new Date(digest.generatedAt).toLocaleTimeString() : '';
@@ -2321,6 +2334,11 @@
         } catch (err) {
             console.error('Unable to load morning report summary:', err);
         }
+    }
+
+    function dismissMorningReportCard() {
+        document.getElementById('dashMorningReportCard').style.display = 'none';
+        try { localStorage.setItem(DASH_MORNING_REPORT_DISMISS_KEY, dashMorningReportDigestDate || new Date().toISOString().slice(0, 10)); } catch (e) {}
     }
 
     /**
