@@ -15,6 +15,8 @@ const { requireLoginApi } = require('../middleware/lilypadAuth')
 
 module.exports = function () {
   router.get('/sales-leads', requireLoginApi, controllers.lilypadSalesLeads.list)
+  router.post('/sales-leads', requireLoginApi, controllers.lilypadSalesLeads.create)
+  router.post('/sales-leads/:id/claim', requireLoginApi, controllers.lilypadSalesLeads.claim)
   router.post('/sales-leads/search', requireLoginApi, controllers.lilypadSalesLeads.search)
   router.get('/sales-leads/reactivation/:division', requireLoginApi, controllers.lilypadSalesLeads.reactivation)
   router.post('/sales-leads/goal-scrape', requireLoginApi, controllers.lilypadSalesLeads.goalScrape)

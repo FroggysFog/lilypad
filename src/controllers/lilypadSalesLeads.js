@@ -20,24 +20,107 @@ const VALID_DIVISIONS = ['froggys_fog', 'training_smoke']
 const VALID_STATUSES = ['unprocessed', 'scored', 'contacted', 'quoted', 'converted', 'disqualified']
 
 /**
- * GET /api/v1/lilypad/sales-leads?division=all|froggys_fog|training_smoke
- * The Sales Battle Plan's data feed - top 25 workable leads, highest
- * intent score first.
+ * GET /api/v1/lilypad/sales-leads?division=all|froggys_fog|training_smoke&scope=available|mine&search=...
+ * The Sales Command Center's data feed, highest intent score first.
+ * scope=available (default): unclaimed leads, ready to work.
+ * scope=mine: leads this rep has already claimed.
+ * `search` narrows by company name - reused by the New Quote popup's
+ * lead picker, not just the main feed.
  */
 controller.list = async function (req, res) {
   try {
     const division = req.query.division
-    const query = { status: { $in: ['scored', 'unprocessed'] } }
+    const query = {}
     if (division && VALID_DIVISIONS.includes(division)) {
       query.division = division
     }
+    if (req.query.scope === 'mine') {
+      // A claimed lead's whole point-of-view: show it in every status
+      // (scored through converted) so it doesn't vanish from "My Claimed
+      // Leads" the moment a rep marks it contacted or quotes it.
+      query['assignedRep.id'] = req.user._id
+    } else if (req.query.scope !== 'all') {
+      // Default "available to claim" pool - still gated to workable
+      // statuses, since a disqualified or already-converted lead has no
+      // business being claimable.
+      query['assignedRep.id'] = null
+      query.status = { $in: ['scored', 'unprocessed'] }
+    }
+    if (req.query.search) {
+      query.companyName = new RegExp(String(req.query.search).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+    }
+
+    const limit = Number(req.query.limit) > 0 ? Math.min(Number(req.query.limit), 100) : 50
 
     const leads = await LilyPadSalesLead.find(query)
       .sort({ 'aiScore.intentScore': -1, createdAt: -1 })
-      .limit(25)
+      .limit(limit)
       .lean()
 
     return res.status(200).json({ success: true, data: leads })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/sales-leads
+ * body: { division, companyName, phone, city, state, contactName,
+ *         contactTitle, contactEmail, contactPhone }
+ * Manual single-lead entry - every other LilyPadSalesLead comes from a
+ * bulk harvest pipeline (USFA/Apify/Goal Mode) or a promoted staged
+ * lead; this is the one hand-entry path, for a lead a rep already knows
+ * about from a call/referral/trade show.
+ */
+controller.create = async function (req, res) {
+  try {
+    const division = VALID_DIVISIONS.includes(req.body.division) ? req.body.division : null
+    const companyName = String(req.body.companyName || '').trim()
+    if (!division || !companyName) {
+      return res.status(400).json({ success: false, error: 'Division and company name are required.' })
+    }
+
+    const lead = await LilyPadSalesLead.create({
+      division,
+      companyName,
+      phone: String(req.body.phone || '').trim(),
+      address: { city: String(req.body.city || '').trim(), state: String(req.body.state || '').trim() },
+      source: 'manual_import',
+      contact: {
+        name: String(req.body.contactName || '').trim(),
+        title: String(req.body.contactTitle || '').trim(),
+        email: String(req.body.contactEmail || '').trim(),
+        phone: String(req.body.contactPhone || '').trim()
+      },
+      provenance: { sourceTier: 'manual', sourceDetails: `Manually added by ${req.user.fullname}` },
+      // Manually-entered leads skip straight to claimed-by-the-adding-rep -
+      // a rep hand-entering a lead they already have a relationship with
+      // shouldn't have to then also claim it from the shared pool.
+      assignedRep: { id: req.user._id, name: req.user.fullname, claimedAt: new Date() }
+    })
+
+    return res.status(200).json({ success: true, data: lead })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/sales-leads/:id/claim
+ * Atomic - the filter requires assignedRep.id to still be null, so two
+ * reps racing to claim the same lead can't both succeed.
+ */
+controller.claim = async function (req, res) {
+  try {
+    const result = await LilyPadSalesLead.findOneAndUpdate(
+      { _id: req.params.id, 'assignedRep.id': null },
+      { $set: { assignedRep: { id: req.user._id, name: req.user.fullname, claimedAt: new Date() } } },
+      { new: true }
+    )
+    if (!result) {
+      return res.status(409).json({ success: false, error: 'This lead is not available to claim (already claimed, or not found).' })
+    }
+    return res.status(200).json({ success: true, data: result })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }

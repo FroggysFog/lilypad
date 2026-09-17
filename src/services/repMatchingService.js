@@ -50,6 +50,13 @@ function getCartOrderOwnerFilter (user) {
   return nameClause || { _id: null }
 }
 
+// LilyPadOrder has no ownerSourceId field at all (only the free-text
+// Owner.Name synced as ownerName) - name-only, same as Cart.com orders.
+function getOrderOwnerFilter (user) {
+  const nameClause = exactNameFilter('ownerName', user && user.fullname)
+  return nameClause || { _id: null }
+}
+
 // LilyPadCustomerProfile is a derived/rebuilt rollup with no owner field
 // of its own - it only links out via salesforceAccountId. Scoping it to
 // a rep means first resolving which LilyPadSalesforceAccount docs that
@@ -63,5 +70,6 @@ module.exports = {
   getOpportunityOwnerFilter,
   getSalesforceAccountOwnerFilter,
   getCartOrderOwnerFilter,
+  getOrderOwnerFilter,
   resolveOwnedSalesforceAccountIds
 }

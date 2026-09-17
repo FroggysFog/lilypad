@@ -91,6 +91,16 @@ const salesLeadSchema = new Schema({
     body: String,
     createdAt: { type: Date, default: Date.now }
   }],
+  // Sales Command Center's claim mechanism - internal to LilyPad only,
+  // no Salesforce write-back (unlike claiming a LilyPadCustomerProfile's
+  // matched Salesforce Account - see lilypadCustomerIntelligence.js).
+  // These are prospecting leads, not existing Salesforce Accounts, so
+  // there's nothing in Salesforce to update. id: null means unclaimed.
+  assignedRep: {
+    id: { type: Schema.Types.ObjectId, ref: 'lilypad_accounts', default: null },
+    name: { type: String, default: null },
+    claimedAt: { type: Date, default: null }
+  },
   // Set by waterfallScraper.js - which tier actually produced this
   // lead/contact, so a rep can judge reliability at a glance (a free
   // registry hit vs. an AI-search-resolved contact carry different
@@ -104,5 +114,6 @@ const salesLeadSchema = new Schema({
 }, { timestamps: true })
 
 salesLeadSchema.index({ division: 1, status: 1, 'aiScore.intentScore': -1 })
+salesLeadSchema.index({ 'assignedRep.id': 1 })
 
 module.exports = mongoose.model(COLLECTION, salesLeadSchema)
