@@ -33,27 +33,16 @@ const LILYPAD_NAV_SECTIONS = [
     renderAs: 'topTabs',
     items: [
       { href: 'dashboard.html', icon: 'ti-dashboard', label: 'Dashboard' },
-      { href: 'morning-report.html', icon: 'ti-sun', label: 'Morning Report' },
       { href: 'tickets.html', icon: 'ti-ticket', label: 'Ticket Operations' },
       { href: 'tasks.html', icon: 'ti-list-check', label: 'Task Manager' },
       { href: 'calendar.html', icon: 'ti-calendar', label: 'Calendar' },
-      { href: 'meeting-recaps.html', icon: 'ti-transcript', label: 'Meeting Recaps' },
-      { href: 'email.html', icon: 'ti-mail', label: 'Email' },
-      { href: 'knowledge-base.html', icon: 'ti-book', label: 'Knowledge Base & SOPs' }
+      { href: 'email.html', icon: 'ti-mail', label: 'Email' }
     ]
   },
   {
     type: 'group',
     icon: 'ti-report-analytics',
     label: 'Reports & Resources',
-    // Morning Report, Meeting Recaps, and Knowledge Base already live in
-    // the Operations top-tab row above - these are the same three hrefs,
-    // deliberately also reachable from the permanent sidebar since
-    // they're check-when-needed reference pages rather than daily tools,
-    // easy to lose track of in a tab row led by Dashboard. Same href
-    // appearing in two sections is intentional; lilypadRolePermissions.js's
-    // catalog builder dedupes by href so this never shows as a second,
-    // confusing checkbox in Roles & Permissions.
     items: [
       { href: 'morning-report.html', icon: 'ti-sun', label: 'Morning Report' },
       { href: 'meeting-recaps.html', icon: 'ti-transcript', label: 'Meeting Recaps' },
