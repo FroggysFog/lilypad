@@ -1,8 +1,11 @@
 /**
  * LilyPad ERP - Cart.com Order Sync Service
  * Mirrors orderSyncService.js's shape for the Salesforce side, but for
- * Cart.com's REST API (froggysfog.com store - confirmed 100% Froggy's
- * Fog, no brand filtering needed here unlike the Salesforce side).
+ * Cart.com's REST API (froggysfog.com store). Previously assumed 100%
+ * Froggy's Fog with no brand filtering needed - real data showed that
+ * assumption was wrong (a Smply rep's name turned up in salesPerson on
+ * real orders here too), so this now excludes the same names as the
+ * Salesforce syncs - see brandFilter.js.
  *
  * Cart.com's order list has no working incremental filter - confirmed
  * live that updated_at_min is silently ignored (total_count barely
@@ -36,6 +39,7 @@
 const cartService = require('../services/cartService')
 const LilyPadCartOrder = require('../models/lilypadCartOrder')
 const winston = require('../logger')
+const { EXCLUDED_OWNER_NAMES, isExcludedOwnerName } = require('./brandFilter')
 
 // Confirmed live: 8-way concurrent payment/customer lookups tripped
 // Cart.com's rate limit (429). Lower concurrency plus honoring
@@ -243,10 +247,25 @@ function normalizeCartOrder (raw, amountPaid, customer, statusName) {
  * "resolved," so a real receivable doesn't vanish the moment Cart.com
  * changes its status.
  */
+/**
+ * Removes Cart Orders owned by a Smply (not Froggy's Fog) rep - see
+ * brandFilter.js. Runs before each sync so records synced before this
+ * filter existed also get cleaned up.
+ */
+async function cleanupExcludedOwnerCartOrders () {
+  const nameRegexes = EXCLUDED_OWNER_NAMES.map((name) => new RegExp(`^${name}$`, 'i'))
+  const result = await LilyPadCartOrder.deleteMany({ salesPerson: { $in: nameRegexes } })
+  if (result.deletedCount) {
+    winston.info(`Cart order sync cleanup: removed ${result.deletedCount} cart orders owned by an excluded (Smply) rep`)
+  }
+  return result.deletedCount || 0
+}
+
 async function syncCartOrders () {
   const status = await cartService.getCartOAuthStatus()
   if (!status.connected) return { skipped: true, reason: 'Cart.com is not connected.' }
 
+  const removed = await cleanupExcludedOwnerCartOrders()
   const openStatuses = await getOpenOrderStatuses()
   const statusNameById = new Map(openStatuses.map((s) => [s.id, s.name]))
 
@@ -263,13 +282,13 @@ async function syncCartOrders () {
       const orders = data.orders || []
       total += orders.length
 
-      const normalized = await mapWithConcurrency(orders, CUSTOMER_FETCH_CONCURRENCY, async (raw) => {
+      const normalized = (await mapWithConcurrency(orders, CUSTOMER_FETCH_CONCURRENCY, async (raw) => {
         const [amountPaid, customer] = await Promise.all([
           fetchApprovedPaymentsTotal(raw.id),
           fetchCustomer(raw.customer_id, customerCache)
         ])
         return normalizeCartOrder(raw, amountPaid, customer, statusNameById.get(raw.order_status_id))
-      })
+      })).filter((doc) => !isExcludedOwnerName(doc.salesPerson))
 
       if (normalized.length) {
         const ops = normalized.map((doc) => {
@@ -299,10 +318,11 @@ async function syncCartOrders () {
 
   winston.info(`Cart.com Order sync: ${synced} synced across ${openStatuses.length} open statuses, ${removal.deletedCount} removed (confirmed paid off/gone), ${toKeep} kept despite leaving the open-status set (still owe a balance or couldn't be re-verified)`)
 
-  return { synced, total, removed: removal.deletedCount || 0, keptAfterStatusChange: toKeep }
+  return { synced, total, removed: removed + (removal.deletedCount || 0), keptAfterStatusChange: toKeep }
 }
 
 module.exports = {
   getOpenOrderStatuses,
+  cleanupExcludedOwnerCartOrders,
   syncCartOrders: singleFlight(syncCartOrders)
 }

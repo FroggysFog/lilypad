@@ -12,6 +12,7 @@ const goalModePlanner = require('../services/goalModePlanner')
 const waterfallScraper = require('../services/waterfallScraper')
 const leadProspectorService = require('../services/leadProspectorService')
 const deptContactResearchService = require('../services/deptContactResearchService')
+const leadClaimEligibilityService = require('../services/leadClaimEligibilityService')
 
 const controller = {}
 
@@ -66,6 +67,23 @@ controller.researchContacts = async function (req, res) {
     const division = VALID_DIVISIONS.includes(req.body.division) ? req.body.division : 'froggys_fog'
     const limit = Number(req.body.limit) > 0 ? Math.min(Number(req.body.limit), 50) : 10
     const summary = await deptContactResearchService.researchContactBatch(division, limit)
+    return res.status(200).json({ success: true, data: summary })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/sales-leads/recheck-claims
+ * body: { limit }
+ * Manual trigger for the same eligibility recheck the nightly scheduler
+ * runs - disqualifies any scored/unprocessed lead that turns out to
+ * already be a claimed Salesforce Account.
+ */
+controller.recheckClaims = async function (req, res) {
+  try {
+    const limit = Number(req.body.limit) > 0 ? Math.min(Number(req.body.limit), 500) : 100
+    const summary = await leadClaimEligibilityService.recheckClaimEligibilityBatch(limit)
     return res.status(200).json({ success: true, data: summary })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })

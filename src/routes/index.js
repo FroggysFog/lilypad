@@ -45,6 +45,7 @@ function mainRoutes(router, controllers) {
   router.get('/api/microsoft-teams/chats', requireLoginApi, controllers.microsoftTeams.chats)
   router.get('/api/microsoft-teams/chats/:chatId/messages', requireLoginApi, controllers.microsoftTeams.messages)
   router.post('/api/microsoft-teams/chats/:chatId/messages', requireLoginApi, controllers.microsoftTeams.send)
+  router.post('/api/microsoft-teams/chats/:chatId/attachments', requireLoginApi, controllers.microsoftTeams.uploadMiddleware, controllers.microsoftTeams.sendAttachment)
   router.post('/api/microsoft-teams/presences', requireLoginApi, controllers.microsoftTeams.presences)
 
   // Microsoft 365 integration (used by calendar.html, email.html, and

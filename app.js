@@ -80,6 +80,9 @@ function launchServer (db) {
 
       const { startLeadScoringScheduler } = require('./src/services/leadScorer')
       startLeadScoringScheduler(winston)
+
+      const { startClaimEligibilityScheduler } = require('./src/services/leadClaimEligibilityService')
+      startClaimEligibilityScheduler(winston)
     })
   })
 }

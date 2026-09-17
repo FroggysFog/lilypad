@@ -47,7 +47,13 @@ const GRAPH = 'https://graph.microsoft.com/v1.0'
 // the Teams chat panel can show whether someone's Active/Idle/Away)
 // is a new one - needs the full two-part change like Contacts/
 // MailboxSettings did.
-const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read', 'Mail.ReadWrite', 'Mail.Send', 'Contacts.Read', 'MailboxSettings.ReadWrite', 'Chat.ReadWrite', 'ChannelMessage.Read.All', 'ChannelMessage.Send', 'Presence.Read.All']
+// Files.ReadWrite added for Teams chat attachments (microsoftTeams.js's
+// sendAttachment uploads to the sender's own OneDrive first, since a real
+// Teams file attachment must reference a driveItem, not raw bytes on the
+// message itself). Anyone who connected before this scope was added must
+// reconnect - Graph doesn't retroactively grant a new scope to an
+// existing refresh token.
+const SCOPES = ['openid', 'profile', 'offline_access', 'User.Read', 'Calendars.ReadWrite', 'Mail.Read', 'Mail.ReadWrite', 'Mail.Send', 'Contacts.Read', 'MailboxSettings.ReadWrite', 'Chat.ReadWrite', 'ChannelMessage.Read.All', 'ChannelMessage.Send', 'Presence.Read.All', 'Files.ReadWrite']
 
 function getConfig () {
   return {
@@ -202,6 +208,34 @@ async function graphRequestBinaryForUser (userId, path) {
   return Buffer.from(response.data)
 }
 
+/**
+ * Same auth plumbing as graphRequestForUser, but for uploading raw file
+ * bytes (e.g. a OneDrive driveItem's /content endpoint) - the caller
+ * controls Content-Type directly since it isn't JSON, and axios is told
+ * not to touch the buffer (no JSON stringify/parse on either side).
+ */
+async function graphUploadForUser (userId, path, buffer, contentType) {
+  const token = await ensureAccessToken(userId)
+  const response = await axios({
+    method: 'put',
+    url: path.startsWith('http') ? path : `${GRAPH}${path}`,
+    data: buffer,
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': contentType || 'application/octet-stream' },
+    maxBodyLength: Infinity,
+    maxContentLength: Infinity,
+    validateStatus: (status) => status < 500
+  })
+
+  if (response.status >= 400) {
+    const message = (response.data && response.data.error && response.data.error.message) || `Graph API error ${response.status}`
+    const err = new Error(message)
+    err.graphStatus = response.status
+    throw err
+  }
+
+  return response.data
+}
+
 async function getStatus (userId) {
   const account = await LilyPadMicrosoftAccount.findOne({ user: userId })
   return {
@@ -312,5 +346,6 @@ module.exports = {
   // so mail doesn't need its own OAuth connect flow or token storage; it's
   // the same Microsoft 365 connection, just a different Graph endpoint.
   graphRequestForUser,
-  graphRequestBinaryForUser
+  graphRequestBinaryForUser,
+  graphUploadForUser
 }

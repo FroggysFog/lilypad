@@ -83,6 +83,58 @@ async function sendMessage (ownerId, chatId, content) {
   })
 }
 
+function escapeHtml (value) {
+  return String(value == null ? '' : value).replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]))
+}
+
+// Real Teams file attachments must reference a driveItem already in
+// OneDrive/SharePoint - there's no way to attach raw bytes directly to a
+// chat message (chatMessageHostedContent is for small inline images/code
+// snippets only, 4MB max, and doesn't render as a downloadable file the
+// way a real attachment does). One folder per LilyPad user's OneDrive
+// keeps these easy to find/clean up later rather than littering the
+// drive root.
+const UPLOAD_FOLDER = 'LilyPad Chat Attachments'
+const GUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
+
+function sanitizeFileName (name) {
+  return String(name || 'file').replace(/[\\/:*?"<>|]/g, '_').slice(0, 200)
+}
+
+/**
+ * Uploads a file to the sender's own OneDrive, then sends it as a real
+ * Teams attachment (contentType: 'reference') on the given chat - the
+ * other party sees an actual downloadable file in Teams, not a LilyPad-
+ * only side channel. `caption` is optional plain text shown alongside
+ * the attachment.
+ */
+async function sendAttachment (ownerId, chatId, fileBuffer, fileName, mimeType, caption) {
+  if (!chatId || !fileBuffer || !fileName) throw new Error('Chat ID, file, and file name are required')
+
+  const safeName = sanitizeFileName(fileName)
+  const uploadPath = `/me/drive/root:/${encodeURIComponent(UPLOAD_FOLDER)}/${Date.now()}-${encodeURIComponent(safeName)}:/content`
+  let item = await microsoftCalendarService.graphUploadForUser(ownerId, uploadPath, fileBuffer, mimeType)
+
+  // The content PUT's own response is a driveItem, but doesn't always
+  // carry webDavUrl - re-fetch with an explicit $select (the exact field
+  // Graph's own docs say to use as a chat attachment's contentUrl) when
+  // it's missing rather than assuming the first response has everything.
+  if (!item.webDavUrl && item.id) {
+    item = await microsoftCalendarService.graphRequestForUser(ownerId, 'get', `/me/drive/items/${item.id}?$select=id,eTag,webDavUrl,name`)
+  }
+
+  const eTagMatch = GUID_PATTERN.exec(item.eTag || '')
+  const attachmentId = eTagMatch ? eTagMatch[0] : item.id
+  const contentUrl = item.webDavUrl
+  if (!contentUrl) throw new Error('Uploaded file, but Microsoft Graph did not return a usable file URL for the attachment.')
+
+  const captionHtml = caption ? escapeHtml(caption) + ' ' : ''
+  return microsoftCalendarService.graphRequestForUser(ownerId, 'post', `/chats/${encodeURIComponent(chatId)}/messages`, {
+    body: { contentType: 'html', content: `${captionHtml}<attachment id="${attachmentId}"></attachment>` },
+    attachments: [{ id: attachmentId, contentType: 'reference', contentUrl, name: safeName }]
+  })
+}
+
 /**
  * One batched call for however many people are visible across the chat
  * list, rather than a Graph request per person - Graph's batch presence
@@ -103,5 +155,6 @@ module.exports = {
   getChats,
   getMessages,
   sendMessage,
+  sendAttachment,
   getPresences
 }

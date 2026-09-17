@@ -23,6 +23,7 @@
   var currentChats = []
   var meId = null
   var currentChatId = null
+  var pendingAttachment = null
   var currentChatName = ''
   var currentNextLink = null
   var loadedMessages = []
@@ -177,11 +178,23 @@
   // --- Message normalizing/grouping (consecutive messages from the same
   // sender collapse under one avatar/name, same as Teams) ---------------
 
+  // Real Teams file attachments (contentType 'reference') ride alongside
+  // the message body as a separate array - the body's own <attachment>
+  // placeholder tag is stripped out by messageBodyToText along with
+  // every other HTML tag, so a file-only message (no caption) must be
+  // carried through by its attachments, not by leftover text.
+  function normalizeAttachments (attachments) {
+    return (attachments || [])
+      .filter(function (a) { return a.contentType === 'reference' && a.contentUrl })
+      .map(function (a) { return { name: a.name || 'Attachment', contentUrl: a.contentUrl } })
+  }
+
   function normalizeMessages (messages) {
     return messages.map(function (m) {
       if (m.messageType && m.messageType !== 'message') return null
       var text = messageBodyToText(m.body && m.body.content)
-      if (!text) return null
+      var attachments = normalizeAttachments(m.attachments)
+      if (!text && !attachments.length) return null
       var senderId = (m.from && m.from.user && m.from.user.id) || (m.from && m.from.application && m.from.application.id) || 'unknown'
       var senderName = (m.from && m.from.user && m.from.user.displayName) || (m.from && m.from.application && m.from.application.displayName) || 'Teams user'
       return {
@@ -189,6 +202,7 @@
         senderId: senderId,
         senderName: senderName,
         text: text,
+        attachments: attachments,
         time: formatTime(m.createdDateTime),
         looksLikeTask: looksLikeTaskText(text)
       }
@@ -199,7 +213,7 @@
     var groups = []
     normalized.forEach(function (m) {
       var last = groups[groups.length - 1]
-      var item = { text: m.text, time: m.time, looksLikeTask: m.looksLikeTask }
+      var item = { text: m.text, attachments: m.attachments, time: m.time, looksLikeTask: m.looksLikeTask }
       if (last && last.senderId === m.senderId) {
         last.items.push(item)
       } else {
@@ -217,9 +231,22 @@
    * (same pattern as data-chat-id elsewhere in this file) rather than a
    * closure, since groupHtml/messageItemHtml only ever produce strings.
    */
+  function attachmentChipsHtml (attachments, isMine) {
+    if (!attachments || !attachments.length) return ''
+    return attachments.map(function (a) {
+      return '<a href="' + escapeHtml(a.contentUrl) + '" target="_blank" rel="noopener" ' +
+        'class="d-flex align-items-center gap-1 text-decoration-none px-2 py-1 mb-1 rounded-2"' +
+        ' style="background:#f0f0f0; color:#252423; font-size:12px; max-width:260px;">' +
+        '<i class="ti ti-paperclip"></i><span class="text-truncate">' + escapeHtml(a.name) + '</span></a>'
+    }).join('')
+  }
+
   function messageItemHtml (item, isMine) {
-    var bodyHtml = escapeHtml(item.text).replace(/\n/g, '<br>')
-    var bubble = '<div class="lp-teams-bubble' + (isMine ? ' lp-teams-bubble-mine' : '') + '">' + bodyHtml + '</div>'
+    var bodyHtml = item.text ? escapeHtml(item.text).replace(/\n/g, '<br>') : ''
+    var chips = attachmentChipsHtml(item.attachments, isMine)
+    var bubble = bodyHtml
+      ? '<div class="lp-teams-bubble' + (isMine ? ' lp-teams-bubble-mine' : '') + '">' + chips + bodyHtml + '</div>'
+      : (chips ? '<div class="d-flex flex-column' + (isMine ? ' align-items-end' : '') + '">' + chips + '</div>' : '')
     var taskBtn = item.looksLikeTask
       ? '<button type="button" class="lp-teams-quick-task-btn" title="Add as a task" data-task-text="' + escapeHtml(item.text) + '"><i class="ti ti-plus"></i></button>'
       : ''
@@ -333,6 +360,7 @@
   function chatListItemHtml (chat) {
     var name = chat.displayName || 'Teams conversation'
     var preview = chat.lastMessagePreview ? messageBodyToText(chat.lastMessagePreview.body && chat.lastMessagePreview.body.content) : ''
+    if (!preview && chat.lastMessagePreview && normalizeAttachments(chat.lastMessagePreview.attachments).length) preview = 'Attachment'
     var time = chat.lastMessagePreview ? formatTime(chat.lastMessagePreview.createdDateTime) : ''
     var otherId = otherMemberUserId(chat)
     var presence = otherId ? presenceByUserId[otherId] : null
@@ -462,8 +490,11 @@
               '</div>' +
               '<div id="lpTeamsMessages" class="flex-fill p-3" style="overflow-y:auto; min-height:0;"></div>' +
               '<div class="p-2 border-top">' +
+                '<div id="lpTeamsAttachmentPreview" class="fs-12 text-muted mb-1" style="display:none;"></div>' +
                 '<form id="lpTeamsSendForm" class="input-group">' +
-                  '<input id="lpTeamsMessageInput" class="form-control" placeholder="Type a message..." autocomplete="off" required>' +
+                  '<input type="file" id="lpTeamsAttachmentInput" style="display:none;">' +
+                  '<button class="btn btn-outline-secondary" type="button" id="lpTeamsAttachBtn" title="Attach a file"><i class="ti ti-paperclip"></i></button>' +
+                  '<input id="lpTeamsMessageInput" class="form-control" placeholder="Type a message..." autocomplete="off">' +
                   '<button class="btn btn-primary" type="submit"><i class="ti ti-send"></i><span class="visually-hidden">Send message</span></button>' +
                 '</form>' +
               '</div>' +
@@ -484,6 +515,25 @@
     document.getElementById('lpTeamsRefreshBtn').addEventListener('click', loadChats)
     document.getElementById('lpTeamsSendForm').addEventListener('submit', sendMessage)
     document.getElementById('lpTeamsPopoutBtn').addEventListener('click', popOut)
+    document.getElementById('lpTeamsAttachBtn').addEventListener('click', function () {
+      document.getElementById('lpTeamsAttachmentInput').click()
+    })
+    document.getElementById('lpTeamsAttachmentInput').addEventListener('change', function (e) {
+      pendingAttachment = e.target.files[0] || null
+      var preview = document.getElementById('lpTeamsAttachmentPreview')
+      if (pendingAttachment) {
+        preview.style.display = ''
+        preview.innerHTML = '<i class="ti ti-paperclip"></i> ' + pendingAttachment.name +
+          ' <a href="javascript:void(0)" id="lpTeamsRemoveAttachment">Remove</a>'
+        document.getElementById('lpTeamsRemoveAttachment').addEventListener('click', function () {
+          pendingAttachment = null
+          e.target.value = ''
+          preview.style.display = 'none'
+        })
+      } else {
+        preview.style.display = 'none'
+      }
+    })
     document.getElementById('lpTeamsSearchInput').addEventListener('input', function (e) {
       chatSearchQuery = e.target.value.trim().toLowerCase()
       renderChatList()
@@ -583,19 +633,39 @@
     event.preventDefault()
     var input = document.getElementById('lpTeamsMessageInput')
     var content = input.value.trim()
-    if (!currentChatId || !content) return
+    if (!currentChatId || (!content && !pendingAttachment)) return
+
+    var sendBtn = document.querySelector('#lpTeamsSendForm button[type="submit"]')
+    sendBtn.disabled = true
     try {
-      var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(currentChatId) + '/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: content })
-      })
-      var result = await res.json()
-      if (!res.ok || !result.success) throw new Error(result.error || 'Unable to send Teams message')
+      if (pendingAttachment) {
+        var formData = new FormData()
+        formData.append('file', pendingAttachment)
+        if (content) formData.append('caption', content)
+        var uploadRes = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(currentChatId) + '/attachments', {
+          method: 'POST',
+          body: formData
+        })
+        var uploadResult = await uploadRes.json()
+        if (!uploadRes.ok || !uploadResult.success) throw new Error(uploadResult.error || 'Unable to send attachment')
+        pendingAttachment = null
+        document.getElementById('lpTeamsAttachmentInput').value = ''
+        document.getElementById('lpTeamsAttachmentPreview').style.display = 'none'
+      } else {
+        var res = await fetch('/api/microsoft-teams/chats/' + encodeURIComponent(currentChatId) + '/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: content })
+        })
+        var result = await res.json()
+        if (!res.ok || !result.success) throw new Error(result.error || 'Unable to send Teams message')
+      }
       input.value = ''
       loadMessages(currentChatId)
     } catch (err) {
       alert(err.message)
+    } finally {
+      sendBtn.disabled = false
     }
   }
 

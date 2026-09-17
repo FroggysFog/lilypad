@@ -3,8 +3,10 @@
  * Same shape as pastDueSyncService.js (derives Past Due records from
  * already-synced Orders, purely local, no live API call), but reading
  * from LilyPadCartOrder instead of LilyPadOrder. No brand/owner filter
- * here - confirmed with the account owner that the froggysfog.com
- * Cart.com store is 100% Froggy's Fog, unlike the shared Salesforce org.
+ * needed directly in this file - cartOrderSyncService.js already
+ * excludes Smply-owned Cart Orders (see brandFilter.js) before they
+ * ever land in LilyPadCartOrder, so this derives cleanly from what's
+ * already there.
  */
 
 const LilyPadCartOrder = require('../models/lilypadCartOrder')

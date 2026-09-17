@@ -45,7 +45,7 @@ const LILYPAD_NAV_SECTIONS = [
     label: 'Reports & Resources',
     items: [
       { href: 'morning-report.html', icon: 'ti-sun', label: 'Morning Report' },
-      { href: 'meeting-recaps.html', icon: 'ti-transcript', label: 'Meeting Recaps' },
+      { href: 'meeting-recaps.html', icon: 'ti-history', label: 'Meeting Recaps' },
       { href: 'knowledge-base.html', icon: 'ti-book', label: 'Knowledge Base & SOPs' }
     ]
   },

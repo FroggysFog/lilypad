@@ -8,6 +8,9 @@
 const { queryAllSalesforcePages, querySalesforce, updateSalesforceRecord, singleFlight } = require('./salesforceService')
 const LilyPadOpportunity = require('../models/lilypadOpportunity')
 const winston = require('../logger')
+const { EXCLUDED_OWNER_NAMES, isExcludedOwnerName } = require('./brandFilter')
+
+const OWNER_NOT_IN_CLAUSE = EXCLUDED_OWNER_NAMES.map((name) => `'${name.replace(/'/g, "\\'")}'`).join(',')
 
 const SINGLE_OPPORTUNITY_SOQL_FIELDS = `Id, Name, AccountId, Account.Name, StageName, Amount, CloseDate, Probability,
            Owner.Id, Owner.Name, Type, LeadSource, IsClosed, IsWon, Description,
@@ -18,8 +21,23 @@ const DEFAULT_OPPORTUNITIES_SOQL = `
            Owner.Id, Owner.Name, Type, LeadSource, IsClosed, IsWon, Description,
            CreatedDate, LastModifiedDate
     FROM Opportunity
+    WHERE Owner.Name NOT IN (${OWNER_NOT_IN_CLAUSE})
     ORDER BY CloseDate DESC NULLS LAST, LastModifiedDate DESC
 `
+
+/**
+ * Removes Opportunities owned by a Smply (not Froggy's Fog) rep - see
+ * brandFilter.js. Runs before each sync so records synced before this
+ * filter existed also get cleaned up.
+ */
+async function cleanupExcludedOwnerOpportunities () {
+  const nameRegexes = EXCLUDED_OWNER_NAMES.map((name) => new RegExp(`^${name}$`, 'i'))
+  const result = await LilyPadOpportunity.deleteMany({ ownerName: { $in: nameRegexes } })
+  if (result.deletedCount) {
+    winston.info(`Opportunity sync cleanup: removed ${result.deletedCount} opportunities owned by an excluded (Smply) rep`)
+  }
+  return result.deletedCount || 0
+}
 
 function normalizeOpportunityRecord (raw) {
   const source = raw && typeof raw === 'object' ? raw : {}
@@ -46,6 +64,7 @@ function normalizeOpportunityRecord (raw) {
 }
 
 async function syncOpportunitiesFromSalesforce () {
+  const removed = await cleanupExcludedOwnerOpportunities()
   const soql = (process.env.SF_OPPORTUNITIES_SOQL || '').trim() || DEFAULT_OPPORTUNITIES_SOQL
   let synced = 0
   let total = 0
@@ -53,7 +72,7 @@ async function syncOpportunitiesFromSalesforce () {
   await queryAllSalesforcePages(soql, async (page) => {
     const normalized = page
       .map(normalizeOpportunityRecord)
-      .filter((r) => r.sourceRecordId)
+      .filter((r) => r.sourceRecordId && !isExcludedOwnerName(r.ownerName))
 
     total += normalized.length
     if (normalized.length) {
@@ -72,7 +91,7 @@ async function syncOpportunitiesFromSalesforce () {
     winston.info(`Opportunity sync progress: ${total} opportunities processed`)
   })
 
-  return { synced, total }
+  return { synced, total, removed }
 }
 
 /**
@@ -133,6 +152,7 @@ async function pushOpportunityUpdate (opportunityId, fields) {
 
 module.exports = {
   normalizeOpportunityRecord,
+  cleanupExcludedOwnerOpportunities,
   syncOpportunitiesFromSalesforce: singleFlight(syncOpportunitiesFromSalesforce),
   pushOpportunityUpdate
 }

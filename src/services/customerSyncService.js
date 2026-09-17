@@ -14,6 +14,9 @@
 const { queryAllSalesforcePages, singleFlight } = require('./salesforceService')
 const LilyPadCustomer = require('../models/lilypadCustomer')
 const winston = require('../logger')
+const { EXCLUDED_OWNER_ALIASES, isExcludedOwnerAlias } = require('./brandFilter')
+
+const OWNER_ALIAS_NOT_IN_CLAUSE = EXCLUDED_OWNER_ALIASES.map((alias) => `'${alias}'`).join(',')
 
 /**
  * This org has ~54,000 Leads - syncing all of them was a meaningful
@@ -63,11 +66,25 @@ async function cleanupOutOfScopeCustomers () {
   return result.deletedCount || 0
 }
 
+/**
+ * Removes Leads owned by a Smply (not Froggy's Fog) alias - see
+ * brandFilter.js. Runs independently of the retention cleanup above so
+ * it also catches records synced before this filter existed.
+ */
+async function cleanupExcludedOwnerCustomers () {
+  const result = await LilyPadCustomer.deleteMany({ ownerAlias: { $in: EXCLUDED_OWNER_ALIASES } })
+  if (result.deletedCount) {
+    winston.info(`Customer sync cleanup: removed ${result.deletedCount} leads owned by an excluded (Smply) alias`)
+  }
+  return result.deletedCount || 0
+}
+
 const DEFAULT_LEADS_SOQL_TEMPLATE = (cutoffDate, cutoffDateTime) => `
     SELECT Id, Name, Company, Industry, State, Status, Owner.Alias, LastActivityDate,
            CreatedDate, Import_Notes__c, CreatedBy.Name, LeadSource, Phone, Email
     FROM Lead
-    WHERE LastActivityDate >= ${cutoffDate} OR CreatedDate >= ${cutoffDateTime}
+    WHERE (LastActivityDate >= ${cutoffDate} OR CreatedDate >= ${cutoffDateTime})
+      AND Owner.Alias NOT IN (${OWNER_ALIAS_NOT_IN_CLAUSE})
     ORDER BY LastActivityDate DESC NULLS LAST, CreatedDate DESC
 `
 
@@ -96,7 +113,7 @@ function normalizeLeadRecord (raw) {
 }
 
 async function syncCustomersFromSalesforce () {
-  const removed = await cleanupOutOfScopeCustomers()
+  const removed = (await cleanupOutOfScopeCustomers()) + (await cleanupExcludedOwnerCustomers())
   const soql = (process.env.SF_LEADS_SOQL || '').trim() ||
     DEFAULT_LEADS_SOQL_TEMPLATE(getCustomerRetentionCutoffSoqlDate(), getCustomerRetentionCutoffSoqlDateTime())
   let synced = 0
@@ -105,7 +122,7 @@ async function syncCustomersFromSalesforce () {
   await queryAllSalesforcePages(soql, async (page) => {
     const normalized = page
       .map(normalizeLeadRecord)
-      .filter((r) => r.sourceRecordId)
+      .filter((r) => r.sourceRecordId && !isExcludedOwnerAlias(r.ownerAlias))
 
     total += normalized.length
     if (normalized.length) {
@@ -129,5 +146,6 @@ async function syncCustomersFromSalesforce () {
 
 module.exports = {
   normalizeLeadRecord,
+  cleanupExcludedOwnerCustomers,
   syncCustomersFromSalesforce: singleFlight(syncCustomersFromSalesforce)
 }

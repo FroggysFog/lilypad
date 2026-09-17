@@ -72,7 +72,11 @@ const salesLeadSchema = new Schema({
   aiScore: {
     intentScore: { type: Number, default: 0, min: 0, max: 100, index: true },
     recommendedSku: String,
-    pitchHook: String,
+    // A brief, factual description of the lead/their business - not a
+    // drafted outreach email. Renamed from pitchHook, which asked the
+    // model for 2 email-ready sentences; reps wanted a quick read on
+    // what the business is, not copy to paste into a cold email.
+    leadDescription: String,
     reasoning: String,
     scoredAt: Date
   },

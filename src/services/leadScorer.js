@@ -66,11 +66,11 @@ const SCORE_TOOL = {
   description: 'Structured sales-intent scoring for one prospective lead.',
   input_schema: {
     type: 'object',
-    required: ['intent_score', 'recommended_sku', 'pitch_hook', 'reasoning'],
+    required: ['intent_score', 'recommended_sku', 'lead_description', 'reasoning'],
     properties: {
       intent_score: { type: 'number', description: '0-100 - how likely this lead is to buy soon, based on the signals given (station/review count, rating, division fit).' },
       recommended_sku: { type: 'string', description: 'One specific SKU from the product guide most relevant to this lead, e.g. "Training Smoke XD 4-Gal" or "Bog Fog 4-Gal Case".' },
-      pitch_hook: { type: 'string', description: 'Exactly 2 punchy, personalized sentences a salesperson could paste directly into an outreach email - tailored to this lead\'s specific use case (safety/burn drills for Training Smoke, hang time/haunt season for Froggy\'s Fog).' },
+      lead_description: { type: 'string', description: 'A brief, factual 1-2 sentence description of this lead\'s business (what they are, what they do, their scale) based on the signals given - not sales copy or an outreach pitch, just a quick read on what this business is.' },
       reasoning: { type: 'string', description: 'One sentence explaining the intent score.' }
     }
   }
@@ -119,7 +119,7 @@ async function scoreOneLead (client, model, lead) {
       $set: {
         'aiScore.intentScore': intentScore,
         'aiScore.recommendedSku': String(result.recommended_sku || '').slice(0, 200),
-        'aiScore.pitchHook': String(result.pitch_hook || '').slice(0, 1000),
+        'aiScore.leadDescription': String(result.lead_description || '').slice(0, 1000),
         'aiScore.reasoning': String(result.reasoning || '').slice(0, 500),
         'aiScore.scoredAt': new Date(),
         status: 'scored'

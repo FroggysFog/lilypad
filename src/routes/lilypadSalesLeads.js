@@ -22,6 +22,7 @@ module.exports = function () {
   router.get('/sales-leads/jobs/:id', requireLoginApi, controllers.lilypadSalesLeads.getJob)
   router.post('/sales-leads/score-now', requireLoginApi, controllers.lilypadSalesLeads.scoreNow)
   router.post('/sales-leads/research-contacts', requireLoginApi, controllers.lilypadSalesLeads.researchContacts)
+  router.post('/sales-leads/recheck-claims', requireLoginApi, controllers.lilypadSalesLeads.recheckClaims)
   router.post('/sales-leads/:id/create-quote', requireLoginApi, controllers.lilypadSalesLeads.createQuote)
   router.post('/sales-leads/:id/status', requireLoginApi, controllers.lilypadSalesLeads.updateStatus)
 

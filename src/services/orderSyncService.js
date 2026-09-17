@@ -16,6 +16,9 @@
 const { querySalesforce, queryAllSalesforcePages, singleFlight } = require('./salesforceService')
 const LilyPadOrder = require('../models/lilypadOrder')
 const winston = require('../logger')
+const { EXCLUDED_OWNER_NAMES, isExcludedOwnerName } = require('./brandFilter')
+
+const OWNER_NOT_IN_CLAUSE = EXCLUDED_OWNER_NAMES.map((name) => `'${name.replace(/'/g, "\\'")}'`).join(',')
 
 const SUB_QUERY_BATCH_SIZE = 200
 
@@ -52,6 +55,23 @@ async function cleanupOutOfScopeOrders () {
   })
   if (result.deletedCount) {
     winston.info(`Order sync cleanup: removed ${result.deletedCount} paid-off orders older than ${cutoff.toISOString().slice(0, 10)}`)
+  }
+  return result.deletedCount || 0
+}
+
+/**
+ * Removes Orders owned by a Smply (not Froggy's Fog) rep - see
+ * brandFilter.js. orderEntryRep is free-text (inconsistent
+ * capitalization confirmed in real data) so it's matched the same
+ * case-insensitive way as ownerName, not with a Mongo $in.
+ */
+async function cleanupExcludedOwnerOrders () {
+  const nameRegexes = EXCLUDED_OWNER_NAMES.map((name) => new RegExp(`^${name}$`, 'i'))
+  const result = await LilyPadOrder.deleteMany({
+    $or: [{ ownerName: { $in: nameRegexes } }, { orderEntryRep: { $in: nameRegexes } }]
+  })
+  if (result.deletedCount) {
+    winston.info(`Order sync cleanup: removed ${result.deletedCount} orders owned by an excluded (Smply) rep`)
   }
   return result.deletedCount || 0
 }
@@ -231,7 +251,7 @@ async function syncOrdersFromSalesforce () {
   let total = 0
   const startedAt = Date.now()
 
-  const removed = await cleanupOutOfScopeOrders()
+  const removed = (await cleanupOutOfScopeOrders()) + (await cleanupExcludedOwnerOrders())
   const cutoffDate = getOrderRetentionCutoffSoqlDate()
 
   await queryAllSalesforcePages(`
@@ -254,7 +274,8 @@ async function syncOrdersFromSalesforce () {
                BillingPostalCode, BillingCountry, ShippingStreet, ShippingCity, ShippingState,
                ShippingPostalCode, ShippingCountry, Description, CreatedDate, LastModifiedDate
         FROM Order
-        WHERE Total_Due__c > 0 OR EffectiveDate >= ${cutoffDate}
+        WHERE (Total_Due__c > 0 OR EffectiveDate >= ${cutoffDate})
+          AND Owner.Name NOT IN (${OWNER_NOT_IN_CLAUSE})
         ORDER BY EffectiveDate DESC NULLS LAST, CreatedDate DESC
     `, async (page) => {
     const orderIds = page.map((order) => order.Id).filter(Boolean)
@@ -263,7 +284,7 @@ async function syncOrdersFromSalesforce () {
 
     const normalized = page
       .map((order) => normalizeOrderRecord(order, itemsByOrderId[order.Id], shipmentsByOrderId[order.Id]))
-      .filter((r) => r.sourceRecordId)
+      .filter((r) => r.sourceRecordId && !isExcludedOwnerName(r.ownerName) && !isExcludedOwnerName(r.orderEntryRep))
 
     total += normalized.length
     if (normalized.length) {
@@ -292,5 +313,6 @@ async function syncOrdersFromSalesforce () {
 
 module.exports = {
   normalizeOrderRecord,
+  cleanupExcludedOwnerOrders,
   syncOrdersFromSalesforce: singleFlight(syncOrdersFromSalesforce)
 }
