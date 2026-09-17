@@ -34,12 +34,23 @@ controller.getRolePermissions = async function (req, res) {
     // what a role's permission doc says (see pagePermissionService.js's
     // ADMIN_ONLY_PAGES), so offering it as a checkbox here would be
     // misleading - checking it would silently do nothing.
+    //
+    // A few hrefs (e.g. morning-report.html) deliberately appear in two
+    // nav sections - the Operations top-tab row and a permanent sidebar
+    // group - since they're reachable from both places. seenHrefs keeps
+    // each one as a single checkbox here, under whichever section lists
+    // it first, rather than showing it twice with the same value.
+    const seenHrefs = new Set()
     const catalog = LILYPAD_NAV_SECTIONS.filter((section) => !section.adminOnly).map((section) => ({
       label: section.label,
-      items: section.type === 'single'
-        ? [{ href: section.href, label: section.label }]
-        : section.items.map((item) => ({ href: item.href, label: item.label }))
-    }))
+      items: (section.type === 'single' ? [{ href: section.href, label: section.label }] : section.items)
+        .filter((item) => {
+          if (seenHrefs.has(item.href)) return false
+          seenHrefs.add(item.href)
+          return true
+        })
+        .map((item) => ({ href: item.href, label: item.label }))
+    })).filter((group) => group.items.length)
 
     const widgetCatalog = dashboardRolePresets.ALL_WIDGETS.map((w) => ({
       id: w.id, title: w.title, description: w.description, category: w.category, icon: w.icon

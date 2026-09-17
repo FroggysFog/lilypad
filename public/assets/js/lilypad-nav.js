@@ -44,6 +44,24 @@ const LILYPAD_NAV_SECTIONS = [
   },
   {
     type: 'group',
+    icon: 'ti-report-analytics',
+    label: 'Reports & Resources',
+    // Morning Report, Meeting Recaps, and Knowledge Base already live in
+    // the Operations top-tab row above - these are the same three hrefs,
+    // deliberately also reachable from the permanent sidebar since
+    // they're check-when-needed reference pages rather than daily tools,
+    // easy to lose track of in a tab row led by Dashboard. Same href
+    // appearing in two sections is intentional; lilypadRolePermissions.js's
+    // catalog builder dedupes by href so this never shows as a second,
+    // confusing checkbox in Roles & Permissions.
+    items: [
+      { href: 'morning-report.html', icon: 'ti-sun', label: 'Morning Report' },
+      { href: 'meeting-recaps.html', icon: 'ti-transcript', label: 'Meeting Recaps' },
+      { href: 'knowledge-base.html', icon: 'ti-book', label: 'Knowledge Base & SOPs' }
+    ]
+  },
+  {
+    type: 'group',
     icon: 'ti-cash-banknote',
     label: 'Accounting',
     items: [
@@ -300,12 +318,12 @@ function lilypadTopTabsApplyPermissions (allowedPages) {
  * so there's exactly one place page identifiers are defined.
  */
 function lilypadNavAllPages () {
-  const pages = []
+  const pages = new Set()
   LILYPAD_NAV_SECTIONS.forEach((section) => {
-    if (section.type === 'single') pages.push(section.href)
-    else section.items.forEach((item) => pages.push(item.href))
+    if (section.type === 'single') pages.add(section.href)
+    else section.items.forEach((item) => pages.add(item.href))
   })
-  return pages
+  return Array.from(pages)
 }
 
 /**

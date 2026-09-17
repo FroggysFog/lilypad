@@ -435,6 +435,22 @@
 					</div>
 				</div>
 
+				<!-- Morning Report Summary -->
+				<div class="card border-0 shadow-sm rounded-3 p-4 mb-3" id="dashMorningReportCard" style="background: linear-gradient(135deg, #fff8e6, #ffffff); display:none;">
+					<div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+						<div class="flex-grow-1" style="min-width:260px;">
+							<div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+								<i class="ti ti-sun text-warning fs-20"></i>
+								<h6 class="fw-bold mb-0 text-dark">Morning Report</h6>
+								<span class="fs-11 text-muted" id="dashMorningReportDate"></span>
+							</div>
+							<p class="fs-14 text-dark mb-2" id="dashMorningGreeting">Loading your morning report...</p>
+							<div class="d-flex flex-wrap gap-2" id="dashMorningReportBadges"></div>
+						</div>
+						<a href="morning-report.html" class="btn btn-outline-warning btn-sm rounded-pill px-3 text-dark flex-shrink-0"><i class="ti ti-arrow-right me-1"></i>View Your Report</a>
+					</div>
+				</div>
+
 				<!-- Modular Role-Based Widget Canvas Container -->
 				<div class="row g-3 mb-4" id="dashboardWidgetCanvas">
 					<!-- Dynamically rendered widgets based on role and preferences -->
@@ -1147,7 +1163,6 @@
             container.innerHTML = tickets.map(t => '<div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-light border">' +
                 '<div class="text-truncate me-2">' +
                     '<div class="d-flex align-items-center gap-1 mb-1">' +
-                        '<span class="badge bg-dark fs-10">' + (t.formattedUid || 'LP') + '</span>' +
                         '<span class="badge bg-warning text-dark fs-10">' + t.status + '</span>' +
                     '</div>' +
                     '<strong class="d-block text-dark fs-12 text-truncate">' + escapeHtml(t.title) + '</strong>' +
@@ -2130,12 +2145,6 @@
                 : '<span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1 rounded-pill fw-semibold"><i class="ti ti-checklist me-1"></i>Task</span>';
             const dueLabel = item.dueDateRaw ? new Date(item.dueDateRaw + 'T00:00:00').toLocaleDateString() : 'No due date';
             const dragAttrs = draggable ? `draggable="true" ondragstart="dashDragStart(event, '${item.feedType}', '${item.id}')"` : '';
-            // The formatted ID (TSK-/LP-) is admin-only troubleshooting
-            // detail - the Task/Ticket pill already tells regular users
-            // what they're looking at.
-            const uidBadge = dashIsAdmin
-                ? `<span class="badge bg-dark text-white fw-bold fs-11 px-2 py-1 rounded-pill" title="Internal reference ID">${escapeHtml(item.uid)}</span>`
-                : '<span></span>';
 
             return `
                 <div class="col-xl-3 col-lg-4 col-md-6 d-flex">
@@ -2145,12 +2154,9 @@
                          onclick="window.location.href='${item.href}'"
                          onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--bs-primary)';"
                          onmouseout="this.style.transform='none'; this.style.borderColor='var(--bs-border-color, #e2e8f0)';">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            ${uidBadge}
-                            <div class="d-flex align-items-center gap-1">
-                                ${typeBadge}
-                                ${dashSoftBadge(priorityClass, item.priority, 'fs-10 px-2 py-1')}
-                            </div>
+                        <div class="d-flex align-items-center gap-1 mb-2">
+                            ${typeBadge}
+                            ${dashSoftBadge(priorityClass, item.priority, 'fs-10 px-2 py-1')}
                         </div>
                         <h6 class="fw-bold fs-13 mb-1 text-dark text-truncate" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h6>
                         <p class="text-muted fs-12 mb-2 text-truncate" style="line-height:1.4;">${escapeHtml(item.subtitle)}</p>
@@ -2187,7 +2193,6 @@
                         <input type="checkbox" class="form-check-input" title="Mark complete" onchange="dashQuickComplete('${item.feedType}', '${item.id}')">
                     </td>
                     <td>${typeBadge}</td>
-                    ${dashIsAdmin ? `<td><span class="badge bg-dark text-white fs-11" title="Internal reference ID">${escapeHtml(item.uid)}</span></td>` : ''}
                     <td>
                         <a href="${item.href}" class="text-dark fw-semibold text-decoration-none fs-13">${escapeHtml(item.title)}</a>
                     </td>
@@ -2215,7 +2220,6 @@
                         <tr>
                             <th></th>
                             <th>Type</th>
-                            ${dashIsAdmin ? '<th>ID</th>' : ''}
                             <th>Title</th>
                             <th>Priority</th>
                             <th>Status</th>
@@ -2283,6 +2287,43 @@
     }
 
     /**
+     * Compact preview of the same digest morning-report.html renders in
+     * full - only the LLM-written greeting plus real counts already
+     * computed by morningDigestService.js (never re-derived here).
+     * Loaded independently of the rest of the dashboard so a slow/failed
+     * digest never blocks the widget canvas.
+     */
+    async function loadMorningReportSummary() {
+        try {
+            const res = await fetch('/api/v1/lilypad/morning-digest');
+            const result = await res.json();
+            if (!result.success) return;
+
+            const digest = result.data;
+            const s = digest.sections || {};
+            document.getElementById('dashMorningGreeting').textContent = digest.greeting || '';
+            document.getElementById('dashMorningReportDate').textContent = digest.generatedAt ? 'Generated ' + new Date(digest.generatedAt).toLocaleTimeString() : '';
+
+            const pipelineCount = ((s.pipelineAlerts && s.pipelineAlerts.closingSoon) || []).length + ((s.pipelineAlerts && s.pipelineAlerts.stalled) || []).length;
+            const badges = [
+                { count: (s.calendar || []).length, label: 'meeting(s) today', cls: 'bg-soft-primary text-primary' },
+                { count: (s.tasksDueToday || []).length, label: 'task(s) due today', cls: 'bg-soft-info text-info' },
+                { count: (s.priorityConversations || []).length, label: 'conversation(s) need a reply', cls: 'bg-soft-danger text-danger' },
+                { count: (s.meetingNotes || []).length, label: 'new meeting recap(s)', cls: 'bg-soft-secondary text-secondary' },
+                { count: pipelineCount, label: 'pipeline alert(s)', cls: 'bg-soft-warning text-warning' }
+            ].filter(b => b.count > 0);
+
+            document.getElementById('dashMorningReportBadges').innerHTML = badges.length
+                ? badges.map(b => `<span class="badge ${b.cls} fs-11 rounded-pill fw-semibold">${b.count} ${b.label}</span>`).join('')
+                : '<span class="badge bg-soft-success text-success fs-11 rounded-pill fw-semibold">All clear</span>';
+
+            document.getElementById('dashMorningReportCard').style.display = '';
+        } catch (err) {
+            console.error('Unable to load morning report summary:', err);
+        }
+    }
+
+    /**
      * Calendar events happening today that involve the current user (they
      * created it or were invited), excluding items whose itemType is
      * 'task' - those already surface as real Task Manager tasks via the
@@ -2323,6 +2364,7 @@
         await loadMe();
         await loadAssigneeOptions();
         await loadDashboard();
+        loadMorningReportSummary();
 
         const bulletinModalEl = document.getElementById('bulletinEditModal');
         if (bulletinModalEl) bulletinModalEl.addEventListener('show.bs.modal', openBulletinEditModal);
