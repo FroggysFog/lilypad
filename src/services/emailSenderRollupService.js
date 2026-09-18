@@ -320,6 +320,7 @@ async function getRollupCards (ownerId) {
         label,
         reason,
         unreadCount,
+        lastInboundAt: contact.lastInboundAt,
         executiveSummary: contact.rollup.executiveSummary,
         // b.text guards against a rollup saved before blockers became
         // {text} subdocuments (previously a plain string array) - those

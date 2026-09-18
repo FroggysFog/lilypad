@@ -47,6 +47,11 @@ function mainRoutes(router, controllers) {
   router.post('/api/microsoft-teams/chats/:chatId/messages', requireLoginApi, controllers.microsoftTeams.send)
   router.post('/api/microsoft-teams/chats/:chatId/attachments', requireLoginApi, controllers.microsoftTeams.uploadMiddleware, controllers.microsoftTeams.sendAttachment)
   router.post('/api/microsoft-teams/presences', requireLoginApi, controllers.microsoftTeams.presences)
+  router.get('/api/microsoft-teams/chat-cards', requireLoginApi, controllers.microsoftTeams.getChatCards)
+  router.post('/api/microsoft-teams/chat-cards/:chatId/rollup-now', requireLoginApi, controllers.microsoftTeams.regenerateChatCard)
+  router.post('/api/microsoft-teams/chat-cards/:chatId/dismiss', requireLoginApi, controllers.microsoftTeams.dismissChatCard)
+
+  router.get('/api/v1/lilypad/communications/feed', requireLoginApi, controllers.lilypadCommunications.getFeed)
 
   // Microsoft 365 integration (used by calendar.html, email.html, and
   // the Teams chat panel above) - one per-user connection covers all

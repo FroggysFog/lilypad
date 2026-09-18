@@ -19,6 +19,7 @@ const LilyPadRolePermission = require('./lilypadRolePermission')
 const LilyPadEmailCache = require('./lilypadEmailCache')
 const LilyPadEmailSyncState = require('./lilypadEmailSyncState')
 const LilyPadContactInteractionScore = require('./lilypadContactInteractionScore')
+const LilyPadChatInteractionCache = require('./lilypadChatInteractionCache')
 const LilyPadSuggestedTask = require('./lilypadSuggestedTask')
 const LilyPadErpEntityLink = require('./lilypadErpEntityLink')
 const LilyPadAwaitingResponse = require('./lilypadAwaitingResponse')
@@ -47,6 +48,7 @@ module.exports = {
   LilyPadEmailCache,
   LilyPadEmailSyncState,
   LilyPadContactInteractionScore,
+  LilyPadChatInteractionCache,
   LilyPadSuggestedTask,
   LilyPadErpEntityLink,
   LilyPadAwaitingResponse,

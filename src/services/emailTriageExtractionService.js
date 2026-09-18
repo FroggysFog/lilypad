@@ -21,6 +21,7 @@ const winston = require('../logger')
 const LilyPadEmailCache = require('../models/lilypadEmailCache')
 const LilyPadSuggestedTask = require('../models/lilypadSuggestedTask')
 const microsoftCalendarService = require('./microsoftCalendarService')
+const { isSimilarTitle } = require('./suggestedTaskDedup')
 
 const REQUEST_TIMEOUT_MS = 30000
 const MAX_RETRIES = 3
@@ -216,28 +217,6 @@ async function summarizeEmailNow (ownerId, graphMessageId) {
   const email = await LilyPadEmailCache.findOne({ owner: ownerId, graphMessageId, deleted: false })
   if (!email) throw new Error('Email not found.')
   return extractAndPersistTriageForEmail(ownerId, email)
-}
-
-const TITLE_SIMILARITY_THRESHOLD = 0.6
-
-/**
- * Normalized bag-of-words overlap, relative to the smaller title - not
- * full Jaccard (divided by the union), since two titles of noticeably
- * different length describing the same ask (a terse restatement vs. a
- * fuller one) should still count as similar rather than being
- * penalized for the length difference.
- */
-function titleWords (title) {
-  return new Set(String(title || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean))
-}
-
-function isSimilarTitle (a, b) {
-  const wordsA = titleWords(a)
-  const wordsB = titleWords(b)
-  if (!wordsA.size || !wordsB.size) return false
-  let shared = 0
-  wordsA.forEach((w) => { if (wordsB.has(w)) shared++ })
-  return shared / Math.min(wordsA.size, wordsB.size) >= TITLE_SIMILARITY_THRESHOLD
 }
 
 /**

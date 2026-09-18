@@ -1,5 +1,6 @@
 const multer = require('multer')
 const microsoftTeams = require('../services/microsoftTeams')
+const teamsChatTriageService = require('../services/teamsChatTriageService')
 
 const controller = {}
 
@@ -53,6 +54,43 @@ controller.sendAttachment = async (req, res) => {
       req.user._id, req.params.chatId, req.file.buffer, req.file.originalname, req.file.mimetype, req.body.caption
     )
     return res.json({ success: true, data })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * GET /api/microsoft-teams/chat-cards
+ */
+controller.getChatCards = async (req, res) => {
+  try {
+    return res.json({ success: true, data: await teamsChatTriageService.getChatCards(req.user._id) })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/microsoft-teams/chat-cards/:chatId/rollup-now
+ * Manual regenerate for one chat - for testing without waiting on the
+ * candidate-selection check or the scheduler.
+ */
+controller.regenerateChatCard = async (req, res) => {
+  try {
+    const rollup = await teamsChatTriageService.generateRollupForChat(req.user._id, decodeURIComponent(req.params.chatId))
+    return res.json({ success: true, data: rollup })
+  } catch (err) {
+    return res.status(502).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/microsoft-teams/chat-cards/:chatId/dismiss
+ */
+controller.dismissChatCard = async (req, res) => {
+  try {
+    await teamsChatTriageService.dismissChatCard(req.user._id, decodeURIComponent(req.params.chatId))
+    return res.json({ success: true })
   } catch (err) {
     return res.status(502).json({ success: false, error: err.message })
   }

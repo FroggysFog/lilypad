@@ -32,6 +32,7 @@ const Controllers = {
   lilypadSalesCommandCenter: require('./lilypadSalesCommandCenter'),
   lilypadInventory: require('./lilypadInventory'),
   lilypadAllLeads: require('./lilypadAllLeads'),
+  lilypadCommunications: require('./lilypadCommunications'),
   readAi: require('./readAi')
 }
 

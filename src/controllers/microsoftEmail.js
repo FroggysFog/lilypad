@@ -348,6 +348,7 @@ controller.getSuggestedTasks = async function (req, res) {
   try {
     const data = await LilyPadSuggestedTask.find({ owner: req.user._id, status: 'pending' })
       .populate('sourceEmail', 'subject from receivedDateTime graphMessageId')
+      .populate('sourceChat', 'chatId displayName')
       .sort({ createdAt: -1 })
       .limit(100)
     return res.status(200).json({ success: true, data })
@@ -368,7 +369,7 @@ controller.approveSuggestedTask = async function (req, res) {
     const suggestion = await LilyPadSuggestedTask.findOne({ _id: req.params.id, owner: req.user._id, status: 'pending' })
     if (!suggestion) return res.status(404).json({ success: false, error: 'Suggested task not found' })
 
-    const sourceLabel = suggestion.sourceMeetingNote ? 'From meeting' : 'From email'
+    const sourceLabel = suggestion.sourceChat ? 'From Teams chat' : suggestion.sourceMeetingNote ? 'From meeting' : 'From email'
     const task = await LilyPadTask.create({
       title: suggestion.title,
       notes: suggestion.context ? `${sourceLabel}: ${suggestion.context}` : 'Suggested from email triage.',
