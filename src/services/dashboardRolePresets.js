@@ -78,6 +78,15 @@ const ALL_WIDGETS = [
     allowedRoles: ['admin', 'finance', 'accounting', 'operations']
   },
   {
+    id: 'profitability',
+    title: 'Order Profitability',
+    description: 'Aggregated order amount, product cost, shipping, and gross margin across Salesforce Orders',
+    category: 'Finance',
+    icon: 'ti-report-money',
+    defaultWidth: 6,
+    allowedRoles: ['admin', 'finance', 'accounting', 'operations', 'sales']
+  },
+  {
     id: 'communications',
     title: 'Communications',
     description: 'AI summaries and suggested tasks across email, Teams chat, and meeting notes',
@@ -149,7 +158,7 @@ const ROLE_PRESETS = {
   sales: {
     roleName: 'Sales & Account Executive',
     kpis: ['kpi-deals', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['my-day', 'communications', 'sales-pipeline', 'lapsed-customers', 'sales-quota'],
+    widgets: ['my-day', 'communications', 'sales-pipeline', 'lapsed-customers', 'sales-quota', 'profitability'],
     layoutMode: 'bento'
   },
 
@@ -171,13 +180,13 @@ const ROLE_PRESETS = {
   finance: {
     roleName: 'Finance & Accounts Receivable',
     kpis: ['kpi-past-due-total', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['past-due-ar', 'my-day', 'communications', 'company-bulletin'],
+    widgets: ['past-due-ar', 'profitability', 'my-day', 'communications', 'company-bulletin'],
     layoutMode: 'bento'
   },
   accounting: {
     roleName: 'Finance & Accounts Receivable',
     kpis: ['kpi-past-due-total', 'kpi-todo', 'kpi-in-progress', 'kpi-complete'],
-    widgets: ['past-due-ar', 'my-day', 'communications', 'company-bulletin'],
+    widgets: ['past-due-ar', 'profitability', 'my-day', 'communications', 'company-bulletin'],
     layoutMode: 'bento'
   },
 
@@ -185,13 +194,13 @@ const ROLE_PRESETS = {
   admin: {
     roleName: 'Operations Leadership & Admin',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['company-bulletin', 'my-day', 'communications', 'sales-pipeline', 'sales-quota', 'past-due-ar', 'shipping-dock', 'rma-bench'],
+    widgets: ['company-bulletin', 'my-day', 'communications', 'sales-pipeline', 'sales-quota', 'past-due-ar', 'profitability', 'shipping-dock', 'rma-bench'],
     layoutMode: 'bento'
   },
   operations: {
     roleName: 'Operations Leadership & Admin',
     kpis: ['kpi-todo', 'kpi-in-progress', 'kpi-urgent', 'kpi-complete'],
-    widgets: ['company-bulletin', 'my-day', 'communications', 'sales-pipeline', 'sales-quota', 'past-due-ar', 'shipping-dock', 'rma-bench'],
+    widgets: ['company-bulletin', 'my-day', 'communications', 'sales-pipeline', 'sales-quota', 'past-due-ar', 'profitability', 'shipping-dock', 'rma-bench'],
     layoutMode: 'bento'
   },
 

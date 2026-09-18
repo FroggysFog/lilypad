@@ -667,6 +667,9 @@
                 case 'past-due-ar':
                     html += renderPastDueWidgetHtml();
                     break;
+                case 'profitability':
+                    html += renderProfitabilityWidgetHtml();
+                    break;
                 case 'lapsed-customers':
                     html += renderLapsedCustomersWidgetHtml();
                     break;
@@ -693,6 +696,7 @@
         if (activeWidgets.includes('sales-pipeline')) loadSalesPipelineWidgetData();
         if (activeWidgets.includes('shipping-dock')) loadShippingDockWidgetData();
         if (activeWidgets.includes('past-due-ar')) loadPastDueWidgetData();
+        if (activeWidgets.includes('profitability')) loadProfitabilityWidgetData();
         if (activeWidgets.includes('lapsed-customers')) loadLapsedCustomersWidgetData();
         if (activeWidgets.includes('sales-quota')) loadSalesQuotaWidgetData();
         if (activeWidgets.includes('communications')) loadCommunicationsWidgetData();
@@ -1005,6 +1009,35 @@
         '</div>';
     }
 
+    function renderProfitabilityWidgetHtml() {
+        return '<div class="col-lg-6">' +
+            '<div class="card border-0 shadow-sm rounded-3 h-100">' +
+                '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        '<div class="rounded-2 p-1 text-white bg-success d-flex align-items-center justify-content-center shadow-sm" style="width:34px; height:34px;">' +
+                            '<i class="ti ti-report-money fs-18"></i>' +
+                        '</div>' +
+                        '<div>' +
+                            '<h5 class="mb-0 fs-16 fw-bold text-dark">Order Profitability</h5>' +
+                            '<span class="fs-12 text-muted">Order amount, cost, shipping &amp; margin (Salesforce Orders)</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="card-body p-3">' +
+                    '<div class="d-flex align-items-center gap-2 flex-wrap mb-3">' +
+                        '<select id="dashProfitRepFilter" class="form-select form-select-sm w-auto rounded-pill fs-12 fw-semibold" onchange="loadProfitabilityWidgetData()"></select>' +
+                        '<input type="date" id="dashProfitStartDate" class="form-control form-control-sm w-auto rounded-pill fs-12" onchange="loadProfitabilityWidgetData()">' +
+                        '<span class="fs-12 text-muted">to</span>' +
+                        '<input type="date" id="dashProfitEndDate" class="form-control form-control-sm w-auto rounded-pill fs-12" onchange="loadProfitabilityWidgetData()">' +
+                    '</div>' +
+                    '<div id="dashProfitWidgetBody">' +
+                        '<div class="text-center py-4 text-muted"><i class="ti ti-loader-2 fs-24 d-block mb-1"></i>Loading...</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
     function renderPastDueWidgetHtml() {
         return '<div class="col-lg-6">' +
             '<div class="card border-0 shadow-sm rounded-3 h-100">' +
@@ -1295,6 +1328,80 @@
             '</div>').join('');
         } catch (err) {
             container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load shipping queue.</div>';
+        }
+    }
+
+    async function loadProfitabilityWidgetData() {
+        const container = document.getElementById('dashProfitWidgetBody');
+        const repSelect = document.getElementById('dashProfitRepFilter');
+        if (!container || !repSelect) return;
+
+        const startDate = document.getElementById('dashProfitStartDate').value;
+        const endDate = document.getElementById('dashProfitEndDate').value;
+        const repName = repSelect.value;
+
+        try {
+            const params = new URLSearchParams();
+            if (startDate) params.set('startDate', startDate);
+            if (endDate) params.set('endDate', endDate);
+            if (repName) params.set('repName', repName);
+
+            const res = await fetch('/api/v1/lilypad/dashboard/widgets/profitability?' + params.toString());
+            const result = await res.json();
+            if (!result.success) throw new Error(result.error);
+
+            // Rep dropdown is populated once and hidden entirely for a
+            // self-scoped (sales-role) viewer, who can't pick another rep.
+            if (!repSelect.dataset.populated) {
+                if (result.isSelfScoped) {
+                    repSelect.style.display = 'none';
+                } else {
+                    repSelect.innerHTML = '<option value="">All Reps</option>' +
+                        (result.repOptions || []).map(name => '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>').join('');
+                }
+                repSelect.dataset.populated = 'true';
+            }
+
+            const d = result.data || {};
+            const isPositive = Number(d.profitability || 0) >= 0;
+            const colorClass = isPositive ? 'text-success' : 'text-danger';
+            const badgeClass = isPositive ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger';
+            const marginLabel = Number(d.grossMarginPct || 0).toFixed(1) + '%';
+
+            if (!d.orderCount) {
+                container.innerHTML = '<div class="text-center py-4 text-muted fs-13">No orders match this filter.</div>';
+                return;
+            }
+
+            container.innerHTML =
+                '<div class="d-flex align-items-center justify-content-center flex-wrap gap-3">' +
+                    '<div class="text-center px-2">' +
+                        '<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Order Amount</span>' +
+                        '<span class="fs-16 fw-bold text-dark">$' + Number(d.orderAmount || 0).toLocaleString() + '</span>' +
+                    '</div>' +
+                    '<span class="fs-18 text-muted">&minus;</span>' +
+                    '<div class="text-center px-2">' +
+                        '<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Cost</span>' +
+                        '<span class="fs-16 fw-bold text-dark">$' + Number(d.productCost || 0).toLocaleString() + '</span>' +
+                    '</div>' +
+                    '<span class="fs-18 text-muted">&minus;</span>' +
+                    '<div class="text-center px-2">' +
+                        '<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Shipping</span>' +
+                        '<span class="fs-16 fw-bold text-dark">$' + Number(d.shipping || 0).toLocaleString() + '</span>' +
+                    '</div>' +
+                    '<span class="fs-18 text-muted">=</span>' +
+                    '<div class="text-center px-2">' +
+                        '<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Profitability</span>' +
+                        '<span class="fs-18 fw-bold ' + colorClass + '">$' + Number(d.profitability || 0).toLocaleString() + '</span>' +
+                    '</div>' +
+                    '<div class="text-center px-3 border-start">' +
+                        '<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Gross Margin</span>' +
+                        '<span class="badge ' + badgeClass + ' fs-13 rounded-pill fw-bold px-3">' + marginLabel + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="text-center fs-11 text-muted mt-2">' + d.orderCount + ' order' + (d.orderCount === 1 ? '' : 's') + '</div>';
+        } catch (err) {
+            container.innerHTML = '<div class="text-center py-3 text-danger fs-12">Unable to load profitability data.</div>';
         }
     }
 

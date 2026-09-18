@@ -130,13 +130,13 @@ function displayCategoryFor (rawCategory) {
 }
 
 /**
- * The one real, hand-written query - sums LilyPadOrder.grandTotal
- * (the field this codebase already treats as revenue, see
- * entityResolutionService.js's lifetime-revenue rollup) over a date/rep
- * filter, optionally broken down by product category via the existing
- * productCategoryService classifier.
+ * Shared by runRevenueReport and runProfitabilityReport - effectiveDate is
+ * a plain 'YYYY-MM-DD' string synced from Salesforce, compared via
+ * $gte/$lte string comparison rather than cast to a Date; ownerName is
+ * matched exactly (not a regex), since callers are expected to have
+ * already validated repName against a known roster (see ALLOWED_OWNERS).
  */
-async function runRevenueReport (params) {
+function buildOrderFilterQuery (params) {
   const query = {}
   if (params.startDate || params.endDate) {
     query.effectiveDate = {}
@@ -144,6 +144,18 @@ async function runRevenueReport (params) {
     if (params.endDate) query.effectiveDate.$lte = params.endDate
   }
   if (params.repName) query.ownerName = params.repName
+  return query
+}
+
+/**
+ * The one real, hand-written query - sums LilyPadOrder.grandTotal
+ * (the field this codebase already treats as revenue, see
+ * entityResolutionService.js's lifetime-revenue rollup) over a date/rep
+ * filter, optionally broken down by product category via the existing
+ * productCategoryService classifier.
+ */
+async function runRevenueReport (params) {
+  const query = buildOrderFilterQuery(params)
 
   const orders = await LilyPadOrder.find(query, 'grandTotal items').lean()
   const total = orders.reduce((sum, o) => sum + (o.grandTotal || 0), 0)
@@ -166,6 +178,35 @@ async function runRevenueReport (params) {
   }
 
   return { total, orderCount: orders.length, breakdown }
+}
+
+/**
+ * Aggregate profitability across LilyPadOrder (Salesforce Orders only -
+ * LilyPadCartOrder has no cost/profitability field at all, see
+ * lilypadCartOrder.js). Sums productCost/shippingAmount/orderProfitability
+ * (already computed and synced from Salesforce, not recomputed here) and
+ * derives grossMarginPct as sum(profitability)/sum(orderAmount)*100 -
+ * deliberately NOT an average of each order's own grossMargin percentage,
+ * which would misweight small vs. large orders.
+ */
+async function runProfitabilityReport (params) {
+  const query = buildOrderFilterQuery(params)
+
+  const orders = await LilyPadOrder.find(query, 'grandTotal productCost shippingAmount orderProfitability').lean()
+
+  const totals = orders.reduce((acc, o) => {
+    acc.orderAmount += Number(o.grandTotal) || 0
+    acc.productCost += Number(o.productCost) || 0
+    acc.shipping += Number(o.shippingAmount) || 0
+    acc.profitability += Number(o.orderProfitability) || 0
+    return acc
+  }, { orderAmount: 0, productCost: 0, shipping: 0, profitability: 0 })
+
+  const grossMarginPct = totals.orderAmount > 0
+    ? (totals.profitability / totals.orderAmount) * 100
+    : 0
+
+  return { ...totals, grossMarginPct, orderCount: orders.length }
 }
 
 function formatCurrency (amount) {
@@ -216,6 +257,7 @@ module.exports = {
   isConfigured,
   generatePreview,
   runRevenueReport,
+  runProfitabilityReport,
   buildSummaryText,
   buildTitle
 }

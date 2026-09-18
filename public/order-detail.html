@@ -142,6 +142,53 @@
 			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount || 0));
 		}
 
+		/**
+		 * Waterfall summary at the top of the page: Grand Total minus Product
+		 * Cost minus Shipping Amount = Profitability. Uses orderProfitability/
+		 * grossMargin as already computed and synced from Salesforce (see
+		 * Financial Data below) rather than recomputing client-side, so this
+		 * card can never disagree with the numbers already shown there.
+		 */
+		function profitabilityCardHtml(o) {
+			const profitability = Number(o.orderProfitability || 0);
+			const isPositive = profitability >= 0;
+			const colorClass = isPositive ? 'text-success' : 'text-danger';
+			const badgeClass = isPositive ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger';
+			const marginLabel = o.grossMargin !== null && o.grossMargin !== undefined && o.grossMargin !== '' ? o.grossMargin + '%' : '—';
+
+			return `
+				<div class="card border-0 shadow-sm rounded-3 mb-3">
+					<div class="card-body py-3">
+						<div class="d-flex align-items-center justify-content-center flex-wrap gap-3">
+							<div class="text-center px-2">
+								<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Grand Total</span>
+								<span class="fs-18 fw-bold text-dark">${formatCurrency(o.grandTotal)}</span>
+							</div>
+							<span class="fs-20 text-muted">&minus;</span>
+							<div class="text-center px-2">
+								<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Product Cost</span>
+								<span class="fs-18 fw-bold text-dark">${formatCurrency(o.productCost)}</span>
+							</div>
+							<span class="fs-20 text-muted">&minus;</span>
+							<div class="text-center px-2">
+								<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Shipping</span>
+								<span class="fs-18 fw-bold text-dark">${formatCurrency(o.shippingAmount)}</span>
+							</div>
+							<span class="fs-20 text-muted">=</span>
+							<div class="text-center px-2">
+								<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Profitability</span>
+								<span class="fs-20 fw-bold ${colorClass}">${formatCurrency(profitability)}</span>
+							</div>
+							<div class="text-center px-3 border-start">
+								<span class="fs-11 text-muted d-block text-uppercase fw-semibold">Gross Margin</span>
+								<span class="badge ${badgeClass} fs-14 rounded-pill fw-bold px-3">${marginLabel}</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			`;
+		}
+
 		async function doLogout() {
 			try { await fetch('/logout'); } catch (e) {}
 			window.location.href = 'login.html';
@@ -210,6 +257,8 @@
 					</div>`
 					: '';
 
+				const profitabilityCard = profitabilityCardHtml(o);
+
 				const itemsHtml = (o.items || []).length
 					? `<table class="table table-sm mb-0">
 						<thead class="table-light"><tr><th>Product</th><th>SKU</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
@@ -239,6 +288,7 @@
 
 				document.getElementById('orderDetailBody').innerHTML = `
 					${overdueBanner}
+					${profitabilityCard}
 					${section('Order Information', [
 						field('Order Name', o.name),
 						field('Status', o.status),

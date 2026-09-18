@@ -23,6 +23,7 @@ module.exports = function () {
   router.get('/dashboard/widgets/sales-pipeline', requireLoginApi, controllers.lilypadDashboard.getSalesPipelineData)
   router.get('/dashboard/widgets/shipping-dock', requireLoginApi, controllers.lilypadDashboard.getShippingDockData)
   router.get('/dashboard/widgets/past-due-ar', requireLoginApi, controllers.lilypadDashboard.getPastDueData)
+  router.get('/dashboard/widgets/profitability', requireLoginApi, controllers.lilypadDashboard.getProfitabilityData)
   router.get('/dashboard/widgets/lapsed-customers', requireLoginApi, controllers.lilypadDashboard.getLapsedCustomersData)
   router.get('/dashboard/widgets/sales-quota', requireLoginApi, controllers.lilypadDashboard.getSalesQuotaData)
   router.get('/dashboard/widgets/report-cards', requireLoginApi, controllers.lilypadReports.getWidgetData)

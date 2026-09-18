@@ -18,6 +18,8 @@ const {
 const LilyPadCustomerProfile = require('../models/lilypadCustomerProfile')
 const { getOpportunityOwnerFilter, resolveOwnedSalesforceAccountIds } = require('../services/repMatchingService')
 const lilypadSalesQuotaController = require('./lilypadSalesQuota')
+const reportQueryService = require('../services/reportQueryService')
+const { ALLOWED_OWNERS } = require('../services/brandFilter')
 
 const lilypadDashboardController = {}
 
@@ -289,6 +291,40 @@ lilypadDashboardController.getPastDueData = async function (req, res) {
     }
 
     return res.json({ success: true, accounts })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * GET /api/v1/lilypad/dashboard/widgets/profitability
+ * Aggregate order amount/cost/shipping/margin across Salesforce Orders
+ * (LilyPadCartOrder has no cost field - see reportQueryService.js), filterable
+ * by date range and sales person. A sales-role viewer is force-scoped to
+ * their own orders and can't select another rep, same self-scoping
+ * pattern getLapsedCustomersData already applies for this role.
+ */
+lilypadDashboardController.getProfitabilityData = async function (req, res) {
+  try {
+    const startDate = DATE_ONLY_PATTERN.test(req.query.startDate) ? req.query.startDate : ''
+    const endDate = DATE_ONLY_PATTERN.test(req.query.endDate) ? req.query.endDate : ''
+    const rawRep = String(req.query.repName || '').trim()
+
+    const effectiveRole = (req.user.role === 'admin' ? req.session.previewRole : null) || req.user.role
+    const isSelfScoped = dashboardRolePresets.normalizeRoleKey(effectiveRole) === 'sales'
+
+    // Fails closed (no data, not everyone's data) if a sales-role user's
+    // own name isn't on the known-good roster - matches this codebase's
+    // established "never leak everything" fallback for owner filters.
+    const repName = isSelfScoped
+      ? (ALLOWED_OWNERS.includes(req.user.fullname) ? req.user.fullname : '__none__')
+      : (ALLOWED_OWNERS.includes(rawRep) ? rawRep : '')
+
+    const data = await reportQueryService.runProfitabilityReport({ startDate, endDate, repName })
+
+    return res.json({ success: true, data, repOptions: ALLOWED_OWNERS, isSelfScoped })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }
