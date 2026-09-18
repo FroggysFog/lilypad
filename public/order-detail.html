@@ -151,7 +151,7 @@
 			return `
 				<div class="col-md-4 mb-3">
 					<span class="fs-12 text-muted d-block text-uppercase fw-semibold">${escapeHtml(label)}</span>
-					<strong class="text-dark">${value === null || value === undefined || value === '' ? '—' : escapeHtml(value)}</strong>
+					<span class="text-dark fs-13">${value === null || value === undefined || value === '' ? '—' : escapeHtml(value)}</span>
 				</div>
 			`;
 		}
@@ -215,7 +215,12 @@
 						<thead class="table-light"><tr><th>Product</th><th>SKU</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
 						<tbody>${o.items.map(i => `<tr><td>${escapeHtml(i.productName)}</td><td>${escapeHtml(i.sku)}</td><td>${i.quantity}</td><td>${formatCurrency(i.unitPrice)}</td><td>${formatCurrency(i.totalPrice)}</td></tr>`).join('')}</tbody>
 					</table>`
-					: '<p class="text-muted fs-13 mb-0">No line items on this order.</p>';
+					: (o.itemsSyncFailed
+						? `<div class="alert alert-warning d-flex align-items-center justify-content-between gap-2 mb-0 py-2">
+							<span><i class="ti ti-alert-triangle me-1"></i>Line items couldn't be confirmed - the last sync of this order's items from Salesforce failed. This is not necessarily an empty order.</span>
+							<button type="button" class="btn btn-sm btn-outline-dark flex-shrink-0" onclick="retryOrderSync()">Retry Sync</button>
+						</div>`
+						: '<p class="text-muted fs-13 mb-0">No line items on this order.</p>');
 
 				const shipments = o.shipments || [];
 				const shipmentsHtml = shipments.length
@@ -248,6 +253,11 @@
 						field('Original Order Date', dateOnly(o.originalOrderDate)),
 						field('Reduction Order', o.isReductionOrder ? 'Yes' : 'No')
 					].join(''))}
+
+					<div class="card border-0 shadow-sm rounded-3 mb-3">
+						<div class="card-header bg-transparent"><strong class="fs-14">Line Items</strong></div>
+						<div class="table-responsive">${itemsHtml}</div>
+					</div>
 
 					${section('Financial Data', [
 						field('Payment Method', o.paymentMethod),
@@ -318,15 +328,26 @@
 							</div>
 						</div>
 					` : ''}
-
-					<div class="card border-0 shadow-sm rounded-3">
-						<div class="card-header bg-transparent"><strong class="fs-14">Line Items</strong></div>
-						<div class="table-responsive">${itemsHtml}</div>
-					</div>
 				`;
 			} catch (err) {
 				document.getElementById('orderDetailNumber').textContent = 'Unable to load order';
 				document.getElementById('orderDetailBody').innerHTML = '<p class="text-danger">' + escapeHtml(err.message) + '</p>';
+			}
+		}
+
+		/**
+		 * Re-runs the full Salesforce order sync (there's no per-order resync
+		 * endpoint - same broad-resync pattern used elsewhere in this app,
+		 * e.g. salesforce-account-detail.html's triggerAccountResync). Only
+		 * shown when this order's itemsSyncFailed flag is set, so it's a
+		 * targeted fix for a real failure, not a general-purpose button.
+		 */
+		async function retryOrderSync() {
+			try {
+				await fetch('/api/v1/lilypad/orders/sync', { method: 'POST' });
+				alert('Sync started - this refreshes all orders, so it may take a few minutes. Reload this page afterward to check.');
+			} catch (err) {
+				alert('Unable to start sync.');
 			}
 		}
 

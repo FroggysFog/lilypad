@@ -76,7 +76,7 @@ async function cleanupExcludedOwnerOrders () {
   return result.deletedCount || 0
 }
 
-function normalizeOrderRecord (raw, items, shipments) {
+function normalizeOrderRecord (raw, items, shipments, itemsSyncFailed) {
   const source = raw && typeof raw === 'object' ? raw : {}
   const account = source.Account && typeof source.Account === 'object' ? source.Account : {}
   const owner = source.Owner && typeof source.Owner === 'object' ? source.Owner : {}
@@ -174,6 +174,7 @@ function normalizeOrderRecord (raw, items, shipments) {
         totalPrice: Number(item.TotalPrice || 0)
       }
     }),
+    itemsSyncFailed: Boolean(itemsSyncFailed),
     shipments: (shipments || []).map((s) => ({
       trackingNumber: String(s.Tracking_Number__c || '').trim(),
       trackingNumberAlt: String(s.Tracking__c || '').trim(),
@@ -191,6 +192,7 @@ function normalizeOrderRecord (raw, items, shipments) {
 
 async function fetchOrderItemsByOrderId (orderIds) {
   const itemsByOrderId = {}
+  const failedOrderIds = new Set()
   for (let index = 0; index < orderIds.length; index += SUB_QUERY_BATCH_SIZE) {
     const batch = orderIds.slice(index, index + SUB_QUERY_BATCH_SIZE)
     if (!batch.length) continue
@@ -208,10 +210,17 @@ async function fetchOrderItemsByOrderId (orderIds) {
         itemsByOrderId[item.OrderId].push(item)
       })
     } catch (itemError) {
-      // Line items are a nice-to-have; keep the order sync itself alive if this fails
+      // Line items are a nice-to-have; keep the order sync itself alive if
+      // this fails - but log it and mark every order in this batch as
+      // unconfirmed, since a silent empty catch here was previously
+      // indistinguishable from "this order really has no line items,"
+      // making a real query failure impossible to diagnose or even see on
+      // the order itself (see itemsSyncFailed on LilyPadOrder).
+      winston.warn(`orderSyncService: failed to fetch OrderItems for a batch of ${batch.length} order(s): ${itemError.message}`)
+      batch.forEach((id) => failedOrderIds.add(id))
     }
   }
-  return itemsByOrderId
+  return { itemsByOrderId, failedOrderIds }
 }
 
 async function fetchShipworksDataByOrderId (orderIds) {
@@ -233,7 +242,9 @@ async function fetchShipworksDataByOrderId (orderIds) {
         shipmentsByOrderId[s.Order__c].push(s)
       })
     } catch (shipworksError) {
-      // Tracking data is a nice-to-have; keep the order sync itself alive if this fails
+      // Tracking data is a nice-to-have; keep the order sync itself alive if
+      // this fails - but log it, same reasoning as fetchOrderItemsByOrderId.
+      winston.warn(`orderSyncService: failed to fetch Shipworks_Data__c for a batch of ${batch.length} order(s): ${shipworksError.message}`)
     }
   }
   return shipmentsByOrderId
@@ -279,11 +290,11 @@ async function syncOrdersFromSalesforce () {
         ORDER BY EffectiveDate DESC NULLS LAST, CreatedDate DESC
     `, async (page) => {
     const orderIds = page.map((order) => order.Id).filter(Boolean)
-    const itemsByOrderId = await fetchOrderItemsByOrderId(orderIds)
+    const { itemsByOrderId, failedOrderIds } = await fetchOrderItemsByOrderId(orderIds)
     const shipmentsByOrderId = await fetchShipworksDataByOrderId(orderIds)
 
     const normalized = page
-      .map((order) => normalizeOrderRecord(order, itemsByOrderId[order.Id], shipmentsByOrderId[order.Id]))
+      .map((order) => normalizeOrderRecord(order, itemsByOrderId[order.Id], shipmentsByOrderId[order.Id], failedOrderIds.has(order.Id)))
       .filter((r) => r.sourceRecordId && !isExcludedOwnerName(r.ownerName) && !isExcludedOwnerName(r.orderEntryRep))
 
     total += normalized.length

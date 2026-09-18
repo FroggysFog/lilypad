@@ -325,6 +325,12 @@ const orderSchema = new Schema(
       default: ''
     },
     items: [orderItemSchema],
+    // True when the most recent sync's OrderItem sub-query for this order
+    // failed (Salesforce error, timeout, etc) - distinguishes "we couldn't
+    // confirm line items" from "this order genuinely has none," which an
+    // empty items array alone can't tell apart. See orderSyncService.js's
+    // fetchOrderItemsByOrderId.
+    itemsSyncFailed: { type: Boolean, default: false },
     shipments: [shipmentSchema],
     sourceRecordId: {
       type: String,
