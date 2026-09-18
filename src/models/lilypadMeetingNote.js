@@ -68,6 +68,10 @@ const meetingNoteSchema = new Schema(
   { timestamps: true }
 )
 
+// Cross-owner lookup (accountCommunicationsService.js matches a customer's
+// known emails against this array across every rep's captured meetings).
+meetingNoteSchema.index({ participantEmails: 1 })
+
 meetingNoteSchema.statics.MATCH_CONFIDENCE = MATCH_CONFIDENCE
 
 module.exports = mongoose.model(COLLECTION, meetingNoteSchema)

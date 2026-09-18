@@ -10,6 +10,8 @@ const LilyPadCustomerProfile = require('../models/lilypadCustomerProfile')
 const { syncSalesforceAccounts } = require('../services/salesforceAccountSyncService')
 const { normalizeDomain, normalizeCompanyName, isNameMatch } = require('../services/customerIntelligence/fuzzyMatchService')
 const { getSalesforceAccountOwnerFilter } = require('../services/repMatchingService')
+const { getAccountCommunications } = require('../services/accountCommunicationsService')
+const { getPastDueForAccount } = require('../services/accountPastDueService')
 
 const controller = {}
 
@@ -97,8 +99,13 @@ controller.getAccountDetail = async function (req, res) {
       return res.status(404).json({ success: false, error: 'Account not found' })
     }
 
-    const [{ matches, matchType }, orders, opportunities, profile] = await Promise.all([
-      findMatchedCustomersForAccount(account),
+    // Matched leads are resolved first, on their own, since the new
+    // communications lookup below needs their emails as its exact-address
+    // match set - everything else here is independent and still runs in
+    // parallel.
+    const { matches, matchType } = await findMatchedCustomersForAccount(account)
+
+    const [orders, opportunities, profile, communications, pastDue] = await Promise.all([
       LilyPadOrder.find({ accountId: account.sourceRecordId })
         .select('orderNumber status effectiveDate grandTotal totalDue')
         .sort({ effectiveDate: -1 })
@@ -111,7 +118,9 @@ controller.getAccountDetail = async function (req, res) {
         .lean(),
       LilyPadCustomerProfile.findOne({ salesforceAccountId: account._id })
         .select('accountTier qualification engagementStatus daysSinceLastOrder orderStats opportunityStats cartOrderStats ticketStats recommendation')
-        .lean()
+        .lean(),
+      getAccountCommunications(account, matches),
+      getPastDueForAccount(account)
     ])
 
     return res.status(200).json({
@@ -121,7 +130,9 @@ controller.getAccountDetail = async function (req, res) {
       customerMatchType: matchType,
       orders,
       opportunities,
-      profile: profile || null
+      profile: profile || null,
+      communications,
+      pastDue
     })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })

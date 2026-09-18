@@ -148,6 +148,7 @@
 							<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#acctTabOverview" type="button">Overview</button></li>
 							<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#acctTabOrders" type="button">Orders <span class="badge bg-soft-secondary text-secondary rounded-pill fs-10 ms-1" id="acctOrdersTabCount"></span></button></li>
 							<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#acctTabOpps" type="button">Opportunities <span class="badge bg-soft-secondary text-secondary rounded-pill fs-10 ms-1" id="acctOppsTabCount"></span></button></li>
+							<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#acctTabActivity" type="button">Activity <span class="badge bg-soft-secondary text-secondary rounded-pill fs-10 ms-1" id="acctActivityTabCount"></span></button></li>
 						</ul>
 						<div class="tab-content">
 							<div class="tab-pane fade show active" id="acctTabOverview">
@@ -173,6 +174,11 @@
 									</div>
 								</div>
 							</div>
+							<div class="tab-pane fade" id="acctTabActivity">
+								<div class="card border-0 shadow-sm rounded-3">
+									<div class="list-group list-group-flush" id="acctActivityList" style="max-height:480px; overflow-y:auto;"></div>
+								</div>
+							</div>
 						</div>
 					</div>
 
@@ -184,6 +190,14 @@
 								<span class="badge fs-10 rounded-pill fw-semibold" id="acctCustomersMatchBadge"></span>
 							</div>
 							<div id="acctCustomersList" class="list-group list-group-flush" style="max-height:320px; overflow-y:auto;"></div>
+						</div>
+
+						<div class="card border-0 shadow-sm rounded-3 mb-3" id="acctPastDueCard" style="display:none;">
+							<div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+								<h6 class="fw-bold mb-0 text-danger"><i class="ti ti-alert-triangle me-1"></i>Past Due</h6>
+								<span class="badge bg-soft-danger text-danger fs-10 rounded-pill fw-semibold" id="acctPastDueCount"></span>
+							</div>
+							<div id="acctPastDueList" class="list-group list-group-flush" style="max-height:240px; overflow-y:auto;"></div>
 						</div>
 
 						<div class="card border-0 shadow-sm rounded-3 mb-3">
@@ -291,6 +305,8 @@
 				renderOpportunities(result.opportunities || []);
 				renderMatchedCustomers(result.customers || [], result.customerMatchType || 'none');
 				renderRelatedStats(result.profile);
+				renderCommunications(result.communications || []);
+				renderPastDue(result.pastDue || []);
 			} catch (err) {
 				document.getElementById('acctDetailName').textContent = 'Unable to load account';
 				document.getElementById('acctDetailBody').innerHTML = '<p class="text-danger p-3">' + escapeHtml(err.message) + '</p>';
@@ -471,6 +487,67 @@
 			document.getElementById('acctCartOrderCount').textContent = profile && profile.cartOrderStats ? profile.cartOrderStats.totalOrders : '—';
 			document.getElementById('acctCartRevenue').textContent = profile && profile.cartOrderStats ? formatCurrency(profile.cartOrderStats.lifetimeRevenue) : '—';
 			document.getElementById('acctTicketCount').textContent = profile && profile.ticketStats ? profile.ticketStats.totalTickets : '—';
+		}
+
+		/**
+		 * Raw email + meeting activity for this account, cross-owner (every
+		 * rep's synced mailbox/calendar, not just whoever's logged in) -
+		 * matched by the account's website domain plus its matched
+		 * individuals' exact email addresses (see accountCommunicationsService.js).
+		 * No AI summary here, just a timeline - that's a deliberate v1 scope
+		 * boundary, not an oversight. Teams chat is excluded entirely for the
+		 * same reason (no participant email is persisted anywhere for chat).
+		 */
+		function renderCommunications(items) {
+			document.getElementById('acctActivityTabCount').textContent = items.length;
+			const list = document.getElementById('acctActivityList');
+			if (!items.length) {
+				list.innerHTML = '<div class="text-center text-muted fs-13 py-4">No related email or meeting activity found.</div>';
+				return;
+			}
+			list.innerHTML = items.map(item => {
+				const icon = item.sourceType === 'meeting' ? 'ti-video' : 'ti-mail';
+				const when = item.lastActivityAt ? new Date(item.lastActivityAt).toLocaleString() : '—';
+				const handledBy = item.ownerName ? `Handled by ${escapeHtml(item.ownerName)}` : '';
+				return `
+					<div class="list-group-item border-0 px-3 py-2">
+						<div class="d-flex align-items-start gap-2">
+							<i class="ti ${icon} text-muted mt-1"></i>
+							<div class="overflow-hidden flex-grow-1">
+								<div class="fw-semibold fs-13 text-truncate">${escapeHtml(item.title)}</div>
+								<div class="fs-12 text-muted">${when}${handledBy ? ' &middot; ' + handledBy : ''}</div>
+								${item.subtitle ? `<div class="fs-12 text-muted text-truncate">${escapeHtml(item.subtitle)}</div>` : ''}
+							</div>
+						</div>
+					</div>
+				`;
+			}).join('');
+		}
+
+		/**
+		 * Salesforce-sourced records join exactly via this Account's Orders;
+		 * Cart.com-sourced records join via the same domain/fuzzy-name match
+		 * already used for this account's Cart.com orders elsewhere on this
+		 * page (see accountPastDueService.js) - kept consistent so a cart
+		 * order counted in Related Records is never silently excluded here.
+		 */
+		function renderPastDue(records) {
+			const card = document.getElementById('acctPastDueCard');
+			if (!records.length) {
+				card.style.display = 'none';
+				return;
+			}
+			card.style.display = '';
+			document.getElementById('acctPastDueCount').textContent = records.length;
+			document.getElementById('acctPastDueList').innerHTML = records.map(r => `
+				<div class="list-group-item border-0 px-3 py-2">
+					<div class="d-flex align-items-center justify-content-between">
+						<span class="fw-semibold fs-13">${formatCurrency(r.amountDue)}</span>
+						<span class="badge bg-soft-secondary text-secondary fs-10 rounded-pill">${r.source === 'cart' ? 'Cart.com' : 'Salesforce'}</span>
+					</div>
+					<div class="fs-12 text-muted">Due ${r.finalDueDate || r.originalDueDate || '—'}${r.orderNumber ? ' &middot; Order ' + escapeHtml(r.orderNumber) : ''}</div>
+				</div>
+			`).join('');
 		}
 
 		async function claimThisAccount(profileId) {

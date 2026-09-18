@@ -448,7 +448,7 @@
 
 				return `<tr>
 					<td>
-						<div class="fw-semibold">${escapeHtml(p.name)}</div>
+						<a href="salesforce-account-detail.html?id=${p.salesforceAccountId}" class="fw-semibold text-decoration-none">${escapeHtml(p.name)}</a>
 						<div class="fs-11 text-muted">${escapeHtml(p.industry || p.domain || '')}</div>
 					</td>
 					<td><span class="badge ${statusBadge} fs-12 rounded-pill fw-semibold">${statusLabel}</span></td>

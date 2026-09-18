@@ -75,5 +75,12 @@ const emailCacheSchema = new Schema(
 
 emailCacheSchema.index({ owner: 1, graphMessageId: 1 }, { unique: true })
 emailCacheSchema.index({ owner: 1, folder: 1, receivedDateTime: -1 })
+// Cross-owner address lookups (accountCommunicationsService.js) span every
+// rep's cache at once, unlike the two indexes above which are scoped to a
+// single owner - without these, matching a customer's emails is a full
+// collection scan across everyone's mailbox.
+emailCacheSchema.index({ 'from.address': 1 })
+emailCacheSchema.index({ 'toRecipients.address': 1 })
+emailCacheSchema.index({ 'ccRecipients.address': 1 })
 
 module.exports = mongoose.model(COLLECTION, emailCacheSchema)
