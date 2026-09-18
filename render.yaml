@@ -6,7 +6,13 @@ services:
     dockerContext: .
     plan: starter
     region: oregon
-    branch: main
+    # Deliberately not "main" - this is the promoted/live service (the
+    # dashboard's actual branch setting), kept in sync with main once a
+    # day by .github/workflows/promote-to-production.yml rather than on
+    # every push. Render's Blueprint sync watches main but has left this
+    # dashboard override alone across syncs, so this line is safe to
+    # correct without affecting the live service.
+    branch: production
     # Switched from the native Node runtime to a Dockerfile build.
     # Confirmed live: the in-house crawler's directory/form searches were
     # completing with 0 businesses found - `chromium.launch()` was
