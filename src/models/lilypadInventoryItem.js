@@ -1,13 +1,15 @@
 /**
  * LilyPad ERP - Inventory Item
- * There is no real-time stock feed anywhere in this app - Cart.com's
- * already-integrated API only ever touches orders/customers/payments,
- * never products/inventory (confirmed by reading its entire client),
- * and no purchase-order/supplier model exists to source "on the way"
- * or an arrival date from. This is a manually-maintained record
- * instead of a fabricated one: every count starts real (zero/empty)
- * and only changes when someone actually updates it here, rather than
- * a UI that invents plausible-looking numbers with nothing behind them.
+ * Real Cart.com catalog/stock data now exists (see lilypadCartProduct.js/
+ * cartProductSyncService.js) via a separate static Catalog API token -
+ * the OAuth app's read_catalog scope is rejected for reasons Cart.com
+ * hasn't resolved, which is why this manual model was originally built.
+ * It now serves as a supplemental overlay, joined onto synced products by
+ * SKU in lilypadInventory.js's controller.list, for exactly the fields
+ * Cart.com's product data doesn't provide: onTheWay, estimatedArrivalDate,
+ * notes (no purchase-order/supplier model exists to source those from).
+ * Every count still starts real (zero/empty) and only changes when
+ * someone actually updates it here, not a UI that invents numbers.
  */
 
 const mongoose = require('mongoose')

@@ -80,6 +80,11 @@ services:
         sync: false
       - key: CART_CALLBACK_URL
         sync: false
+      # Cart.com Catalog API - static admin-console token with Catalog
+      # permission (separate from the OAuth app above, whose read_catalog
+      # scope was rejected for unknown reasons); non-expiring, no refresh needed.
+      - key: CART_CATALOG_API_TOKEN
+        sync: false
       # Microsoft Calendar sync (calendar.html) - reuses the same Entra
       # App Registration as the existing Teams integration
       # (MICROSOFT_TENANT_ID/CLIENT_ID/CLIENT_SECRET, set directly in the

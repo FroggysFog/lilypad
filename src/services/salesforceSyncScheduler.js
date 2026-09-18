@@ -19,6 +19,7 @@ const { syncSalesforceAccounts } = require('./salesforceAccountSyncService')
 const { syncOpportunitiesFromSalesforce } = require('./opportunitySyncService')
 const { syncCartOrders } = require('./cartOrderSyncService')
 const { syncCartPastDueAccounts } = require('./cartPastDueSyncService')
+const { syncCartProducts } = require('./cartProductSyncService')
 
 const SALESFORCE_SYNC_JOBS = [
   { name: 'Customers', run: syncCustomersFromSalesforce },
@@ -35,6 +36,14 @@ const SALESFORCE_SYNC_JOBS = [
 const CART_SYNC_JOBS = [
   { name: 'Cart.com Orders', run: syncCartOrders },
   { name: 'Cart.com Past Due', run: syncCartPastDueAccounts }
+]
+
+// Independent of the OAuth-based jobs above - gated on the static Catalog
+// API token's presence, not cartStatus.connected, since it uses a
+// completely separate auth mechanism (see cartService.js's
+// cartCatalogRequest).
+const CART_CATALOG_SYNC_JOBS = [
+  { name: 'Cart.com Catalog', run: syncCartProducts }
 ]
 
 function logHeapUsedMb (winston, label) {
@@ -60,6 +69,8 @@ async function runScheduledSalesforceSync (winston) {
   else if (winston) winston.info('Scheduled sync: Salesforce is not connected, skipping its jobs.')
   if (cartStatus.connected) jobs.push(...CART_SYNC_JOBS)
   else if (winston) winston.info('Scheduled sync: Cart.com is not connected, skipping its jobs.')
+  if (process.env.CART_CATALOG_API_TOKEN) jobs.push(...CART_CATALOG_SYNC_JOBS)
+  else if (winston) winston.info('Scheduled sync: Cart.com Catalog token is not configured, skipping its job.')
 
   if (!jobs.length) return { skipped: true, reason: 'Neither Salesforce nor Cart.com is connected.' }
 

@@ -193,11 +193,61 @@ function relativizeCartUrl (absoluteUrl) {
   }
 }
 
+/**
+ * A second, independent Cart.com auth mechanism: a non-expiring static
+ * token generated directly in Cart.com's admin console (Tools > Apps &
+ * Addons > API Apps & Integrations > Tokens > New), not the OAuth app
+ * above. Exists because the OAuth app's read_catalog scope is rejected
+ * with a 401 for reasons Cart.com support hasn't resolved, even on an
+ * Enterprise plan with a full-admin authorizing user - the admin-console
+ * token works and returns real Catalog data. Deliberately bypasses
+ * loadPersistedCartTokens()/LilyPadSetting entirely: there's no
+ * refresh/exchange dance for a token that doesn't expire, just a plain
+ * env var.
+ */
+function getCartCatalogStatus () {
+  return {
+    configured: Boolean(process.env.CART_CATALOG_API_TOKEN),
+    storeUrl: getCartOAuthConfig().storeUrl
+  }
+}
+
+async function cartCatalogRequest (path) {
+  const config = getCartOAuthConfig()
+  const token = process.env.CART_CATALOG_API_TOKEN || ''
+  if (!token) {
+    throw new Error('Cart.com Catalog API token is not configured. Add CART_CATALOG_API_TOKEN to the environment.')
+  }
+
+  const cleanPath = String(path || '').trim()
+  if (!cleanPath || !cleanPath.startsWith('/')) {
+    throw new Error('Path must be a relative path starting with "/" (e.g. /api/v1/products.json).')
+  }
+
+  try {
+    const response = await axios.get(`${config.storeUrl}${cleanPath}`, {
+      headers: { 'X-AC-Auth-Token': token },
+      timeout: REQUEST_TIMEOUT_MS
+    })
+    return { status: response.status, data: response.data }
+  } catch (error) {
+    const status = error.response && error.response.status
+    const body = error.response && error.response.data
+    const retryAfterHeader = error.response && error.response.headers && error.response.headers['retry-after']
+    const wrapped = new Error(`Cart.com Catalog request failed${status ? ` (${status})` : ''}: ${body ? JSON.stringify(body) : error.message}`)
+    wrapped.cartStatus = status || null
+    wrapped.retryAfterSeconds = retryAfterHeader ? Number(retryAfterHeader) : null
+    throw wrapped
+  }
+}
+
 module.exports = {
   getCartOAuthConfig,
   getCartAuthUrl,
   exchangeCartCode,
   getCartOAuthStatus,
   cartRequest,
-  relativizeCartUrl
+  relativizeCartUrl,
+  getCartCatalogStatus,
+  cartCatalogRequest
 }

@@ -136,17 +136,17 @@
 					</div>
 				</div>
 
-				<!-- Quick Inventory Search - no live stock feed exists anywhere in
-					 this app (Cart.com's connected API never touches products, and
-					 nothing else tracks on-hand/incoming counts) - this is a real,
-					 manually-maintained record, not a fabricated one. Counts start
-					 at zero/empty and only change when someone updates them here. -->
+				<!-- Quick Inventory Search - primary data is now a real Cart.com
+					 Catalog sync (see lilypadCartProduct.js/cartProductSyncService.js),
+					 with the manual "Add Item" form below serving as a supplemental
+					 overlay for fields Cart.com doesn't track (incoming ETA, notes) -
+					 see lilypadInventoryItem.js model comment. -->
 				<div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
 					<div class="d-flex align-items-center justify-content-between mb-2">
 						<h6 class="fw-bold mb-0"><i class="ti ti-package me-1 text-primary"></i>Quick Inventory Search</h6>
 						<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="openInventoryModal()"><i class="ti ti-plus me-1"></i>Add Item</button>
 					</div>
-					<p class="fs-11 text-muted mb-2">Manually-maintained stock levels - no live feed is connected yet, so these figures are only as current as the last manual update.</p>
+					<p class="fs-11 text-muted mb-2">On Hand comes from a live Cart.com Catalog sync where a SKU match exists; On the Way/Est. Arrival/Notes are manually tracked here since Cart.com doesn't provide them.</p>
 					<div class="input-icon position-relative mb-2">
 						<input type="text" id="inventorySearchInput" class="form-control rounded-pill" placeholder="Search by machine type, name, manufacturer, or SKU...">
 						<span class="input-icon-addon"><i class="ti ti-search fs-16 text-muted"></i></span>
@@ -156,6 +156,7 @@
 							<thead class="table-light">
 								<tr>
 									<th>Name</th>
+									<th>SKU</th>
 									<th>On Hand</th>
 									<th>On the Way</th>
 									<th>Available to Sell</th>
@@ -1156,10 +1157,16 @@
 			}
 		}
 
-		// --- Quick Inventory Search (manually-maintained, see model comment) ---
+		// --- Quick Inventory Search (Cart.com Catalog sync + manual overlay, see lilypadInventory.js controller comment) ---
 
 		let inventoryItems = [];
 		let inventorySearchDebounce = null;
+
+		const INVENTORY_SOURCE_BADGES = {
+			cart: '<span class="badge bg-soft-success text-success fs-10 rounded-pill">Cart.com</span>',
+			merged: '<span class="badge bg-soft-success text-success fs-10 rounded-pill">Cart.com</span>',
+			manual: '<span class="badge bg-soft-secondary text-secondary fs-10 rounded-pill">Manual</span>'
+		};
 
 		function formatInvDate(iso) {
 			if (!iso) return '<span class="text-muted">—</span>';
@@ -1173,22 +1180,23 @@
 
 			if (!items.length) {
 				wrap.style.display = '';
-				tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3 fs-13">No inventory items yet - click "Add Item" to start tracking one.</td></tr>';
+				tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3 fs-13">No inventory items yet - click "Add Item" to start tracking one.</td></tr>';
 				return;
 			}
 
 			wrap.style.display = '';
-			tbody.innerHTML = items.map(item => `
+			tbody.innerHTML = items.map((item, idx) => `
 				<tr>
 					<td>
 						<div class="fw-semibold fs-13">${escapeHtml(item.name)}</div>
-						<div class="fs-11 text-muted">${escapeHtml([item.manufacturer, item.machineType].filter(Boolean).join(' · '))}${item.sku ? ' · SKU: ' + escapeHtml(item.sku) : ''}</div>
+						<div class="fs-11 text-muted">${escapeHtml([item.manufacturer, item.machineType].filter(Boolean).join(' · '))} ${INVENTORY_SOURCE_BADGES[item.source] || ''}</div>
 					</td>
-					<td>${item.onHand}</td>
+					<td class="fs-13">${escapeHtml(item.sku) || '<span class="text-muted">—</span>'}</td>
+					<td>${item.onHand}${item.isDiscontinued ? ' <span class="badge bg-soft-warning text-warning fs-10 rounded-pill">Discontinued</span>' : ''}</td>
 					<td>${item.onTheWay}</td>
 					<td>${item.availableToSell}</td>
 					<td class="fs-13">${formatInvDate(item.estimatedArrivalDate)}</td>
-					<td><button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="openInventoryModal('${item._id}')"><i class="ti ti-pencil"></i></button></td>
+					<td><button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="openInventoryModal(${idx})" title="${item.source === 'cart' ? 'Add tracking overlay for this item' : 'Edit'}"><i class="ti ti-pencil"></i></button></td>
 				</tr>
 			`).join('');
 		}
@@ -1204,21 +1212,29 @@
 			}
 		}
 
-		function openInventoryModal(itemId) {
-			const item = itemId ? inventoryItems.find(i => i._id === itemId) : null;
-			document.getElementById('invModalTitle').textContent = item ? 'Edit Inventory Item' : 'Add Inventory Item';
-			document.getElementById('invItemId').value = item ? item._id : '';
+		/**
+		 * itemIdx indexes into the last-rendered inventoryItems array (not a
+		 * Mongo _id directly) since a pure "cart" row has no LilyPadInventoryItem
+		 * yet - editing one instead pre-fills the Add Item form with the real
+		 * Cart.com name/SKU so a rep can add just the supplemental fields
+		 * (onTheWay/estimatedArrivalDate/notes) without retyping the name/SKU.
+		 */
+		function openInventoryModal(itemIdx) {
+			const item = itemIdx !== undefined ? inventoryItems[itemIdx] : null;
+			const hasExistingRecord = item && item.source !== 'cart';
+			document.getElementById('invModalTitle').textContent = hasExistingRecord ? 'Edit Inventory Item' : 'Add Inventory Item';
+			document.getElementById('invItemId').value = hasExistingRecord ? item._id : '';
 			document.getElementById('invName').value = item ? item.name : '';
-			document.getElementById('invMachineType').value = item ? item.machineType : '';
-			document.getElementById('invManufacturer').value = item ? item.manufacturer : '';
+			document.getElementById('invMachineType').value = hasExistingRecord ? item.machineType : '';
+			document.getElementById('invManufacturer').value = hasExistingRecord ? item.manufacturer : '';
 			document.getElementById('invSku').value = item ? item.sku : '';
-			document.getElementById('invOnHand').value = item ? item.onHand : 0;
+			document.getElementById('invOnHand').value = hasExistingRecord ? item.onHand : 0;
 			document.getElementById('invOnTheWay').value = item ? item.onTheWay : 0;
 			document.getElementById('invAvailableToSell').value = item ? item.availableToSell : 0;
 			document.getElementById('invEstimatedArrivalDate').value = item && item.estimatedArrivalDate ? item.estimatedArrivalDate.slice(0, 10) : '';
 			document.getElementById('invNotes').value = item ? item.notes : '';
 			document.getElementById('invErr').textContent = '';
-			document.getElementById('invDeleteBtn').style.display = item ? '' : 'none';
+			document.getElementById('invDeleteBtn').style.display = hasExistingRecord ? '' : 'none';
 			bootstrap.Modal.getOrCreateInstance(document.getElementById('inventoryModal')).show();
 		}
 

@@ -1,16 +1,26 @@
 /**
  * LilyPad ERP - Inventory Controller
- * Manually-maintained stock levels - see lilypadInventoryItem.js for why
- * this isn't wired to a live feed. Same case-insensitive regex $or
- * search style as globalSearchService.js, not a Mongo text index.
+ * Quick Inventory Search now searches real synced Cart.com catalog data
+ * (LilyPadCartProduct) first, overlaying any LilyPadInventoryItem that
+ * shares the same SKU for the fields Cart.com doesn't track (onTheWay/
+ * estimatedArrivalDate/notes - see lilypadInventoryItem.js). Manual-only
+ * items with no Cart.com match still show up standalone, so nothing
+ * already tracked disappears. Same case-insensitive regex $or search
+ * style as globalSearchService.js, not a Mongo text index.
  */
 
 const LilyPadInventoryItem = require('../models/lilypadInventoryItem')
+const LilyPadCartProduct = require('../models/lilypadCartProduct')
+const { syncCartProducts } = require('../services/cartProductSyncService')
 
 const controller = {}
 
 function rx (term) {
   return { $regex: String(term).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
+}
+
+function exactRx (term) {
+  return new RegExp(`^${String(term).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')
 }
 
 /**
@@ -21,12 +31,61 @@ function rx (term) {
 controller.list = async function (req, res) {
   try {
     const q = String(req.query.q || '').trim()
-    const query = q
+
+    const cartQuery = q ? { $or: [{ itemNumber: rx(q) }, { itemName: rx(q) }] } : {}
+    const cartProducts = await LilyPadCartProduct.find(cartQuery).sort({ itemName: 1 }).limit(50).lean()
+
+    const matchedSkus = cartProducts.map((p) => p.itemNumber).filter(Boolean)
+    const overlaysBySku = new Map()
+    if (matchedSkus.length) {
+      const overlays = await LilyPadInventoryItem.find({ sku: { $in: matchedSkus.map(exactRx) } }).lean()
+      overlays.forEach((o) => overlaysBySku.set(o.sku.toLowerCase(), o))
+    }
+
+    const cartResults = cartProducts.map((p) => {
+      const overlay = p.itemNumber ? overlaysBySku.get(p.itemNumber.toLowerCase()) : null
+      return {
+        source: overlay ? 'merged' : 'cart',
+        _id: overlay ? overlay._id : undefined,
+        name: p.itemName,
+        sku: p.itemNumber,
+        onHand: p.quantityOnHand,
+        onTheWay: overlay ? overlay.onTheWay : p.quantityOnOrder,
+        availableToSell: overlay ? overlay.availableToSell : p.quantityOnHand,
+        estimatedArrivalDate: overlay ? overlay.estimatedArrivalDate : null,
+        notes: overlay ? overlay.notes : '',
+        price: p.price,
+        isDiscontinued: p.isDiscontinued
+      }
+    })
+
+    const matchedOverlayIds = new Set(Array.from(overlaysBySku.values()).map((o) => String(o._id)))
+    const manualQuery = q
       ? { $or: [{ name: rx(q) }, { machineType: rx(q) }, { manufacturer: rx(q) }, { sku: rx(q) }] }
       : {}
+    const manualOnly = (await LilyPadInventoryItem.find(manualQuery).sort({ name: 1 }).limit(50).lean())
+      .filter((item) => !matchedOverlayIds.has(String(item._id)))
+      .map((item) => ({ ...item, source: 'manual' }))
 
-    const items = await LilyPadInventoryItem.find(query).sort({ name: 1 }).limit(50).lean()
-    return res.status(200).json({ success: true, data: items })
+    return res.status(200).json({ success: true, data: [...cartResults, ...manualOnly] })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+/**
+ * POST /api/v1/lilypad/inventory/sync
+ * Manual trigger for the Cart.com Catalog sync, for testing without
+ * waiting on the scheduler - same pattern as lilypadOrders.js's
+ * triggerOrderSync.
+ */
+controller.syncCatalog = async function (req, res) {
+  try {
+    const result = await syncCartProducts()
+    if (result.skipped) {
+      return res.status(200).json({ success: true, message: result.reason, ...result })
+    }
+    return res.status(200).json({ success: true, message: `Synced ${result.synced} of ${result.total} products from Cart.com.`, ...result })
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message })
   }
