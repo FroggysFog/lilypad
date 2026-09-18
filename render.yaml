@@ -1,6 +1,13 @@
 services:
   - type: web
-    name: lilypad-erp-dev
+    # Was "lilypad-erp-dev" - a leftover name from before the sandbox/
+    # production split existed. Renaming this in the Render dashboard
+    # (without updating this file) caused the Blueprint sync to treat
+    # "lilypad-erp-dev" as a service it could no longer find and create a
+    # brand-new duplicate under that name on the next sync. This value
+    # must always match the real service's current dashboard name, or
+    # that happens again.
+    name: lilypad-production
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
