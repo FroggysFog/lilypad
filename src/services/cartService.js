@@ -32,7 +32,14 @@ const LilyPadSetting = require('../models/lilypadSetting')
 const SETTING_KEY = 'cartTokens'
 // Confirmed via a live 401 on /api/v1/customers/*.json: Cart.com's scope for
 // customer data is "read_people", not "read_customers" (which was a guess).
-const SCOPE = 'read_orders,read_people,read_reports'
+// read_catalog added to reach /api/v1/inventory.json and /api/v1/products.json -
+// confirmed those are real endpoints via a live 401 (not 404) under the
+// original scope; read_catalog is Cart.com's own documented scope for the
+// products endpoint, not yet confirmed against this store since that only
+// takes effect after a fresh re-authorization (see /auth/cart/connect) -
+// an existing connection's token keeps whatever scope it was granted at
+// its own authorization time.
+const SCOPE = 'read_orders,read_people,read_reports,read_catalog'
 const REQUEST_TIMEOUT_MS = 30000
 
 let cachedTokens = null
