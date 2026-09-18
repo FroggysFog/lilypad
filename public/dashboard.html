@@ -806,8 +806,26 @@
         }
     }
 
+    const DASH_MY_QUEUE_COLLAPSED_KEY = 'lilypadDashMyQueueCollapsed';
+
+    function isMyQueueCollapsed() {
+        try { return localStorage.getItem(DASH_MY_QUEUE_COLLAPSED_KEY) === 'true'; } catch (e) { return false; }
+    }
+
+    function toggleMyQueueCollapse() {
+        const body = document.getElementById('dashMyQueueBody');
+        const icon = document.getElementById('dashMyQueueToggleIcon');
+        if (!body) return;
+
+        const collapsed = body.style.display !== 'none';
+        body.style.display = collapsed ? 'none' : '';
+        if (icon) icon.className = collapsed ? 'ti ti-chevron-down' : 'ti ti-chevron-up';
+        try { localStorage.setItem(DASH_MY_QUEUE_COLLAPSED_KEY, collapsed ? 'true' : 'false'); } catch (e) {}
+    }
+
     function renderCombinedMyDayAndQueueWidgetHtml() {
         const isGrid = dashViewMode === 'grid';
+        const queueCollapsed = isMyQueueCollapsed();
         return '<div class="col-12">' +
             '<div class="card border-0 shadow-sm rounded-3 overflow-hidden">' +
                 '<!-- TOP SECTION: MY DAY -->' +
@@ -863,9 +881,14 @@
                                 '<li class="nav-item"><button class="nav-link btn btn-sm py-1 px-3 active rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets(\'all\', this)">All</button></li>' +
                                 '<li class="nav-item"><button class="nav-link btn btn-sm py-1 px-3 rounded-pill fs-12 fw-semibold" onclick="filterDashboardTickets(\'urgent\', this)">Urgent</button></li>' +
                             '</ul>' +
+                            '<button type="button" class="btn btn-sm btn-light border rounded-circle d-flex align-items-center justify-content-center p-0 flex-shrink-0" style="width:28px; height:28px;" onclick="toggleMyQueueCollapse()" title="Collapse/expand My Queue">' +
+                                '<i class="ti ' + (queueCollapsed ? 'ti-chevron-down' : 'ti-chevron-up') + '" id="dashMyQueueToggleIcon"></i>' +
+                            '</button>' +
                         '</div>' +
                     '</div>' +
-                    '<div class="row g-3" id="dashMyQueueContainer"></div>' +
+                    '<div id="dashMyQueueBody" style="' + (queueCollapsed ? 'display:none;' : '') + '">' +
+                        '<div class="row g-3" id="dashMyQueueContainer"></div>' +
+                    '</div>' +
                 '</div>' +
 
                 '<!-- CARD FOOTER -->' +
@@ -1102,7 +1125,7 @@
     }
 
     function renderCommunicationsWidgetHtml() {
-        return '<div class="col-lg-6">' +
+        return '<div class="col-lg-12">' +
             '<div class="card border-0 shadow-sm rounded-3 h-100">' +
                 '<div class="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">' +
                     '<div class="d-flex align-items-center gap-2">' +

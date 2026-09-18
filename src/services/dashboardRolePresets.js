@@ -83,7 +83,7 @@ const ALL_WIDGETS = [
     description: 'AI summaries and suggested tasks across email, Teams chat, and meeting notes',
     category: 'Communications',
     icon: 'ti-user-star',
-    defaultWidth: 6,
+    defaultWidth: 12,
     allowedRoles: ['*']
   },
   {
